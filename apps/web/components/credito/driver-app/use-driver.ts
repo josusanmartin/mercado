@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Address, Hex } from "viem";
-import type { DriverDemoResponse, DriverScoreResponse } from "@mercado/shared";
+import { explorerTx, type DriverDemoResponse, type DriverScoreResponse } from "@mercado/shared";
 import { useBorrowCapacity, useMercado, usePool } from "@/lib/contracts";
 import { useReportBusy } from "@/lib/busy";
 
@@ -118,4 +118,40 @@ export function useAdvance(
     draw,
     repay: (amount: bigint) => m.repayLoan(amount),
   };
+}
+
+export type CreditEvent = {
+  event: "Borrowed" | "Repaid";
+  amount: bigint;
+  fee?: bigint;
+  txHash: Hex;
+  logIndex: number;
+  url: string;
+  timestamp?: number;
+};
+
+/** This borrower's Borrowed/Repaid events from the server-side index (GET /api/credit/history), so the
+ *  browser never runs eth_getLogs (CR-08). react-query keeps the last good rows if a refresh fails. */
+export function useCreditHistory(borrower: Address | undefined) {
+  return useQuery({
+    queryKey: ["credit-history", borrower],
+    enabled: !!borrower,
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const body = await fetch(`/api/credit/history?address=${borrower}`).then((r) =>
+        json<{ rows: { kind: "borrow" | "repay"; amount: string; fee?: string; txHash: Hex; logIndex: number; timestamp?: number }[] }>(r),
+      );
+      return body.rows.map(
+        (r): CreditEvent => ({
+          event: r.kind === "borrow" ? "Borrowed" : "Repaid",
+          amount: BigInt(r.amount),
+          fee: r.fee !== undefined ? BigInt(r.fee) : undefined,
+          txHash: r.txHash,
+          logIndex: r.logIndex,
+          url: explorerTx(r.txHash),
+          timestamp: r.timestamp,
+        }),
+      );
+    },
+  });
 }

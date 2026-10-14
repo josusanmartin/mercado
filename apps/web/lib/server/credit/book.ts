@@ -272,3 +272,38 @@ export async function loanBook(limit = 25) {
     },
   };
 }
+
+// ---------------------------------------------------------------- one borrower (DriverApp activity, CR-08)
+
+export interface BorrowerEvent {
+  kind: "borrow" | "repay";
+  amount: string; // 6dp
+  fee?: string; // borrow only
+  remainingDebt?: string; // repay only
+  txHash: Hex;
+  logIndex: number;
+  block: string;
+  timestamp?: number;
+}
+
+/** One borrower's Borrowed / Repaid events, newest first, from the same server-side index as the loan book,
+ *  so the driver app never runs eth_getLogs in the browser. */
+export async function borrowerHistory(borrower: Address, limit = 50) {
+  const { events, times } = await poolEvents();
+  const who = borrower.toLowerCase();
+  const rows: BorrowerEvent[] = [];
+  for (let i = events.length - 1; i >= 0 && rows.length < limit; i--) {
+    const e = events[i];
+    if (e.borrower.toLowerCase() !== who) continue;
+    rows.push({
+      kind: e.kind,
+      amount: e.amount.toString(),
+      ...(e.kind === "borrow" ? { fee: e.fee.toString() } : { remainingDebt: e.remaining.toString() }),
+      txHash: e.tx,
+      logIndex: e.idx,
+      block: e.block.toString(),
+      timestamp: times.get(e.block),
+    });
+  }
+  return { rows };
+}

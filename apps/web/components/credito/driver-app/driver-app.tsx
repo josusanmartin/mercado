@@ -10,7 +10,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
 import { ArrowDownLeft, ArrowUpRight, BarChart3, ExternalLink, HandCoins, Home, List, Smartphone, Star, User, Wallet } from "lucide-react";
-import { useActivityFeed, useBalances } from "@/lib/contracts";
+import { useBalances } from "@/lib/contracts";
 import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ import {
   LoadError,
   StaleLine,
 } from "@/components/mobile/extra/editorial";
-import { PLATFORMS, useAdvance, useDriverData, type Platform } from "./use-driver";
+import { PLATFORMS, useAdvance, useCreditHistory, useDriverData, type Platform } from "./use-driver";
 
 const ROSA = "#D93A7A";
 type Flow = "conectar" | "app" | "recibido" | "pagado";
@@ -496,8 +496,8 @@ function median(xs: number[]) {
 function ActivityList({ limit }: { limit?: number }) {
   const { address } = useConnection();
   const now = useNow(60_000);
-  const feed = useActivityFeed("credit", { account: address, limit: 100 });
-  const rows = feed.rows.filter((r) => r.event === "Borrowed" || r.event === "Repaid").slice(0, limit ?? 30);
+  const feed = useCreditHistory(address);
+  const rows = (feed.data ?? []).slice(0, limit ?? 30);
   if (!feed.data && feed.isError) return <LoadError onRetry={() => feed.refetch()} busy={feed.isFetching} />;
   if (feed.isLoading)
     return (
