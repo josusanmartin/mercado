@@ -55,4 +55,6 @@ Findings from `qa`'s contract and API review. Each one is posted to the owner in
 | Q-006 | contracts oracle/desk ops | On-chain FX stress on the shared oracle reprices the desk (xMXN→OUSD drain) and makes ≤207% positions liquidatable; restoring needs `forceSet` | contracts | open (P2) |
 | Q-007 | contracts `CreditPool` | Share price excludes unrealized fees (JIT lender captures fees); no default/write-off | contracts | noted (P3) |
 | Q-008 | web / `CreditPool.stats()` | `totalSupplied` is really totalAssets (cash + lent), so label it "lender claims" | web | open (P3) |
+| Q-009 | api `bills/service.ts` payLocked | CREATED orders can be paid after quote expiry (stale interim FX) | api | open (P3) |
+| Q-010 | api bills store | File store + in-process locks aren't serverless-safe; demo runs on a local single process (README note) | api / qa | disclosed (P3) |
 | Q-002 | api `/api/driver/score` | Caller chooses profile for any borrower, so any wallet can claim "steady". Mitigated by borrower binding + 1,500 per-user cap; demo-acceptable, disclosed | api / qa | accepted (P3) |

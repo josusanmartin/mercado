@@ -96,6 +96,8 @@ npm run dev
 npx tsx scripts/demo-journey.ts
 ```
 
+> The bill-payment order store (`.data/orders.json`) and its locks are local and single-process. Run the demo on the local dev server. A serverless deploy (e.g. Vercel) would need a shared database and lock first.
+
 ## Tests
 
 - **Contracts:** `npm run contracts:test` (Foundry: `Vault`, `FXStress`, `Swap`, `LoanAttestation`).
