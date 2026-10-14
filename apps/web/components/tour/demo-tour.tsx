@@ -1,16 +1,244 @@
 "use client";
+// One-click Demo Tour: SPEC §0 steps in the order of DEMO.md. The spine is one xMXN flow:
+// pesos are created and sent, a lender funds the pool, the driver draws an advance, pays a bill
+// through a real HTTP 402 receipt, then repays. Each step switches to its persona and page, and
+// pre-fills the amounts the script uses (screens read them via useTourPrefill).
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, Loader2, Route, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Route } from "lucide-react";
+import { useAnyBusy } from "@/lib/busy";
+import { cn } from "@/lib/utils";
+import { personaById, type PersonaId } from "@/components/wallet/personas";
+import { usePersona } from "@/components/wallet/use-persona";
+
+export type TourStep = {
+  spec: number; // SPEC §0 step this demonstrates
+  persona: PersonaId;
+  href: string;
+  title: string;
+  doThis: string;
+  prefill?: Record<string, string>;
+};
+
+export const TOUR: TourStep[] = [
+  {
+    spec: 1,
+    persona: "lp",
+    href: "/mint",
+    title: "Lock OUSD, mint pesos",
+    doThis: "Deposit 1,000 OUSD and mint 8,000 xMXN, a 250% ratio. Then drag the peso slider to see where it turns red.",
+    prefill: { deposit: "1000", mint: "8000" },
+  },
+  {
+    spec: 3,
+    persona: "sender",
+    href: "/send",
+    title: "Send pesos home",
+    doThis: "Swap 50 OUSD for xMXN on the swap desk and send it to Rosa in one go.",
+    prefill: { amount: "50", memo: "para mamá" },
+  },
+  {
+    spec: 4,
+    persona: "lender",
+    href: "/earn",
+    title: "A lender funds the pool",
+    doThis: "Check the pool has cash to lend. Supply 2,000 xMXN if it's running low.",
+    prefill: { supply: "2000" },
+  },
+  {
+    spec: 4,
+    persona: "driver",
+    href: "/credit",
+    title: "Driver gets an advance",
+    doThis: "Connect the demo driver, check eligibility, then draw the advance.",
+  },
+  {
+    spec: 5,
+    persona: "driver",
+    href: "/pay",
+    title: "Pay the phone bill over HTTP 402",
+    doThis: "Buy 100 MXN of Telcel airtime. Payment is real on Tempo; the top-up is SIMULATED.",
+  },
+  {
+    spec: 6,
+    persona: "driver",
+    href: "/credit",
+    title: "Repay the advance",
+    doThis: "Repay the full balance. Nothing is deducted from Uber payouts automatically.",
+  },
+  {
+    spec: 6,
+    persona: "lender",
+    href: "/earn",
+    title: "The lender sees the fee",
+    doThis: "Realized fees went up and loans out went down. No APY is promised.",
+  },
+];
+
+type TourState = { active: boolean; index: number };
+const KEY = "mercado.tour.v1";
+
+type TourCtx = {
+  active: boolean;
+  index: number;
+  step: TourStep | undefined;
+  going: boolean;
+  start: () => void;
+  stop: () => void;
+  go: (index: number) => Promise<void>;
+};
+
+const Ctx = createContext<TourCtx | null>(null);
+
+export function TourProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<TourState>({ active: false, index: 0 });
+  const [going, setGoing] = useState(false);
+  const router = useRouter();
+  const { switchTo } = usePersona();
+  const busy = useAnyBusy();
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) ?? "null") as TourState | null;
+      if (saved) setState(saved);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch {}
+  }, [state]);
+
+  const go = useCallback(
+    async (index: number) => {
+      const step = TOUR[index];
+      if (!step) return;
+      if (busy) {
+        toast.warning("Wait for the current transaction to finish first.");
+        return;
+      }
+      setGoing(true);
+      setState({ active: true, index });
+      try {
+        await switchTo(step.persona);
+        router.push(step.href);
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message.split("\n")[0] : "Could not switch persona");
+      } finally {
+        setGoing(false);
+      }
+    },
+    [busy, switchTo, router],
+  );
+
+  const value = useMemo<TourCtx>(
+    () => ({
+      active: state.active,
+      index: state.index,
+      step: state.active ? TOUR[state.index] : undefined,
+      going,
+      start: () => void go(0),
+      stop: () => setState((s) => ({ ...s, active: false })),
+      go,
+    }),
+    [state, going, go],
+  );
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function useTour() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useTour must be used inside TourProvider");
+  return ctx;
+}
+
+/** Amounts the current tour step suggests for this page, or {} when the tour isn't on it. */
+export function useTourPrefill(href: string): Record<string, string> {
+  const { step } = useTour();
+  return step?.href === href ? (step.prefill ?? {}) : {};
+}
 
 export function TourLauncher() {
+  const { active, start, going } = useTour();
+  if (active) return null;
   return (
-    <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-      <Route />
-      Demo Tour
+    <Button variant="brand" size="sm" onClick={start} disabled={going}>
+      {going ? <Loader2 className="animate-spin" /> : <Route />}
+      <span className="hidden sm:inline">Demo Tour</span>
     </Button>
   );
 }
 
 export function TourPanel() {
-  return null;
+  const { active, index, step, stop, go, going } = useTour();
+  const path = usePathname();
+  const busy = useAnyBusy();
+  if (!active || !step) return null;
+  const p = personaById(step.persona);
+  const here = path === step.href;
+
+  return (
+    <aside
+      aria-label="Demo Tour"
+      className="bg-tinta text-papel fixed inset-x-3 bottom-3 z-40 rounded-xl p-4 shadow-2xl sm:right-5 sm:bottom-5 sm:left-auto sm:w-[25rem]"
+    >
+      <div className="flex items-start gap-3">
+        <ol className="mt-1 flex gap-1" aria-label="Tour progress">
+          {TOUR.map((s, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                aria-label={`Step ${i + 1}: ${s.title}`}
+                aria-current={i === index ? "step" : undefined}
+                disabled={going || busy}
+                onClick={() => go(i)}
+                className={cn(
+                  "block h-1.5 w-5 rounded-full transition-colors",
+                  i < index ? "bg-papel/70" : i === index ? "bg-brand" : "bg-papel/20",
+                )}
+              />
+            </li>
+          ))}
+        </ol>
+        <button type="button" onClick={stop} className="text-papel/60 hover:text-papel ml-auto" aria-label="Close tour">
+          <X className="size-4" />
+        </button>
+      </div>
+      <p className="text-papel/60 mt-3 text-xs">
+        Step {index + 1} of {TOUR.length} · as {p.name}, {p.role.toLowerCase()}
+      </p>
+      <h2 className="font-display mt-0.5 text-lg font-semibold">{step.title}</h2>
+      <p className="text-papel/85 mt-1 text-sm text-pretty">{step.doThis}</p>
+      <div className="mt-4 flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-papel hover:bg-papel/10 hover:text-papel"
+          disabled={index === 0 || going || busy}
+          onClick={() => go(index - 1)}
+        >
+          <ChevronLeft />
+          Back
+        </Button>
+        {!here ? (
+          <Button size="sm" variant="brand" className="ml-auto" disabled={going || busy} onClick={() => go(index)}>
+            {going && <Loader2 className="animate-spin" />}
+            Go as {p.name}
+          </Button>
+        ) : index < TOUR.length - 1 ? (
+          <Button size="sm" variant="brand" className="ml-auto" disabled={going || busy} onClick={() => go(index + 1)}>
+            {going && <Loader2 className="animate-spin" />}
+            Next: {TOUR[index + 1].title}
+            <ChevronRight />
+          </Button>
+        ) : (
+          <Button size="sm" variant="brand" className="ml-auto" onClick={stop}>
+            Finish tour
+          </Button>
+        )}
+      </div>
+    </aside>
+  );
 }

@@ -50,8 +50,9 @@ export function fxRate(mxnPerUsd: bigint): number {
 export const MAX_UINT = 2n ** 256n - 1n;
 
 /** bps → "150.0%"; infinite ratio (no debt) → "∞" */
-export function fmtBps(bps: bigint | number | undefined, digits = 1): string {
+export function fmtBps(bps: bigint | number | null | undefined, digits = 1): string {
   if (bps === undefined) return "—";
+  if (bps === null) return "∞";
   const b = typeof bps === "bigint" ? bps : BigInt(Math.round(bps));
   if (b >= MAX_UINT / 2n) return "∞";
   return `${nf(digits, digits).format(Number(b) / 100)}%`;

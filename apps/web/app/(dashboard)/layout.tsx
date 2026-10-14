@@ -4,10 +4,11 @@ import { NetworkBadge } from "@/components/shell/network-badge";
 import { MobileNav, SideNav } from "@/components/shell/nav";
 import { GuillocheRosette } from "@/components/shell/guilloche";
 import { WalletMenu } from "@/components/wallet/wallet-menu";
-import { TourLauncher, TourPanel } from "@/components/tour/demo-tour";
+import { TourLauncher, TourPanel, TourProvider } from "@/components/tour/demo-tour";
 
 export default function DashboardLayout({ children }: LayoutProps<"/">) {
   return (
+    <TourProvider>
     <div className="flex min-h-dvh flex-col">
       <TestnetBanner />
       <header className="border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30">
@@ -38,5 +39,6 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
       </div>
       <TourPanel />
     </div>
+    </TourProvider>
   );
 }

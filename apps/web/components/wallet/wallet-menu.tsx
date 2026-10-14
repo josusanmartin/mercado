@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import { shortAddr } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useAnyBusy } from "@/lib/busy";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PERSONAS, type PersonaId } from "./personas";
@@ -56,6 +57,8 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
   const { mutate: disconnect } = useDisconnect();
   const { active, switchTo } = usePersona();
   const [personaPending, setPersonaPending] = useState<PersonaId>();
+  // Never switch accounts while a transaction flow is in flight (R-012).
+  const busy = useAnyBusy();
 
   const byType = (t: string) => connectors.find((c) => c.type === t || c.id === t);
   const tempo = byType("tempoWallet") ?? connectors.find((c) => /tempo/i.test(c.name));
@@ -93,6 +96,11 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
         <DialogTitle>Choose a wallet</DialogTitle>
         <DialogDescription>Everything runs on Tempo Moderato testnet. Fees are paid in a USD test token or sponsored.</DialogDescription>
       </DialogHeader>
+      {busy && (
+        <p className="rounded-md bg-warning/10 px-3 py-2 text-sm text-warning-ink">
+          A transaction is in progress. Wait for it to finish before switching wallets.
+        </p>
+      )}
 
       <div className="grid gap-2">
         <WalletOption
@@ -100,7 +108,7 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
           title="Tempo Wallet"
           detail="Sign in at tempo.xyz, no extension needed"
           pending={pendingId === tempo?.id}
-          disabled={!tempo}
+          disabled={busy || !tempo}
           onClick={() => use(tempo)}
         />
         <WalletOption
@@ -108,7 +116,7 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
           title="Passkey"
           detail="A new account secured by Face ID or your fingerprint, no seed phrase"
           pending={pendingId === passkey?.id}
-          disabled={!passkey}
+          disabled={busy || !passkey}
           onClick={() => use(passkey)}
         />
       </div>
@@ -125,7 +133,7 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
             <li key={p.id}>
               <button
                 type="button"
-                disabled={!p.privateKey || personaPending !== undefined}
+                disabled={busy || !p.privateKey || personaPending !== undefined}
                 onClick={() => usePersonaAccount(p.id)}
                 className={cn(
                   "hover:bg-accent flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm disabled:opacity-50",
@@ -152,13 +160,14 @@ function WalletChooser({ onDone }: { onDone: () => void }) {
         title="Browser wallet"
         detail="MetaMask or another injected wallet"
         pending={pendingId === injected?.id}
-        disabled={!injected}
+        disabled={busy || !injected}
         onClick={() => use(injected)}
       />
 
       {isConnected && (
         <Button
           variant="ghost"
+          disabled={busy}
           className="justify-self-start"
           onClick={() => {
             disconnect();
