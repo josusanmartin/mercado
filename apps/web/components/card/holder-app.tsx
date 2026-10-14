@@ -11,7 +11,7 @@ import { explorerTx } from "@mercado/shared";
 import { toUnits } from "@/lib/format";
 import { useBalances, useCardActions, useCards, usePool, type Tap } from "@/lib/contracts";
 import { useActivityFeed } from "@/lib/contracts/activity";
-import { Stagger, TickerText } from "@/lib/motion";
+import { CopyAddress, Stagger, TickerText } from "@/lib/motion";
 import { useNow } from "@/lib/use-now";
 import {
   AccentField,
@@ -39,6 +39,7 @@ import {
   useNavDirection,
   useFirstShow,
   useNewKeys,
+  useSnackbar,
   useStatusBar,
   fmtMoney,
   haceTiempo,
@@ -242,13 +243,24 @@ const TABS: NavItem<Tab>[] = [
 ];
 
 function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }; holder?: Address; last4?: number }) {
+  const snack = useSnackbar();
   return (
     <div>
       <div className="flex items-center gap-4 px-4 pt-4 pb-5">
         <Avatar name={who.hello} size={64} />
         <div className="min-w-0">
           <Display size={24}>{who.onCard}</Display>
-          <p className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]">{holder ? `${holder.slice(0, 6)}…${holder.slice(-4)}` : "—"}</p>
+          {holder ? (
+            <CopyAddress
+              address={holder}
+              locale="es"
+              onCopied={() => snack("Dirección copiada")}
+              onFailed={() => snack("No se pudo copiar: la dirección completa está seleccionada")}
+              className="mt-1 text-[var(--m-on-surface-variant)]"
+            />
+          ) : (
+            <p className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]">—</p>
+          )}
         </div>
       </div>
       <div className="relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-[var(--m-outline-variant)]">

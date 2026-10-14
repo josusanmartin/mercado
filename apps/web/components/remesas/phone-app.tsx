@@ -12,7 +12,7 @@ import { ArrowUpRight, Bell, CircleUserRound, CreditCard, ExternalLink, History,
 import { MEMO_MAX_BYTES, memoByteLength, useBalances, useOracle } from "@/lib/contracts";
 import { useActivityFeed, type ActivityRow } from "@/lib/contracts/activity";
 import { fmtNumber, shortAddr, toUnits } from "@/lib/format";
-import { Stagger, Ticker, TickerText, useReducedMotion } from "@/lib/motion";
+import { CopyAddress, Stagger, Ticker, TickerText, useReducedMotion } from "@/lib/motion";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
@@ -494,13 +494,17 @@ function Perfil({ openOnramp }: AppProps) {
         </Avatar>
         <div className="min-w-0">
           <Display size={24}>Sender (US)</Display>
-          <button
-            type="button"
-            onClick={() => address && navigator.clipboard?.writeText(address).then(() => snack("Dirección copiada"))}
-            className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]"
-          >
-            {shortAddr(address)} · copiar
-          </button>
+          {address ? (
+            <CopyAddress
+              address={address}
+              locale="es"
+              onCopied={() => snack("Dirección copiada")}
+              onFailed={() => snack("No se pudo copiar: la dirección completa está seleccionada")}
+              className="mt-1 text-[var(--m-on-surface-variant)]"
+            />
+          ) : (
+            <p className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]">—</p>
+          )}
         </div>
       </div>
       <div className="relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-[var(--m-outline-variant)]">
