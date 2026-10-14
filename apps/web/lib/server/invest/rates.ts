@@ -55,7 +55,7 @@ async function compute() {
 }
 
 /** A savings vault of the active protocol: a collateral entry with that symbol, or a top-level v2 deployment key. */
-function vaultAddress(symbol: "sOUSD" | "sxMXN"): Address | undefined {
+export function vaultAddress(symbol: "sOUSD" | "sxMXN"): Address | undefined {
   const a = serverAddresses();
   const fromCollaterals = a.collaterals.find((x) => x.symbol === symbol)?.token;
   if (fromCollaterals) return fromCollaterals;

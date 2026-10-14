@@ -8,11 +8,11 @@
 // Positions' cost basis and accrued yield come from the account's own on-chain events.
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { erc20Abi, parseAbiItem, type Abi, type Address } from "viem";
+import { erc20Abi, type Abi, type Address } from "viem";
+import { Fetch } from "mppx/client";
 import {
   useConfig,
   useConnection,
-  usePublicClient,
   useReadContract,
   useReadContracts,
 } from "wagmi";
@@ -267,25 +267,6 @@ export function useInvestPositions() {
   };
 }
 
-// The account's own deposits/withdrawals/trades, from chain logs (cost basis + activity list).
-const supplied = parseAbiItem(
-  "event Supplied(address indexed lender, uint256 amount)",
-);
-const withdrawn = parseAbiItem(
-  "event Withdrawn(address indexed lender, uint256 amount)",
-);
-const depositEv = parseAbiItem(
-  "event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)",
-);
-const withdrawEv = parseAbiItem(
-  "event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)",
-);
-const bought = parseAbiItem(
-  "event Bought(address indexed user, bool withXmxn, uint256 payIn, uint256 ousdUsed, uint256 tbillOut, uint256 fee, uint256 px)",
-);
-const sold = parseAbiItem(
-  "event Sold(address indexed user, bool forXmxn, uint256 tbillIn, uint256 ousdOut, uint256 received, uint256 fee, uint256 px)",
-);
 
 export type InvestActivity = {
   product: "pesos" | "dolares" | "acciones" | "tbills"; // tbills: legacy trades only
@@ -299,291 +280,43 @@ export type InvestActivity = {
   timestamp?: number;
 };
 
-const ts = (l: { blockTimestamp?: unknown }) =>
-  l.blockTimestamp === undefined || l.blockTimestamp === null
-    ? undefined
-    : Number(BigInt(l.blockTimestamp as string | bigint | number));
 
-const CHUNK = 50_000n;
-// once sxMXN exists, peso savings is the vault and pool deposits are lending to drivers (Crédito's lenders)
-const POOL_IN = INVEST.sxMXN ? "Depósito · préstamo a choferes" : "Depósito · ahorro en pesos";
-const POOL_OUT = INVEST.sxMXN ? "Retiro · préstamo a choferes" : "Retiro · ahorro en pesos";
+const BIG = [
+  "netPesos", "netDolares", "netTbillCost", "sharesFromEvents", "tbillFromEvents",
+  "netPesosVault", "sxSharesFromEvents", "netStocksCost", "stocksFromEvents",
+] as const;
+type HistoryTotals = Record<(typeof BIG)[number], bigint>;
 
+/**
+ * The wallet's own deposits/withdrawals/trades (cost basis + activity list), indexed SERVER-side by
+ * GET /api/invest/history: the browser never bursts eth_getLogs at the public RPC (429s in devtools).
+ *   netPesos / netDolares / netPesosVault: amounts put in (deposits − withdrawals), for "earned since deposit"
+ *   netTbillCost / netStocksCost: OUSD spent on the desk minus OUSD received
+ *   sharesFromEvents / sxSharesFromEvents / tbillFromEvents / stocksFromEvents: holdings explained by this
+ *   wallet's own deposits and trades. Return math is only meaningful when these equal the actual holdings
+ *   (R-045: transfers, Mint collateral or a faucet would otherwise be miscounted as gains/losses).
+ */
 export function useInvestHistory() {
   const { address } = useConnection();
-  const client = usePublicClient({ chainId: CHAIN_ID });
   return useQuery({
     queryKey: ["invest-history", A.protocol, address],
-    enabled: !!address && !!client,
+    enabled: !!address,
     refetchInterval: 15_000,
-    queryFn: async () => {
-      const c = client!;
-      const latest = await c.getBlockNumber();
-      const rows: InvestActivity[] = [];
-      let pesosIn = 0n,
-        pesosOut = 0n,
-        dolIn = 0n,
-        dolOut = 0n,
-        tbCost = 0n,
-        tbProceeds = 0n;
-      let sharesIn = 0n,
-        sharesOut = 0n,
-        tbIn = 0n,
-        tbOut = 0n;
-      let vaultIn = 0n,
-        vaultOut = 0n,
-        sxSharesIn = 0n,
-        sxSharesOut = 0n,
-        idxCost = 0n,
-        idxProceeds = 0n,
-        idxIn = 0n,
-        idxOut = 0n;
-      for (let from = INVEST.startBlock; from <= latest; from += CHUNK) {
-        const to = from + CHUNK - 1n < latest ? from + CHUNK - 1n : latest;
-        const range = { fromBlock: from, toBlock: to, strict: true } as const;
-        const [s, w, dep, wd, b, so, sxd, sxw, ib, isold] = await Promise.all([
-          c.getLogs({
-            address: INVEST.pool,
-            event: supplied,
-            args: { lender: address },
-            ...range,
-          }),
-          c.getLogs({
-            address: INVEST.pool,
-            event: withdrawn,
-            args: { lender: address },
-            ...range,
-          }),
-          INVEST.sOUSD
-            ? c.getLogs({
-                address: INVEST.sOUSD,
-                event: depositEv,
-                args: { owner: address },
-                ...range,
-              })
-            : [],
-          INVEST.sOUSD
-            ? c.getLogs({
-                address: INVEST.sOUSD,
-                event: withdrawEv,
-                args: { owner: address },
-                ...range,
-              })
-            : [],
-          INVEST.desk
-            ? c.getLogs({
-                address: INVEST.desk,
-                event: bought,
-                args: { user: address },
-                ...range,
-              })
-            : [],
-          INVEST.desk
-            ? c.getLogs({
-                address: INVEST.desk,
-                event: sold,
-                args: { user: address },
-                ...range,
-              })
-            : [],
-          INVEST.sxMXN
-            ? c.getLogs({
-                address: INVEST.sxMXN,
-                event: depositEv,
-                args: { owner: address },
-                ...range,
-              })
-            : [],
-          INVEST.sxMXN
-            ? c.getLogs({
-                address: INVEST.sxMXN,
-                event: withdrawEv,
-                args: { owner: address },
-                ...range,
-              })
-            : [],
-          INVEST.deskIdx
-            ? c.getLogs({
-                address: INVEST.deskIdx,
-                event: bought,
-                args: { user: address },
-                ...range,
-              })
-            : [],
-          INVEST.deskIdx
-            ? c.getLogs({
-                address: INVEST.deskIdx,
-                event: sold,
-                args: { user: address },
-                ...range,
-              })
-            : [],
-        ]);
-        for (const l of sxd) {
-          vaultIn += l.args.assets;
-          sxSharesIn += l.args.shares;
-          rows.push({
-            product: "pesos",
-            label: "Depósito · ahorro en pesos",
-            amount: l.args.assets,
-            symbol: "xMXN",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of sxw) {
-          vaultOut += l.args.assets;
-          sxSharesOut += l.args.shares;
-          rows.push({
-            product: "pesos",
-            label: "Retiro · ahorro en pesos",
-            amount: l.args.assets,
-            symbol: "xMXN",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of ib) {
-          idxCost += l.args.ousdUsed;
-          idxIn += l.args.tbillOut;
-          rows.push({
-            product: "acciones",
-            label: "Compra · acciones",
-            amount: l.args.tbillOut,
-            symbol: "mIDX",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of isold) {
-          idxProceeds += l.args.ousdOut;
-          idxOut += l.args.tbillIn;
-          rows.push({
-            product: "acciones",
-            label: "Venta · acciones",
-            amount: l.args.tbillIn,
-            symbol: "mIDX",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of s) {
-          pesosIn += l.args.amount;
-          rows.push({
-            product: "pesos",
-            label: POOL_IN,
-            amount: l.args.amount,
-            symbol: "xMXN",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of w) {
-          pesosOut += l.args.amount;
-          rows.push({
-            product: "pesos",
-            label: POOL_OUT,
-            amount: l.args.amount,
-            symbol: "xMXN",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of dep) {
-          dolIn += l.args.assets;
-          sharesIn += l.args.shares;
-          rows.push({
-            product: "dolares",
-            label: "Depósito · ahorro en dólares",
-            amount: l.args.assets,
-            symbol: "OUSD",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of wd) {
-          dolOut += l.args.assets;
-          sharesOut += l.args.shares;
-          rows.push({
-            product: "dolares",
-            label: "Retiro · ahorro en dólares",
-            amount: l.args.assets,
-            symbol: "OUSD",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of b) {
-          tbCost += l.args.ousdUsed;
-          tbIn += l.args.tbillOut;
-          rows.push({
-            product: "tbills",
-            label: "Compra · T-bills",
-            amount: l.args.tbillOut,
-            symbol: "tTBILL",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-        for (const l of so) {
-          tbProceeds += l.args.ousdOut;
-          tbOut += l.args.tbillIn;
-          rows.push({
-            product: "tbills",
-            label: "Venta · T-bills",
-            amount: l.args.tbillIn,
-            symbol: "tTBILL",
-            txHash: l.transactionHash,
-            block: l.blockNumber,
-            logIndex: l.logIndex,
-            timestamp: ts(l),
-          });
-        }
-      }
-      rows.sort((x, y) =>
-        x.block === y.block
-          ? y.logIndex - x.logIndex
-          : x.block > y.block
-            ? -1
-            : 1,
+    queryFn: async (): Promise<HistoryTotals & { rows: InvestActivity[] }> => {
+      // unwrapped fetch: a read must never be auto-paid by a wallet's fetch polyfill
+      const res = await Fetch.unwrapFetch(globalThis.fetch)(
+        `/api/invest/history?address=${address}`,
+        { cache: "no-store" },
       );
-      return {
-        rows,
-        /** Net amounts put in (deposits − withdrawals), for "earned since deposit". */
-        netPesos: pesosIn - pesosOut,
-        netDolares: dolIn - dolOut,
-        /** OUSD spent on tTBILL minus OUSD received from sales. */
-        netTbillCost: tbCost - tbProceeds,
-        /** sOUSD shares / tTBILL units explained by this wallet's own deposits and desk trades. Return math
-         *  is only meaningful when these equal the wallet's actual holdings (R-045: transfers, Mint
-         *  collateral or a faucet would otherwise be miscounted as gains/losses). */
-        sharesFromEvents: sharesIn - sharesOut,
-        tbillFromEvents: tbIn - tbOut,
-        /** sxMXN: xMXN put in (deposits − withdrawals) and the shares those explain. */
-        netPesosVault: vaultIn - vaultOut,
-        sxSharesFromEvents: sxSharesIn - sxSharesOut,
-        /** Stocks: OUSD spent on mIDX minus OUSD received, and the mIDX units those trades explain. */
-        netStocksCost: idxCost - idxProceeds,
-        stocksFromEvents: idxIn - idxOut,
-      };
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? `History failed (${res.status})`);
+      const totals = Object.fromEntries(
+        BIG.map((k) => [k, BigInt(j[k])]),
+      ) as HistoryTotals;
+      const rows = (j.rows as (Omit<InvestActivity, "amount" | "block"> & { amount: string; block: string })[]).map(
+        (r) => ({ ...r, amount: BigInt(r.amount), block: BigInt(r.block) }),
+      );
+      return { ...totals, rows };
     },
   });
 }
