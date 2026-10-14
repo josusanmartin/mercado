@@ -1,0 +1,36 @@
+ M apps/web/components/vault/mint-screen.tsx
+ M apps/web/e2e/hero.spec.ts
+ M apps/web/lib/server/deployments.ts
+ M deck/project/deck.json
+ M deck/project/slides/close.html
+ M deck/project/slides/honesty.html
+ M deck/project/slides/j1-mint.html
+ M deck/project/slides/j2-send.html
+ M deck/project/slides/j3-advance.html
+ M deck/project/slides/j4-bills.html
+ M deck/project/slides/j5-agent.html
+ M deck/project/slides/problem.html
+ M deck/project/slides/proof.html
+ M packages/contracts/broadcast/StressDemo.s.sol/42431/run-latest.json
+ M packages/shared/src/schemas.ts
+ M packages/shared/src/types.ts
+ M review/evidence/connected-redesign-summary.txt
+?? apps/web/app/api/move/
+?? apps/web/components/vault/collateral-picker.tsx
+?? apps/web/lib/server/move/
+?? apps/web/lib/v2/
+?? packages/contracts/broadcast/DemoReset.s.sol/
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939475945.json
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939611680.json
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939794794.json
+?? review/evidence/chain-screen-1791941879120.json
+?? review/evidence/chain-screen-recheck-summary.txt
+?? review/evidence/connected-redesign-1791941785618.json
+?? review/evidence/irc-redesign4.txt
+?? review/evidence/irc-redesign5.txt
+?? review/evidence/irc-reframe-unread.txt
+?? review/evidence/redesign-flow-1791941954556.json
+?? review/evidence/redesign-flow-summary.txt
+?? review/evidence/redesign-mobile-final-1791941954556.png
+?? review/evidence/reframe-status.txt
+?? review/redesign-flow-check.mjs

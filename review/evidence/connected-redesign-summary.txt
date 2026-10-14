@@ -1,0 +1,42 @@
+{
+  "file": "review/evidence/connected-redesign-1791941785618.json",
+  "views": [
+    {
+      "path": "/",
+      "active": [
+        "J"
+      ]
+    },
+    {
+      "path": "/credit",
+      "active": []
+    },
+    {
+      "path": "/pay",
+      "active": []
+    },
+    {
+      "path": "/mint",
+      "active": []
+    },
+    {
+      "path": "/send",
+      "active": []
+    },
+    {
+      "path": "/earn",
+      "active": []
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "before-arrow",
+      "focused": "Lucía, Liquidity provider"
+    },
+    {
+      "name": "after-arrow",
+      "focused": "Miguel, Sender in Houston"
+    }
+  ],
+  "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Other wallets', exact: true })\u001b[22m\n"
+}

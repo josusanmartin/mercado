@@ -1,0 +1,45 @@
+{
+  "file": "review/evidence/redesign-flow-1791941954556.json",
+  "checks": [
+    {
+      "name": "offer-to-draw-input",
+      "pass": true
+    },
+    {
+      "name": "input-shortcuts-do-not-navigate",
+      "pass": true
+    },
+    {
+      "name": "dialog-shortcuts-stay-in-place",
+      "pass": true
+    },
+    {
+      "name": "escape-closes-dialog",
+      "pass": true
+    },
+    {
+      "name": "second-escape-goes-home",
+      "pass": true
+    },
+    {
+      "name": "bill-to-checkout",
+      "pass": true
+    },
+    {
+      "name": "edited-bill-checkout-invalidated",
+      "pass": true
+    }
+  ],
+  "api": [
+    {
+      "status": 200,
+      "maxAmount": "1500000000",
+      "availableToBorrow": "1300000000"
+    }
+  ],
+  "mobile": {
+    "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+    "visible": true,
+    "overflow": false
+  }
+}

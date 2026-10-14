@@ -1,0 +1,12 @@
+914c1f2 web: System view on Home (Create · Move · Lend · Spend around xMXN, live numbers)
+6206d1a slides: v0.2 reframe step 1: new cover line + system map (Create, Move, Lend, Spend)
+1ec9ef3 earn: restyle on console design system (Settings layout); demo-reset script (WIP: nonce-lane run hung)
+ec82c1b screens: shared TxProgress (reports busy, records activity); pay flow reports busy so persona switching locks mid-payment (R-012)
+ce40157 SPEC v0.2: parallel financial system; institutional yield-bearing/RWA minting; vault-integrated vAMM
+50db5a1 web: even tile heights and a single shortcut row on phones
+1cd3fb4 screens: /credit and /pay on the console design system (SettingsLayout + ListPane + Panel/Rows/BigNumber/PanelActions), token colors only; unknown debt shows — not 0
+ac2e268 web: unreadable collateral ratio shows 'health unavailable', never 'No debt'
+1df9d2c web: Contracts on the console Settings layout; restyle connect gate + tx progress; drop old shell pieces
+203593f slides: judge Q&A appendix slide from review/PRODUCT.md (answers in notes)
+168b86b web: network identity in the always-visible hint bar; page shortcuts off while a dialog is open
+5f2a62a review: judge Q&A prep

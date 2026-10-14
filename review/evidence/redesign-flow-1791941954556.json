@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-14T01:39:14.556Z",
+  "checks": [
+    {
+      "name": "offer-to-draw-input",
+      "pass": true
+    },
+    {
+      "name": "input-shortcuts-do-not-navigate",
+      "pass": true
+    },
+    {
+      "name": "dialog-shortcuts-stay-in-place",
+      "pass": true
+    },
+    {
+      "name": "escape-closes-dialog",
+      "pass": true
+    },
+    {
+      "name": "second-escape-goes-home",
+      "pass": true
+    },
+    {
+      "name": "bill-to-checkout",
+      "pass": true
+    },
+    {
+      "name": "edited-bill-checkout-invalidated",
+      "pass": true
+    }
+  ],
+  "api": [
+    {
+      "status": 200,
+      "maxAmount": "1500000000",
+      "availableToBorrow": "1300000000"
+    }
+  ],
+  "offer": "Get an advance\nDriver\nSteady\nCredit line\n1,500\nDraw\n1,300\nYour advance\n204\nLenders\nAgent API\nWhy you get a credit line\n\nA fixed rule from median weekly net, earnings volatility, active weeks and trip consistency. These are fake underwriting parameters for a testnet demo.\n\nDemo Uber Data\nIllustrative, not a credit model\n\nCredit line\n\n1,500xMXN\n\nScore\nFloor 50\n96.5 / 100\nIncome level\n35/35\nEarnings stability\n27.7/30\nActive weeks\n20/20\nTrip consistency\n13.8/15\nAvailable now\nLimited by pool cash, 80% utilization and what you already owe\n1,300 xMXN\nMedian weekly net earnings: 10,077.31 MXN over 12 weeks (35/35 pts).\nEarnings volatility (CV) 0.05: very steady income (27.7/30 pts).\nActive in 12 of 12 weeks (20/20 pts).\nTrip-count consistency (CV 0.04, median 114.5 trips/week) (13.8/15 pts).\n15% of median weekly net is 1,511.6 MXN, so the 1,500 MXN ceiling applies.\nScore 96.5 ≥ floor 50: credit line of 1,500 xMXN. Illustrative demo heuristic only, not a validated credit model.\nYou can draw up to 1300 xMXN right now (limited by pool liquidity/utilization or your outstanding advance).\n\nSigned eligibility (EIP-712) for 0x871a…cC63 · nonce 99375514… · data hash 0x2129…b31d · expires in 15:00. Only the hash of the income report goes on-chain.\n\nDraw an advance\nRefresh offer",
+  "draw": "Get an advance\nDriver\nSteady\nCredit line\n1,500\nDraw\n1,300\nYour advance\n204\nLenders\nAgent API\nDraw your advance\n\nPaid in xMXN from the credit pool, which lenders fund separately from the peso vault. A flat 2% fee is added to what you owe.\n\nAvailable now\n1,300 xMXN\nOffer expires in\n15:00\nAmount\nMax\nDraw advance",
+  "checkout": "Pay bills\nBill\nTelcel\nCheckout\n100\nReceipt\nHistory\nCheckout\n\nTelcel airtime 100 MXN → 55****5678\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\n\nYou pay\n\n100.00xMXN\n\nPaid to (merchant)\n0x6727…d4d3 ↗\nSettles via\nMPP HTTP 402 · Tempo Moderato\nFulfillment\nSIMULATED, no real top-up\nYour xMXN balance\n100.00 xMXN\n✓\nQuote locked\nPrice and merchant fixed for 15 minutes\n2\n402 Payment Required\nServer returns an MPP challenge bound to this order\n3\nPay on Tempo\nYour wallet sends xMXN to the merchant, memo-bound to the challenge\n4\nVerified on-chain\nServer checks amount, token, recipient and memo\n5\nTop-up (SIMULATED)\nMock provider returns a reference; no real airtime\nPay 100.00 xMXN",
+  "mobile": {
+    "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+    "visible": true,
+    "overflow": false
+  }
+}

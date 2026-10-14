@@ -1,0 +1,539 @@
+commit 77b91105a6b6e2c1d818a59ae7873e3f54b258ca
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:42:36 2026 +0000
+
+    crew: V2-DESIGN.md (multi-collateral Create vault + Move vAMM/PSM solvency design)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ crew/V2-DESIGN.md | 187 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 187 insertions(+)
+
+commit aa69083e0f78b9f40d937f2e468b444bcb1b736d
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:42:30 2026 +0000
+
+    slides: recaptured console-restyle tiles (credit line, checkout)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/assets/credit-line-v2.png  | Bin 0 -> 84535 bytes
+ deck/assets/pay-checkout-v2.png | Bin 0 -> 112779 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 1581d994d8b08d4df1a977ad4982fe8d7b20b794
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:42:22 2026 +0000
+
+    web: Create collateral picker (OUSD live; sOUSD/tTBILL demo tokens marked v2, coming)
+    
+    Data-driven catalogue in lib/v2/collaterals.ts with a NEXT_PUBLIC_PROTOCOL
+    flag (v1 default). v2 params will be read from chain once V2-DESIGN.md and
+    addresses land; nothing invented meanwhile.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/vault/collateral-picker.tsx | 56 +++++++++++++++++++++++
+ apps/web/components/vault/mint-screen.tsx       |  7 ++-
+ apps/web/lib/v2/collaterals.ts                  | 60 +++++++++++++++++++++++++
+ 3 files changed, 122 insertions(+), 1 deletion(-)
+
+commit befc4ff7203835c83792341a9793b3a40bbbcbc3
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:42:07 2026 +0000
+
+    slides: v0.2 reframe arc: problem → system → Create → Move → Lend → Spend → proof → honesty → close, with live/demo/in-progress labels
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/deck.json              |  2 +-
+ deck/project/slides/close.html      |  8 ++++----
+ deck/project/slides/honesty.html    |  8 +++++---
+ deck/project/slides/j1-mint.html    | 12 ++++++------
+ deck/project/slides/j2-send.html    | 14 +++++++-------
+ deck/project/slides/j3-advance.html |  6 +++---
+ deck/project/slides/j4-bills.html   |  6 +++---
+ deck/project/slides/j5-agent.html   |  4 ++--
+ deck/project/slides/problem.html    | 37 +++++++------------------------------
+ deck/project/slides/proof.html      |  6 +++---
+ 10 files changed, 41 insertions(+), 62 deletions(-)
+
+commit 914c1f274f3c789269e18ca550273496c231c75d
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:41:25 2026 +0000
+
+    web: System view on Home (Create · Move · Lend · Spend around xMXN, live numbers)
+    
+    SPEC v0.2 framing. v1 data for now: vault collateral, desk liquidity, pool
+    loans/cash, MPP xMXN received by the merchant, xMXN supply as the hub.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/home/home-screen.tsx |   3 +
+ apps/web/components/home/system-map.tsx  | 100 +++++++++++++++++++++++++++++++
+ 2 files changed, 103 insertions(+)
+
+commit 6206d1a974f566a4117f9a336a3492a912d90fdd
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:40:52 2026 +0000
+
+    slides: v0.2 reframe step 1: new cover line + system map (Create, Move, Lend, Spend)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/deck.json          |  2 +-
+ deck/project/slides/cover.html  |  9 +++---
+ deck/project/slides/system.html | 63 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 69 insertions(+), 5 deletions(-)
+
+commit 1ec9ef3eaeafae55d45f1a54c87ff35d54db1257
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:40:06 2026 +0000
+
+    earn: restyle on console design system (Settings layout); demo-reset script (WIP: nonce-lane run hung)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/earn/earn-screen.tsx   | 315 +++++++++++++++--------------
+ apps/web/components/earn/three-buckets.tsx | 176 ++++++----------
+ packages/contracts/script/DemoReset.s.sol  | 165 +++++++++++++++
+ packages/contracts/script/demo-reset       |  37 ++++
+ packages/contracts/script/demo-state.mjs   |  49 +++++
+ 5 files changed, 467 insertions(+), 275 deletions(-)
+
+commit ec82c1b0f1409d42bf4a1007d2ae6a070adda872
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:39:41 2026 +0000
+
+    screens: shared TxProgress (reports busy, records activity); pay flow reports busy so persona switching locks mid-payment (R-012)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/billpay/pay-screen.tsx         |  3 ++
+ apps/web/components/credit/credit-screen.tsx       | 12 ++++++--
+ apps/web/components/credit/tx-status.tsx           | 35 ----------------------
+ .../lib/server/__tests__/browser-driver-flow.cjs   |  2 +-
+ 4 files changed, 13 insertions(+), 39 deletions(-)
+
+commit ce4015763a8c4e5f182935a6a808bad478b0462a
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:39:15 2026 +0000
+
+    SPEC v0.2: parallel financial system; institutional yield-bearing/RWA minting; vault-integrated vAMM
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ SPEC.md | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+commit 50db5a13e6b786760db7ed2fcaeccff06ad3094e
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:38:36 2026 +0000
+
+    web: even tile heights and a single shortcut row on phones
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/console/circle-button.tsx | 2 +-
+ apps/web/components/console/tile.tsx          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 1cd3fb4e6917495611f0520290676c59e0da294b
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:38:30 2026 +0000
+
+    screens: /credit and /pay on the console design system (SettingsLayout + ListPane + Panel/Rows/BigNumber/PanelActions), token colors only; unknown debt shows — not 0
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/billpay/pay-screen.tsx         | 673 +++++++++--------
+ apps/web/components/billpay/recent-orders.tsx      |  58 +-
+ apps/web/components/credit/agent-api-panel.tsx     |  45 +-
+ apps/web/components/credit/credit-screen.tsx       | 822 +++++++++++----------
+ apps/web/components/credit/tx-status.tsx           |   2 +-
+ .../lib/server/__tests__/browser-driver-flow.cjs   |  16 +-
+ 6 files changed, 867 insertions(+), 749 deletions(-)
+
+commit ac2e268be41a29e0fb1b53b2eba053f8aa8a26a6
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:37:46 2026 +0000
+
+    web: unreadable collateral ratio shows 'health unavailable', never 'No debt'
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/vault-math.ts | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+commit 1df9d2c1c685cdb1cf190fd1b5955666f182cfd6
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:37:28 2026 +0000
+
+    web: Contracts on the console Settings layout; restyle connect gate + tx progress; drop old shell pieces
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/console/settings.tsx      |   8 +-
+ apps/web/components/home/contracts-screen.tsx | 172 +++++++++++++-------------
+ apps/web/components/shell/connect-gate.tsx    |  16 ++-
+ apps/web/components/shell/guilloche.tsx       |  64 ----------
+ apps/web/components/shell/nav.tsx             |  79 ------------
+ apps/web/components/shell/testnet-banner.tsx  |  18 ---
+ apps/web/components/shell/tx-progress.tsx     |   4 +-
+ 7 files changed, 102 insertions(+), 259 deletions(-)
+
+commit 203593f448362c7dd497e886f689fbda06f90560
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:37:09 2026 +0000
+
+    slides: judge Q&A appendix slide from review/PRODUCT.md (answers in notes)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/deck.json            |  2 +-
+ deck/project/slides/judge-qa.html | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+commit 168b86b0ec0bb15909ddd107149594941d622ec2
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:36:38 2026 +0000
+
+    web: network identity in the always-visible hint bar; page shortcuts off while a dialog is open
+    
+    Fixes review's R-019 regression (Moderato 42431 hidden on mobile) and the
+    Backspace/t/+ leak from inside dialogs.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/console/hint-bar.tsx | 7 ++++++-
+ apps/web/components/console/keyboard.tsx | 5 ++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+commit 5f2a62aa14f29d6ea0f88928334142682c0f5c26
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:36:30 2026 +0000
+
+    review: judge Q&A prep
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ review/PRODUCT.md                                  |  28 +++
+ review/chain-screen-values.mjs                     |   5 +
+ review/connected-redesign-check.mjs                |   6 +
+ review/evidence/chain-screen-1791941664291.json    |  38 ++++
+ review/evidence/chain-screen-summary.txt           |   7 +
+ review/evidence/changes-pass8.txt                  | 156 +++++++++++++++
+ review/evidence/connected-redesign-summary.txt     |   0
+ .../home-rpc-unavailable-1791941415510.json        |   6 +
+ review/evidence/home-unavailable-summary.txt       |   7 +
+ review/evidence/irc-pass22.txt                     |   1 +
+ review/evidence/irc-pass23.txt                     |   2 +
+ review/evidence/irc-redesign-start.txt             |   4 +
+ review/evidence/irc-redesign2.txt                  |   1 +
+ review/evidence/irc-redesign3.txt                  |   1 +
+ review/evidence/receipt-helper-1791941324880.json  |  34 ++++
+ review/evidence/receipt-helper-summary.txt         |  12 ++
+ .../evidence/redesign-1440-home-1791941595884.png  | Bin 0 -> 92168 bytes
+ .../evidence/redesign-1440-pay-1791941595884.png   | Bin 0 -> 60318 bytes
+ review/evidence/redesign-1791941595884.json        | 219 +++++++++++++++++++++
+ .../evidence/redesign-390-home-1791941595884.png   | Bin 0 -> 76554 bytes
+ review/evidence/redesign-390-pay-1791941595884.png | Bin 0 -> 44440 bytes
+ review/evidence/redesign-pass1-summary.txt         | 207 +++++++++++++++++++
+ review/evidence/sponsor-recheck-1791941598397.json |  41 ++++
+ review/evidence/sponsor-redesign-summary.txt       |  42 ++++
+ review/evidence/wip-redesign-start.txt             |  21 ++
+ review/home-unavailable-check.mjs                  |   2 +
+ review/receipt-helper-check.mjs                    |   6 +
+ review/redesign-check.mjs                          |  11 ++
+ 28 files changed, 857 insertions(+)
+
+commit 7e98bc00625208af67aa436a50022b679a73ed2f
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:36:03 2026 +0000
+
+    web: Send money on the console Settings layout (send · recipient's wallet · swap desk)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/transfer/send-screen.tsx | 357 ++++++++++++---------------
+ 1 file changed, 160 insertions(+), 197 deletions(-)
+
+commit 5c50cb447cf84bce0065e27dd87351d981817e94
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:34:44 2026 +0000
+
+    web: Create pesos on the console Settings layout
+    
+    Sections: deposit and mint, repay and withdraw, your position, exchange rate
+    (mock admin oracle, staleness), peso stress test (preview-only slider).
+    Unloaded position reads show as unavailable, not zero.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/vault/fx-card.tsx     |  47 ----
+ apps/web/components/vault/mint-screen.tsx | 433 +++++++++++++-----------------
+ apps/web/components/vault/peso-slider.tsx |  28 +-
+ 3 files changed, 199 insertions(+), 309 deletions(-)
+
+commit dbf7113b7553f5c6b3386efcdb6fa72e33999f34
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:32:35 2026 +0000
+
+    web: Home in the console-menu language
+    
+    Tile row (Create pesos, Send, Advance, Pay bills, Earn, Demo Tour) with one
+    live number each, round shortcuts (Receipts, Wallet, Contracts, Network &
+    honesty, theme), wallet + where-the-money-sits settings panels. Missing
+    reads show Unavailable/—, never zero (review).
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/home/home-screen.tsx   | 439 ++++++++++++++---------------
+ apps/web/components/wallet/wallet-menu.tsx |   2 +-
+ 2 files changed, 216 insertions(+), 225 deletions(-)
+
+commit c262124c1a2dd755d79a2b457873ffa1571b9ff5
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:31:24 2026 +0000
+
+    qa: hero recording spec (HERO=1) for driver advance → 402 pay → receipt video
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/e2e/hero.spec.ts | 60 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+commit 53bd8b7c4da4e381c8eb4ea0eca70b3f6de95d86
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:31:09 2026 +0000
+
+    web: console-menu design system (crew/DESIGN-SWITCH.md)
+    
+    Basic white/black themes (shadcn tokens remapped, so existing screens
+    follow), pulsing cyan selection ring as the only accent, Nunito Sans.
+    components/console: Tile/TileRow, CircleButton/CircleRow, ProfileBar
+    (persona avatars, network chip, xMXN readout, clock), HintBar (honesty
+    line + A/B/+ hints), SettingsLayout/ListPane/Panel/Row/BigNumber/
+    PanelActions, ThemeProvider, KeyboardNav (arrow roving in data-nav groups,
+    Esc/Backspace back, +/t tour; ignored while typing).
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/app/(dashboard)/layout.tsx           |  45 ++-----
+ apps/web/app/globals.css                      | 161 ++++++++++++++++++--------
+ apps/web/app/layout.tsx                       |  17 ++-
+ apps/web/components/console/circle-button.tsx |  43 +++++++
+ apps/web/components/console/hint-bar.tsx      |  39 +++++++
+ apps/web/components/console/index.ts          |   8 ++
+ apps/web/components/console/keyboard.tsx      | 110 ++++++++++++++++++
+ apps/web/components/console/profile-bar.tsx   | 100 ++++++++++++++++
+ apps/web/components/console/settings.tsx      | 110 ++++++++++++++++++
+ apps/web/components/console/theme.tsx         |  32 +++++
+ apps/web/components/console/tile.tsx          |  76 ++++++++++++
+ apps/web/components/shell/network-badge.tsx   |  10 +-
+ apps/web/components/tour/demo-tour.tsx        |  15 ++-
+ apps/web/components/ui/badge.tsx              |   6 +-
+ apps/web/components/ui/button.tsx             |  20 ++--
+ apps/web/components/ui/card.tsx               |   4 +-
+ apps/web/components/ui/dialog.tsx             |   6 +-
+ apps/web/components/ui/input.tsx              |   4 +-
+ apps/web/components/ui/slider.tsx             |   2 +-
+ apps/web/components/ui/tabs.tsx               |   6 +-
+ apps/web/components/wallet/wallet-menu.tsx    |  13 +++
+ 21 files changed, 704 insertions(+), 123 deletions(-)
+
+commit d9f88c44372fe33531024b2b0793d93c72863c4f
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:30:47 2026 +0000
+
+    slides: dark editorial rollout complete (appendix formula + roadmap); drop unused faces
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/deck.json        |  2 +-
+ deck/project/slides/next.html | 74 ++++++++++++++++++++-----------------------
+ deck/project/slides/xmxn.html | 41 ++++++++++++------------
+ 3 files changed, 55 insertions(+), 62 deletions(-)
+
+commit d7d22d41dbde9c22a05824005b2d77d3749557f5
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:30:17 2026 +0000
+
+    slides: dark editorial rollout batch 3 (honesty, close, architecture)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/architecture.html | 102 +++++++++++++---------------------
+ deck/project/slides/close.html        |  31 ++++-------
+ deck/project/slides/honesty.html      |  49 ++++++++--------
+ 3 files changed, 73 insertions(+), 109 deletions(-)
+
+commit 5f5d9dd26a5c7cf7464ba2993f7008f438e0d0ec
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:29:12 2026 +0000
+
+    slides: dark editorial rollout batch 2 (create pesos, send, proof)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/j1-mint.html | 67 ++++++++++++++++++++--------------------
+ deck/project/slides/j2-send.html | 55 ++++++++++++++++++---------------
+ deck/project/slides/proof.html   | 41 ++++++++++++++----------
+ 3 files changed, 88 insertions(+), 75 deletions(-)
+
+commit 6e8b614bcf7ecfb8c660ff2fa2d9e5610b950f20
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:28:07 2026 +0000
+
+    review: pass 8 findings and evidence
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ review/FINDINGS.md                                 |  77 +++++++++++++--
+ review/PRODUCT.md                                  |   8 +-
+ review/browser-flows-check.mjs                     |  22 +++++
+ review/credit-browser-check.mjs                    |   7 ++
+ review/evidence/browser-1791940402694.json         | 105 +++++++++++++++++++++
+ review/evidence/browser-flows-1791940479311.json   |  46 +++++++++
+ review/evidence/browser-flows-1791940545735.json   |  89 +++++++++++++++++
+ review/evidence/browser-flows-pass7-summary.txt    |  81 ++++++++++++++++
+ review/evidence/browser-flows-summary.txt          |  45 +++++++++
+ review/evidence/browser-mobile-1791940402694.png   | Bin 0 -> 21946 bytes
+ review/evidence/browser-pass6-summary.txt          |  81 ++++++++++++++++
+ review/evidence/credit-browser-1791940615629.json  |  30 ++++++
+ review/evidence/credit-browser-summary.txt         |  28 ++++++
+ review/evidence/credit-connected-1791940615629.png | Bin 0 -> 202945 bytes
+ review/evidence/irc-pass10.txt                     |   2 +
+ review/evidence/irc-pass11.txt                     |   2 +
+ review/evidence/irc-pass12.txt                     |   2 +
+ review/evidence/irc-pass13.txt                     |   9 ++
+ review/evidence/irc-pass14.txt                     |   1 +
+ review/evidence/irc-pass15.txt                     |   5 +
+ review/evidence/irc-pass16.txt                     |   1 +
+ review/evidence/irc-pass17.txt                     |   7 ++
+ review/evidence/irc-pass18.txt                     |  12 +++
+ review/evidence/irc-pass19.txt                     |   3 +
+ review/evidence/irc-pass20.txt                     |   3 +
+ review/evidence/irc-pass21.txt                     |   4 +
+ review/evidence/memo-1791941049318.json            |  81 ++++++++++++++++
+ review/evidence/memo-recheck-summary.txt           |  36 +++++++
+ review/evidence/mobile-label-summary.txt           |  20 ++++
+ review/evidence/mobile-labels-1791940702612.json   |  20 ++++
+ review/evidence/mobile-labels-1791940702612.png    | Bin 0 -> 73061 bytes
+ review/evidence/no-active-account-sources.txt      |   5 +
+ review/evidence/recovery-ui-1791940880144.json     |  18 ++++
+ review/evidence/recovery-ui-1791940880144.png      | Bin 0 -> 90354 bytes
+ review/evidence/recovery-ui-1791941099162.json     |  18 ++++
+ review/evidence/recovery-ui-1791941099162.png      | Bin 0 -> 92471 bytes
+ review/evidence/recovery-ui-recheck-summary.txt    |  19 ++++
+ review/evidence/recovery-ui-summary.txt            |  19 ++++
+ review/evidence/screen-credit-1791940545735.png    | Bin 0 -> 91685 bytes
+ review/evidence/screen-earn-1791940545735.png      | Bin 0 -> 121553 bytes
+ review/evidence/screen-home-1791940545735.png      | Bin 0 -> 38553 bytes
+ review/evidence/screen-mint-1791940545735.png      | Bin 0 -> 97709 bytes
+ review/evidence/screen-mobile-1791940479311.png    | Bin 0 -> 65440 bytes
+ review/evidence/screen-mobile-1791940545735.png    | Bin 0 -> 67586 bytes
+ review/evidence/screen-pay-1791940545735.png       | Bin 0 -> 83981 bytes
+ review/evidence/screen-send-1791940545735.png      | Bin 0 -> 42067 bytes
+ review/evidence/send-receipt-1791940814658.json    |   8 ++
+ review/evidence/send-receipt-1791941132553.json    |   8 ++
+ review/evidence/send-receipt-recheck-summary.txt   |  13 +++
+ review/evidence/send-receipt-recheck2-summary.txt  |   9 ++
+ review/evidence/send-receipt-summary.txt           |   9 ++
+ review/evidence/sponsor-live-policy.json           |   1 +
+ review/evidence/sponsor-recheck-1791941049183.json |  41 ++++++++
+ review/evidence/sponsor-recheck-summary.txt        |  42 +++++++++
+ review/evidence/typecheck-pass7.txt                |   2 +
+ review/evidence/typecheck-pass8.txt                |   0
+ review/memo-check.mjs                              |   2 +-
+ review/recovery-ui-check.mjs                       |   6 ++
+ review/send-receipt-check.mjs                      |  10 ++
+ review/sponsor-recheck.mjs                         |  20 ++++
+ 60 files changed, 1066 insertions(+), 11 deletions(-)
+
+commit 65a8d82f3ab51e4a61d250bc7b5c131e7a9f3f96
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:28:02 2026 +0000
+
+    slides: dark editorial rollout batch 1 (problem, advance, machine-to-machine)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/j3-advance.html | 83 ++++++++++++++++---------------------
+ deck/project/slides/j5-agent.html   | 58 +++++++++++++-------------
+ deck/project/slides/problem.html    | 61 ++++++++++++++-------------
+ 3 files changed, 93 insertions(+), 109 deletions(-)
+
+commit 25c5200ea507ad67f42a41692cb625e0f1870961
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:26:24 2026 +0000
+
+    bills: gate archive-orders on a quiescent store (no paid-unfulfilled orders, no unresolved attempts, 30s idle); --force to override
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/server/bills/archive-orders.mts | 53 ++++++++++++++++++++++------
+ 1 file changed, 43 insertions(+), 10 deletions(-)
+
+commit 345c3cb2b9b533e3f59fc4d1edc8b94bdff7be4e
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:54 2026 +0000
+
+    pay: wrap provider toggle on mobile (no horizontal overflow at 390px)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/billpay/pay-screen.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit f5842ffd727f9c4e8bcf155c2fe61f3f6c2f3c9b
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:48 2026 +0000
+
+    web: disable the accounts provider's global mppx fetch polyfill on all Tempo connectors
+    
+    tempoWallet/webAuthn/dangerous_secp256k1 now get { mpp: false }, so a
+    connected wallet never auto-pays an arbitrary same-origin 402; payments go
+    only through the explicit payBill checkout. Verified: window.fetch stays
+    native after connecting and an unpaid POST /api/bills/pay returns 402.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/wallet/use-persona.ts | 3 ++-
+ apps/web/lib/tempo/config.ts              | 9 ++++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+commit 5405d24dcbcbf9340b32b69672139bdf00815fb8
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:29 2026 +0000
+
+    Design brief: console-menu (Switch-inspired) platform redesign
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ crew/DESIGN-SWITCH.md | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+commit 5a0e26b5c3b1f55b29664e43d25c6de93072b7b1
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:04 2026 +0000
+
+    web: no horizontal overflow on /mint and /send at 390px
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/shell/connect-gate.tsx   | 1 +
+ apps/web/components/transfer/send-screen.tsx | 2 +-
+ apps/web/components/vault/mint-screen.tsx    | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+commit cce23cbeea9a31b7a33e937c7b54bd0ed9a90cc2
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:24:48 2026 +0000
+
+    bills: archive-orders reset helper for demo:reset (moves .data/orders.json to .data/archive/)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/server/bills/archive-orders.mts | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)

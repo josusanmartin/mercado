@@ -1,0 +1,7 @@
+ apps/web/e2e/hero.spec.ts                          |  38 +-
+ apps/web/lib/server/deployments.ts                 |   3 +
+ .../StressDemo.s.sol/42431/run-latest.json         | 820 ++++++++++-----------
+ packages/shared/src/schemas.ts                     |  51 ++
+ packages/shared/src/types.ts                       |   4 +
+ review/evidence/connected-redesign-summary.txt     |  42 ++
+ 6 files changed, 533 insertions(+), 425 deletions(-)

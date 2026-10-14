@@ -1,0 +1,1 @@
+[01:37] <slides> deck: added appendix slide A4 'Questions we expect': review's 8 judge questions as short lines in two columns, with condensed answers in the speaker notes (still honest: no exactly-once claim, the sponsor is bounded, SIMULATED fulfillment). PUBLISH touched.
