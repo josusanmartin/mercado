@@ -15,6 +15,7 @@ import { useTour, TOUR } from "@/components/tour/demo-tour";
 import { personaByAddress } from "@/components/wallet/personas";
 import { WalletChooser, WalletDialog } from "@/components/wallet/wallet-menu";
 import { useRecentOrders } from "@/components/billpay/use-bill-pay";
+import { SystemMap } from "./system-map";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -71,6 +72,8 @@ export function HomeScreen() {
           { label: theme === "dark" ? "Light" : "Dark", icon: theme === "dark" ? Sun : Moon, onClick: toggle },
         ]}
       />
+
+      <SystemMap />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <WalletPanel />
