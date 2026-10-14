@@ -431,7 +431,7 @@ function Backing() {
     return (
       <Panel
         title="Exchange backing"
-        description="The exchange holds its own OUSD reserve against the xMXN it issued, plus an equity buffer. It never touches CDP collateral. If the peso appreciates, coverage falls; below the floor, minting and large redemptions are refused on-chain."
+        description="The exchange holds its own OUSD reserve against the xMXN it issued, seeded with contributed capital. It never touches CDP collateral. If the peso strengthens, the xMXN liability is worth more in USD and coverage falls. Each mint is checked against the coverage it would leave after the trade, and redemptions drain a rolling bucket that refills over 24h."
       >
         <Rows>
           <Row label="OUSD reserve" value={v(ex.reserveOusd, "OUSD")} />
@@ -441,23 +441,23 @@ function Backing() {
             sub="xMXN issued by the exchange and still outstanding"
           />
           <Row
-            label="Equity buffer"
+            label="Net contributed capital"
             value={v(ex.equityOusd, "OUSD")}
-            sub="First-loss capital, not user funds"
+            sub="OUSD added as equity minus withdrawn. A cumulative counter, not today's loss-absorbing buffer: that is reserve minus liability at the current rate."
           />
           <Row
             label="Coverage"
             value={pct(ex.coverageBps)}
-            sub={`Minting refused below ${pct(ex.minMintCoverageBps)}`}
+            sub={`A mint is refused if post-trade coverage would fall below ${pct(ex.minMintCoverageBps)}`}
           />
           <Row
-            label="24h redemption bucket"
+            label="Redemption bucket (rolling)"
             value={
               ex.bucketUsedOusd === undefined || ex.bucketCapOusd === undefined
                 ? "…"
                 : `${fmtAmount(ex.bucketUsedOusd)} / ${fmtAmount(ex.bucketCapOusd)} OUSD`
             }
-            sub={`Cap ${pct(ex.redeemCapBps)} of reserve per 24h`}
+            sub={`Used / capacity. Capacity is ${pct(ex.redeemCapBps)} of the current reserve; usage leaks back out over 24h (continuous refill, not a daily reset)`}
           />
           <Row
             label="Fee"
