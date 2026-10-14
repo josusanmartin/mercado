@@ -36,6 +36,7 @@ import {
   IconButton,
   LinearProgress,
   ListHeader,
+  ListHeaderAction,
   ListItem,
   Meta,
   Money,
@@ -206,15 +207,7 @@ function Inicio({ s, openOnramp }: AppProps) {
         </Pressable>
       </div>
 
-      <ListHeader
-        action={
-          <button type="button" onClick={() => s.setScreen("actividad")} className="m-meta h-8 text-[var(--m-on-surface)] underline underline-offset-4">
-            Ver todo
-          </button>
-        }
-      >
-        Movimientos
-      </ListHeader>
+      <ListHeader action={<ListHeaderAction onClick={() => s.setScreen("actividad")}>Ver todo</ListHeaderAction>}>Movimientos</ListHeader>
       <ActivityList limit={4} onEmpty={() => start()} />
     </div>
   );
@@ -410,6 +403,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
             {head && <Meta className="px-4 pt-3 pb-1">{g}</Meta>}
             {e.kind === "send" ? (
               <ListItem
+                divider
                 href={e.row.url}
                 leading={<Avatar name={e.contact?.name ?? "Envío"}>{e.contact ? undefined : <ArrowUpRight className="size-5" />}</Avatar>}
                 headline={`Envío a ${e.contact?.name ?? shortAddr(e.row.to)}`}
@@ -419,6 +413,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
               />
             ) : (
               <ListItem
+                divider
                 href={e.order.receipt?.explorerUrl}
                 leading={<BrandTile id={e.order.provider === "telcel" ? "telcel" : "cfe"} />}
                 headline={e.order.provider === "telcel" ? "Tiempo Aire Telcel" : "Luz CFE"}
@@ -487,7 +482,7 @@ function Perfil({ openOnramp }: AppProps) {
           </button>
         </div>
       </div>
-      <div className="border-t border-[var(--m-outline-variant)]">
+      <div className="relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-[var(--m-outline-variant)]">
         <ListItem
           divider
           leading={
@@ -604,7 +599,7 @@ function Enviar({ s }: AppProps) {
       </div>
 
       <BottomSheet open={pick} onClose={() => setPick(false)} title="¿A quién?" sub="Contactos demo · wallets reales de testnet">
-        <div className="border-t border-[var(--m-outline-variant)]">
+        <div className="relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-[var(--m-outline-variant)]">
           {contacts.map((c) => (
             <ListItem
               key={c.id}

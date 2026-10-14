@@ -22,6 +22,8 @@ export {
   IconButton,
   LinearProgress,
   ListHeader,
+  ListHeaderAction,
+  DIVIDER,
   ListItem,
   Meta,
   Money,

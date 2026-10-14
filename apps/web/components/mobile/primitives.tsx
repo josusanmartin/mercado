@@ -447,6 +447,9 @@ export function Avatar({ name, size = 40, className, children }: { name: string;
   );
 }
 
+/** Row hairline, inset to the content margins (as in the editorial phones' BankRow lists). */
+export const DIVIDER = "relative after:pointer-events-none after:absolute after:inset-x-4 after:bottom-0 after:h-px after:bg-[var(--m-outline-variant)]";
+
 /** Bank-style row: 64dp, round leading, title + subtitle, amount right-aligned. Hairline optional. */
 export function ListItem({
   leading,
@@ -489,7 +492,7 @@ export function ListItem({
       )}
     </>
   );
-  const cls = cn("flex w-full items-center gap-3.5 px-4", supporting ? "min-h-16 py-2" : "min-h-14 py-1", divider && "border-b border-[var(--m-outline-variant)]", className);
+  const cls = cn("flex w-full items-center gap-3.5 px-4", supporting ? "min-h-16 py-2" : "min-h-14 py-1", divider && DIVIDER, className);
   if (href)
     return (
       <a href={href} target="_blank" rel="noreferrer" className={cn("m-press", cls)} onPointerDown={(e) => ripple(e)}>
@@ -505,13 +508,27 @@ export function ListItem({
   return <div className={cls}>{body}</div>;
 }
 
-/** Section header: tiny uppercase meta + optional action ("MOVIMIENTOS · VER TODO"). */
+/**
+ * Section header: tiny uppercase meta + optional action ("MOVIMIENTOS · Ver todo") over an ink hairline,
+ * like the editorial SectionHead in Crédito/Invest, so all four phones head their sections alike.
+ */
 export function ListHeader({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex min-h-11 items-end justify-between px-4 pt-4 pb-1">
-      <p className="m-meta text-[var(--m-on-surface)]">{children}</p>
-      {action}
+    <div className="px-4 pt-5">
+      <div className="flex min-h-10 items-end justify-between gap-3 border-b border-[var(--m-on-surface)] pb-2">
+        <p className="m-meta text-[var(--m-on-surface)]">{children}</p>
+        {action}
+      </div>
     </div>
+  );
+}
+
+/** The section header's action link ("Ver todo"), as in the editorial phones. */
+export function ListHeaderAction({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="m-tap -my-2 h-10 text-[13px] font-semibold text-[var(--m-on-surface)]">
+      {children}
+    </button>
   );
 }
 

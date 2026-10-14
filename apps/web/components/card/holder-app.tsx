@@ -24,6 +24,8 @@ import {
   Button,
   Display,
   ListHeader,
+  ListHeaderAction,
+  DIVIDER,
   ListItem,
   LinearProgress,
   Meta,
@@ -147,8 +149,8 @@ export function HolderApp({
                 </section>
 
                 <ListHeader>Controles</ListHeader>
-                <div className="border-t border-[var(--m-outline-variant)]">
-                  <div className="flex min-h-16 items-center gap-3.5 border-b border-[var(--m-outline-variant)] px-4">
+                <div>
+                  <div className={`flex min-h-16 items-center gap-3.5 px-4 ${DIVIDER}`}>
                     <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)]">
                       <Snowflake className="size-5" strokeWidth={1.75} />
                     </span>
@@ -183,15 +185,7 @@ export function HolderApp({
                   </div>
                 )}
 
-                <ListHeader
-                  action={
-                    <button type="button" onClick={() => setTab("actividad")} className="m-meta h-8 text-[var(--m-on-surface)] underline underline-offset-4">
-                      Ver todo
-                    </button>
-                  }
-                >
-                  Movimientos
-                </ListHeader>
+                <ListHeader action={<ListHeaderAction onClick={() => setTab("actividad")}>Ver todo</ListHeaderAction>}>Movimientos</ListHeader>
                 <CardActivity holder={holder} merchantName={merchantName} limit={3} />
 
                 <LimitSheet
@@ -236,7 +230,7 @@ function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }
           <p className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]">{holder ? `${holder.slice(0, 6)}…${holder.slice(-4)}` : "—"}</p>
         </div>
       </div>
-      <div className="border-t border-[var(--m-outline-variant)]">
+      <div className="relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-[var(--m-outline-variant)]">
         <ListItem
           divider
           leading={<RowGlyph>▭</RowGlyph>}
@@ -318,9 +312,9 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
         <Skeleton className="h-10 w-full" />
       </div>
     );
-  if (rows.length === 0) return <Meta className="px-4 py-3">Aún no hay cobros con esta tarjeta</Meta>;
+  if (rows.length === 0) return <p className="px-4 py-5 text-[14px] text-[var(--m-on-surface-variant)]">Aún no hay cobros con esta tarjeta</p>;
   return (
-    <Stagger className="border-t border-[var(--m-outline-variant)]">
+    <Stagger>
       {rows.slice(0, limit).map((r) => {
         const refund = r.event === "CardRefunded";
         return (
