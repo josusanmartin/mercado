@@ -71,6 +71,7 @@ import {
   useH,
   LoadError,
   StaleLine,
+  useStuck,
   washStyle,
 } from "@/components/mobile/extra/editorial";
 import {
@@ -395,6 +396,8 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
   const H = useH();
   const bal = useBalances();
   const s = adv.score.data;
+  // scoring that hangs falls back to the "Sin conexión · Reintentar" state instead of shimmering forever
+  const scoreStuck = useStuck(!!platform && (adv.score.isPending || (!s && !adv.score.error)));
   const debt = adv.pool.debt;
   const owing = debt !== undefined && debt > 0n;
   const owed =
@@ -458,7 +461,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
               </div>
               <ScoreRingSlot />
             </>
-          ) : adv.score.isPending || (!s && !adv.score.error) ? (
+          ) : (adv.score.isPending || (!s && !adv.score.error)) && !scoreStuck ? (
             <>
               <BalanceHead label="Analizando tus ganancias…" />
               {/* same slots as the result (44 · 30 · ring 52), so nothing moves when the score lands */}
@@ -469,7 +472,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
               </div>
               <ScoreRingSlot busy />
             </>
-          ) : adv.score.error ? (
+          ) : adv.score.error || scoreStuck ? (
             <>
               <BalanceHead label="Disponible ahora" />
               <Display size={36} className="mt-3">
@@ -746,6 +749,11 @@ function Ganancias({ platform, data, adv }: Props) {
   const H = useH();
   const d = data.data;
   const s = adv.score.data;
+  // every skeleton resolves: earnings or the score failing / hanging → error + Reintentar
+  const dStuck = useStuck(!!platform && !d && !data.isError);
+  const sStuck = useStuck(!!platform && !s && !adv.score.error);
+  const dFailed = !d && (data.isError || dStuck);
+  const sFailed = !s && (!!adv.score.error || sStuck);
   const f = s?.features;
   const cv = f?.netEarningsCv;
   const why = f
@@ -792,6 +800,10 @@ function Ganancias({ platform, data, adv }: Props) {
               {"Conecta Uber, DiDi o Rappi en Inicio"}
             </Meta>
           </div>
+        ) : !d && dFailed ? (
+          <div className="px-5 pt-4">
+            <LoadError text="No pudimos cargar tus ganancias." onRetry={() => data.refetch()} busy={data.isFetching && !dStuck} />
+          </div>
         ) : !d ? (
           <div className="px-5 pt-6" aria-busy="true">
             <Skeleton className="h-12 w-48 rounded-[4px]" />
@@ -820,7 +832,7 @@ function Ganancias({ platform, data, adv }: Props) {
           </section>
         )}
       </AccentField>
-      {platform && !d && (
+      {platform && !d && !dFailed && (
         <div className="px-5 pt-6">
           <EarningsBars />
         </div>
@@ -846,7 +858,9 @@ function Ganancias({ platform, data, adv }: Props) {
           </div>
           <div className="px-5 pt-7">
             <SectionHead>Por qué esta línea</SectionHead>
-            {!s ? (
+            {!s && sFailed ? (
+              <LoadError text="No pudimos calcular tu línea." onRetry={adv.check} busy={adv.score.isPending && !sStuck} />
+            ) : !s ? (
               <div className="grid gap-2 pt-3">
                 <Skeleton className="h-4 w-3/4 rounded-[2px]" />
                 <Skeleton className="h-4 w-2/3 rounded-[2px]" />
@@ -903,9 +917,11 @@ function ActivityList({ limit }: { limit?: number }) {
   const { address } = useConnection();
   const now = useNow(60_000);
   const feed = useCreditHistory(address);
+  const stuck = useStuck(feed.isLoading);
   const rows = (feed.data ?? []).slice(0, limit ?? 30);
-  if (!feed.data && feed.isError)
-    return <LoadError onRetry={() => feed.refetch()} busy={feed.isFetching} />;
+  // when it timed out the hung request is still "fetching": keep Reintentar clickable (refetch cancels it)
+  if (!feed.data && (feed.isError || stuck))
+    return <LoadError onRetry={() => feed.refetch()} busy={feed.isFetching && !stuck} />;
   if (feed.isLoading)
     return (
       <div className="grid gap-3 pt-3" aria-busy="true">

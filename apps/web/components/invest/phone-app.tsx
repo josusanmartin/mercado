@@ -39,6 +39,7 @@ import {
   useH,
   LoadError,
   StaleLine,
+  useStuck,
   dayLabel,
   washStyle,
 } from "@/components/mobile/extra/editorial";
@@ -270,6 +271,7 @@ function Allocation({ r, rate }: { r: ReturnType<typeof useReturns>; rate?: numb
  */
 function ContributionChart({ product }: { product: Product }) {
   const h = useInvestHistory();
+  const stuck = useStuck(!h.data && !h.isError);
   const now = useNow(60_000);
   const unit = product === "acciones" ? "mIDX" : PRODUCT[product].unit;
   const title = product === "acciones" ? "mIDX comprados − vendidos" : `Aportes netos · ${unit}`;
@@ -291,7 +293,7 @@ function ContributionChart({ product }: { product: Product }) {
   const first = n ? dayLabel(pts[0].t, now) : undefined;
   const series = n >= 2 ? [...pts, { t: Math.max(now ?? 0, pts.at(-1)!.t), v: pts.at(-1)!.v }] : [];
   const status = !h.data
-    ? h.isError
+    ? h.isError || stuck
       ? "Historial no disponible"
       : "Cargando historial…"
     : n === 0
@@ -630,11 +632,14 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   const { address } = useConnection();
   const h = useInvestHistory();
   const now = useNow(60_000);
+  // a read that hangs or keeps retrying ends in the error state (Reintentar), never an endless shimmer
+  const stuck = useStuck(!!address && !h.data && !h.isError);
   // T-bills are gone from the product (legacy trades are hidden); Stocks trades arrive as product "acciones".
   const all: Row[] = (h.data?.rows ?? []).flatMap((r) => (r.product === "tbills" ? [] : [{ ...r, product: r.product }]));
   const rows = all.filter((r) => !product || r.product === product).slice(0, limit ?? 30);
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
-  if (!h.data && h.isError) return <LoadError onRetry={() => h.refetch()} busy={h.isFetching} />;
+  // when it timed out the hung request is still "fetching": keep Reintentar clickable (refetch cancels it)
+  if (!h.data && (h.isError || stuck)) return <LoadError onRetry={() => h.refetch()} busy={h.isFetching && !stuck} />;
   if (!h.data)
     return (
       <div className="grid gap-3 pt-3" aria-busy="true">

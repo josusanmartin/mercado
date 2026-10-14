@@ -419,6 +419,21 @@ export function useH() {
   return <T,>(x: T): T | undefined => (present ? undefined : x);
 }
 
+/**
+ * True once `loading` has lasted longer than `ms`: a skeleton must never shimmer forever (lead 09:24), so a read
+ * that hangs (or keeps retrying) falls back to the error state with Reintentar. Resets when loading ends.
+ */
+export function useStuck(loading: boolean, ms = 5_000) {
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    setStuck(false);
+    if (!loading) return;
+    const t = setTimeout(() => setStuck(true), ms);
+    return () => clearTimeout(t);
+  }, [loading, ms]);
+  return loading && stuck;
+}
+
 /** A list that couldn't load at all: say so and offer a retry (never an endless skeleton). */
 export function LoadError({ text = "No pudimos cargar tus movimientos.", onRetry, busy }: { text?: string; onRetry: () => void; busy?: boolean }) {
   return (
