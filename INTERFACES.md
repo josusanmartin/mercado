@@ -5,14 +5,14 @@ This is the contract between the four workstreams. **Change it only by posting t
 ## Conventions
 
 - Chain: Tempo Moderato testnet, chain id **42431**. RPC, explorer, and faucet details: the `contracts` agent confirms them and records them in `packages/shared/src/chain.ts`.
-- Token amounts: TIP-20, **6 decimals** for both dOUSD and xMXN. Always `uint256` / `bigint` base units in code; format only at the UI edge.
+- Token amounts: TIP-20, **6 decimals** for both OUSD and xMXN. Always `uint256` / `bigint` base units in code; format only at the UI edge.
 - FX: `mxnPerUsd` uses **8 decimals** (20.00 MXN/USD = `2_000_000_000`). `updatedAt` is unix seconds.
 - Ratios and fees are in **basis points** (`15000` = 150%).
-- Collateral token: a labeled test token. Name **"Demo OUSD (testnet, not Open USD)"**, symbol **`dOUSD`**. Never call it issuer-backed. If native Open USD turns out to be reachable on Moderato, raise it in the channel before switching.
+- Collateral token: **Tempo's testnet OpenUSD (`OUSD`)** at `0x20c0000000000000000000006a37da5c996874be` (6dp, currency USD; faucet-funded via `tempo_fundAddress`). UI label: **"Testnet OUSD (Tempo faucet, no real value)"**. Never say it's issuer-backed or redeemable. The vault, desk and pool take the collateral address as a constructor param; our own `dOUSD` test token is a fallback only if the faucet token misbehaves.
 - Debt token: **xMXN**, name "Mercado Synthetic Peso (testnet)", TIP-20 created via Tempo `TIP20Factory`, currency "MXN" if the factory accepts it.
 - Deployed addresses go in `packages/shared/src/deployments/42431.json` (written by `packages/contracts/script/Deploy.s.sol` + export script):
   ```json
-  { "chainId": 42431, "dOUSD": "0x…", "xMXN": "0x…", "factory": "0x…", "oracle": "0x…",
+  { "chainId": 42431, "ousd": "0x…", "xMXN": "0x…", "factory": "0x…", "oracle": "0x…",
     "vault": "0x…", "swapDesk": "0x…", "creditPool": "0x…", "attestationSigner": "0x…",
     "merchant": "0x…", "deployedAt": "ISO", "txs": { "label": "0xhash" } }
   ```
@@ -47,8 +47,8 @@ interface IFXOracleAdapter {
 }
 
 interface ICollateralVault {
-    struct Position { uint256 collateral; uint256 debt; } // dOUSD 6dp, xMXN 6dp
-    function depositCollateral(uint256 amount) external;           // transferFrom dOUSD
+    struct Position { uint256 collateral; uint256 debt; } // OUSD 6dp, xMXN 6dp
+    function depositCollateral(uint256 amount) external;           // transferFrom OUSD
     function mint(uint256 xmxnAmount) external;                    // requires ratio >= MIN_MINT after
     function repayAndBurn(uint256 xmxnAmount) external;            // pulls xMXN, burns it, reduces debt
     function withdrawCollateral(uint256 amount) external;          // requires ratio >= MIN_MINT after (or debt==0)
@@ -64,7 +64,7 @@ interface ICollateralVault {
 }
 
 interface ISwapDesk {
-    // ousdToXmxn=true: amountIn dOUSD → xMXN out. Uses oracle price minus spread; reverts if reserves insufficient.
+    // ousdToXmxn=true: amountIn OUSD → xMXN out. Uses oracle price minus spread; reverts if reserves insufficient.
     function quote(bool ousdToXmxn, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee);
     function swapOusdForXmxn(uint256 amountIn, uint256 minOut) external returns (uint256 amountOut);
     function swapXmxnForOusd(uint256 amountIn, uint256 minOut) external returns (uint256 amountOut);
