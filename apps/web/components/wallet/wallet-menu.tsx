@@ -50,6 +50,19 @@ export function WalletMenu() {
   );
 }
 
+/** The wallet chooser behind any trigger (used by the console ProfileBar). */
+export function WalletDialog({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+        <WalletChooser onDone={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function WalletChooser({ onDone }: { onDone: () => void }) {
   const { isConnected, address } = useConnection();
   const connectors = useConnectors();

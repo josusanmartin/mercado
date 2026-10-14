@@ -1,23 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import { Providers } from "@/components/wallet/providers";
+import { ThemeProvider, ThemeScript } from "@/components/console/theme";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({ variable: "--font-display-face", subsets: ["latin"], display: "swap" });
-const body = Instrument_Sans({ variable: "--font-body", subsets: ["latin"], display: "swap" });
+const body = Nunito_Sans({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Mercado · synthetic pesos on Tempo", template: "%s · Mercado" },
   description: "Testnet prototype: create xMXN synthetic pesos backed by testnet OUSD, then send them, borrow them and pay with them on Tempo.",
 };
 
-export const viewport: Viewport = { themeColor: "#10241c" };
+export const viewport: Viewport = { themeColor: "#ebebeb" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
+    <html lang="en" className={`${body.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className="min-h-full">
-        <Providers>{children}</Providers>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

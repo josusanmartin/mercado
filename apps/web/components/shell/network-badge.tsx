@@ -13,19 +13,19 @@ export function NetworkBadge({ className }: { className?: string }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span
+          tabIndex={0}
           className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium tabular",
-            wrong ? "border-destructive/40 bg-destructive/5 text-destructive" : "bg-card",
+            "bg-card shadow-tile inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm tabular",
+            wrong && "text-destructive",
             className,
           )}
         >
           <span className={cn("size-2 rounded-full", wrong ? "bg-destructive" : live ? "bg-success" : "bg-muted-foreground/40")} />
-          {wrong ? "Wrong network" : "Tempo Moderato"}
-          <span className="text-muted-foreground">{TEMPO_MODERATO_CHAIN_ID}</span>
+          {wrong ? "Wrong network" : `Moderato ${TEMPO_MODERATO_CHAIN_ID}`}
         </span>
       </TooltipTrigger>
       <TooltipContent>
-        {live ? `Testnet, block ${block.data?.toLocaleString("en-US")}` : block.isError ? "RPC unreachable" : "Connecting to Moderato…"}
+        {live ? `Tempo testnet, block ${block.data?.toLocaleString("en-US")}` : block.isError ? "RPC unreachable" : "Connecting to Tempo Moderato…"}
       </TooltipContent>
     </Tooltip>
   );

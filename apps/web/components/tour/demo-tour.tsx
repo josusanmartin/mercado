@@ -182,7 +182,7 @@ export function TourPanel() {
   return (
     <aside
       aria-label="Demo Tour"
-      className="bg-tinta text-papel fixed inset-x-3 bottom-3 z-40 rounded-xl p-4 shadow-2xl sm:right-5 sm:bottom-5 sm:left-auto sm:w-[25rem]"
+      className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-16 z-40 rounded-[14px] p-5 shadow-[0_8px_30px_rgb(0_0_0/0.18)] duration-150 sm:right-8 sm:bottom-20 sm:left-auto sm:w-[26rem]"
     >
       <div className="flex items-start gap-3">
         <ol className="mt-1 flex gap-1" aria-label="Tour progress">
@@ -195,27 +195,26 @@ export function TourPanel() {
                 disabled={going || busy}
                 onClick={() => go(i)}
                 className={cn(
-                  "block h-1.5 w-5 rounded-full transition-colors",
-                  i < index ? "bg-papel/70" : i === index ? "bg-brand" : "bg-papel/20",
+                  "block h-2 w-6 rounded-full transition-colors",
+                  i < index ? "bg-foreground/70" : i === index ? "bg-select" : "bg-foreground/15",
                 )}
               />
             </li>
           ))}
         </ol>
-        <button type="button" onClick={stop} className="text-papel/60 hover:text-papel ml-auto" aria-label="Close tour">
+        <button type="button" onClick={stop} className="text-muted-foreground hover:text-foreground ml-auto rounded-full" aria-label="Close tour">
           <X className="size-4" />
         </button>
       </div>
-      <p className="text-papel/60 mt-3 text-xs">
+      <p className="text-muted-foreground mt-3 text-sm">
         Step {index + 1} of {TOUR.length} · as {p.name} ({p.role})
       </p>
-      <h2 className="font-display mt-0.5 text-lg font-semibold">{step.title}</h2>
-      <p className="text-papel/85 mt-1 text-sm text-pretty">{step.doThis}</p>
+      <h2 className="mt-0.5 text-xl font-semibold">{step.title}</h2>
+      <p className="mt-1 text-[15px] text-pretty">{step.doThis}</p>
       <div className="mt-4 flex items-center gap-2">
         <Button
           size="sm"
           variant="ghost"
-          className="text-papel hover:bg-papel/10 hover:text-papel"
           disabled={index === 0 || going || busy}
           onClick={() => go(index - 1)}
         >

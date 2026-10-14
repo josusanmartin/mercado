@@ -1,45 +1,65 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
-  Mercado palette — taken from Mexican banknote printing rather than a SaaS kit:
-  papel (cool security paper), tinta (green-black intaglio ink), jade (the 200-peso
-  green, primary actions), rosa mexicano (brand mark + guilloche, used sparingly),
-  maíz (amber: mock/simulated labels and warnings), grana (cochineal red: danger).
+  Console-menu language (crew/DESIGN-SWITCH.md): a flat "basic white" and "basic black" theme,
+  one accent (the cyan selection ring), status colors only in tiny dots and badges.
 */
 :root {
-  --papel: #f2f4f0;
-  --tinta: #10241c;
-  --jade: #0d6a4e;
-  --rosa: #c8175f;
-  --maiz: #b7791f;
-  --grana: #b4232a;
+  --page: #ebebeb;
+  --tile: #ffffff;
+  --ink: #2d2d2d;
+  --ink-2: #6b6b6b;
+  --line: #d6d6d6;
+  --well: #f4f4f4;
+  --accent: #00c3e3;
+  --accent-dim: rgb(0 195 227 / 0.55);
+  --shadow: 0 2px 6px rgb(0 0 0 / 0.08);
 
-  --background: var(--papel);
-  --foreground: var(--tinta);
-  --card: #fbfcfa;
-  --card-foreground: var(--tinta);
-  --popover: #fbfcfa;
-  --popover-foreground: var(--tinta);
-  --primary: var(--jade);
-  --primary-foreground: #f4fbf7;
-  --secondary: #e4ebe5;
-  --secondary-foreground: var(--tinta);
-  --muted: #e6ebe6;
-  --muted-foreground: #56685f;
-  --accent: #e3ece6;
-  --accent-foreground: var(--tinta);
-  --destructive: var(--grana);
-  --border: #d5ddd6;
-  --input: #c9d3cb;
-  --ring: var(--jade);
-  --radius: 0.625rem;
+  --background: var(--page);
+  --foreground: var(--ink);
+  --card: var(--tile);
+  --card-foreground: var(--ink);
+  --popover: var(--tile);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--tile);
+  --secondary: #e2e2e2;
+  --secondary-foreground: var(--ink);
+  --muted: var(--well);
+  --muted-foreground: var(--ink-2);
+  --accent-bg: #f0f0f0;
+  --destructive: #d33a2c;
+  --border: var(--line);
+  --input: #cfcfcf;
+  --ring: var(--accent);
+  --radius: 14px;
 
-  --brand: var(--rosa);
-  --brand-foreground: #fff6fa;
-  --warning: var(--maiz);
-  --warning-ink: #7a4f0e;
-  --success: #12805c;
+  --brand: var(--ink);
+  --brand-foreground: var(--tile);
+  --warning: #c27c0e;
+  --warning-ink: #8a5600;
+  --success: #24965a;
+}
+
+.dark {
+  --page: #2d2d2d;
+  --tile: #3c3c3c;
+  --ink: #ffffff;
+  --ink-2: #b9b9b9;
+  --line: #4d4d4d;
+  --well: #353535;
+  --shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  --secondary: #4a4a4a;
+  --accent-bg: #474747;
+  --input: #595959;
+  --destructive: #ff6b5e;
+  --warning: #f0b43c;
+  --warning-ink: #f6c766;
+  --success: #4fd08a;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -55,8 +75,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent-bg);
+  --color-accent-foreground: var(--ink);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -66,27 +86,66 @@
   --color-warning: var(--warning);
   --color-warning-ink: var(--warning-ink);
   --color-success: var(--success);
-  --color-tinta: var(--tinta);
-  --color-papel: var(--papel);
+  --color-select: var(--accent);
+  --color-page: var(--page);
+  --color-tile: var(--tile);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-well: var(--well);
+  /* legacy names from the first theme, kept so older classes still resolve */
+  --color-tinta: var(--ink);
+  --color-papel: var(--page);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: 18px;
+  --shadow-tile: var(--shadow);
 
-  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display-face), var(--font-body), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-body), ui-rounded, system-ui, sans-serif;
+  --font-display: var(--font-body), ui-rounded, system-ui, sans-serif;
+
+  --animate-ring-pulse: ring-pulse 1.2s ease-in-out infinite alternate;
+  @keyframes ring-pulse {
+    from {
+      outline-color: var(--accent);
+    }
+    to {
+      outline-color: var(--accent-dim);
+    }
+  }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    font-size: 16px;
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-feature-settings: "ss01", "cv11";
   }
-  /* Money is always tabular so columns of amounts line up. */
+  h1,
+  h2,
+  h3,
+  strong,
+  b {
+    font-weight: 600;
+  }
+  /* The one accent: a thick pulsing ring around whatever is selected. Follows the element's radius. */
+  :focus-visible,
+  [data-selected="true"] {
+    outline: 4px solid var(--accent);
+    outline-offset: 3px;
+    animation: var(--animate-ring-pulse);
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  [role="slider"]:focus-visible {
+    outline-offset: 2px;
+  }
   .tabular,
   [data-amount] {
     font-variant-numeric: tabular-nums;
@@ -96,7 +155,17 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
