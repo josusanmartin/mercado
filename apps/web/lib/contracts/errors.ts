@@ -1,6 +1,7 @@
 // Turns viem/wagmi errors into one readable sentence for the UI.
 import { BaseError, ContractFunctionRevertedError, UserRejectedRequestError, decodeErrorResult, type Hex } from "viem";
 import { allErrorsAbi } from "./abis";
+import { ADDR } from "./addresses";
 
 const pct = (bps: unknown) => `${(Number(bps) / 100).toFixed(2)}%`;
 const amt = (v: unknown) => (Number(v) / 1e6).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -43,18 +44,18 @@ const MESSAGES: Record<string, (args: readonly unknown[]) => string> = {
   InsufficientReserve: ([r]) => `The exchange only has ${amt(r)} OUSD in reserve.`,
   RedeemCapExceeded: ([, cap]) => `Redemptions are rate-limited (${amt(cap)} OUSD at once, refilling over 24h). Try a smaller amount or later.`,
   LiabilityCeiling: () => "The exchange has reached its issuance ceiling.",
-  // Mercado Card (Spanish first, for the phone + POS)
-  CardIsFrozen: () => "Tarjeta congelada. Descongélala para pagar.", // Spanish only (lead 07:12): phone + POS
-  OverDailyLimit: ([after, limit]) => `Supera tu límite diario · Over the daily limit (${amt(after)} of ${amt(limit)} xMXN; resets at midnight CDMX).`,
-  TapExpired: () => "Autorización vencida · The tap expired. Tap again to approve.",
-  TapReplayed: () => "Autorización ya usada · This tap was already used. Tap again.",
-  BadTapSignature: () => "Firma no válida · The cardholder's approval doesn't match this charge.",
-  NotMerchant: () => "Terminal no autorizada · This terminal isn't an approved Mercado demo merchant.",
-  NotHolder: () => "Solo el titular puede cambiar esta tarjeta · Only the cardholder can change this card.",
-  InvalidLimit: () => "Límite no válido · Enter a daily limit between 1 and 100,000 xMXN.",
-  RefundTooLarge: ([refundable]) => `Reembolso mayor al cobro · At most ${amt(refundable)} xMXN can be refunded.`,
-  NotChargeMerchant: () => "Only the merchant that made this charge can refund it.",
-  UnknownCard: () => "Tarjeta no encontrada · Card not found.",
+  // Mercado Card: Spanish only (lead 07:12), the holder reads these on the phone and at the POS
+  CardIsFrozen: () => "Tarjeta congelada. Descongélala para pagar.",
+  OverDailyLimit: ([after, limit]) => `Supera tu límite diario: ${amt(after)} de ${amt(limit)} xMXN. Se renueva a medianoche, hora CDMX.`,
+  TapExpired: () => "Autorización vencida. Toca de nuevo para aprobar.",
+  TapReplayed: () => "Esta autorización ya se usó. Toca de nuevo.",
+  BadTapSignature: () => "Firma no válida: la aprobación del titular no coincide con este cobro.",
+  NotMerchant: () => "Terminal no autorizada para cobrar con Mercado Card.",
+  NotHolder: () => "Solo el titular puede cambiar esta tarjeta.",
+  InvalidLimit: () => "Límite no válido: elige entre 1 y 100,000 xMXN.",
+  RefundTooLarge: ([refundable]) => `Reembolso mayor al cobro: puedes reembolsar hasta ${amt(refundable)} xMXN.`,
+  NotChargeMerchant: () => "Solo el comercio que hizo este cobro puede reembolsarlo.",
+  UnknownCard: () => "Tarjeta no encontrada.",
   // InvestDesk (Invest)
   InsufficientInventory: ([avail]) => `The T-bill desk only has ${amt(avail)} available right now.`,
   ExceedsBoughtBalance: ([bought]) => `The desk buys back only what you bought here (${amt(bought)} tTBILL).`,
@@ -67,6 +68,28 @@ const MESSAGES: Record<string, (args: readonly unknown[]) => string> = {
   ContractPaused: () => "The token is paused.",
   PolicyForbids: () => "The token's transfer policy blocks this transfer.",
 };
+
+/** Spanish for the shared errors when the failing call is a Mercado Card call (charge, freeze, limit…). */
+const MESSAGES_ES: Record<string, (args: readonly unknown[]) => string> = {
+  InsufficientBalance: ([bal, need]) => `Saldo insuficiente: tienes ${amt(bal)} xMXN y necesitas ${amt(need)}.`,
+  InsufficientAllowance: () => "Tu autorización de gasto es muy baja. Autoriza primero.",
+  ZeroAmount: () => "Ingresa un monto mayor a cero.",
+  Unauthorized: () => "Esta cuenta no está autorizada para esa acción.",
+  ContractPaused: () => "La tarjeta está en pausa por un momento. Intenta de nuevo.",
+  EnforcedPause: () => "La tarjeta está en pausa por un momento. Intenta de nuevo.",
+  PolicyForbids: () => "La política del token bloquea esta transferencia.",
+};
+
+/** The contract a failing call targeted (viem's ContractFunctionExecutionError carries it). */
+function failingContract(err: BaseError): string | undefined {
+  let to: string | undefined;
+  err.walk((e) => {
+    const a = (e as { contractAddress?: unknown }).contractAddress;
+    if (typeof a === "string") to = a.toLowerCase();
+    return false;
+  });
+  return to;
+}
 
 function findRevertData(err: BaseError): Hex | undefined {
   let data: Hex | undefined;
@@ -95,13 +118,19 @@ export function decodeRevert(error: unknown): { name: string; args: readonly unk
   }
 }
 
-/** One human sentence for any wallet/RPC/contract error. */
-export function readableError(error: unknown): string {
+/**
+ * One human sentence for any wallet/RPC/contract error. Card calls (or `lang: "es"`) read Spanish:
+ * the Card errors are always Spanish, and the shared token errors switch to Spanish for the cardholder.
+ */
+export function readableError(error: unknown, opts?: { lang?: "es" | "en" }): string {
   if (!error) return "";
   if (error instanceof BaseError) {
-    if (error.walk((e) => e instanceof UserRejectedRequestError)) return "You rejected the request in your wallet.";
+    const es = opts?.lang === "es" || (opts?.lang !== "en" && failingContract(error) === ADDR.card.toLowerCase());
+    if (error.walk((e) => e instanceof UserRejectedRequestError))
+      return es ? "Rechazaste la solicitud en tu billetera." : "You rejected the request in your wallet.";
     const decoded = decodeRevert(error);
-    if (decoded) return MESSAGES[decoded.name]?.(decoded.args) ?? `Transaction reverted: ${decoded.name}.`;
+    if (decoded)
+      return (es ? MESSAGES_ES[decoded.name] : undefined)?.(decoded.args) ?? MESSAGES[decoded.name]?.(decoded.args) ?? `Transaction reverted: ${decoded.name}.`;
     if (/FeeTokenNotUsd|fee token/i.test(error.message))
       return "Fees must be paid in a USD stablecoin (e.g. AlphaUSD). Check the wallet's fee token.";
     return error.shortMessage || error.message;
