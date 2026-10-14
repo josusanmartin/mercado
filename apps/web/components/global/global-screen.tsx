@@ -41,7 +41,7 @@ import { personaById, type PersonaId } from "@/components/wallet/personas";
 import { usePersona } from "@/components/wallet/use-persona";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { useDemoMode } from "@/components/console/demo-mode";
-import { SuccessCheck, TickerText } from "@/lib/motion";
+import { FlowPath, Pulse, SuccessCheck, TickerText } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ADDR,
@@ -506,18 +506,96 @@ function PaySupplier() {
 
       <Panel
         title="Quote details"
-        description="Live from the exchange at this size. For a quote signed by Mercado (cotización indicativa firmada), use the Partner API."
+        description="Live from the exchange at this size."
       >
-        <div className="min-h-[22rem]">
-          {quote.isLoading && (
-            <p className="text-muted-foreground py-4 text-[15px]">Pricing…</p>
-          )}
-          {quote.error && (
-            <p className="text-destructive py-4 text-[15px]">
+        {/* v6 "show, don't tell": the money flow + 3 numbers; every quote row stays one click away */}
+        <div className="grid min-h-[22rem] content-start gap-6 pt-1">
+          <FlowPath
+            active={m.tx.isBusy}
+            label="Money flow: you pay OUSD, the exchange converts, the supplier receives xMXN"
+            nodes={[
+              {
+                label: "You pay",
+                value: <TickerText text={fmtAmount(amountIn)} />,
+                sub: "OUSD",
+              },
+              {
+                label: q?.source === "v1-swapdesk" ? "Swap desk" : "Exchange",
+                value: q ? (
+                  <TickerText
+                    text={q.rate.toLocaleString("en-US", {
+                      maximumFractionDigits: 4,
+                    })}
+                  />
+                ) : (
+                  "…"
+                ),
+                sub: "xMXN per OUSD",
+              },
+              {
+                label: "Supplier gets",
+                value: q ? (
+                  <TickerText text={fmtAmount(BigInt(q.amountOut))} />
+                ) : (
+                  "—"
+                ),
+                sub: "xMXN",
+              },
+            ]}
+          />
+          {quote.error ? (
+            <p className="text-destructive text-[15px]">
               {(quote.error as Error).message}
             </p>
+          ) : (
+            <dl className="grid grid-cols-3 gap-3 border-t pt-4">
+              {(
+                [
+                  [
+                    "Cost vs mid",
+                    q ? `${(q.effectiveSpreadBps / 100).toFixed(2)}%` : "…",
+                    true,
+                  ],
+                  [
+                    "Minimum received",
+                    q ? `${fmtAmount(BigInt(q.minOutSuggested))}` : "…",
+                    true,
+                  ],
+                  // a countdown ticks every second: never pulsed (review V6 #2, semantic motion budget)
+                  [
+                    "Expires in",
+                    q
+                      ? secondsLeft === 0
+                        ? "refreshing"
+                        : `${secondsLeft ?? "…"}s`
+                      : "…",
+                    false,
+                  ],
+                ] as const
+              ).map(([k, v, pulse]) => (
+                <div key={k} className="grid min-w-0 gap-0.5">
+                  <dt className="meta text-muted-foreground">{k}</dt>
+                  <dd className="tabular text-[17px] font-semibold">
+                    {pulse ? <Pulse value={v}>{v}</Pulse> : v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           )}
-          {q && <QuoteRows q={q} secondsLeft={secondsLeft} />}
+          {q && (
+            <details className="text-[13px]">
+              <summary className="text-muted-foreground hover:text-foreground cursor-pointer">
+                How it works
+              </summary>
+              <div className="pt-2">
+                <QuoteRows q={q} secondsLeft={secondsLeft} />
+                <p className="text-muted-foreground pt-3">
+                  For a quote signed by Mercado (cotización indicativa firmada),
+                  use the Partner API.
+                </p>
+              </div>
+            </details>
+          )}
         </div>
       </Panel>
     </div>
