@@ -11,7 +11,7 @@ The spine of the demo is **one xMXN flow**: the lender funds the pool, the drive
 - [ ] Pool has liquidity and the driver has no open debt. Check with `npx tsx scripts/demo-journey.ts --steps J0`.
 - [ ] Explorer tab open: https://explore.testnet.tempo.xyz
 - [ ] Browser at ~1280px wide, zoom 110%. Optionally run a second pass on a phone-width window to show mobile.
-- [ ] Fallback: if the live chain misbehaves, play the explorer links from `scripts/out/last-run.json`.
+- [ ] Fallback: if the live chain misbehaves, play the explorer links from `scripts/evidence/last-run.json`.
 
 ## 0:00 Hook (Home)
 

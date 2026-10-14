@@ -10,8 +10,8 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
 | # | Step | Owner | Status | Evidence |
 |---|---|---|---|---|
-| J1 | LP deposits testnet OUSD into CollateralVault | contracts / qa | ⬜ | |
-| J2 | Vault mints xMXN to LP (6dp TIP-20) | contracts / qa | ⬜ | |
+| J1 | LP deposits testnet OUSD into CollateralVault | contracts / qa | ✅ (provisional deploy) | `demo-journey J1`: [deposit 1,000 OUSD](https://explore.testnet.tempo.xyz/tx/0x2cc7cc49a6da2ac1bdba37203719110d0f816d03eb8f1014121709c7d2d03da0) |
+| J2 | Vault mints xMXN to LP (6dp TIP-20) | contracts / qa | ✅ (provisional deploy) | `demo-journey J2`: [mint 6,666.67 xMXN at 300%](https://explore.testnet.tempo.xyz/tx/0xa45a7ff6bc619cd3c95ed838a6f94f58a5818ec13df777e82d12790424040d9e); totalSupply grew by exactly the debt |
 | J3 | Sender swaps OUSD→xMXN on SwapDesk and transfers xMXN to Recipient | contracts / qa | ⬜ | |
 | J4 | Driver loads Demo Uber Data, gets a signed, expiring attestation, borrows from CreditPool | api / contracts / qa | ⬜ | |
 | J5 | Driver pays Telcel airtime via a real MPP 402 flow in xMXN; response is SIMULATED and carries a receipt | api / qa | ⬜ | |
@@ -22,7 +22,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | # | Check | Owner | Status | Evidence |
 |---|---|---|---|---|
 | 1 | Contract txs are visible on the Tempo testnet explorer, not only in a simulated UI | contracts / qa | ⬜ | |
-| 2 | Only the vault may mint/burn xMXN; deposits can't mint above the configured ratio (150%) | contracts | ⬜ | |
+| 2 | Only the vault may mint/burn xMXN; deposits can't mint above the configured ratio (150%) | contracts | 🟡 | On-chain (journey J2, sim): over-max mint → `RatioTooLow`; direct `xMXN.mint` by LP → TIP-20 `Unauthorized`. Foundry `Vault.t.sol` 18/18 pass (verified by review) |
 | 3 | Collateral withdrawal can't make a vault unhealthy | contracts | ⬜ | |
 | 4 | Stale / zero / negative / outlier prices can't be used for minting or liquidation | contracts | ⬜ | |
 | 5 | FX stress: peso appreciation lowers collateralization and liquidation is enforceable | contracts | ⬜ | |

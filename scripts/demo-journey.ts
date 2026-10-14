@@ -227,7 +227,12 @@ async function mintXmxnFor(d: Deployments, acct: PrivateKeyAccount, label: strin
   const collateral = (amount * 3n * 10n ** 8n) / px + 1n
   await ensureOusd(d, acct.address, collateral, label)
   await approveIfNeeded(acct, d.ousd, d.vault, collateral, `OUSD → vault (${label})`)
-  await send(`${label} depositCollateral ${fmt(collateral)} OUSD`, acct, { address: d.vault, abi: vaultAbi, functionName: 'depositCollateral', args: [collateral] })
+  await send(`${label} depositCollateral ${fmt(collateral)} OUSD`, acct, {
+    address: d.vault,
+    abi: vaultAbi,
+    functionName: 'depositCollateral',
+    args: [collateral],
+  })
   await send(`${label} mint ${fmt(amount)} xMXN`, acct, { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [amount] })
 }
 
@@ -249,36 +254,51 @@ async function healthCheck(d: Deployments) {
   } else ok(`health: oracle fresh (${age}s old, max ${maxAge}s)`)
 
   // swap desk inventory
-  const [rO, rX] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'reserves' })
-  if (rX < FLOOR.deskXmxn || rO < FLOOR.deskOusd) {
-    const addX = rX < FLOOR.deskXmxn ? FLOOR.deskXmxn * 2n - rX : 0n
-    const addO = rO < FLOOR.deskOusd ? FLOOR.deskOusd * 2n - rO : 0n
-    if (HEAL) {
-      warn(`desk low (${fmt(rO)} OUSD / ${fmt(rX)} xMXN); deployer reseeds +${fmt(addO)} OUSD / +${fmt(addX)} xMXN from its own vault position`)
-      const dep = account('DEPLOYER')
-      if (addX > 0n) await mintXmxnFor(d, dep, 'deployer', addX)
-      if (addO > 0n) await ensureOusd(d, dep.address, addO, 'deployer')
-      if (addO > 0n) await approveIfNeeded(dep, d.ousd, d.swapDesk, addO, 'OUSD → desk')
-      if (addX > 0n) await approveIfNeeded(dep, d.xMXN, d.swapDesk, addX, 'xMXN → desk')
-      await send('desk seed', dep, { address: d.swapDesk, abi: deskAbi, functionName: 'seed', args: [addO, addX] })
-    } else problems.push(`desk reserves low: ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
-  } else ok(`health: desk reserves ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
+  if (ZERO.test(d.swapDesk ?? '0x' + '0'.repeat(40))) warn('health: swap desk not deployed yet')
+  else {
+    const [rO, rX] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'reserves' })
+    if (rX < FLOOR.deskXmxn || rO < FLOOR.deskOusd) {
+      const addX = rX < FLOOR.deskXmxn ? FLOOR.deskXmxn * 2n - rX : 0n
+      const addO = rO < FLOOR.deskOusd ? FLOOR.deskOusd * 2n - rO : 0n
+      if (HEAL) {
+        warn(`desk low (${fmt(rO)} OUSD / ${fmt(rX)} xMXN); deployer reseeds +${fmt(addO)} OUSD / +${fmt(addX)} xMXN from its own vault position`)
+        const dep = account('DEPLOYER')
+        if (addX > 0n) await mintXmxnFor(d, dep, 'deployer', addX)
+        if (addO > 0n) await ensureOusd(d, dep.address, addO, 'deployer')
+        if (addO > 0n) await approveIfNeeded(dep, d.ousd, d.swapDesk, addO, 'OUSD → desk')
+        if (addX > 0n) await approveIfNeeded(dep, d.xMXN, d.swapDesk, addX, 'xMXN → desk')
+        await send('desk seed', dep, { address: d.swapDesk, abi: deskAbi, functionName: 'seed', args: [addO, addX] })
+      } else problems.push(`desk reserves low: ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
+    } else ok(`health: desk reserves ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
+  }
 
   // credit pool cash
-  const liq = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'availableLiquidity' })
-  if (liq < FLOOR.poolLiquidity) {
-    const add = FLOOR.poolLiquidity * 2n - liq
-    if (HEAL) {
-      warn(`pool liquidity ${fmt(liq)} xMXN is low; LENDER mints ${fmt(add)} xMXN from its own vault position and supplies it`)
-      const lender = account('LENDER')
-      const have = await bal(d.xMXN, lender.address)
-      if (have < add) await mintXmxnFor(d, lender, 'lender', add - have)
-      await approveIfNeeded(lender, d.xMXN, d.creditPool, add, 'xMXN → pool')
-      await send(`lender supply ${fmt(add)} xMXN`, lender, { address: d.creditPool, abi: poolAbi, functionName: 'supply', args: [add] })
-    } else problems.push(`pool liquidity low: ${fmt(liq)} xMXN`)
-  } else ok(`health: pool liquidity ${fmt(liq)} xMXN`)
+  if (ZERO.test(d.creditPool ?? '0x' + '0'.repeat(40))) warn('health: credit pool not deployed yet')
+  else {
+    const liq = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'availableLiquidity' })
+    if (liq < FLOOR.poolLiquidity) {
+      const add = FLOOR.poolLiquidity * 2n - liq
+      if (HEAL) {
+        warn(`pool liquidity ${fmt(liq)} xMXN is low; LENDER mints ${fmt(add)} xMXN from its own vault position and supplies it`)
+        const lender = account('LENDER')
+        const have = await bal(d.xMXN, lender.address)
+        if (have < add) await mintXmxnFor(d, lender, 'lender', add - have)
+        await approveIfNeeded(lender, d.xMXN, d.creditPool, add, 'xMXN → pool')
+        await send(`lender supply ${fmt(add)} xMXN`, lender, { address: d.creditPool, abi: poolAbi, functionName: 'supply', args: [add] })
+      } else problems.push(`pool liquidity low: ${fmt(liq)} xMXN`)
+    } else ok(`health: pool liquidity ${fmt(liq)} xMXN`)
+  }
 
   if (problems.length) throw new Error(`health check failed: ${problems.join('; ')}`)
+}
+
+/** Thrown when a step can't run yet (e.g. contract not deployed). Recorded as SKIP, never as PASS. */
+class SkipStep extends Error {}
+
+const ZERO = /^0x0{40}$/i
+function requireDeployed(d: Deployments, ...keys: (keyof Deployments)[]) {
+  const missing = keys.filter((k) => typeof d[k] !== 'string' || ZERO.test(d[k] as string))
+  if (missing.length) throw new SkipStep(`not deployed yet: ${missing.join(', ')}`)
 }
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -298,6 +318,10 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert(id === 42431, `chain id ${id} != 42431`)
       ok(`connected to Tempo Moderato (chain ${id}) via ${RPC}`)
       for (const k of ['ousd', 'xMXN', 'oracle', 'vault', 'swapDesk', 'creditPool'] as const) {
+        if (!d[k] || ZERO.test(d[k])) {
+          warn(`${k.padEnd(10)} not deployed yet`)
+          continue
+        }
         const code = await pub.getCode({ address: d[k] })
         if (!code || code === '0x') warn(`${k} ${d[k]} has no code`)
         else log(`${k.padEnd(10)} ${d[k]}  ${C.dim}${EXPLORER}/address/${d[k]}${C.x}`)
@@ -313,11 +337,17 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     id: 'J1',
     title: 'LP deposits OUSD collateral into the vault',
     async run({ d }) {
+      requireDeployed(d, 'vault', 'ousd')
       const lp = account('LP')
       await ensureOusd(d, lp.address, AMT.lpDeposit, 'LP')
       const before = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'getPosition', args: [lp.address] })
       await approveIfNeeded(lp, d.ousd, d.vault, AMT.lpDeposit, 'OUSD → vault')
-      await send(`depositCollateral ${fmt(AMT.lpDeposit)} OUSD`, lp, { address: d.vault, abi: vaultAbi, functionName: 'depositCollateral', args: [AMT.lpDeposit] })
+      await send(`depositCollateral ${fmt(AMT.lpDeposit)} OUSD`, lp, {
+        address: d.vault,
+        abi: vaultAbi,
+        functionName: 'depositCollateral',
+        args: [AMT.lpDeposit],
+      })
       const after = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'getPosition', args: [lp.address] })
       assert(after.collateral - before.collateral === AMT.lpDeposit, 'position collateral increased by deposit')
       ok(`LP position: ${fmt(after.collateral)} OUSD collateral, ${fmt(after.debt)} xMXN debt`)
@@ -348,13 +378,18 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const over = (await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'maxMintable', args: [lp.address] })) + 1_000_000n
       await expectRevert('mint above the 150% limit', { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp }, ['RatioTooLow'])
       // only the vault may mint xMXN: a direct TIP-20 mint from the LP must revert
-      await expectRevert('direct xMXN.mint by a non-vault account', { address: d.xMXN, abi: erc20, functionName: 'mint', args: [lp.address, 1_000_000n], account: lp }, ['Unauthorized'])
+      await expectRevert(
+        'direct xMXN.mint by a non-vault account',
+        { address: d.xMXN, abi: erc20, functionName: 'mint', args: [lp.address, 1_000_000n], account: lp },
+        ['Unauthorized'],
+      )
     },
   },
   {
     id: 'J3',
     title: 'Sender swaps OUSD→xMXN on the SwapDesk and sends to Recipient',
     async run({ d }) {
+      requireDeployed(d, 'swapDesk')
       const sender = account('SENDER')
       const recipient = process.env.RECIPIENT_ADDRESS as Address
       await ensureOusd(d, sender.address, AMT.senderSwapIn, 'Sender')
@@ -389,6 +424,7 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     title: 'Driver: Demo Uber Data → signed attestation → borrow from CreditPool',
     async run(ctx) {
       const { d } = ctx
+      requireDeployed(d, 'creditPool')
       const driver = account('DRIVER')
       const demo = await api('/api/driver/demo?profile=steady')
       assert(demo.res.ok, `GET /api/driver/demo → ${demo.res.status} ${JSON.stringify(demo.body).slice(0, 200)}`)
@@ -418,7 +454,9 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       // negative checks before the real draw (simulation only)
       const sim = { address: d.creditPool, abi: poolAbi, functionName: 'borrow', account: driver } as const
       await expectRevert('tampered attestation (maxAmount +1)', { ...sim, args: [amount, maxAmount + 1n, ...borrowArgs.slice(2)] }, ['InvalidSigner'])
-      await expectRevert('expired attestation', { ...sim, args: [amount, maxAmount, BigInt(Math.floor(Date.now() / 1000) - 60), ...borrowArgs.slice(3)] }, ['AttestationExpired'])
+      await expectRevert('expired attestation', { ...sim, args: [amount, maxAmount, BigInt(Math.floor(Date.now() / 1000) - 60), ...borrowArgs.slice(3)] }, [
+        'AttestationExpired',
+      ])
       await expectRevert('borrow above the attested max', { ...sim, args: [maxAmount + 1n, ...borrowArgs.slice(1)] }, ['ExceedsAttestedMax', 'ExceedsUserCap'])
       await send(`borrow ${fmt(amount)} xMXN`, driver, { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: borrowArgs })
       const debt = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
@@ -431,94 +469,31 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       // negative check: replaying the same attestation must revert
       const used = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'nonceUsed', args: [driver.address, BigInt(att.nonce)] })
       assert(used, 'nonce marked used')
-      await expectRevert('replayed attestation', { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)], account: driver }, ['NonceAlreadyUsed'])
+      await expectRevert(
+        'replayed attestation',
+        { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)], account: driver },
+        ['NonceAlreadyUsed'],
+      )
     },
   },
   {
     id: 'J5',
-    title: 'Driver pays Telcel airtime via MPP HTTP 402 (SIMULATED fulfillment)',
+    title: 'Driver pays Telcel airtime via MPP HTTP 402, in pull AND push mode (SIMULATED fulfillment)',
     async run({ d }) {
-      const driver = account('DRIVER')
-      const quote = await api('/api/bills/quote', {
-        method: 'POST',
-        body: JSON.stringify({ provider: 'telcel', phone: '5512345678', amountMxn: AMT.billMxn }),
-      })
-      assert(quote.res.ok, `POST /api/bills/quote → ${quote.res.status} ${JSON.stringify(quote.body).slice(0, 200)}`)
-      assert(quote.body.simulated === true, 'quote is labeled simulated')
-      ok(`quote ${quote.body.quoteId}: ${fmt(BigInt(quote.body.amount))} xMXN (token ${quote.body.token})`)
-      const idempotencyKey = `journey-${Date.now()}`
-      const body = JSON.stringify({ quoteId: quote.body.quoteId, idempotencyKey })
-
-      // 1) unpaid request must get a real 402 challenge
-      const unpaid = await fetch(`${API}/api/bills/pay`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
-      const challenge = unpaid.headers.get('www-authenticate')
-      assert(unpaid.status === 402, `unpaid /api/bills/pay → ${unpaid.status}, expected 402`)
-      assert(challenge && /payment/i.test(challenge), '402 carries a WWW-Authenticate: Payment challenge')
-      ok(`unpaid request → 402, challenge: ${challenge.slice(0, 90)}…`)
-      note(`402 challenge: ${challenge}`)
-
-      // 2) pay with the mppx client (402 → Tempo TIP-20 transfer → retry with credential)
-      const { Mppx, tempo } = await import('mppx/client')
-      const mppx = Mppx.create({
-        methods: [
-          tempo({
-            account: driver,
-            expectedChainId: 42431,
-            expectedRecipients: [d.merchant],
-            getClient: () => createWalletClient({ account: driver, chain, transport: http(RPC) }),
-          }),
-        ],
-        polyfill: false,
-      })
-      const merchantBefore = await bal(d.xMXN, d.merchant)
-      const paid = await mppx.fetch(`${API}/api/bills/pay`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
-      const order = await paid.json().catch(() => ({}))
-      assert(paid.ok, `paid /api/bills/pay → ${paid.status} ${JSON.stringify(order).slice(0, 300)}`)
-      log(`order ${order.orderId}: ${order.status}`)
-      assert(order.status === 'FULFILLED_SIMULATED', `order status ${order.status}`)
-      assert(order.fulfillment?.simulated === true && /SIMULATED/.test(order.fulfillment?.label ?? ''), 'fulfillment labeled SIMULATED')
-      const txHash = order.receipt?.txHash as Hash
-      assert(txHash, 'order carries receipt.txHash')
-      evidence[current].txs['MPP payment'] = txUrl(txHash)
-      ok(`MPP payment tx ${C.dim}${txUrl(txHash)}${C.x}`)
-      ok(`fulfillment ref ${order.fulfillment.reference}: "${order.fulfillment.label}"`)
-
-      // 3) the receipt must be a real on-chain xMXN transfer to the merchant for the quoted amount
-      const rcpt = await pub.getTransactionReceipt({ hash: txHash })
-      assert(rcpt.status === 'success', 'payment tx succeeded on-chain')
-      const transfers = rcpt.logs
-        .filter((l) => l.address.toLowerCase() === d.xMXN.toLowerCase())
-        .map((l) => {
-          try {
-            return decodeEventLog({ abi: erc20, ...l }) as any
-          } catch {
-            return undefined
-          }
-        })
-        .filter((e) => e?.eventName === 'Transfer' && e.args.to.toLowerCase() === d.merchant.toLowerCase())
-      const paidAmt = transfers.reduce((a, e) => a + (e.args.amount as bigint), 0n)
-      assert(paidAmt === BigInt(quote.body.amount), `on-chain xMXN to merchant ${paidAmt} == quoted ${quote.body.amount}`)
-      assert((await bal(d.xMXN, d.merchant)) - merchantBefore >= paidAmt, 'merchant balance increased')
-      ok(`on-chain: ${fmt(paidAmt)} xMXN driver → merchant ${d.merchant}`)
-
-      // 4) retry with the same idempotency key → same order, no second fulfillment
-      const retry = await mppx.fetch(`${API}/api/bills/pay`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
-      const again = await retry.json().catch(() => ({}))
-      assert(again.orderId === order.orderId, `retry returned order ${again.orderId}, expected ${order.orderId}`)
-      assert(again.fulfillment?.reference === order.fulfillment.reference, 'retry returned the same fulfillment reference')
-      const merchantAfterRetry = await bal(d.xMXN, d.merchant)
-      assert(merchantAfterRetry - merchantBefore === paidAmt, `retry must not charge again: merchant received ${merchantAfterRetry - merchantBefore}, expected ${paidAmt}`)
-      ok('retry with same idempotency key → same order + reference, not charged again')
-
-      const hist = await api(`/api/bills/orders/${order.orderId}`)
-      if (hist.res.ok) log(`order history: ${JSON.stringify(hist.body.history ?? hist.body.states ?? hist.body.status)}`)
-      else warn(`GET /api/bills/orders/${order.orderId} → ${hist.res.status}`)
+      // pull: client signs, server broadcasts (default for local keys / demo personas)
+      // push: client broadcasts, then retries with the tx hash (what Tempo Wallet / passkey wallets do)
+      requireDeployed(d, 'xMXN', 'merchant')
+      for (const mode of ['pull', 'push'] as const) {
+        log(`${C.b}— ${mode} mode —${C.x}`)
+        await payBillVia(d, account('DRIVER'), mode)
+      }
     },
   },
   {
     id: 'J6',
     title: 'Driver repays; lender sees repayment and realized fees',
     async run({ d }) {
+      requireDeployed(d, 'creditPool')
       const driver = account('DRIVER')
       const debt = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
       if (debt === 0n) return warn('driver has no outstanding debt; nothing to repay')
@@ -529,7 +504,12 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
         // (stands in for "next week's earnings"; there's no automatic Uber deduction)
         const short_ = debt - have
         warn(`driver holds ${fmt(have)} xMXN, owes ${fmt(debt)}; LP sends ${fmt(short_)} as a stand-in for next week's earnings`)
-        await send(`top-up ${fmt(short_)} xMXN LP → Driver`, account('LP'), { address: d.xMXN, abi: erc20, functionName: 'transfer', args: [driver.address, short_] })
+        await send(`top-up ${fmt(short_)} xMXN LP → Driver`, account('LP'), {
+          address: d.xMXN,
+          abi: erc20,
+          functionName: 'transfer',
+          args: [driver.address, short_],
+        })
       }
       await approveIfNeeded(driver, d.xMXN, d.creditPool, debt, 'xMXN → pool')
       await send(`repay ${fmt(debt)} xMXN`, driver, { address: d.creditPool, abi: poolAbi, functionName: 'repay', args: [debt] })
@@ -537,10 +517,14 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert(after === 0n, `driver debt after full repay is ${after}`)
       const stats = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'stats' })
       ok(`driver debt ${fmt(debt)} → 0`)
-      ok(`pool: lender claims ${fmt(stats[0])}, borrowed ${fmt(stats[1])}, outstanding ${fmt(statsBefore[2])} → ${fmt(stats[2])}, realized fees ${fmt(statsBefore[3])} → ${fmt(stats[3])} xMXN`)
+      ok(
+        `pool: lender claims ${fmt(stats[0])}, borrowed ${fmt(stats[1])}, outstanding ${fmt(statsBefore[2])} → ${fmt(stats[2])}, realized fees ${fmt(statsBefore[3])} → ${fmt(stats[3])} xMXN`,
+      )
       assert(stats[3] > statsBefore[3], 'realized fees increased after repayment')
       const lender = process.env.LENDER_ADDRESS as Address
-      ok(`lender claim: ${fmt(await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'lenderBalance', args: [lender] }))} xMXN (principal + realized fee share; no APY promised)`)
+      ok(
+        `lender claim: ${fmt(await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'lenderBalance', args: [lender] }))} xMXN (principal + realized fee share; no APY promised)`,
+      )
     },
   },
   {
@@ -548,7 +532,8 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     title: 'FX stress (runs last): peso appreciation makes a position liquidatable; everything is restored',
     async run({ d }) {
       const script = join(ROOT, 'packages/contracts/script/StressDemo.s.sol')
-      if (!existsSync(script)) return warn('packages/contracts/script/StressDemo.s.sol not there yet; skipping (pending @contracts)')
+      if (!existsSync(script)) throw new SkipStep('packages/contracts/script/StressDemo.s.sol not there yet (pending @contracts)')
+      requireDeployed(d, 'vault', 'oracle', 'swapDesk')
       const [pxBefore] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'peek' })
       const fromBlock = await pub.getBlockNumber()
       // ~/.local/bin/forge is an unrelated CLI on this box; use Foundry's explicitly
@@ -562,22 +547,27 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
         timeout: 300_000,
       })
       if (r.status !== 0) throw new Error(`StressDemo.s.sol exited ${r.status}: ${(r.stderr || r.stdout || '').trim().split('\n').slice(-3).join(' | ')}`)
+      // the script must print which accounts it used, so we check THAT liquidation, not any in the window
+      const borrower = r.stdout.match(/STRESS_BORROWER=(0x[0-9a-fA-F]{40})/)?.[1]
+      const liquidator = r.stdout.match(/STRESS_LIQUIDATOR=(0x[0-9a-fA-F]{40})/)?.[1]
+      assert(borrower && liquidator, 'StressDemo output includes STRESS_BORROWER=0x… and STRESS_LIQUIDATOR=0x…')
       const liqLogs = await pub.getContractEvents({
         address: d.vault,
         abi: parseAbi(['event Liquidated(address indexed user, address indexed liquidator, uint256 debtCovered, uint256 collateralSeized)']),
         eventName: 'Liquidated',
         fromBlock,
       })
-      assert(liqLogs.length > 0, 'a Liquidated event was emitted during the stress run')
-      for (const l of liqLogs) {
+      const mine = liqLogs.filter((l) => l.args.user?.toLowerCase() === borrower.toLowerCase() && l.args.liquidator?.toLowerCase() === liquidator.toLowerCase())
+      assert(mine.length > 0, `Liquidated(user=${borrower}, liquidator=${liquidator}) emitted during the stress run`)
+      for (const l of mine) {
         evidence[current].txs[`liquidation ${l.args.user?.slice(0, 8)}`] = txUrl(l.transactionHash!)
-        ok(`liquidated ${l.args.user}: covered ${fmt(l.args.debtCovered!)} xMXN, seized ${fmt(l.args.collateralSeized!)} OUSD  ${C.dim}${txUrl(l.transactionHash!)}${C.x}`)
+        ok(
+          `liquidated ${l.args.user}: covered ${fmt(l.args.debtCovered!)} xMXN, seized ${fmt(l.args.collateralSeized!)} OUSD  ${C.dim}${txUrl(l.transactionHash!)}${C.x}`,
+        )
       }
       const [pxAfter] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'peek' })
       assert(pxAfter === pxBefore, `oracle restored to ${fmt(pxBefore, 8)} (now ${fmt(pxAfter, 8)})`)
-      const deskPaused = await pub
-        .readContract({ address: d.swapDesk, abi: parseAbi(['function paused() view returns (bool)']), functionName: 'paused' })
-        .catch(() => false)
+      const deskPaused = await pub.readContract({ address: d.swapDesk, abi: parseAbi(['function paused() view returns (bool)']), functionName: 'paused' })
       assert(!deskPaused, 'swap desk unpaused after the stress run')
       ok(`oracle back at ${fmt(pxAfter, 8)} MXN/USD, desk unpaused`)
       const lpRatio = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'collateralRatio', args: [account('LP').address] })
@@ -587,6 +577,93 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     },
   },
 ]
+
+/** One full MPP bill payment: quote → 402 → pay (mppx client, given mode) → verify on-chain → idempotent retry. */
+async function payBillVia(d: Deployments, driver: PrivateKeyAccount, mode: 'pull' | 'push') {
+  const quote = await api('/api/bills/quote', {
+    method: 'POST',
+    body: JSON.stringify({ provider: 'telcel', phone: '5512345678', amountMxn: AMT.billMxn }),
+  })
+  assert(quote.res.ok, `POST /api/bills/quote → ${quote.res.status} ${JSON.stringify(quote.body).slice(0, 200)}`)
+  assert(quote.body.simulated === true, 'quote is labeled simulated')
+  const token = quote.body.token as Address
+  if (token.toLowerCase() !== d.xMXN.toLowerCase()) warn(`bills charge ${quote.body.tokenSymbol ?? token}, not xMXN (interim token?)`)
+  ok(`quote ${quote.body.quoteId}: ${fmt(BigInt(quote.body.amount))} ${quote.body.tokenSymbol ?? 'xMXN'}`)
+  const body = JSON.stringify({ quoteId: quote.body.quoteId, idempotencyKey: `journey-${mode}-${Date.now()}` })
+  const post = { method: 'POST', headers: { 'content-type': 'application/json' }, body }
+
+  // 1) unpaid request must get a real 402 challenge
+  const unpaid = await fetch(`${API}/api/bills/pay`, post)
+  const challenge = unpaid.headers.get('www-authenticate')
+  assert(unpaid.status === 402, `unpaid /api/bills/pay → ${unpaid.status}, expected 402`)
+  assert(challenge && /^payment /i.test(challenge), '402 carries a WWW-Authenticate: Payment challenge')
+  ok(`unpaid request → 402, challenge: ${challenge.slice(0, 80)}…`)
+  note(`[${mode}] 402 challenge: ${challenge}`)
+
+  // 2) pay with the mppx client (402 → TIP-20 transfer bound to the challenge → retry with credential)
+  const { Mppx, tempo } = await import('mppx/client')
+  const mppx = Mppx.create({
+    methods: [
+      tempo({
+        account: driver,
+        mode,
+        expectedChainId: 42431,
+        expectedRecipients: [d.merchant],
+        getClient: () => createWalletClient({ account: driver, chain, transport: http(RPC) }),
+      }),
+    ],
+    polyfill: false,
+  })
+  const merchantBefore = await bal(token, d.merchant)
+  const paid = await mppx.fetch(`${API}/api/bills/pay`, post)
+  const order = await paid.json().catch(() => ({}))
+  assert(paid.ok, `paid /api/bills/pay → ${paid.status} ${JSON.stringify(order).slice(0, 300)}`)
+  assert(order.status === 'FULFILLED_SIMULATED', `order ${order.orderId} status ${order.status}`)
+  assert(order.fulfillment?.simulated === true && /SIMULATED/.test(order.fulfillment?.label ?? ''), 'fulfillment labeled SIMULATED')
+  assert(paid.headers.get('payment-receipt'), 'response carries a Payment-Receipt header')
+  const txHash = order.receipt?.txHash as Hash
+  assert(txHash, 'order carries receipt.txHash')
+  evidence[current].txs[`MPP payment (${mode})`] = txUrl(txHash)
+  ok(`order ${order.orderId}: ${order.status}, payment tx ${C.dim}${txUrl(txHash)}${C.x}`)
+  ok(`fulfillment ref ${order.fulfillment.reference}: "${order.fulfillment.label}"`)
+
+  // 3) the receipt must be a real on-chain transfer to the merchant for the quoted amount, from the driver
+  const rcpt = await pub.getTransactionReceipt({ hash: txHash })
+  assert(rcpt.status === 'success', 'payment tx succeeded on-chain')
+  const transfers = rcpt.logs
+    .filter((l) => l.address.toLowerCase() === token.toLowerCase())
+    .map((l) => {
+      try {
+        return decodeEventLog({ abi: erc20, ...l }) as any
+      } catch {
+        return undefined
+      }
+    })
+    .filter((e) => e?.eventName === 'Transfer' && e.args.to.toLowerCase() === d.merchant.toLowerCase())
+  const paidAmt = transfers.reduce((a, e) => a + (e.args.amount as bigint), 0n)
+  assert(paidAmt === BigInt(quote.body.amount), `on-chain transfer to merchant ${paidAmt} == quoted ${quote.body.amount}`)
+  assert(
+    transfers.every((e) => e.args.from.toLowerCase() === driver.address.toLowerCase()),
+    'payment came from the driver',
+  )
+  ok(`on-chain: ${fmt(paidAmt)} driver → merchant ${d.merchant}`)
+
+  // 4) retry with the same idempotency key → same order, no second charge or fulfillment
+  const retry = await mppx.fetch(`${API}/api/bills/pay`, post)
+  const again = await retry.json().catch(() => ({}))
+  assert(again.orderId === order.orderId, `retry returned order ${again.orderId}, expected ${order.orderId}`)
+  assert(again.fulfillment?.reference === order.fulfillment.reference, 'retry returned the same fulfillment reference')
+  const delta = (await bal(token, d.merchant)) - merchantBefore
+  assert(delta === paidAmt, `retry must not charge again: merchant received ${delta}, expected ${paidAmt}`)
+  ok('retry with same idempotency key → same order + reference, not charged again')
+
+  // 5) state machine recorded
+  const hist = await api(`/api/bills/orders/${order.orderId}`)
+  assert(hist.res.ok, `GET /api/bills/orders/${order.orderId} → ${hist.res.status}`)
+  const states = (hist.body.history ?? hist.body.order?.history ?? []).map((h: any) => h.status)
+  assert(JSON.stringify(states) === JSON.stringify(['CREATED', 'PAYMENT_VERIFIED', 'FULFILLED_SIMULATED']), `order history ${JSON.stringify(states)}`)
+  ok(`order history: ${states.join(' → ')}`)
+}
 
 /** Negative check via simulation (no gas). Passes only on a genuine contract revert, not on RPC/network errors. */
 /** `expected` lists acceptable custom error names; a revert for any other reason (e.g. stale oracle) fails. */
@@ -609,7 +686,9 @@ async function expectRevert(
 }
 
 function short(e: any): string {
-  return String(e?.shortMessage ?? e?.message ?? e).split('\n')[0].slice(0, 160)
+  return String(e?.shortMessage ?? e?.message ?? e)
+    .split('\n')[0]
+    .slice(0, 160)
 }
 
 async function main() {
@@ -617,6 +696,7 @@ async function main() {
   console.log(`${C.dim}api ${API} · rpc ${RPC} · fee token ${FEE_TOKEN}${C.x}\n`)
   const ctx: Ctx = { d: loadDeployments() }
   let failed = 0
+  let skipped = 0
   for (const step of STEPS) {
     if (ONLY && !ONLY.has(step.id) && step.id !== 'J0') continue
     current = step.id
@@ -627,6 +707,13 @@ async function main() {
       await step.run(ctx)
       console.log(`   ${C.g}${C.b}PASS${C.x} ${C.dim}${((Date.now() - t0) / 1000).toFixed(1)}s${C.x}\n`)
     } catch (e: any) {
+      if (e instanceof SkipStep) {
+        skipped++
+        evidence[step.id].status = 'skip'
+        evidence[step.id].error = e.message
+        console.log(`   ${C.y}${C.b}SKIP${C.x} ${e.message}\n`)
+        continue
+      }
       failed++
       evidence[step.id].status = 'fail'
       evidence[step.id].error = short(e)
@@ -636,11 +723,16 @@ async function main() {
       if (!KEEP_GOING) break
     }
   }
-  const outDir = join(ROOT, 'scripts/out')
+  const outDir = join(ROOT, 'scripts/evidence')
   mkdirSync(outDir, { recursive: true })
   writeFileSync(join(outDir, 'last-run.json'), JSON.stringify({ at: new Date().toISOString(), api: API, evidence }, null, 2))
-  console.log(failed ? `${C.r}${failed} step(s) failed${C.x}` : `${C.g}${C.b}All steps passed${C.x}`, `${C.dim}evidence → scripts/out/last-run.json${C.x}`)
-  process.exit(failed ? 1 : 0)
+  const summary = failed
+    ? `${C.r}${failed} step(s) failed${C.x}${skipped ? `, ${skipped} skipped` : ''}`
+    : skipped
+      ? `${C.y}No failures, but ${skipped} step(s) SKIPPED (not a full pass)${C.x}`
+      : `${C.g}${C.b}All steps passed${C.x}`
+  console.log(summary, `${C.dim}evidence → scripts/evidence/last-run.json${C.x}`)
+  process.exit(failed ? 1 : skipped ? 2 : 0)
 }
 
 main().catch((e) => {
