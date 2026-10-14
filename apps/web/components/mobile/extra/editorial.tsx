@@ -4,8 +4,9 @@
 //   <ActionRow>/<RoundAction> 56px round actions · <BankRow> + <DayGroups> bank-style lists
 //   <Pill> black pill button · <SplitStats> side-by-side figures on hairlines · <DotNav> bottom nav
 // Built for Crédito + Invest (mobile2) on the kit's paper theme; generic enough for mobile to promote into the kit.
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { isValidElement, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { Stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { fmtMoney, haceTiempo, haptic } from "../format";
 import { usePresent } from "@/components/console/present";
@@ -47,6 +48,24 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
     </p>
   );
 }
+
+/**
+ * v5 color world (crew/PRINCIPLES.md §v5): the top of a screen as a full-bleed accent field. Everything inside is
+ * ink (AA: 4.6:1 on rosa, 9.4:1 on maize), so the kit's grey/accent/skeleton tokens are re-pointed to ink here.
+ * Pair it with washStyle() on what follows for the soft fade into the white canvas.
+ */
+export function AccentField({ color, children, className }: { color: string; children: ReactNode; className?: string }) {
+  const ink = "#0a0a0a";
+  const tokens = { "--m-on-surface": ink, "--m-on-surface-variant": ink, "--m-accent": ink, "--m-on-accent": color, "--m-surface-3": "rgba(10,10,10,.16)" };
+  return (
+    <div className={cn("text-[#0a0a0a]", className)} style={{ background: color, ...tokens } as CSSProperties}>
+      {children}
+    </div>
+  );
+}
+
+/** The ~12% accent wash fading into the canvas over ~120px, for the block right under an AccentField. */
+export const washStyle = (color: string): CSSProperties => ({ backgroundImage: `linear-gradient(${color}1f, transparent 120px)`, backgroundRepeat: "no-repeat" });
 
 /** Uppercase Archivo Black statement. `fit` keeps a one-line word inside the column (kit <Display fit>). */
 export function Display({ children, size = 40, className, as: Tag = "h2", fit }: { children: ReactNode; size?: number; className?: string; as?: "h1" | "h2" | "p"; fit?: boolean }) {
@@ -310,7 +329,7 @@ export function hora(ts: number | undefined): string {
   return new Date(ts * 1000).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Mexico_City" });
 }
 
-/** Groups newest-first items under Hoy / Ayer / date headers. */
+/** Groups newest-first items under Hoy / Ayer / date headers; rows fade up in a stagger on first view (v5). */
 export function DayGroups<T>({ items, ts, now, render }: { items: T[]; ts: (t: T) => number | undefined; now: number | undefined; render: (t: T) => ReactNode }) {
   const groups: { label: string; items: T[] }[] = [];
   for (const it of items) {
@@ -324,7 +343,12 @@ export function DayGroups<T>({ items, ts, now, render }: { items: T[]; ts: (t: T
       {groups.map((g) => (
         <section key={g.label}>
           <p className="m-meta pt-4 pb-1">{g.label}</p>
-          {g.items.map(render)}
+          <Stagger>
+            {g.items.map((it, i) => {
+              const row = render(it);
+              return <div key={isValidElement(row) && row.key !== null ? row.key : i}>{row}</div>;
+            })}
+          </Stagger>
         </section>
       ))}
     </div>

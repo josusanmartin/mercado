@@ -14,12 +14,14 @@ import { useBalances } from "@/lib/contracts";
 import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { LetterReveal, Reveal, Stagger, TickerText } from "@/lib/motion";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
 import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney } from "@/components/mobile";
 import {
+  AccentField,
   ActionRow,
   BankRow,
   DayGroups,
@@ -35,6 +37,7 @@ import {
   useH,
   LoadError,
   StaleLine,
+  washStyle,
 } from "@/components/mobile/extra/editorial";
 import { PLATFORMS, useAdvance, useCreditHistory, useDriverData, type Platform } from "./use-driver";
 
@@ -105,7 +108,7 @@ function DriverAppInner() {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
       <div className="-mx-4 sm:mx-0">
-        <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} onAccent="#0a0a0a">
+        <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} onAccent="#0a0a0a" statusBar={flow === "recibido" || flow === "pagado" ? undefined : ROSA}>
           <EdApp screen={flow === "app" ? `app-${tab}` : flow}>
             <ScreenTransition className="flex-1" id={flow === "app" ? `app-${tab}` : flow} dir={flow === "app" && prev === "app" ? "fade" : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd"}>
               {flow === "conectar" && <Conectar {...props} />}
@@ -175,23 +178,30 @@ function Conectar({ ask }: Props) {
   const H = useH();
   const { address } = useConnection();
   return (
-    <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
-      <Meta mark={ROSA} parts={["Mercado Crédito", H("Testnet · sin valor real"), H("No canjeable")]} />
-      <Display as="h1" size={50} className="mt-8">
-        Adelanta
-        <br />
-        lo que ya
-        <br />
-        {/* image-in-type: our own generated route texture (public/photos/ruta.webp, art/make_ruta.py) */}
-        <span
-          className="bg-clip-text text-transparent"
-          style={{ backgroundColor: ROSA, backgroundImage: "url(/photos/ruta.webp)", backgroundSize: "auto 170%", backgroundPosition: "12% 80%", WebkitBackgroundClip: "text" }}
-        >
-          ganaste.
-        </span>
-      </Display>
-      <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
-      <div className="grid gap-3 pt-8">
+    <div className="flex flex-1 flex-col pb-6">
+      {/* v5 rosa field: the headline reveals letter by letter, "ganaste." (image-in-type) rises after, then the meta */}
+      <AccentField color={ROSA} className="px-5 pt-5 pb-6">
+        <Meta mark="#0a0a0a" parts={["Mercado Crédito", H("Testnet · sin valor real"), H("No canjeable")]} />
+        <Display as="h1" size={50} className="mt-8">
+          <LetterReveal text="Adelanta" />
+          <br />
+          <LetterReveal text="lo que ya" />
+          <br />
+          {/* image-in-type: our own generated route texture on an ink ground (public/photos/ruta-ink.webp, art/make_ruta.py) */}
+          <Reveal as="span" delay={220} className="inline-block">
+            <span
+              className="bg-clip-text text-transparent"
+              style={{ backgroundColor: "#0a0a0a", backgroundImage: "url(/photos/ruta-ink.webp)", backgroundSize: "auto 170%", backgroundPosition: "12% 80%", WebkitBackgroundClip: "text" }}
+            >
+              ganaste.
+            </span>
+          </Reveal>
+        </Display>
+        <Reveal delay={320}>
+          <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
+        </Reveal>
+      </AccentField>
+      <div className="grid gap-3 px-5 pt-5" style={washStyle(ROSA)}>
         <p className="m-meta border-b border-[var(--m-on-surface)] pb-2 !text-[var(--m-on-surface)]">Conecta la app con la que trabajas</p>
         {PLATFORMS.map((p) => (
           <PlatformButton key={p.id} id={p.id} disabled={!address} onClick={() => ask(p.id)} />
@@ -264,117 +274,121 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
 
   return (
     <div className="pb-6">
-      <TopMeta platform={platform} />
-      <p className="px-5 pt-6 text-[15px] font-medium">{name ? `Hola, ${name}` : "Hola"}</p>
+      <AccentField color={ROSA} className="pb-6">
+        <TopMeta platform={platform} />
+        <p className="px-5 pt-6 text-[15px] font-medium">{name ? `Hola, ${name}` : "Hola"}</p>
 
-      {/* the one big number */}
-      <section className="px-5 pt-2" aria-live="polite">
-        {owing ? (
-          <>
-            <BalanceHead label="Debes" />
-            <Money value={debt} currency="MXN" size={54} className="mt-3" />
-            <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
-              <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
-            </div>
-            <Meta className="mt-2" parts={["xMXN", H("No canjeable"), "Incluye comisión 2%", `${paidPct}% pagado`]} />
-          </>
-        ) : !platform ? (
-          <>
-            <BalanceHead label="Disponible ahora" />
-            <Money value={undefined} size={54} className="mt-3" />
-            <Meta className="mt-2">{"Conecta tu plataforma para ver tu línea"}</Meta>
-          </>
-        ) : adv.score.isPending || (!s && !adv.score.error) ? (
-          <>
-            <BalanceHead label="Analizando tus ganancias…" />
-            <Skeleton className="mt-3 h-[48px] w-56 rounded-[4px]" />
-            <Skeleton className="mt-3 h-3 w-40 rounded-[2px]" />
-          </>
-        ) : adv.score.error ? (
-          <>
-            <BalanceHead label="Disponible ahora" />
-            <Display size={36} className="mt-3">
-              Sin conexión
-            </Display>
-            <button type="button" className="mt-3 text-[14px] font-semibold underline underline-offset-4" onClick={adv.check}>
-              Reintentar
-            </button>
-          </>
-        ) : s && !s.eligible ? (
-          <>
-            <BalanceHead label="Disponible ahora" />
-            <Display size={40} className="mt-3">
-              No disponible
-            </Display>
-            <Meta className="mt-2" parts={["Aún no cumples el mínimo", "Vuelve en unas semanas"]} />
-          </>
-        ) : (
-          <>
-            <BalanceHead label="Disponible ahora" />
-            <Money value={adv.available} currency="MXN" size={54} className="mt-3" />
-            <Meta
-              className="mt-2"
-              parts={[
-                "xMXN",
-                H("No canjeable"),
-                s && `Línea MX${fmtMoney(BigInt(s.maxAmount), 0)}`,
-                s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
-              ]}
-            />
-          </>
-        )}
-      </section>
+        {/* the one big number (kit Money ticks to each new value) */}
+        <section className="px-5 pt-2" aria-live="polite">
+          {owing ? (
+            <>
+              <BalanceHead label="Debes" />
+              <Money value={debt} currency="MXN" size={54} className="mt-3" />
+              <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
+                <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
+              </div>
+              <Meta className="mt-2" parts={["xMXN", H("No canjeable"), "Incluye comisión 2%", <TickerText key="pagado" text={`${paidPct}% pagado`} />]} />
+            </>
+          ) : !platform ? (
+            <>
+              <BalanceHead label="Disponible ahora" />
+              <Money value={undefined} size={54} className="mt-3" />
+              <Meta className="mt-2">{"Conecta tu plataforma para ver tu línea"}</Meta>
+            </>
+          ) : adv.score.isPending || (!s && !adv.score.error) ? (
+            <>
+              <BalanceHead label="Analizando tus ganancias…" />
+              <Skeleton className="mt-3 h-[48px] w-56 rounded-[4px]" />
+              <Skeleton className="mt-3 h-3 w-40 rounded-[2px]" />
+            </>
+          ) : adv.score.error ? (
+            <>
+              <BalanceHead label="Disponible ahora" />
+              <Display size={36} className="mt-3">
+                Sin conexión
+              </Display>
+              <button type="button" className="mt-3 text-[14px] font-semibold underline underline-offset-4" onClick={adv.check}>
+                Reintentar
+              </button>
+            </>
+          ) : s && !s.eligible ? (
+            <>
+              <BalanceHead label="Disponible ahora" />
+              <Display size={40} className="mt-3">
+                No disponible
+              </Display>
+              <Meta className="mt-2" parts={["Aún no cumples el mínimo", "Vuelve en unas semanas"]} />
+            </>
+          ) : (
+            <>
+              <BalanceHead label="Disponible ahora" />
+              <Money value={adv.available} currency="MXN" size={54} className="mt-3" />
+              <Meta
+                className="mt-2"
+                parts={[
+                  "xMXN",
+                  H("No canjeable"),
+                  s && <TickerText key="linea" text={`Línea MX${fmtMoney(BigInt(s.maxAmount), 0)}`} />,
+                  s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
+                ]}
+              />
+            </>
+          )}
+        </section>
+      </AccentField>
 
-      {!owing && platform && adv.att && adv.expired && (
-        <div className="px-5 pt-5">
-          <Pill variant="line" onClick={adv.check} loading={adv.score.isPending}>
-            Actualizar oferta
-          </Pill>
-        </div>
-      )}
-
-      <div className="px-4 pt-7">
-        <ActionRow>
-          <RoundAction primary icon={<HandCoins strokeWidth={1.75} />} label="Adelanto" onClick={() => open("adelanto")} disabled={!canDraw} />
-          <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Pagar" onClick={() => open("pagar")} disabled={!owing} />
-          <RoundAction icon={<Smartphone strokeWidth={1.75} />} label="Tiempo Aire" href="/remesas?screen=aire" />
-          <RoundAction icon={<BarChart3 strokeWidth={1.75} />} label="Ganancias" onClick={() => setTab("ganancias")} />
-        </ActionRow>
-      </div>
-
-      <div className="px-5 pt-7">
-        <SplitStats
-          items={[
-            { label: <><Flag code="mx" /> Tu saldo</>, value: `MX${fmtMoney(bal.xmxn)}`, sub: "xMXN en tu wallet" },
-            owing
-              ? { label: "Disponible", value: `MX${fmtMoney(adv.available ?? 0n)}`, sub: "para otro adelanto" }
-              : { label: "Debes", value: `MX${fmtMoney(debt ?? 0n)}`, sub: "sin adelantos abiertos" },
-          ]}
-        />
-      </div>
-
-      {!platform && (
-        <div className="px-5 pt-6">
-          <SectionHead>Conecta para otro adelanto</SectionHead>
-          <div className="grid gap-2 pt-3">
-            {PLATFORMS.map((p) => (
-              <PlatformButton key={p.id} id={p.id} onClick={() => ask(p.id)} />
-            ))}
+      <div style={washStyle(ROSA)}>
+        {!owing && platform && adv.att && adv.expired && (
+          <div className="px-5 pt-5">
+            <Pill variant="line" onClick={adv.check} loading={adv.score.isPending}>
+              Actualizar oferta
+            </Pill>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="px-5 pt-7">
-        <SectionHead
-          action={
-            <button type="button" className="text-[13px] font-semibold" onClick={() => setTab("actividad")}>
-              Ver todo
-            </button>
-          }
-        >
-          Actividad
-        </SectionHead>
-        <ActivityList limit={3} />
+        <div className="px-4 pt-7">
+          <ActionRow>
+            <RoundAction primary icon={<HandCoins strokeWidth={1.75} />} label="Adelanto" onClick={() => open("adelanto")} disabled={!canDraw} />
+            <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Pagar" onClick={() => open("pagar")} disabled={!owing} />
+            <RoundAction icon={<Smartphone strokeWidth={1.75} />} label="Tiempo Aire" href="/remesas?screen=aire" />
+            <RoundAction icon={<BarChart3 strokeWidth={1.75} />} label="Ganancias" onClick={() => setTab("ganancias")} />
+          </ActionRow>
+        </div>
+
+        <div className="px-5 pt-7">
+          <SplitStats
+            items={[
+              { label: <><Flag code="mx" /> Tu saldo</>, value: <TickerText text={`MX${fmtMoney(bal.xmxn)}`} />, sub: "xMXN en tu wallet" },
+              owing
+                ? { label: "Disponible", value: <TickerText text={`MX${fmtMoney(adv.available ?? 0n)}`} />, sub: "para otro adelanto" }
+                : { label: "Debes", value: <TickerText text={`MX${fmtMoney(debt ?? 0n)}`} />, sub: "sin adelantos abiertos" },
+            ]}
+          />
+        </div>
+
+        {!platform && (
+          <div className="px-5 pt-6">
+            <SectionHead>Conecta para otro adelanto</SectionHead>
+            <div className="grid gap-2 pt-3">
+              {PLATFORMS.map((p) => (
+                <PlatformButton key={p.id} id={p.id} onClick={() => ask(p.id)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="px-5 pt-7">
+          <SectionHead
+            action={
+              <button type="button" className="text-[13px] font-semibold" onClick={() => setTab("actividad")}>
+                Ver todo
+              </button>
+            }
+          >
+            Actividad
+          </SectionHead>
+          <ActivityList limit={3} />
+        </div>
       </div>
     </div>
   );
@@ -426,24 +440,32 @@ function Ganancias({ platform, data, adv }: Props) {
     : [];
   return (
     <div className="pb-6">
-      <TopMeta platform={platform} title="Ganancias" />
-      {!platform ? (
-        <div className="px-5 pt-8">
-          <Display size={36}>Sin plataforma</Display>
-          <Meta className="mt-3">{"Conecta Uber, DiDi o Rappi en Inicio"}</Meta>
-        </div>
-      ) : !d ? (
-        <div className="grid gap-3 px-5 pt-8" aria-busy="true">
-          <Skeleton className="h-12 w-48 rounded-[4px]" />
-          <Skeleton className="h-28 w-full rounded-[2px]" />
-        </div>
-      ) : (
-        <>
+      <AccentField color={ROSA} className="pb-6">
+        <TopMeta platform={platform} title="Ganancias" />
+        {!platform ? (
+          <div className="px-5 pt-2">
+            <Display size={36}>Sin plataforma</Display>
+            <Meta className="mt-3">{"Conecta Uber, DiDi o Rappi en Inicio"}</Meta>
+          </div>
+        ) : !d ? (
+          <div className="px-5 pt-6" aria-busy="true">
+            <Skeleton className="h-12 w-48 rounded-[4px]" />
+          </div>
+        ) : (
           <section className="px-5 pt-6">
             <p className="m-meta">Semana típica · neto</p>
             <Money value={f?.medianWeeklyNetMxn ?? median(d.weeks.map((w) => w.netMxn))} digits={0} currency="MXN" size={48} className="mt-2" />
             <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, H("Datos sintéticos"), H("Testnet")]} />
           </section>
+        )}
+      </AccentField>
+      {platform && !d && (
+        <div className="px-5 pt-6" aria-busy="true">
+          <Skeleton className="h-28 w-full rounded-[2px]" />
+        </div>
+      )}
+      {platform && d && (
+        <div style={washStyle(ROSA)}>
           <div className="px-5 pt-6">
             <EarningsBars weeks={d.weeks} />
           </div>
@@ -466,7 +488,7 @@ function Ganancias({ platform, data, adv }: Props) {
                 <Skeleton className="h-4 w-2/3 rounded-[2px]" />
               </div>
             ) : (
-              <ol className="grid">
+              <Stagger as="ol" className="grid">
                 {why.map((w, i) => (
                   <li key={w.t} className="flex items-baseline gap-4 border-b border-[var(--m-outline-variant)] py-3">
                     <span className="m-display w-6 text-[15px] text-[var(--m-on-surface-variant)]">{String(i + 1).padStart(2, "0")}</span>
@@ -476,11 +498,16 @@ function Ganancias({ platform, data, adv }: Props) {
                     </span>
                   </li>
                 ))}
-              </ol>
+              </Stagger>
             )}
-            {s && <Meta className="mt-3">{[`Puntaje ${fmtNumber(s.score, 0)}/100`, `Mínimo ${s.scoreFloor}`, H("Ilustrativo, no es un modelo de crédito")].filter(Boolean).join(" · ")}</Meta>}
+            {s && (
+              <Meta className="mt-3">
+                <TickerText text={`Puntaje ${fmtNumber(s.score, 0)}/100`} />
+                {[``, `Mínimo ${s.scoreFloor}`, H("Ilustrativo, no es un modelo de crédito")].filter((x) => x !== undefined).join(" · ")}
+              </Meta>
+            )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -546,13 +573,15 @@ function Actividad({ platform }: Props) {
   const H = useH();
   return (
     <div className="pb-6">
-      <TopMeta platform={platform} title="Actividad" />
-      <div className="px-5 pt-6">
-        <Display size={40}>Actividad</Display>
-        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo", H("Testnet · sin valor real")]} />
-        <div className="pt-3">
-          <ActivityList />
+      <AccentField color={ROSA} className="pb-6">
+        <TopMeta platform={platform} title="Actividad" />
+        <div className="px-5 pt-6">
+          <Display size={40}>Actividad</Display>
+          <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo", H("Testnet · sin valor real")]} />
         </div>
+      </AccentField>
+      <div className="px-5 pt-3" style={washStyle(ROSA)}>
+        <ActivityList />
       </div>
     </div>
   );
@@ -572,11 +601,15 @@ function Perfil({ platform, data, disconnect }: Props) {
   ];
   return (
     <div className="pb-6">
-      <TopMeta platform={platform} title="Perfil" />
-      <div className="px-5 pt-6">
-        <Display size={48} fit>{d?.driver.firstName ?? (personaByAddress(address)?.id === "driver" ? "Javier" : "Chofer")}</Display>
-        {d && <Meta className="mt-2" parts={[d.driver.city, `★ ${fmtNumber(d.driver.rating, 2)}`, d.driver.vehicle]} />}
-        <dl className="mt-6 border-t border-[var(--m-on-surface)]">
+      <AccentField color={ROSA} className="pb-6">
+        <TopMeta platform={platform} title="Perfil" />
+        <div className="px-5 pt-6">
+          <Display size={48} fit>{d?.driver.firstName ?? (personaByAddress(address)?.id === "driver" ? "Javier" : "Chofer")}</Display>
+          {d && <Meta className="mt-2" parts={[d.driver.city, `★ ${fmtNumber(d.driver.rating, 2)}`, d.driver.vehicle]} />}
+        </div>
+      </AccentField>
+      <div className="px-5 pt-6" style={washStyle(ROSA)}>
+        <dl className="border-t border-[var(--m-on-surface)]">
           {rows.map((r) => (
             <div key={r.k} className="flex min-h-14 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
               <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{r.k}</dt>

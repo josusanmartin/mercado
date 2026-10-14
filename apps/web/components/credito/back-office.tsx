@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { EarnScreen } from "@/components/earn/earn-screen";
 import { usePool } from "@/lib/contracts";
 import { fmtAmount } from "@/lib/format";
+import { Stagger, TickerText } from "@/lib/motion";
 import { bpsToPct } from "@/components/credit/use-advance";
 import { UnderwritingApi } from "./underwriting-api";
 
@@ -97,33 +98,49 @@ export function BackOffice() {
           <Row
             label="Pool liquidity"
             value={
-              pool.available === undefined
-                ? "…"
-                : `${fmtAmount(pool.available, 0)} xMXN`
+              <TickerText
+                text={
+                  pool.available === undefined
+                    ? "…"
+                    : `${fmtAmount(pool.available, 0)} xMXN`
+                }
+              />
             }
             sub="Idle cash lenders can still lend"
           />
           <Row
             label="Outstanding advances"
             value={
-              pool.outstanding === undefined
-                ? "…"
-                : `${fmtAmount(pool.outstanding, 0)} xMXN`
+              <TickerText
+                text={
+                  pool.outstanding === undefined
+                    ? "…"
+                    : `${fmtAmount(pool.outstanding, 0)} xMXN`
+                }
+              />
             }
           />
           <Row
             label="Utilization"
             value={
-              utilization === undefined ? "…" : bpsToPct(BigInt(utilization))
+              <TickerText
+                text={
+                  (utilization === undefined ? undefined : bpsToPct(BigInt(utilization))) ?? "…"
+                }
+              />
             }
             sub={`Cap ${bpsToPct(pool.maxUtilizationBps) ?? "…"} of lender claims (enforced on-chain)`}
           />
           <Row
             label="Realized fees"
             value={
-              pool.realizedFees === undefined
-                ? "…"
-                : `${fmtAmount(pool.realizedFees)} xMXN`
+              <TickerText
+                text={
+                  pool.realizedFees === undefined
+                    ? "…"
+                    : `${fmtAmount(pool.realizedFees)} xMXN`
+                }
+              />
             }
             sub="Paid by drivers on repayment, owed to lenders"
           />
@@ -168,7 +185,8 @@ export function BackOffice() {
                   <th className="py-2 font-medium">Tx</th>
                 </tr>
               </thead>
-              <tbody>
+              {/* v5: the book's rows fade up in a stagger (pure CSS, always ends visible) */}
+              <Stagger as="tbody">
                 {book.data.loans.map((l) => (
                   <tr key={l.txHash} className="border-t">
                     <td className="py-2 pr-4 whitespace-nowrap">
@@ -217,7 +235,7 @@ export function BackOffice() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+              </Stagger>
             </table>
           </div>
         )}
@@ -255,7 +273,7 @@ export function BackOffice() {
                   <th className="py-2 font-medium">Nonce used</th>
                 </tr>
               </thead>
-              <tbody>
+              <Stagger as="tbody">
                 {atts.data.attestations.map((a) => (
                   <tr key={`${a.borrower}-${a.nonce}`} className="border-t">
                     <td className="py-2 pr-4 whitespace-nowrap">
@@ -279,7 +297,7 @@ export function BackOffice() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+              </Stagger>
             </table>
           </div>
         )}
