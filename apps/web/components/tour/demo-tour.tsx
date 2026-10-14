@@ -44,7 +44,7 @@ export const TOUR: TourStep[] = [
     persona: "lp",
     href: "/mint",
     title: "An institution creates pesos",
-    doThis: "Lock collateral (OUSD, staked OUSD or a demo T-bill) and mint xMXN. The Risk view shows how far the peso would have to move.",
+    doThis: "Lock collateral (OUSD or staked OUSD) and mint xMXN. The Risk view shows how far the peso would have to move.",
   },
   {
     product: "remesas",
@@ -80,7 +80,7 @@ export const TOUR: TourStep[] = [
     persona: "saver",
     href: "/invest",
     title: "Save and invest",
-    doThis: "Peso savings fund the driver advances (real fees, variable, not guaranteed); dollar savings earn demo yield; or buy demo T-bills.",
+    doThis: "Peso savings fund the driver advances (real fees, variable, not guaranteed); dollar savings earn the configured demo rate as it accrues.",
   },
 ];
 

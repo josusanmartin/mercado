@@ -108,7 +108,7 @@ export const PRODUCTS: Product[] = [
     href: "/invest",
     name: "Mercado Invest",
     short: "Invest",
-    purpose: "Save in pesos or dollars, or buy tokenized T-bills.",
+    purpose: "Save in dollars or pesos and earn a return.",
     audience: "Savers",
     icon: PiggyBank,
     color: "var(--c-invest)",
