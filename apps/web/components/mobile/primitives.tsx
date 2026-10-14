@@ -5,6 +5,7 @@
 import {
   forwardRef,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -14,6 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { DUR, SuccessCheck as MotionCheck, Ticker, useReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { fmtMoney, haptic, initials } from "./format";
 
@@ -67,7 +69,8 @@ export const Pressable = forwardRef<HTMLButtonElement, PressProps>(function Pres
 
 /**
  * The display face: Archivo Black, uppercase, tight. Balances and screen titles.
- * `fit` shrinks the size so one line never overflows its column (large balances, narrow phones).
+ * `fit` shrinks the size so one line never overflows its column (large balances, narrow phones). Money is
+ * never clipped or ellipsized (review #19): below the smallest size it wraps instead.
  */
 export function Display({
   children,
@@ -91,10 +94,12 @@ export function Display({
     if (!fit || !el) return;
     const measure = () => {
       el.style.fontSize = `${size}px`;
+      el.style.whiteSpace = "nowrap";
       const avail = el.clientWidth;
       const need = el.scrollWidth;
-      const next = need > avail && avail > 0 ? Math.max(18, Math.floor((size * avail) / need)) : size;
+      const next = need > avail && avail > 0 ? Math.max(14, Math.floor((size * avail) / need)) : size;
       el.style.fontSize = `${next}px`;
+      if (el.scrollWidth > el.clientWidth) el.style.whiteSpace = "normal"; // still too wide: wrap, never clip
       setPx(next);
     };
     measure();
@@ -108,7 +113,7 @@ export function Display({
     };
   }, [fit, size]);
   return (
-    <Tag ref={ref as never} className={cn("m-display", fit && "overflow-hidden whitespace-nowrap", className)} style={{ fontSize: fit ? px : size, ...style }}>
+    <Tag ref={ref as never} className={cn("m-display", fit && "flex-wrap break-words whitespace-nowrap", className)} style={{ fontSize: fit ? px : size, ...style }}>
       {children}
     </Tag>
   );
@@ -193,7 +198,9 @@ export function BalanceHead({ label, honesty }: { label: ReactNode; honesty?: Re
 
 /**
  * The one big balance: "US$1,250" in the display face with ".00" smaller (fintech style), fit to one
- * line, ticking up to its value. `currency` picks the prefix (US$ / MX$); pass a number (units) or a 6dp bigint.
+ * line. It glides from its previous value to each new one like @/lib/motion's Ticker (the first value shows
+ * as is, never a count-up from 0; reduced motion jumps). `currency` picks the prefix (US$ / MX$); pass a
+ * number (units) or a 6dp bigint.
  */
 export function Money({
   value,
@@ -285,9 +292,31 @@ export function IconButton({ label, className, children, ...rest }: PressProps &
 }
 
 /** Round action: a 56dp circle with a short label underneath (fintech action row). */
-export function RoundAction({ icon, label, onClick, primary, disabled }: { icon: ReactNode; label: string; onClick: () => void; primary?: boolean; disabled?: boolean }) {
+export function RoundAction({
+  icon,
+  label,
+  onClick,
+  primary,
+  disabled,
+  badge,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+  disabled?: boolean;
+  /** A small second line under the label ("Próximamente"). The button's name stays `label`; this describes it. */
+  badge?: string;
+}) {
+  const id = useId();
   return (
-    <Pressable onClick={onClick} disabled={disabled} className="grid content-start justify-items-center gap-2 rounded-[8px] px-1 py-1.5 disabled:opacity-40">
+    <Pressable
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={badge ? label : undefined}
+      aria-describedby={badge ? id : undefined}
+      className="grid content-start justify-items-center gap-2 rounded-[8px] px-1 py-1.5 disabled:opacity-40"
+    >
       <span
         className={cn(
           "grid size-14 place-items-center rounded-full [&_svg]:size-[22px] [&_svg]:stroke-[1.75]",
@@ -296,7 +325,14 @@ export function RoundAction({ icon, label, onClick, primary, disabled }: { icon:
       >
         {icon}
       </span>
-      <span className="text-center text-[13px] leading-tight font-medium">{label}</span>
+      <span className="grid text-center text-[13px] leading-tight font-medium">
+        {label}
+        {badge && (
+          <span id={id} className="mt-0.5 text-[11px] font-medium whitespace-nowrap text-[var(--m-on-surface-variant)]">
+            {badge}
+          </span>
+        )}
+      </span>
     </Pressable>
   );
 }
@@ -351,7 +387,7 @@ export type NavItem<T extends string> = { id: T; label: string; icon: ReactNode;
 /** Bottom nav: 4 icons, labels, a small accent dot under the active one. Hairline on top. */
 export function BottomNav<T extends string>({ items, value, onChange }: { items: NavItem<T>[]; value: T; onChange: (id: T) => void }) {
   return (
-    <nav className="z-10 grid h-[72px] grid-flow-col border-t border-[var(--m-outline-variant)] bg-[var(--m-surface)] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(72px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:bottom-0 sm:-mb-5 sm:h-[92px] sm:pb-5" aria-label="Navegación">
+    <nav className="z-10 grid h-[72px] grid-flow-col border-t border-[var(--m-outline-variant)] bg-[var(--m-surface)] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(72px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[92px] sm:pb-5" aria-label="Navegación">
       {items.map((it) => {
         const on = it.id === value;
         const body = (
@@ -361,7 +397,7 @@ export function BottomNav<T extends string>({ items, value, onChange }: { items:
             <span className={cn("size-1 rounded-full transition-opacity duration-200", on ? "opacity-100" : "opacity-0")} style={{ background: "var(--m-accent)" }} />
           </>
         );
-        const cls = "grid content-center justify-items-center gap-1";
+        const cls = "m-tap grid content-center justify-items-center gap-1";
         return it.href ? (
           <a key={it.id} href={it.href} className={cls} onClick={() => haptic()}>
             {body}
@@ -655,44 +691,52 @@ export function ScreenTransition({ id, dir = "fwd", children, className }: { id:
   );
 }
 
-/** A number that ticks up to `value` (ease-out, ~700ms) and then follows it; undefined until known. */
-export function useTickUp(value: number | undefined, ms = 700) {
-  const [shown, setShown] = useState<number>();
-  const from = useRef<number | undefined>(undefined);
+/**
+ * A number that glides to each new `value` (ease-out cubic, 420ms), same motion as @/lib/motion's Ticker:
+ * the first known value shows as is (no fake count-up from 0), reduced motion jumps. Undefined until known.
+ */
+export function useTickUp(value: number | undefined, ms: number = DUR.slow) {
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(value);
+  const from = useRef(value);
   useEffect(() => {
-    if (value === undefined) return;
-    const start = from.current ?? 0;
-    from.current = value;
-    if (start === value || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(value);
+    const a = from.current;
+    if (value === undefined || a === undefined || reduced || a === value) {
+      from.current = value;
+      setShown(value);
+      return;
+    }
     const t0 = performance.now();
     let raf = 0;
     const step = (t: number) => {
       const k = Math.min(1, (t - t0) / ms);
-      setShown(start + (value - start) * (1 - Math.pow(1 - k, 3)));
+      setShown(a + (value - a) * (1 - Math.pow(1 - k, 3)));
       if (k < 1) raf = requestAnimationFrame(step);
+      else from.current = value;
     };
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value, ms]);
+    return () => {
+      cancelAnimationFrame(raf);
+      from.current = value;
+    };
+  }, [value, ms, reduced]);
   return shown;
 }
 
-/** Counts a number up to `value` once (number tick-up), then follows it. */
-export function TickUp({ value, format, ms = 700 }: { value: number | undefined; format: (n: number) => string; ms?: number }) {
-  const shown = useTickUp(value, ms);
-  return <>{shown === undefined ? "—" : format(shown)}</>;
+/** A formatted number that glides to new values (web's Ticker; "—" until known). */
+export function TickUp({ value, format, ms = DUR.slow }: { value: number | undefined; format: (n: number) => string; ms?: number }) {
+  return <Ticker value={value} format={format} duration={ms} />;
 }
 
-/** The success mark: a disc pops in, the tick draws, one soft ring. */
-export function SuccessCheck({ size = 88, color }: { size?: number; color?: string }) {
+/**
+ * The one signature success motion (v5): web's SuccessCheck from @/lib/motion (a check that draws itself in
+ * a soft accent ripple), in the app's accent. `color` overrides it (e.g. ink where the accent is too light).
+ */
+export function SuccessCheck({ size = 88, color, label = "Listo" }: { size?: number; color?: string; label?: string }) {
   const c = color ?? "var(--m-accent)";
   return (
-    <span className="relative grid place-items-center" style={{ width: size, height: size }} role="img" aria-label="Listo">
-      <span className="m-check-ring absolute inset-0 rounded-full" style={{ background: c }} />
-      <span className="m-check-disc absolute inset-0 rounded-full" style={{ background: c }} />
-      <svg viewBox="0 0 24 24" className="relative" style={{ width: size * 0.5, height: size * 0.5 }} fill="none" stroke="var(--m-on-accent)" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
-        <path className="m-check-tick" d="M5 12.5l4.5 4.5L19 7.5" />
-      </svg>
+    <span className="inline-grid" style={{ color: c, "--accent": c } as CSSProperties}>
+      <MotionCheck size={size} label={label} />
     </span>
   );
 }

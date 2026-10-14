@@ -26,6 +26,9 @@
   --m-ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
   --m-ease-emph-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
   --m-ease-std: cubic-bezier(0.2, 0, 0, 1);
+  /* v5 (PRINCIPLES §v5): the site's ease-out, and a firm spring for sheets (~1% settle, never bouncy). */
+  --m-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --m-spring: linear(0, 0.063, 0.203, 0.366, 0.524, 0.66, 0.77, 0.854, 0.914, 0.955, 0.982, 0.998, 1.007, 1.01, 1.011, 1.01, 1.009, 1.007, 1.005, 1.004, 1.002, 1.002, 1.001, 1);
 
   font-family: var(--font-phone), "Inter Tight", Inter, system-ui, sans-serif;
   font-size: 16px;
@@ -89,12 +92,12 @@
   display: none;
 }
 
-/* Pressables: M3 state layer (hover/pressed) + ripple + a slight press-in. */
+/* Pressables: M3 state layer (hover/pressed) + ripple + press scale .97 (v5). */
 .m-press {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  transition: transform 120ms var(--m-ease-std), background-color 150ms var(--m-ease-std), box-shadow 150ms var(--m-ease-std);
+  transition: transform 180ms var(--m-ease-out), background-color 150ms var(--m-ease-std), box-shadow 150ms var(--m-ease-std);
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -115,8 +118,12 @@
 .m-press:active:not(:disabled)::before {
   opacity: 0.1;
 }
-.m-press:active:not(:disabled) {
-  transform: scale(0.985);
+.m-press:active:not(:disabled),
+.m-tap:active {
+  transform: scale(0.97);
+}
+.m-tap {
+  transition: transform 180ms var(--m-ease-out);
 }
 .m-press:disabled {
   cursor: default;
@@ -145,12 +152,13 @@
   }
 }
 
-/* Screen transitions (M3 shared axis X, ~240ms). */
+/* Screen + tab transitions: Android shared axis X (the new screen slides 30px in from the side it lives on
+   while fading in, 300ms ease-out). Transform/opacity only; content is clickable at once. */
 .m-enter-fwd {
-  animation: m-in-fwd 240ms var(--m-ease-emph-decel) both;
+  animation: m-in-fwd 300ms var(--m-ease-out) both;
 }
 .m-enter-back {
-  animation: m-in-back 240ms var(--m-ease-emph-decel) both;
+  animation: m-in-back 300ms var(--m-ease-out) both;
 }
 .m-enter-fade {
   animation: m-fade 200ms var(--m-ease-std) both;
@@ -158,13 +166,19 @@
 @keyframes m-in-fwd {
   from {
     opacity: 0;
-    transform: translateX(28px);
+    transform: translateX(30px);
+  }
+  40% {
+    opacity: 1;
   }
 }
 @keyframes m-in-back {
   from {
     opacity: 0;
-    transform: translateX(-28px);
+    transform: translateX(-30px);
+  }
+  40% {
+    opacity: 1;
   }
 }
 @keyframes m-fade {
@@ -181,8 +195,12 @@
 .m-scrim[data-closing] {
   animation: m-fade-out 180ms var(--m-ease-std) both;
 }
+/* Sheets spring up (v5). The 1% settle would lift the bottom edge, so the surface extends below it. After
+   the entrance the transform belongs to drag-to-dismiss, which springs back the same way. */
 .m-sheet {
-  animation: m-sheet-in 280ms var(--m-ease-emph-decel) both;
+  animation: m-sheet-in 420ms var(--m-spring) backwards;
+  transition: transform 320ms var(--m-spring);
+  box-shadow: 0 48px 0 0 var(--m-surface);
 }
 .m-sheet[data-closing] {
   animation: m-sheet-out 180ms var(--m-ease-emph-accel) both;
@@ -217,41 +235,9 @@
   }
 }
 
-/* Success check: the circle pops, then the tick draws, then a soft ring. */
-.m-check-disc {
-  animation: m-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-.m-check-tick {
-  stroke-dasharray: 30;
-  stroke-dashoffset: 30;
-  animation: m-draw 300ms var(--m-ease-std) 260ms forwards;
-}
-.m-check-ring {
-  animation: m-ring 900ms var(--m-ease-std) 200ms both;
-}
-@keyframes m-pop {
-  from {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-}
-@keyframes m-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes m-ring {
-  from {
-    transform: scale(0.8);
-    opacity: 0.45;
-  }
-  to {
-    transform: scale(1.6);
-    opacity: 0;
-  }
-}
+/* Success screens: lines settle in after the check (SuccessCheck is web's, @/lib/motion). */
 .m-rise {
-  animation: m-rise 320ms var(--m-ease-emph-decel) both;
+  animation: m-rise 360ms var(--m-ease-out) both;
 }
 @keyframes m-rise {
   from {
@@ -260,18 +246,23 @@
   }
 }
 
-/* Skeleton shimmer. */
+/* Skeleton shimmer: a soft highlight sweeps across (transform only, v5). */
 .m-skeleton {
-  background: linear-gradient(90deg, var(--m-surface-2) 0%, var(--m-surface-3) 45%, var(--m-surface-2) 90%);
-  background-size: 220% 100%;
-  animation: m-shimmer 1.3s linear infinite;
+  position: relative;
+  overflow: hidden;
+  background: var(--m-surface-2);
+}
+.m-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--m-surface-3) 90%, var(--m-on-surface) 6%) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: m-shimmer 1.4s var(--m-ease-std) infinite;
 }
 @keyframes m-shimmer {
-  from {
-    background-position: 120% 0;
-  }
   to {
-    background-position: -120% 0;
+    transform: translateX(100%);
   }
 }
 
@@ -306,6 +297,13 @@
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+  }
+  .m-root .m-skeleton::after {
+    display: none;
+  }
+  .m-press:active:not(:disabled),
+  .m-tap:active {
+    transform: none;
   }
 }
 
