@@ -153,6 +153,29 @@ describe("R-009 interrupted settlement recovery", () => {
   });
 });
 
+describe("push-mode normal verification", () => {
+  it("a push credential for an issued challenge is verified by mppx (with receipt), not via the recovery scan", async () => {
+    const quoteId = await newQuote();
+    const k = key();
+    // simulate an issued challenge already recorded for the order
+    await pay({ quoteId, idempotencyKey: k });
+    const orderId = (await order(k)).body.orderId;
+    await withStore((db) => {
+      (db.orders[orderId].pendingAttempts ??= []).push({ challengeId: "chal-P", kind: "issued", fromBlock: "1", at: "", holdUntil: 0, keepUntil: Date.now() + 60_000 });
+    });
+    // the scan would find the (already mined) push tx for chal-P
+    findSettled.mockImplementation(async () => ({ txHash: tx(60), payer: "0x4444444444444444444444444444444444444444", challengeId: "chal-P" }));
+    nextOutcome = { paid: true, txHash: tx(60) };
+    chargeStub.mockClear();
+    const res = await pay({ quoteId, idempotencyKey: k }, `Payment cred:hash:chal-P:${tx(60)}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Payment-Receipt")).toBe(`receipt-${tx(60)}`);
+    const body = await res.json();
+    expect(body.order.history.some((h: { note?: string }) => h.note?.startsWith("Recovered"))).toBe(false);
+    expect(chargeStub).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("push-mode duplicate payments", () => {
   it("a second, already-broadcast payment for a paid order is recorded as unapplied, never fulfilled", async () => {
     const execute = vi.spyOn(getBillProvider("telcel"), "execute");

@@ -175,7 +175,11 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
 
   // R-009: before any new charge, resolve earlier attempts that may have settled on-chain without being
   // recorded (crash/timeout between broadcast and our write).
-  const recovered = await recoverAttempts(order);
+  // The challenge the current credential answers is excluded: that payment goes through mppx's normal
+  // verification (which yields the Payment-Receipt). Push txs are already mined at this point, so the
+  // scan would otherwise "recover" every push payment.
+  const cred = ownCredential(request);
+  const recovered = await recoverAttempts(order, cred?.challengeId);
   if (recovered) return recovered;
 
   // Q-009: an unpaid order whose quote expired is closed rather than charged at a stale price, but only
@@ -189,7 +193,6 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
     throw new BillError(410, "Quote expired before payment; request a new quote", "QUOTE_EXPIRED");
   }
 
-  const cred = ownCredential(request);
   if (cred?.externalId && cred.externalId !== order.orderId)
     throw new BillError(409, "Payment credential is bound to a different order", "CREDENTIAL_ORDER_MISMATCH");
   if (holdActive(order, cred?.challengeId) && cred?.kind !== "hash") throw settlementPending();
@@ -292,15 +295,16 @@ function settlementPending(detail?: string) {
 }
 
 /** Applies an on-chain settlement found for one of the order's recorded attempts. */
-async function recoverAttempts(order: StoredOrder): Promise<PayResult | null> {
-  if (!order.pendingAttempts?.length) return null;
+async function recoverAttempts(order: StoredOrder, excludeChallengeId?: string): Promise<PayResult | null> {
+  const attempts = (order.pendingAttempts ?? []).filter((a) => a.challengeId !== excludeChallengeId);
+  if (!attempts.length) return null;
   let found: FoundPayment | null;
   try {
     found = await findSettledAttempt({
       token: order.token as Address,
       recipient: order.recipient,
       amount: BigInt(order.amount),
-      attempts: order.pendingAttempts,
+      attempts,
     });
   } catch (err) {
     // Can't prove the earlier attempt didn't settle: stay blocked (no new charge) until a scan succeeds.

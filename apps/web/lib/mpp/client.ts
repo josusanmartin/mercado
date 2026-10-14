@@ -20,6 +20,9 @@ export interface PayBillParams {
   /** A local viem account (privateKeyToAccount) for scripts/tests. */
   account?: Account;
   onStage?: (stage: PayStage) => void;
+  /** Force "push" (client broadcasts) or "pull" (server broadcasts). Default: push for wallet clients,
+   *  pull for local accounts. */
+  mode?: "push" | "pull";
 }
 
 export interface PayBillResult {
@@ -69,7 +72,7 @@ export function payBill(params: PayBillParams): Promise<PayBillResult> {
 }
 
 async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
-  const { quoteId, baseUrl = "", walletClient, account, onStage } = params;
+  const { quoteId, baseUrl = "", walletClient, account, onStage, mode } = params;
   if (!walletClient && !account) throw new Error("payBill needs a walletClient or an account");
   const idempotencyKey = params.idempotencyKey ?? crypto.randomUUID();
 
@@ -78,6 +81,7 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
     methods: [
       tempo.charge({
         expectedChainId: TEMPO_MODERATO_CHAIN_ID,
+        ...(mode ? { mode } : {}),
         // Local accounts get a client on the shared chain, whose default fee token is a USD TIP-20:
         // xMXN can't pay Tempo fees (FeeTokenNotUsdError).
         ...(account ? { account, getClient: () => createClient({ chain: tempoModerato, transport: http(), account }) } : {}),

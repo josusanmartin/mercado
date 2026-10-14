@@ -1,5 +1,5 @@
 // Live MPP bill payment check on Moderato (pull mode, local key) through lib/mpp/client.ts. Moves real
-// testnet xMXN to the merchant. Usage (dev server on :3100): npx tsx apps/web/lib/server/__tests__/live-pay.mts [LP|DEPLOYER|…]
+// testnet xMXN to the merchant. Usage (dev server on :3100): npx tsx apps/web/lib/server/__tests__/live-pay.mts [LP|DEPLOYER|…] [pull|push]
 import { readFileSync } from "node:fs";
 import { createPublicClient, http, parseAbi, formatUnits, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -15,6 +15,7 @@ const erc20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
 const bal = (a: string) => pc.readContract({ address: dep.xMXN, abi: erc20, functionName: "balanceOf", args: [a as Hex] });
 
 const who = process.argv[2] ?? "LP";
+const mode = (process.argv[3] as "push" | "pull" | undefined) ?? "pull";
 const account = privateKeyToAccount(env[`${who}_PRIVATE_KEY`] as Hex);
 const merchant = dep.merchant;
 console.log(`payer ${who} ${account.address} xMXN=${formatUnits(await bal(account.address), 6)} merchant=${formatUnits(await bal(merchant), 6)}`);
@@ -24,7 +25,8 @@ const q = await quoteBill({ provider: "telcel", phone: "5512345678", amountMxn: 
 console.log("quote", q.quoteId, q.amount, q.tokenSymbol);
 const m0 = await bal(merchant);
 const stages: string[] = [];
-const r = await payBill({ quoteId: q.quoteId, baseUrl: base, account, onStage: (s) => stages.push(s) });
+const r = await payBill({ quoteId: q.quoteId, baseUrl: base, account, mode, onStage: (s) => stages.push(s) });
+console.log("mode", mode);
 console.log("stages", stages.join(" → "));
 console.log("order", r.order.orderId, r.order.status, "tx", r.order.receipt.txHash, r.order.receipt.explorerUrl);
 console.log("fulfillment", r.order.fulfillment?.reference, r.order.fulfillment?.label);
