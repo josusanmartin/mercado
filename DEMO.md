@@ -23,9 +23,9 @@ The spine of the demo is **one xMXN flow**: the lender funds the pool, the drive
 ## 0:20 Create pesos (/mint)
 
 3. **Demo Tour → LP**. Open **Create pesos**. Show the FX quote, labeled **mock oracle**, and the collateral token **"Testnet OUSD (Tempo faucet, no real value)"**.
-4. Enter 1,000 OUSD. The UI projects mintable xMXN and the ratio. At 20 MXN/USD, mint **10,000 xMXN**, which lands exactly at the recommended **200%** (minimum is 150%, i.e. 13,333 xMXN). **Deposit** → **Mint**. Click the explorer link.
+4. Enter 1,000 OUSD. The UI projects mintable xMXN and the ratio. At 20 MXN/USD, mint **8,000 xMXN**, which lands at **250%** (the demo LP stays ≥250% so it's never near the line; UI recommends ≥200%, minimum 150%). **Deposit** → **Mint**. Click the explorer link.
    - *"Every peso here is minted against an over-collateralized position. Only the vault can mint, and it won't go past 150%."*
-5. Drag the **peso-appreciation slider** (mock scenario, preview-only) from 20 → 13 MXN/USD. The position goes 200% → **130%**, below the 135% liquidation line. (The ratio scales linearly with the rate: 200% × 13/20 = 130%. Liquidation starts below 13.5 MXN/USD.)
+5. Drag the **peso-appreciation slider** (mock scenario, preview-only, runs on *this* position) down from 20 MXN/USD until it **goes red at ~10.8**, where 250% × 10.8/20 = 135%, the liquidation line. That's the dollar falling 46% against the peso (equivalently, the peso gaining ~85% against the dollar).
    - *"A USD-backed peso debt is exposed to peso appreciation. We show that risk instead of hiding it. The slider is preview-only and never touches the shared oracle."*
 
 ## 0:50 Send money (/send)
@@ -51,6 +51,11 @@ The spine of the demo is **one xMXN flow**: the lender funds the pool, the drive
 12. **Get an advance → Repay**. Debt goes to zero.
     - *"Repayment is manual in this demo. Nothing is deducted automatically from Uber payouts."*
 13. **Earn** as **Lender**: realized fees went up and outstanding exposure went down.
+
+## Optional (after the main take): on-chain liquidation proof
+
+Run `npx tsx scripts/demo-journey.ts --steps J7` (wraps `packages/contracts/script/StressDemo.s.sol`). It pauses the desk, opens a separate ~160% position, force-sets the mock oracle 20 → 13, liquidates that position from a liquidator account, restores the price and unpauses the desk. Then it re-runs the health check. Show the `Liquidated` tx on the explorer.
+- *"Liquidation isn't a slide: here's a real liquidation on Tempo, on a dedicated position, with the mock oracle restored seconds later."*
 
 ## 2:35 Close
 
