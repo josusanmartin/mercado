@@ -1,0 +1,68 @@
+/*
+  Editorial layer for the in-phone apps (crew/PRINCIPLES.md): white canvas, pure ink, Archivo Black for
+  balances and titles, Inter Tight for everything else, hairlines instead of boxes, tiny uppercase meta.
+  Owned by mobile2 under components/mobile/extra (mobile may promote it into the kit).
+  `.m-root:has(.m-ed)` retunes the kit tokens for the whole phone (sheets included) while an editorial
+  app is mounted, so kit pieces (BottomSheet, Chip, Skeleton…) sit on the same canvas.
+*/
+.m-root:has(.m-ed),
+.m-ed {
+  --m-surface: #ffffff;
+  --m-surface-1: #ffffff;
+  --m-surface-2: #f4f4f2;
+  --m-surface-3: #ebebe8;
+  --m-on-surface: #0a0a0a;
+  --m-on-surface-variant: #5e5e5e;
+  --m-outline: #0a0a0a;
+  --m-outline-variant: #e6e6e3;
+  --m-accent-container: color-mix(in oklab, var(--m-accent) 12%, white);
+  --m-on-accent-container: color-mix(in oklab, var(--m-accent) 55%, black);
+  --m-ink: #0a0a0a;
+  --m-jade: #1f3d2b;
+  --m-cream: #f2e6c9;
+}
+.m-ed,
+.m-root:has(.m-ed) [role="dialog"] {
+  font-family: var(--font-inter-tight), "Inter Tight", Inter, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+.m-ed .m-display,
+.m-root:has(.m-ed) .m-display {
+  font-family: var(--font-archivo-black), "Archivo Black", Impact, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.88;
+  font-variant-numeric: tabular-nums;
+}
+.m-ed .m-meta,
+.m-root:has(.m-ed) .m-meta {
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--m-on-surface-variant);
+}
+/* Kit sheets on the editorial canvas: square-ish top corners, a hairline instead of a shadow. */
+.m-root:has(.m-ed) .m-sheet {
+  border-radius: 8px 8px 0 0;
+  box-shadow: none;
+  border-top: 1px solid var(--m-on-surface);
+}
+/* Slow, intentional number reveal. */
+.m-ed .m-tick {
+  animation: m-ed-tick 520ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes m-ed-tick {
+  from {
+    opacity: 0;
+    transform: translateY(0.18em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

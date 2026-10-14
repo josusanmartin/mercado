@@ -1,5 +1,5 @@
 "use client";
-// M3 modal bottom sheet, rendered inside the phone screen (portal into AndroidDevice's overlay host).
+// Modal bottom sheet, rendered inside the phone screen (portal into AndroidDevice's overlay host).
 // Scrim tap / Escape / drag-down closes it; it animates out before unmounting.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -64,13 +64,13 @@ export function BottomSheet({
         tabIndex={-1}
         data-closing={closing || undefined}
         className={cn(
-          "m-sheet relative max-h-[92%] overflow-y-auto rounded-t-[28px] bg-[var(--m-surface-1)] pb-6 shadow-[0_-4px_24px_rgb(0_0_0/0.12)] outline-none sm:pb-8",
+          "m-sheet relative max-h-[92%] overflow-y-auto rounded-t-[8px] bg-[var(--m-surface)] pb-6 outline-none sm:pb-8",
           className,
         )}
         style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
       >
         <div
-          className="sticky top-0 z-10 grid h-9 cursor-grab touch-none place-items-center bg-[var(--m-surface-1)]"
+          className="sticky top-0 z-10 grid h-9 cursor-grab touch-none place-items-center bg-[var(--m-surface)]"
           onPointerDown={(e) => {
             if (!dismissable) return;
             start.current = e.clientY;
@@ -84,12 +84,12 @@ export function BottomSheet({
           }}
           aria-hidden
         >
-          <span className="h-1 w-8 rounded-full bg-[var(--m-on-surface-variant)]/40" />
+          <span className="h-1 w-8 rounded-full bg-[var(--m-on-surface-variant)] opacity-50" />
         </div>
         {(title || sub) && (
           <div className="px-6 pb-3">
-            {title && <h3 className="text-[22px] leading-tight font-normal">{title}</h3>}
-            {sub && <p className="mt-1 text-[14px] text-[var(--m-on-surface-variant)]">{sub}</p>}
+            {sub && <p className="m-meta mb-2">{sub}</p>}
+            {title && <h3 className="m-display text-[28px]">{title}</h3>}
           </div>
         )}
         {children}

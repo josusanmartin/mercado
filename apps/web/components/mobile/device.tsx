@@ -1,14 +1,14 @@
 "use client";
 // A generic modern Android phone (no Pixel/Samsung branding, no iPhone cues): slim bezel with a metal
 // rim, centered punch-hole camera, Android 15-style status bar (live clock, wifi, signal, battery),
-// gesture handle, side keys and a faint glass sheen. Below 640px the app IS the phone: no frame, no
+// gesture handle, side keys and a faint glass sheen. The screen is dark-first (crew/mobile.md v2). Below 640px the app IS the phone: no frame, no
 // fake status bar, and sheets/snackbars cover the real viewport.
 // The children render once (one React tree for both sizes), so app state never splits.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { roboto } from "./font";
+import { phoneDisplay, phoneFont } from "./font";
 import "./mobile.css";
 
 type Snack = { id: number; text: string; action?: { label: string; onClick: () => void }; closing?: boolean };
@@ -24,7 +24,8 @@ export function AndroidDevice({
   children,
   label = "Android phone preview",
   accent,
-  statusBar = "#ffffff",
+  statusBar = "var(--m-surface)",
+  theme = "paper",
 }: {
   children: ReactNode;
   label?: string;
@@ -32,6 +33,8 @@ export function AndroidDevice({
   accent?: string;
   /** Status bar background, to match the app's top surface. */
   statusBar?: string;
+  /** "paper" = white canvas, ink type (default); "ink" = black canvas (Card). */
+  theme?: "paper" | "ink";
 }) {
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [snacks, setSnacks] = useState<Snack[]>([]);
@@ -62,11 +65,11 @@ export function AndroidDevice({
           <div
             key={s.id}
             data-closing={s.closing || undefined}
-            className="m-snack pointer-events-auto flex min-h-12 w-full items-center gap-2 rounded-[6px] bg-[#2f3036] py-2 pr-2 pl-4 text-[14px] text-[#f2f0f4] shadow-[0_6px_16px_rgb(0_0_0/0.25)]"
+            className="m-snack pointer-events-auto flex min-h-12 w-full items-center gap-2 rounded-[14px] bg-[var(--m-inverse)] py-2 pr-2 pl-4 text-[15px] text-[var(--m-on-inverse)] shadow-[0_6px_16px_rgb(0_0_0/0.25)]"
           >
             <span className="flex-1">{s.text}</span>
             {s.action && (
-              <button type="button" onClick={s.action.onClick} className="h-10 rounded-full px-3 text-[14px] font-medium text-[#ffb68a]">
+              <button type="button" onClick={s.action.onClick} className="h-10 rounded-full px-3 text-[14px] font-semibold text-[var(--m-on-inverse)] underline-offset-4 hover:underline">
                 {s.action.label}
               </button>
             )}
@@ -87,16 +90,18 @@ export function AndroidDevice({
           <div className="sm:rounded-[44px] sm:bg-[#07080a] sm:p-[7px]">
             <div
               className={cn(
-                roboto.variable,
+                phoneFont.variable,
+                phoneDisplay.variable,
                 "m-root relative flex flex-col overflow-hidden sm:h-[766px] sm:rounded-[37px]",
               )}
               style={style}
+              data-theme={theme}
             >
               <StatusBar bg={statusBar} />
               <div className="m-scroll relative min-h-0 flex-1 sm:overflow-y-auto sm:pb-5">{children}</div>
               {/* gesture navigation handle (edge-to-edge, over the app) */}
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-30 hidden h-5 items-center justify-center sm:flex">
-                <span className="h-[4px] w-[108px] rounded-full bg-[#15171b]/85" />
+                <span className="h-[4px] w-[108px] rounded-full bg-[var(--m-on-surface)] opacity-80" />
               </div>
               {!small && layers}
               {/* glass sheen + camera, above everything */}
@@ -111,7 +116,7 @@ export function AndroidDevice({
       </div>
       {small &&
         createPortal(
-          <div className={cn(roboto.variable, "m-root pointer-events-none fixed inset-0 z-[100] !bg-transparent")} style={style}>
+          <div className={cn(phoneFont.variable, phoneDisplay.variable, "m-root pointer-events-none fixed inset-0 z-[100] !bg-transparent")} style={style} data-theme={theme}>
             {layers}
           </div>,
           document.body,
@@ -127,7 +132,7 @@ function StatusBar({ bg }: { bg: string }) {
   const time = d ? `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}` : "";
   return (
     <div
-      className="relative z-20 hidden h-[34px] shrink-0 items-center justify-between pr-5 pl-6 text-[13.5px] font-medium tracking-[0.01em] text-[#15171b] sm:flex"
+      className="relative z-20 hidden h-[34px] shrink-0 items-center justify-between pr-5 pl-6 text-[13.5px] font-medium tracking-[0.01em] text-[var(--m-on-surface)] sm:flex"
       style={{ background: bg }}
       aria-hidden
     >

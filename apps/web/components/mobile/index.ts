@@ -1,5 +1,6 @@
-// Mercado mobile kit (crew/mobile.md): Material 3-inspired Android UI for every in-phone experience.
-//   <PhoneFrame accent="#ff8a1f">…</PhoneFrame>  (from @/components/console) wraps an app in AndroidDevice.
+// Mercado mobile kit: the in-phone apps (structure: crew/mobile.md v2; style: crew/PRINCIPLES.md).
+//   <PhoneFrame accent="#E2603F" theme="paper" | "ink">…</PhoneFrame> (from @/components/console) wraps an app.
+//   Type: <Display> (Archivo Black, uppercase) for balances/titles, <Meta> for tiny uppercase labels.
 //   Inside: TopAppBar, ListItem, Button, Chip, BottomSheet, NumericKeypad, BottomNav, SuccessScreen, …
 //   useSnackbar()("Copiado") shows a snackbar; ScreenTransition + useNavDirection give M3 motion.
 export { AndroidDevice, InPhone, useOverlayHost, useSnackbar } from "./device";
@@ -9,6 +10,7 @@ export {
   BottomNav,
   Button,
   Chip,
+  Display,
   DemoBadge,
   DetailRows,
   EmptyState,
@@ -18,13 +20,17 @@ export {
   LinearProgress,
   ListHeader,
   ListItem,
+  Meta,
   Pressable,
+  RoundAction,
+  Rule,
   ScreenTransition,
   Skeleton,
   SkeletonList,
   SuccessCheck,
   SuccessScreen,
   Switch,
+  TickUp,
   TopAppBar,
   ripple,
   useNavDirection,

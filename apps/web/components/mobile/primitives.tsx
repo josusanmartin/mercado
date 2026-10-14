@@ -1,6 +1,7 @@
 "use client";
-// Material 3-inspired building blocks for the in-phone apps. All live under .m-root (AndroidDevice),
-// read --m-accent, use 48dp touch targets and 120–250ms motion.
+// Building blocks for the in-phone apps (crew/PRINCIPLES.md on the mobile.md v2 fintech structure):
+// black pill buttons, hairlines, corners ≤8px, Archivo Black display + tiny uppercase meta, ink on
+// white (or the "ink" theme). All live under .m-root (AndroidDevice), read --m-* tokens, 48dp targets.
 import {
   forwardRef,
   useEffect,
@@ -61,15 +62,43 @@ export const Pressable = forwardRef<HTMLButtonElement, PressProps>(function Pres
   );
 });
 
+/* ───────────────────────── type ───────────────────────── */
+
+/** The display face: Archivo Black, uppercase, tight. Balances and screen titles. */
+export function Display({ children, size = 44, className, as: Tag = "p", style }: { children: ReactNode; size?: number; className?: string; as?: "p" | "h1" | "h2" | "span"; style?: CSSProperties }) {
+  return (
+    <Tag className={cn("m-display", className)} style={{ fontSize: size, ...style }}>
+      {children}
+    </Tag>
+  );
+}
+
+/** Tiny uppercase meta line ("■ 02 · REMESAS", "TESTNET · SIN VALOR REAL"). */
+export function Meta({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
+  return (
+    <p className={cn("m-meta", className)} style={style}>
+      {children}
+    </p>
+  );
+}
+
+/** 1px hairline rule. */
+export function Rule({ className }: { className?: string }) {
+  return <hr className={cn("border-0 border-t border-[var(--m-outline-variant)]", className)} />;
+}
+
 /* ───────────────────────── buttons ───────────────────────── */
 
-type Variant = "filled" | "tonal" | "outlined" | "text" | "dark";
+type Variant = "filled" | "accent" | "tonal" | "outlined" | "text" | "dark";
+const DISABLED = "disabled:bg-[var(--m-surface-2)] disabled:text-[var(--m-on-surface-variant)] disabled:border-transparent";
 const VARIANT: Record<Variant, string> = {
-  filled: "bg-[var(--m-accent)] text-[var(--m-on-accent)] disabled:bg-[#1d1b20]/[0.12] disabled:text-[#1d1b20]/40",
-  dark: "bg-[#15171b] text-white disabled:bg-[#1d1b20]/[0.12] disabled:text-[#1d1b20]/40",
-  tonal: "bg-[var(--m-accent-container)] text-[var(--m-on-accent-container)] disabled:bg-[#1d1b20]/[0.12] disabled:text-[#1d1b20]/40",
-  outlined: "border border-[var(--m-outline)] text-[var(--m-on-surface)] disabled:text-[#1d1b20]/40 disabled:border-[#1d1b20]/12",
-  text: "text-[var(--m-on-accent-container)] disabled:text-[#1d1b20]/40",
+  // the black pill (inverts on the ink theme)
+  filled: `bg-[var(--m-inverse)] text-[var(--m-on-inverse)] ${DISABLED}`,
+  dark: `bg-[var(--m-inverse)] text-[var(--m-on-inverse)] ${DISABLED}`,
+  accent: `bg-[var(--m-accent)] text-[var(--m-on-accent)] ${DISABLED}`,
+  tonal: `bg-[var(--m-surface-2)] text-[var(--m-on-surface)] ${DISABLED}`,
+  outlined: "border border-[var(--m-outline)] text-[var(--m-on-surface)] disabled:opacity-40",
+  text: "text-[var(--m-on-surface)] underline-offset-4 hover:underline disabled:opacity-40",
 };
 
 export function Button({
@@ -84,8 +113,8 @@ export function Button({
   return (
     <Pressable
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-[0.01em]",
-        size === "lg" ? "h-[52px] px-6 text-[16px]" : "h-10 px-5 text-[14px]",
+        "inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-[0.06em] uppercase",
+        size === "lg" ? "h-[52px] px-6 text-[13.5px]" : "h-10 px-5 text-[12.5px]",
         VARIANT[variant],
         className,
       )}
@@ -105,16 +134,27 @@ export function IconButton({ label, className, children, ...rest }: PressProps &
   );
 }
 
-/** Extended FAB (M3): 56dp, 16dp radius, accent container. */
+/** Round action: a 56dp circle with a short label underneath (fintech action row). */
+export function RoundAction({ icon, label, onClick, primary, disabled }: { icon: ReactNode; label: string; onClick: () => void; primary?: boolean; disabled?: boolean }) {
+  return (
+    <Pressable onClick={onClick} disabled={disabled} className="grid content-start justify-items-center gap-2 rounded-[8px] px-1 py-1.5 disabled:opacity-40">
+      <span
+        className={cn(
+          "grid size-14 place-items-center rounded-full [&_svg]:size-[22px] [&_svg]:stroke-[1.75]",
+          primary ? "bg-[var(--m-accent)] text-[var(--m-on-accent)]" : "border border-[var(--m-outline)] text-[var(--m-on-surface)]",
+        )}
+      >
+        {icon}
+      </span>
+      <span className="text-center text-[13px] leading-tight font-medium">{label}</span>
+    </Pressable>
+  );
+}
+
+/** Extended FAB: a black pill with an icon. */
 export function Fab({ icon, children, className, ...rest }: PressProps & { icon: ReactNode }) {
   return (
-    <Pressable
-      className={cn(
-        "inline-flex h-14 items-center gap-3 rounded-[16px] bg-[var(--m-accent-container)] px-5 text-[15px] font-medium text-[var(--m-on-accent-container)] shadow-[0_3px_6px_rgb(0_0_0/0.12),0_1px_2px_rgb(0_0_0/0.1)]",
-        className,
-      )}
-      {...rest}
-    >
+    <Pressable className={cn("inline-flex h-14 items-center gap-3 rounded-full bg-[var(--m-inverse)] px-6 text-[14px] font-semibold tracking-[0.04em] text-[var(--m-on-inverse)] uppercase", className)} {...rest}>
       {icon}
       {children}
     </Pressable>
@@ -123,7 +163,7 @@ export function Fab({ icon, children, className, ...rest }: PressProps & { icon:
 
 /* ───────────────────────── app bar / nav ───────────────────────── */
 
-/** M3 small top app bar: 64dp, back arrow, title (+ optional English sub-label), actions. */
+/** Top app bar: back arrow, display title, optional meta line above it, actions. Spanish only. */
 export function TopAppBar({
   title,
   sub,
@@ -133,6 +173,7 @@ export function TopAppBar({
   style,
 }: {
   title: ReactNode;
+  /** tiny uppercase meta under the title */
   sub?: ReactNode;
   onBack?: () => void;
   actions?: ReactNode;
@@ -142,28 +183,40 @@ export function TopAppBar({
   return (
     <header className={cn("sticky top-0 z-10 flex min-h-16 items-center gap-1 bg-[var(--m-surface)] px-1", !onBack && "pl-4", className)} style={style}>
       {onBack && (
-        <IconButton label="Atrás · Back" onClick={onBack}>
-          <ArrowLeft className="size-6" strokeWidth={2} />
+        <IconButton label="Atrás" onClick={onBack}>
+          <ArrowLeft className="size-6" strokeWidth={1.75} />
         </IconButton>
       )}
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-[20px] leading-tight font-normal tracking-normal">{title}</h2>
-        {sub && <p className="truncate text-[13px] text-[var(--m-on-surface-variant)]">{sub}</p>}
+        <h2 className="m-display truncate text-[22px] leading-none">{title}</h2>
+        {sub && <p className="m-meta mt-1 truncate">{sub}</p>}
       </div>
       {actions && <div className="flex items-center">{actions}</div>}
     </header>
   );
 }
 
-export type NavItem<T extends string> = { id: T; label: string; icon: ReactNode };
+export type NavItem<T extends string> = { id: T; label: string; icon: ReactNode; href?: string };
 
-/** M3 navigation bar: 80dp, pill indicator behind the active icon. */
+/** Bottom nav: 4 icons, labels, a small accent dot under the active one. Hairline on top. */
 export function BottomNav<T extends string>({ items, value, onChange }: { items: NavItem<T>[]; value: T; onChange: (id: T) => void }) {
   return (
-    <nav className="relative z-10 grid h-20 sm:sticky sm:bottom-0 grid-flow-col bg-[var(--m-surface-2)] pb-1 sm:-mb-5 sm:h-[100px] sm:pb-5" aria-label="Navegación">
+    <nav className="relative z-10 grid h-[72px] grid-flow-col border-t border-[var(--m-outline-variant)] bg-[var(--m-surface)] sm:sticky sm:bottom-0 sm:-mb-5 sm:h-[92px] sm:pb-5" aria-label="Navegación">
       {items.map((it) => {
         const on = it.id === value;
-        return (
+        const body = (
+          <>
+            <span className={cn("[&_svg]:size-6 [&_svg]:stroke-[1.75]", on ? "text-[var(--m-on-surface)]" : "text-[var(--m-on-surface-variant)]")}>{it.icon}</span>
+            <span className={cn("text-[12px] tracking-[0.02em]", on ? "font-semibold text-[var(--m-on-surface)]" : "font-medium text-[var(--m-on-surface-variant)]")}>{it.label}</span>
+            <span className={cn("size-1 rounded-full transition-opacity duration-200", on ? "opacity-100" : "opacity-0")} style={{ background: "var(--m-accent)" }} />
+          </>
+        );
+        const cls = "grid content-center justify-items-center gap-1";
+        return it.href ? (
+          <a key={it.id} href={it.href} className={cls} onClick={() => haptic()}>
+            {body}
+          </a>
+        ) : (
           <button
             key={it.id}
             type="button"
@@ -172,17 +225,9 @@ export function BottomNav<T extends string>({ items, value, onChange }: { items:
               haptic();
               onChange(it.id);
             }}
-            className="group grid content-center justify-items-center gap-1"
+            className={cls}
           >
-            <span
-              className={cn(
-                "grid h-8 w-16 place-items-center rounded-full transition-colors duration-200 [&_svg]:size-6",
-                on ? "bg-[var(--m-accent-container)] text-[var(--m-on-accent-container)]" : "text-[var(--m-on-surface-variant)] group-hover:bg-black/5",
-              )}
-            >
-              {it.icon}
-            </span>
-            <span className={cn("text-[13px] tracking-[0.02em]", on ? "font-semibold text-[var(--m-on-surface)]" : "font-medium text-[var(--m-on-surface-variant)]")}>{it.label}</span>
+            {body}
           </button>
         );
       })}
@@ -192,10 +237,11 @@ export function BottomNav<T extends string>({ items, value, onChange }: { items:
 
 /* ───────────────────────── lists, avatars, chips ───────────────────────── */
 
-const AVATAR_TONES = ["#ffdcc2", "#d9e2ff", "#ffd8e4", "#c9f0e0", "#ece0ff", "#fff0b3"];
-const AVATAR_INK = ["#6e3900", "#1a3a8f", "#8a1748", "#0b5a43", "#4a2d99", "#6b5200"];
+// Cultural palette tones (PRINCIPLES §2): cream, jade, terracotta, cobalt, rosa, maize.
+const AVATAR_TONES = ["#f2e6c9", "#1f3d2b", "#e2603f", "#2448c8", "#d93a7a", "#e5a823"];
+const AVATAR_INK = ["#0a0a0a", "#f2e6c9", "#ffffff", "#ffffff", "#ffffff", "#0a0a0a"];
 
-/** Initials avatar with a stable soft color per name. */
+/** Initials avatar with a stable cultural color per name. */
 export function Avatar({ name, size = 40, className, children }: { name: string; size?: number; className?: string; children?: ReactNode }) {
   let h = 0;
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -203,21 +249,22 @@ export function Avatar({ name, size = 40, className, children }: { name: string;
   return (
     <span
       aria-hidden
-      className={cn("grid shrink-0 place-items-center rounded-full font-medium", className)}
-      style={{ width: size, height: size, background: AVATAR_TONES[i], color: AVATAR_INK[i], fontSize: size * 0.4 }}
+      className={cn("m-display grid shrink-0 place-items-center rounded-full", className)}
+      style={{ width: size, height: size, background: AVATAR_TONES[i], color: AVATAR_INK[i], fontSize: size * 0.38, lineHeight: 1 }}
     >
       {children ?? initials(name)}
     </span>
   );
 }
 
-/** M3 list item: 56dp (one line) or 72dp (two lines). Pass onClick (or href) to make it pressable. */
+/** Bank-style row: 64dp, round leading, title + subtitle, amount right-aligned. Hairline optional. */
 export function ListItem({
   leading,
   headline,
   supporting,
   trailing,
   trailingSub,
+  trailingTone,
   onClick,
   href,
   divider,
@@ -229,6 +276,8 @@ export function ListItem({
   supporting?: ReactNode;
   trailing?: ReactNode;
   trailingSub?: ReactNode;
+  /** "in" = money in (green, +), default = money out / neutral */
+  trailingTone?: "in" | "out";
   onClick?: () => void;
   href?: string;
   divider?: boolean;
@@ -239,23 +288,18 @@ export function ListItem({
     <>
       {leading}
       <span className="min-w-0 flex-1 text-left">
-        <span className="block truncate text-[16px] leading-6">{headline}</span>
-        {supporting && <span className="block truncate text-[14px] leading-5 text-[var(--m-on-surface-variant)]">{supporting}</span>}
+        <span className="block truncate text-[16px] leading-6 font-medium">{headline}</span>
+        {supporting && <span className="block truncate text-[13.5px] leading-5 text-[var(--m-on-surface-variant)]">{supporting}</span>}
       </span>
       {(trailing || trailingSub) && (
         <span className="shrink-0 text-right">
-          {trailing && <span className="m-num block text-[15px] leading-6 font-medium">{trailing}</span>}
+          {trailing && <span className={cn("m-num block text-[16px] leading-6 font-semibold", trailingTone === "in" && "text-[var(--m-success)]")}>{trailing}</span>}
           {trailingSub && <span className="block text-[13px] leading-5 text-[var(--m-on-surface-variant)]">{trailingSub}</span>}
         </span>
       )}
     </>
   );
-  const cls = cn(
-    "flex w-full items-center gap-4 px-4",
-    supporting ? "min-h-[72px] py-2" : "min-h-14 py-1",
-    divider && "border-b border-[var(--m-outline-variant)]",
-    className,
-  );
+  const cls = cn("flex w-full items-center gap-3.5 px-4", supporting ? "min-h-16 py-2" : "min-h-14 py-1", divider && "border-b border-[var(--m-outline-variant)]", className);
   if (href)
     return (
       <a href={href} target="_blank" rel="noreferrer" className={cn("m-press", cls)} onPointerDown={(e) => ripple(e)}>
@@ -271,38 +315,31 @@ export function ListItem({
   return <div className={cls}>{body}</div>;
 }
 
-/** Section header above a list ("Movimientos · Activity"). */
+/** Section header: tiny uppercase meta + optional action ("MOVIMIENTOS · VER TODO"). */
 export function ListHeader({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex min-h-12 items-center justify-between px-4 pt-2">
-      <p className="text-[14px] font-medium tracking-[0.01em] text-[var(--m-on-surface-variant)]">{children}</p>
+    <div className="flex min-h-11 items-end justify-between px-4 pt-4 pb-1">
+      <p className="m-meta text-[var(--m-on-surface)]">{children}</p>
       {action}
     </div>
   );
 }
 
-/** M3 filter chip: 32dp visual, 48dp hit area. */
-export function Chip({
-  selected,
-  children,
-  icon,
-  className,
-  ...rest
-}: PressProps & { selected?: boolean; icon?: ReactNode }) {
+/** Pill chip: outlined ink, filled ink when selected. 48dp hit area. */
+export function Chip({ selected, children, icon, className, ...rest }: PressProps & { selected?: boolean; icon?: ReactNode }) {
   return (
     <Pressable
       aria-pressed={selected}
       className={cn(
-        "relative inline-flex h-9 items-center gap-1.5 rounded-[8px] px-3.5 text-[14px] font-medium",
+        "relative inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[14px] font-medium",
         "after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']",
-        selected
-          ? "bg-[var(--m-accent-container)] text-[var(--m-on-accent-container)]"
-          : "border border-[var(--m-outline)] text-[var(--m-on-surface-variant)]",
+        selected ? "border-[var(--m-inverse)] bg-[var(--m-inverse)] text-[var(--m-on-inverse)]" : "border-[var(--m-outline)] text-[var(--m-on-surface)]",
+        "disabled:opacity-40",
         className,
       )}
       {...rest}
     >
-      {selected ? <Check className="size-[18px]" strokeWidth={2.25} /> : icon}
+      {selected ? <Check className="size-4" strokeWidth={2.25} /> : icon}
       {children}
     </Pressable>
   );
@@ -310,15 +347,15 @@ export function Chip({
 
 /* ───────────────────────── status, honesty, feedback ───────────────────────── */
 
-/** Small neutral honesty badge ("Demo", "SIMULATED", "demo token"). */
+/** Small precise honesty label ("DEMO", "SIMULADO", "TESTNET · SIN VALOR REAL"). */
 export function DemoBadge({ children = "Demo", tone = "neutral", className }: { children?: ReactNode; tone?: "neutral" | "accent" | "onAccent"; className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-6 shrink-0 items-center rounded-[6px] px-2 text-[12.5px] font-medium tracking-[0.02em]",
-        tone === "neutral" && "bg-[var(--m-surface-3)] text-[var(--m-on-surface-variant)]",
-        tone === "accent" && "bg-[var(--m-accent-container)] text-[var(--m-on-accent-container)]",
-        tone === "onAccent" && "bg-white/20 text-current",
+        "inline-flex h-[22px] shrink-0 items-center gap-1 rounded-[2px] border px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase",
+        tone === "neutral" && "border-[var(--m-outline-variant)] text-[var(--m-on-surface-variant)]",
+        tone === "accent" && "border-transparent bg-[var(--m-accent-container)] text-[var(--m-on-accent-container)]",
+        tone === "onAccent" && "border-current/40 text-current",
         className,
       )}
     >
@@ -327,24 +364,24 @@ export function DemoBadge({ children = "Demo", tone = "neutral", className }: { 
   );
 }
 
-/** The quiet honesty line on money screens. */
+/** The quiet honesty line on money screens (tiny meta, Spanish). */
 export function HonestyNote({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("px-4 text-[13px] leading-[1.4] text-[var(--m-on-surface-variant)]", className)}>{children}</p>;
+  return <p className={cn("m-meta px-4", className)}>{children}</p>;
 }
 
-/** Inline error / info banner. */
+/** Inline message: a thin left rule, no box. */
 export function Banner({ tone = "info", icon, children, action }: { tone?: "info" | "error" | "success"; icon?: ReactNode; children: ReactNode; action?: ReactNode }) {
   return (
     <div
       role={tone === "error" ? "alert" : undefined}
       className={cn(
-        "flex items-start gap-3 rounded-[16px] p-3.5 text-[14px] leading-[1.4]",
-        tone === "info" && "bg-[var(--m-surface-2)] text-[var(--m-on-surface)]",
-        tone === "error" && "bg-[#fde7e6] text-[#7a1712]",
-        tone === "success" && "bg-[#dff3ea] text-[#0b4d37]",
+        "flex items-start gap-3 border-l-2 py-1 pl-3 text-[14px] leading-[1.4]",
+        tone === "info" && "border-[var(--m-on-surface)] text-[var(--m-on-surface)]",
+        tone === "error" && "border-[var(--m-error)] text-[var(--m-error)]",
+        tone === "success" && "border-[var(--m-success)] text-[var(--m-success)]",
       )}
     >
-      {icon && <span className="mt-px shrink-0 [&_svg]:size-5">{icon}</span>}
+      {icon && <span className="mt-px shrink-0 [&_svg]:size-[18px]">{icon}</span>}
       <div className="min-w-0 flex-1">{children}</div>
       {action}
     </div>
@@ -352,15 +389,15 @@ export function Banner({ tone = "info", icon, children, action }: { tone?: "info
 }
 
 export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
-  return <span aria-hidden className={cn("m-skeleton block rounded-[8px]", className)} style={style} />;
+  return <span aria-hidden className={cn("m-skeleton block rounded-[4px]", className)} style={style} />;
 }
 
 /** A list of skeleton rows while data loads. */
 export function SkeletonList({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="grid" aria-busy="true" aria-label="Cargando · Loading">
+    <div className="grid" aria-busy="true" aria-label="Cargando">
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex min-h-[72px] items-center gap-4 px-4">
+        <div key={i} className="flex min-h-16 items-center gap-3.5 px-4">
           <Skeleton className="size-10 rounded-full" />
           <span className="grid flex-1 gap-2">
             <Skeleton className="h-3.5 w-3/5" />
@@ -373,17 +410,17 @@ export function SkeletonList({ rows = 3 }: { rows?: number }) {
   );
 }
 
-/** M3 linear indeterminate progress (top of a busy screen). */
+/** Thin indeterminate progress line (top of a busy screen). */
 export function LinearProgress({ className }: { className?: string }) {
-  return <div role="progressbar" aria-label="Procesando" className={cn("m-progress h-1 w-full rounded-full", className)} />;
+  return <div role="progressbar" aria-label="Procesando" className={cn("m-progress h-[3px] w-full", className)} />;
 }
 
-/** Empty state: icon, title, hint, optional action. */
+/** Empty state: drawing, statement, action. */
 export function EmptyState({ icon, title, hint, action }: { icon: ReactNode; title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="grid justify-items-center gap-2 px-8 py-8 text-center">
-      <span className="grid size-14 place-items-center rounded-full bg-[var(--m-surface-2)] text-[var(--m-on-surface-variant)] [&_svg]:size-6">{icon}</span>
-      <p className="text-[16px] font-medium">{title}</p>
+      <span className="grid size-16 place-items-center text-[var(--m-on-surface)] [&_svg]:size-12">{icon}</span>
+      <p className="m-display text-[22px]">{title}</p>
       {hint && <p className="text-[14px] text-[var(--m-on-surface-variant)]">{hint}</p>}
       {action}
     </div>
@@ -392,7 +429,7 @@ export function EmptyState({ icon, title, hint, action }: { icon: ReactNode; tit
 
 /* ───────────────────────── switch ───────────────────────── */
 
-/** M3 switch: 52×32 track, thumb grows with a check when on. 48dp hit area. */
+/** Switch: 52×32 pill track, ink when on. 48dp hit area. */
 export function Switch({ checked, onChange, disabled, label }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; label: string }) {
   return (
     <button
@@ -410,13 +447,13 @@ export function Switch({ checked, onChange, disabled, label }: { checked: boolea
       <span
         className={cn(
           "relative h-8 w-[52px] rounded-full border-2 transition-colors duration-200",
-          checked ? "border-[var(--m-accent)] bg-[var(--m-accent)]" : "border-[var(--m-outline)] bg-[var(--m-surface-3)]",
+          checked ? "border-[var(--m-accent)] bg-[var(--m-accent)]" : "border-[var(--m-on-surface-variant)] bg-transparent",
         )}
       >
         <span
           className={cn(
             "absolute top-1/2 grid -translate-y-1/2 place-items-center rounded-full transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)]",
-            checked ? "left-[22px] size-6 bg-white text-[var(--m-accent)]" : "left-[4px] size-4 bg-[var(--m-outline)] group-active:size-[22px]",
+            checked ? "left-[22px] size-6 bg-[var(--m-on-accent)] text-[var(--m-accent)]" : "left-[4px] size-4 bg-[var(--m-on-surface-variant)]",
           )}
         >
           {checked && <Check className="size-4" strokeWidth={3} />}
@@ -441,7 +478,7 @@ export function useNavDirection<T extends string>(screen: T, order: readonly T[]
   return order.indexOf(screen) >= order.indexOf(prev.current) ? "fwd" : dir;
 }
 
-/** Re-mounts its child with a shared-axis slide whenever `id` changes. */
+/** Re-mounts its child with a short shared-axis slide whenever `id` changes. */
 export function ScreenTransition({ id, dir = "fwd", children, className }: { id: string; dir?: "fwd" | "back" | "fade"; children: ReactNode; className?: string }) {
   return (
     <div key={id} className={cn(dir === "fwd" ? "m-enter-fwd" : dir === "back" ? "m-enter-back" : "m-enter-fade", "flex min-h-full flex-col", className)}>
@@ -450,52 +487,63 @@ export function ScreenTransition({ id, dir = "fwd", children, className }: { id:
   );
 }
 
-/** The success disc: pops in, draws the tick, sends out one soft ring. */
+/** Counts a number up to `value` once (number tick-up), then follows it. */
+export function TickUp({ value, format, ms = 700 }: { value: number | undefined; format: (n: number) => string; ms?: number }) {
+  const [shown, setShown] = useState<number>();
+  const from = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (value === undefined) return;
+    const start = from.current ?? 0;
+    from.current = value;
+    if (start === value || typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(value);
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms);
+      const e = 1 - Math.pow(1 - k, 3);
+      setShown(start + (value - start) * e);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, ms]);
+  return <>{shown === undefined ? "—" : format(shown)}</>;
+}
+
+/** The success mark: a disc pops in, the tick draws, one soft ring. */
 export function SuccessCheck({ size = 88, color }: { size?: number; color?: string }) {
   const c = color ?? "var(--m-accent)";
   return (
-    <span className="relative grid place-items-center" style={{ width: size, height: size }} role="img" aria-label="Listo · Done">
+    <span className="relative grid place-items-center" style={{ width: size, height: size }} role="img" aria-label="Listo">
       <span className="m-check-ring absolute inset-0 rounded-full" style={{ background: c }} />
       <span className="m-check-disc absolute inset-0 rounded-full" style={{ background: c }} />
-      <svg viewBox="0 0 24 24" className="relative" style={{ width: size * 0.5, height: size * 0.5 }} fill="none" stroke="white" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="relative" style={{ width: size * 0.5, height: size * 0.5 }} fill="none" stroke="var(--m-on-accent)" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
         <path className="m-check-tick" d="M5 12.5l4.5 4.5L19 7.5" />
       </svg>
     </span>
   );
 }
 
-/** Full-screen success layout: check, title, big amount, details, primary action pinned low. */
-export function SuccessScreen({
-  title,
-  amount,
-  caption,
-  children,
-  action,
-}: {
-  title: ReactNode;
-  amount?: ReactNode;
-  caption?: ReactNode;
-  children?: ReactNode;
-  action?: ReactNode;
-}) {
+/** Success layout: check, display statement, big amount, details, black pill pinned low. */
+export function SuccessScreen({ title, amount, caption, children, action }: { title: ReactNode; amount?: ReactNode; caption?: ReactNode; children?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex min-h-full flex-col items-center px-6 pt-12 pb-6 text-center">
-      <SuccessCheck />
-      <p className="m-rise mt-6 text-[22px] leading-tight" style={{ animationDelay: "250ms" }}>
+    <div className="flex min-h-full flex-col px-5 pt-12 pb-6">
+      <SuccessCheck size={72} />
+      <p className="m-display m-rise mt-8 text-[34px]" style={{ animationDelay: "250ms" }}>
         {title}
       </p>
       {amount && (
-        <p className="m-rise m-num mt-2 text-[40px] leading-none font-medium tracking-tight" style={{ animationDelay: "320ms" }}>
+        <p className="m-display m-rise mt-3 text-[46px]" style={{ animationDelay: "320ms", color: "var(--m-accent)" }}>
           {amount}
         </p>
       )}
       {caption && (
-        <p className="m-rise mt-2 text-[14px] text-[var(--m-on-surface-variant)]" style={{ animationDelay: "380ms" }}>
+        <p className="m-meta m-rise mt-3" style={{ animationDelay: "380ms" }}>
           {caption}
         </p>
       )}
       {children && (
-        <div className="m-rise mt-6 w-full text-left" style={{ animationDelay: "440ms" }}>
+        <div className="m-rise mt-6 w-full" style={{ animationDelay: "440ms" }}>
           {children}
         </div>
       )}
@@ -504,15 +552,15 @@ export function SuccessScreen({
   );
 }
 
-/** Label/value rows used on receipts. */
+/** Label/value rows on receipts: hairlines, no box. */
 export function DetailRows({ rows }: { rows: { label: ReactNode; value: ReactNode; sub?: ReactNode }[] }) {
   return (
-    <dl className="grid rounded-[16px] bg-[var(--m-surface-1)] px-4 py-1">
+    <dl className="grid border-t border-[var(--m-outline-variant)]">
       {rows.map((r, i) => (
-        <div key={i} className={cn("flex items-start justify-between gap-3 py-3", i > 0 && "border-t border-[var(--m-outline-variant)]")}>
-          <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{r.label}</dt>
+        <div key={i} className="flex items-start justify-between gap-3 border-b border-[var(--m-outline-variant)] py-3">
+          <dt className="m-meta pt-0.5">{r.label}</dt>
           <dd className="min-w-0 text-right">
-            <span className="m-num block text-[14px] font-medium break-words">{r.value}</span>
+            <span className="m-num block text-[15px] font-semibold break-words">{r.value}</span>
             {r.sub && <span className="block text-[13px] text-[var(--m-on-surface-variant)]">{r.sub}</span>}
           </dd>
         </div>

@@ -1,36 +1,75 @@
 /*
-  Mercado mobile kit (crew/mobile.md): Material 3-inspired Android UI used inside PhoneFrame.
-  Everything is scoped under .m-root so the desktop Brand v4 (Instrument Sans) is untouched.
-  The phone screen always renders light, like a real app with its own theme.
+  Mercado mobile kit: the in-phone apps inside PhoneFrame. Scoped under .m-root.
+  Style = crew/PRINCIPLES.md (editorial, black & white first, cultural accents) on the fintech app
+  structure of crew/mobile.md v2. Themes: default "paper" (white canvas, ink type) and "ink" (Card).
 */
 .m-root {
-  --m-accent: #111418;
+  --m-accent: #0a0a0a; /* product accent, set per app: big blocks + key highlights only */
   --m-on-accent: #ffffff;
-  --m-accent-container: color-mix(in oklab, var(--m-accent) 13%, white);
+  --m-accent-container: color-mix(in oklab, var(--m-accent) 12%, white);
   --m-on-accent-container: color-mix(in oklab, var(--m-accent) 70%, black);
   --m-surface: #ffffff;
-  --m-surface-1: #f7f7f9;
-  --m-surface-2: #f1f2f5;
-  --m-surface-3: #e9ebef;
-  --m-on-surface: #15171b;
-  --m-on-surface-variant: #565c68;
-  --m-outline: #b8bcc5;
-  --m-outline-variant: #e3e5ea;
-  --m-error: #c62828;
-  --m-success: #12805c;
+  --m-surface-1: #f6f5f1;
+  --m-surface-2: #eeece6;
+  --m-surface-3: #e2e0d9;
+  --m-on-surface: #0a0a0a;
+  --m-on-surface-variant: #5c5a55;
+  --m-outline: #0a0a0a;
+  --m-outline-variant: #e3e1da;
+  --m-inverse: #0a0a0a;
+  --m-on-inverse: #ffffff;
+  --m-cream: #f2e6c9;
+  --m-jade: #1f3d2b;
+  --m-terracotta: #e2603f;
+  --m-error: #b42318;
+  --m-success: #1f6b45;
   --m-ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
   --m-ease-emph-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
   --m-ease-std: cubic-bezier(0.2, 0, 0, 1);
 
-  font-family: var(--font-roboto), Roboto, "Google Sans", system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.43;
-  letter-spacing: 0.004em;
+  font-family: var(--font-phone), "Inter Tight", Inter, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
   color: var(--m-on-surface);
   background: var(--m-surface);
   color-scheme: light;
   -webkit-tap-highlight-color: transparent;
-  font-feature-settings: "tnum" 0;
+}
+.m-root[data-theme="ink"] {
+  --m-accent-container: color-mix(in oklab, var(--m-accent) 22%, #0a0a0a);
+  --m-on-accent-container: color-mix(in oklab, var(--m-accent) 45%, white);
+  --m-surface: #0a0a0a;
+  --m-surface-1: #151514;
+  --m-surface-2: #1d1d1b;
+  --m-surface-3: #2a2a27;
+  --m-on-surface: #f7f4ec;
+  --m-on-surface-variant: #a7a399;
+  --m-outline: #f7f4ec;
+  --m-outline-variant: #2a2a27;
+  --m-inverse: #f2e6c9;
+  --m-on-inverse: #0a0a0a;
+  --m-error: #ff8a7a;
+  --m-success: #7fd1a4;
+  color-scheme: dark;
+}
+/* Display: one ultra-heavy grotesque, uppercase, tight. Balances and screen titles. */
+.m-root .m-display {
+  font-family: var(--font-phone-display), "Archivo Black", Impact, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.88;
+  font-variant-numeric: tabular-nums;
+}
+/* Meta: tiny, precise, uppercase. Where honesty labels live. */
+.m-root .m-meta {
+  font-size: 11.5px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--m-on-surface-variant);
 }
 .m-root .m-num {
   font-variant-numeric: tabular-nums;
@@ -136,14 +175,14 @@
 
 /* Bottom sheet + scrim. */
 .m-scrim {
-  background: rgb(0 0 0 / 0.32);
+  background: rgb(10 10 10 / 0.45);
   animation: m-fade 220ms var(--m-ease-std) both;
 }
 .m-scrim[data-closing] {
   animation: m-fade-out 180ms var(--m-ease-std) both;
 }
 .m-sheet {
-  animation: m-sheet-in 250ms var(--m-ease-emph-decel) both;
+  animation: m-sheet-in 280ms var(--m-ease-emph-decel) both;
 }
 .m-sheet[data-closing] {
   animation: m-sheet-out 180ms var(--m-ease-emph-accel) both;
