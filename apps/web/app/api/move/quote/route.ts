@@ -1,5 +1,5 @@
 import { MoveQuoteQuerySchema } from "@mercado/shared";
-import type { Hex } from "viem";
+import { formatUnits, parseUnits, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 import { canonicalJson } from "@/lib/server/credit";
@@ -7,9 +7,10 @@ import { env } from "@/lib/server/env";
 import { jsonError } from "@/lib/server/http";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 import { MoveQuoteError, quoteMove } from "@/lib/server/move/quote";
+import { recordPaidCall } from "@/lib/mpp/ledger";
 
-/** Partner fee per signed quote, in decimal token units. */
-const PARTNER_FEE = { xMXN: "0.50", interim: "0.03" };
+/** Partner fee per signed indicative quote (MPP buys the API response, not the payment itself). */
+const PARTNER_FEE = "0.50"; // xMXN
 
 // GET /api/move/quote?side=usd_to_mxn|mxn_to_usd&amount=100
 //   (app, free)          → indicative quote from the v2 vAMM, or the v1 SwapDesk fallback.
@@ -32,17 +33,27 @@ export async function GET(request: Request) {
     await quoteMove(side, amount);
     const token = billPaymentToken();
     const outcome = await charge(request, {
-      amount: token.interim ? PARTNER_FEE.interim : PARTNER_FEE.xMXN,
+      amount: PARTNER_FEE,
       currency: token.address,
       recipient: merchantAddress(),
       externalId: `move-quote:${side}:${amount}`,
-      description: `Mercado MOVE signed quote (${side}, ${amount}), demo testnet pricing`,
+      description: `Mercado signed indicative quote (${side}, ${amount}): 30s expiry, minimum received bound on-chain`,
       meta: { product: "move-quote" },
       expiresMinutes: 5,
     });
     if (!outcome.paid) return outcome.challenge;
 
     const quote = await quoteMove(side, amount);
+    await recordPaidCall({
+      product: "move-quote",
+      txHash: outcome.txHash,
+      payer: outcome.payer,
+      amount: parseUnits(PARTNER_FEE, 6).toString(),
+      token: token.address,
+      protocol: quote.protocol,
+      summary: `${side} ${amount} → ${formatUnits(BigInt(quote.amountOut), 6)} ${quote.symbolOut}`,
+      at: new Date().toISOString(),
+    });
     const key = env("ATTESTATION_SIGNER_PRIVATE_KEY") as Hex | undefined;
     let signed: { signature?: Hex; signer?: `0x${string}` } = {};
     if (key) {

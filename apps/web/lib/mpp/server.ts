@@ -8,6 +8,7 @@ import { Mppx, tempo } from "mppx/server";
 import { Challenge, Credential, Receipt } from "mppx";
 import type { Address, Hex } from "viem";
 import { requireAddress, serverAddresses } from "../server/protocol";
+import { rpcClient } from "../server/chain";
 import { fileStore } from "./store";
 import { env, repoRoot } from "../server/env";
 
@@ -33,13 +34,11 @@ export function merchantAddress(): Address {
 export interface PaymentToken {
   address: Address;
   symbol: string;
-  /** Always false now: bills settle only in the active protocol's xMXN (no interim token). */
-  interim: boolean;
 }
 
 /** MPP charge token: the active protocol's xMXN (v1 until lead flips; v2's own xMXN after). Fails closed. */
 export function billPaymentToken(): PaymentToken {
-  return { address: requireAddress("xMXN"), symbol: "xMXN", interim: false };
+  return { address: requireAddress("xMXN"), symbol: "xMXN" };
 }
 
 type MppxServer = ReturnType<typeof createMppx>;
@@ -54,6 +53,8 @@ function createMppx() {
         recipient: merchantAddress(),
         currency: billPaymentToken().address,
         store: fileStore(),
+        // Our RPC client (retries + backoff): a transient RPC error mid-verify must not fail a real payment.
+        getClient: () => rpcClient(),
       }),
     ],
   });
@@ -61,7 +62,7 @@ function createMppx() {
 
 // One instance per process (Next dev bundles routes separately, so keep it on globalThis). Replay
 // markers persist in .data/mppx-store.json.
-const KEY = Symbol.for("mercado.mppx.server");
+const KEY = Symbol.for("mercado.mppx.server.rpc-retry"); // bump to re-create after config changes
 export function mppx(): MppxServer {
   const g = globalThis as typeof globalThis & { [KEY]?: MppxServer };
   g[KEY] ??= createMppx();

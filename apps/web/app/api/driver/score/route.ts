@@ -1,12 +1,13 @@
 import { DriverScoreRequestSchema } from "@mercado/shared";
-import type { Address } from "viem";
+import { parseUnits, type Address } from "viem";
 import { assessDriver } from "@/lib/server/credit";
 import { jsonError, parseJson } from "@/lib/server/http";
-import { ProtocolUnavailableError } from "@/lib/server/protocol";
+import { ProtocolUnavailableError, activeProtocolName } from "@/lib/server/protocol";
+import { recordPaidCall } from "@/lib/mpp/ledger";
 import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 
-/** Fee for third-party underwriter access, in decimal token units. */
-const UNDERWRITER_FEE = { xMXN: "2", interim: "0.10" };
+/** Fee for third-party underwriter access, in decimal xMXN. */
+const UNDERWRITER_FEE = "2";
 
 // POST /api/driver/score { borrower, profile }
 //   (app, free)              → deterministic demo score + signed EIP-712 Eligibility (15 min expiry).
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
 
     const token = billPaymentToken();
     const outcome = await charge(request, {
-      amount: token.interim ? UNDERWRITER_FEE.interim : UNDERWRITER_FEE.xMXN,
+      amount: UNDERWRITER_FEE,
       currency: token.address,
       recipient: merchantAddress(),
       externalId: `score:${body.borrower.toLowerCase()}:${body.profile}`,
@@ -31,6 +32,16 @@ export async function POST(request: Request) {
     });
     if (!outcome.paid) return outcome.challenge;
     const report = await assessDriver(body.borrower as Address, body.profile, { borrowCapacityMxn: null });
+    await recordPaidCall({
+      product: "underwriting",
+      txHash: outcome.txHash,
+      payer: outcome.payer,
+      amount: parseUnits(UNDERWRITER_FEE, 6).toString(),
+      token: token.address,
+      protocol: activeProtocolName(),
+      summary: `${body.profile} · score ${report.score}`,
+      at: new Date().toISOString(),
+    });
     const { attestation, attestationWithheld, ...rest } = report;
     void attestation;
     void attestationWithheld;

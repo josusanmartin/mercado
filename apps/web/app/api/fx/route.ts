@@ -1,4 +1,4 @@
-import { getFx } from "@/lib/server/fx";
+import { FxUnavailableError, getFx } from "@/lib/server/fx";
 import { jsonError } from "@/lib/server/http";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 
@@ -7,7 +7,7 @@ export async function GET() {
   try {
     return Response.json(await getFx(), { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
-    if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
+    if (e instanceof ProtocolUnavailableError || e instanceof FxUnavailableError) return jsonError(503, e.message, e.code);
     throw e;
   }
 }

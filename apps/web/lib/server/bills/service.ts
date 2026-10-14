@@ -8,7 +8,6 @@ import type { BillPayRequest, BillPayResponse, BillQuoteRequest, BillQuoteRespon
 import { billPaymentToken, charge, credentialKind, merchantAddress, ownCredential } from "../../mpp/server";
 import { Challenge } from "mppx";
 import { currentBlock, findSettledAttempt, type FoundPayment } from "../../mpp/reconcile";
-import { getFx } from "../fx";
 import { getBillProvider } from "./providers";
 import { withKeyLock } from "./lock";
 import { serverAddresses } from "../protocol";
@@ -32,14 +31,8 @@ export async function createQuote(req: BillQuoteRequest): Promise<BillQuoteRespo
   const provider = getBillProvider(req.provider);
   const pq = await provider.quote(req);
   const token = billPaymentToken();
-  let amount = parseUnits(String(pq.amountMxn), 6); // 1 xMXN per MXN of face value
-  let description = pq.description;
-  if (token.interim) {
-    // xMXN not deployed yet: charge the USD test token at the current (mock) FX rate.
-    const fx = await getFx();
-    amount = (amount * 100_000_000n) / BigInt(fx.mxnPerUsd);
-    description += ` (charged in ${token.symbol} at ${fx.rate} MXN/USD until xMXN is live)`;
-  }
+  const amount = parseUnits(String(pq.amountMxn), 6); // 1 xMXN per MXN of face value
+  const description = pq.description;
   const quote: StoredQuote = {
     quoteId: `q_${randomUUID()}`,
     provider: pq.provider,
@@ -237,11 +230,20 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
 
   if (!outcome.paid) {
     if (cred) {
-      // The credential failed. It may still have settled (e.g. confirmation timed out after broadcast):
-      // check the chain, and don't hand out a fresh challenge while that's unresolved.
-      const late = await recoverAttempts(order);
-      if (late) return late;
-      throw settlementPending(await outcome.challenge.clone().text().catch(() => ""));
+      // The credential failed. It may still have settled (e.g. an RPC error or confirmation timeout after
+      // broadcast): re-check the chain for a few seconds, and don't hand out a fresh challenge while that's
+      // unresolved.
+      const detail = await outcome.challenge.clone().text().catch(() => "");
+      console.warn(`[bills] credential for ${orderId} (${cred.kind}) failed verification: ${detail.slice(0, 300)}`);
+      for (let i = 0; i < LATE_SCAN_TRIES; i++) {
+        const late = await recoverAttempts(order).catch((e) => {
+          if (i === LATE_SCAN_TRIES - 1) throw e;
+          return null;
+        });
+        if (late) return late;
+        if (i < LATE_SCAN_TRIES - 1) await new Promise((r) => setTimeout(r, LATE_SCAN_DELAY_MS));
+      }
+      throw settlementPending(detail);
     }
     await recordIssuedChallenge(orderId, outcome.challenge);
     const headers = new Headers(outcome.challenge.headers);
@@ -259,6 +261,10 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
   order = await fulfill(order.orderId);
   return { kind: "ok", body: toBody(order), receiptHeader: outcome.receiptHeader };
 }
+
+/** After a failed credential, re-scan the chain this many times (a late/lagging settlement still applies). */
+const LATE_SCAN_TRIES = 4;
+const LATE_SCAN_DELAY_MS = process.env.VITEST ? 0 : 2_000;
 
 /** How long a failed/interrupted attempt blocks new charges. Pull-mode txs expire ≤25s after signing. */
 const PENDING_HOLD_MS = 60_000;

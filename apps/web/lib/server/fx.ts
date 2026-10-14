@@ -3,7 +3,6 @@
 // labeled config value with updatedAt 0 (never "updated just now").
 import { parseAbi, type Address } from "viem";
 import type { FxResponse } from "@mercado/shared";
-import { env } from "./env";
 import { requireAddress } from "./protocol";
 import { publicClient } from "./chain";
 
@@ -12,13 +11,14 @@ const oracleAbi = parseAbi([
   "function isMock() view returns (bool)",
 ]);
 
-/** Fallback when no oracle is readable: FX_FALLBACK_MXN_PER_USD (8dp int) or 18.50. Illustrative only. */
-const DEFAULT_FALLBACK = 1_850_000_000n;
+export class FxUnavailableError extends Error {
+  readonly status = 503;
+  readonly code = "FX_UNAVAILABLE";
+}
 
 export async function getFx(): Promise<FxResponse> {
   // The active protocol's oracle; throws ProtocolUnavailableError (503) if v2 is active but incomplete.
   const oracle: Address = requireAddress("oracle");
-  let reason = "oracle unreadable";
   try {
     const client = publicClient();
     const [[mxnPerUsd, updatedAt, valid], isMock] = await Promise.all([
@@ -37,18 +37,7 @@ export async function getFx(): Promise<FxResponse> {
       label: valid ? feed : `${feed}. STALE or PAUSED: minting and liquidation are blocked until it is updated`,
     };
   } catch (err) {
-    reason = `oracle unreadable: ${(err as Error).message.split("\n")[0]}`;
+    // No made-up fallback rate: if the on-chain feed can't be read, say so.
+    throw new FxUnavailableError(`The FX oracle can't be read right now: ${(err as Error).message.split("\n")[0]}`);
   }
-  const raw = env("FX_FALLBACK_MXN_PER_USD");
-  const fallback = raw && /^\d+$/.test(raw) ? BigInt(raw) : DEFAULT_FALLBACK;
-  return {
-    mxnPerUsd: fallback.toString(),
-    rate: Number(fallback) / 1e8,
-    updatedAt: 0,
-    source: "config-fallback",
-    isMock: true,
-    oracle,
-    stale: true,
-    label: `Illustrative config value, not a live rate and not usable for minting (${reason})`,
-  };
 }
