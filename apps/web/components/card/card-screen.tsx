@@ -43,6 +43,18 @@ const HOLDERS: Record<HolderId, { persona: "recipient" | "driver"; hello: string
   driver: { persona: "driver", hello: "Javier", onCard: "Javier · Driver" },
 };
 /** On-chain merchant names are ASCII; show them properly. */
+/** The on-chain name's "(demo merchant)" suffix is honesty text: present mode hides it, the app shows it. */
+function MerchantName({ label }: { label: string }) {
+  const m = label.match(/^(.*?)(\s*\(demo merchant\))$/i);
+  if (!m) return <>{label}</>;
+  return (
+    <>
+      {m[1]}
+      <span data-honesty>{m[2]}</span>
+    </>
+  );
+}
+
 const merchantLabel = (name?: string) => (name ? name.replace(/\bDona\b/g, "Doña").replace(" - ", " · ") : undefined);
 
 function useHolderId(): HolderId {
@@ -282,8 +294,11 @@ function Terminal({
             <Store className="size-5" strokeWidth={1.75} />
           </span>
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">{merchantLabel(stats.merchantName) ?? "Shop terminal"}</h2>
-            <p className="text-muted-foreground text-[13px]">
+            <h2 className="text-xl font-semibold tracking-tight">
+              <MerchantName label={merchantLabel(stats.merchantName) ?? "Shop terminal"} />
+            </h2>
+            {/* Deck capture mode (?present=1, lead 07:12) hides this demo-terminal disclosure; shown by default. */}
+            <p data-honesty className="text-muted-foreground text-[13px]">
               Demo merchant terminal {shortAddr(shop.address)} · {stats.merchantActive ? "allowlisted on MercadoCard" : "checking allowlist…"}
             </p>
           </div>
