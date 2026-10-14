@@ -37,6 +37,14 @@ export function CreditoScreen() {
     url.searchParams.set("tab", tab);
     window.history.replaceState(null, "", url);
   }, [tab]);
+  // v6 CLS (lead 09:43): below 640px the driver tab is a phone app laid out from the first paint (editorial.css);
+  // the back office opts out with <html data-phone-off> (first set before paint by page.tsx's inline script).
+  // Keep it in sync with the tab and drop it when leaving Crédito.
+  useEffect(() => {
+    const html = document.documentElement;
+    html.toggleAttribute("data-phone-off", tab !== "driver");
+    return () => html.removeAttribute("data-phone-off");
+  }, [tab]);
 
   return (
     <SettingsLayout

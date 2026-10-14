@@ -71,6 +71,20 @@
   }
 }
 
+/* v6 CLS (lead 09:43): Crédito's driver tab (the default) is a full-screen phone app below 640px. The shell's
+   data-product="credito" is in the first streamed chunk, so mobile.css's real-phone layout is mirrored for it from
+   the very first paint; only the back office opts out (html[data-phone-off], set by the Crédito page's inline
+   script on ?tab=backoffice and kept in sync by CreditoScreen). Scripting only: without JS the site hero stays. */
+@media (max-width: 639px) and (scripting: enabled) {
+  html:not([data-phone-off]) [data-product="credito"] [data-phone-hide] {
+    display: none !important;
+  }
+  html:not([data-phone-off]):has([data-product="credito"] #main) #main {
+    padding-top: 0;
+    padding-bottom: 96px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .m-root .m-tick,
   .m-root .m-ed-snap,
