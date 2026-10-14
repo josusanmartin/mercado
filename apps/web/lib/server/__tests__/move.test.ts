@@ -9,8 +9,29 @@ const ADDR = {
   oracle: "0x00000000000000000000000000000000000000a1",
   swapDesk: "0x00000000000000000000000000000000000000d1",
 } as const;
-let deployments: Record<string, unknown> = { ...ADDR };
-vi.mock("../deployments", () => ({ getDeployments: () => deployments }));
+const V2 = {
+  vamm: "0x00000000000000000000000000000000000000e1",
+  xMXN: "0x00000000000000000000000000000000000000e3",
+} as const;
+
+// The active protocol's addresses (stand-in for packages/shared/src/protocol.ts activeAddresses()).
+let active: Record<string, unknown> | Error = { protocol: "v1", chainId: 42431, ...ADDR };
+vi.mock("../protocol", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../protocol")>();
+  const serverAddresses = () => {
+    if (active instanceof Error) throw new real.ProtocolUnavailableError(active.message);
+    return active;
+  };
+  return {
+    ...real,
+    serverAddresses,
+    requireAddress: (k: string) => {
+      const v = (serverAddresses() as Record<string, unknown>)[k];
+      if (typeof v !== "string") throw new real.ProtocolUnavailableError(`no ${k}`);
+      return v;
+    },
+  };
+});
 
 let px = 2_000_000_000n; // 20.00 MXN/USD
 let deskImpl: (args: readonly unknown[]) => unknown = ([usdToMxn, amountIn]) => {
@@ -69,34 +90,18 @@ describe("MOVE quotes (v1 SwapDesk fallback)", () => {
     deskImpl = prev;
   });
 
-  it("rejects zero and undeployed", async () => {
+  it("rejects zero, and fails closed when the active protocol lacks a venue", async () => {
     await expect(quoteMove("usd_to_mxn", "0")).rejects.toBeInstanceOf(MoveQuoteError);
-    deployments = {};
-    await expect(quoteMove("usd_to_mxn", "1")).rejects.toMatchObject({ status: 503 });
-    deployments = { ...ADDR };
+    const { ProtocolUnavailableError } = await import("../protocol");
+    active = { protocol: "v1", chainId: 42431, ousd: ADDR.ousd, xMXN: ADDR.xMXN, oracle: ADDR.oracle };
+    await expect(quoteMove("usd_to_mxn", "1")).rejects.toBeInstanceOf(ProtocolUnavailableError);
+    active = { protocol: "v1", chainId: 42431, ...ADDR };
   });
 });
 
 describe("MOVE quotes (v2 vAMM)", () => {
-  const V2 = {
-    vamm: "0x00000000000000000000000000000000000000e1",
-    vault: "0x00000000000000000000000000000000000000e2",
-    xMXN: "0x00000000000000000000000000000000000000e3",
-  };
-
-  it("stays on v1 when v2 is deployed but not flipped (default v1)", async () => {
-    deployments = { ...ADDR, v2: V2 };
-    delete process.env.NEXT_PUBLIC_PROTOCOL;
-    const q = await quoteMove("usd_to_mxn", "100", 1_000);
-    expect(q.protocol).toBe("v1");
-    expect(q.source).toBe("v1-swapdesk");
-    expect(q.tokenOut).toBe(ADDR.xMXN);
-    deployments = { ...ADDR };
-  });
-
-  it("uses only v2 venue + token once flipped, and reports size impact", async () => {
-    deployments = { ...ADDR, v2: V2 };
-    process.env.NEXT_PUBLIC_PROTOCOL = "v2";
+  it("uses only v2 venue + token when v2 is active, and reports size impact", async () => {
+    active = { protocol: "v2", chainId: 42431, ousd: ADDR.ousd, oracle: ADDR.oracle, ...V2 };
     const prev = deskImpl;
     deskImpl = () => [1_985_000_000n, 6_000_000n, 2_000_000_000n, 15n]; // out, fee, mid, impactBps
     const q = await quoteMove("usd_to_mxn", "100", 1_000);
@@ -106,22 +111,27 @@ describe("MOVE quotes (v2 vAMM)", () => {
     expect(q.tokenOut).toBe(V2.xMXN);
     expect(q.sizeImpactBps).toBe(15);
     expect(q.effectiveSpreadBps).toBe(75);
-    expect(q.label).toMatch(/vault vAMM/);
     deskImpl = prev;
-    delete process.env.NEXT_PUBLIC_PROTOCOL;
-    deployments = { ...ADDR };
+    active = { protocol: "v1", chainId: 42431, ...ADDR };
   });
 
-  it("never falls back to v1 when the flipped v2 venue fails", async () => {
-    deployments = { ...ADDR, v2: V2 };
-    process.env.NEXT_PUBLIC_PROTOCOL = "v2";
+  it("fails closed when v2 is selected but incomplete (never falls back to v1)", async () => {
+    const { ProtocolUnavailableError } = await import("../protocol");
+    active = new Error("Mercado v2 is selected but deployments.v2 is missing or incomplete.");
+    await expect(quoteMove("usd_to_mxn", "100")).rejects.toBeInstanceOf(ProtocolUnavailableError);
+    active = { protocol: "v2", chainId: 42431, ousd: ADDR.ousd, oracle: ADDR.oracle, xMXN: V2.xMXN }; // no vamm
+    await expect(quoteMove("usd_to_mxn", "100")).rejects.toBeInstanceOf(ProtocolUnavailableError);
+    active = { protocol: "v1", chainId: 42431, ...ADDR };
+  });
+
+  it("never falls back to v1 when the v2 venue read fails", async () => {
+    active = { protocol: "v2", chainId: 42431, ousd: ADDR.ousd, oracle: ADDR.oracle, ...V2 };
     const prev = deskImpl;
     deskImpl = () => {
       throw new Error("rpc down");
     };
     await expect(quoteMove("usd_to_mxn", "100")).rejects.toMatchObject({ status: 502 });
     deskImpl = prev;
-    delete process.env.NEXT_PUBLIC_PROTOCOL;
-    deployments = { ...ADDR };
+    active = { protocol: "v1", chainId: 42431, ...ADDR };
   });
 });

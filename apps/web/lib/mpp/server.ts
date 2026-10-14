@@ -7,9 +7,7 @@ import path from "node:path";
 import { Mppx, tempo } from "mppx/server";
 import { Challenge, Credential, Receipt } from "mppx";
 import type { Address, Hex } from "viem";
-import { TEMPO_ADDRESSES, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
-import { getDeployments } from "../server/deployments";
-import { activeProtocol } from "../server/protocol";
+import { requireAddress, serverAddresses } from "../server/protocol";
 import { fileStore } from "./store";
 import { env, repoRoot } from "../server/env";
 
@@ -27,27 +25,21 @@ function secretKey(): string {
   return key;
 }
 
+/** MPP recipient: the active protocol's merchant (packages/shared/src/protocol.ts). Fails closed. */
 export function merchantAddress(): Address {
-  const addr = getDeployments().merchant ?? env("MERCHANT_ADDRESS");
-  if (!addr) throw new Error("MERCHANT_ADDRESS is not configured");
-  return addr as Address;
+  return requireAddress("merchant");
 }
 
 export interface PaymentToken {
   address: Address;
   symbol: string;
-  /** true while xMXN isn't deployed and we charge an interim USD test token instead. */
+  /** Always false now: bills settle only in the active protocol's xMXN (no interim token). */
   interim: boolean;
 }
 
-/** Bills settle in xMXN. Before xMXN is deployed we fall back to pathUSD (BILL_TOKEN_ADDRESS overrides). */
+/** MPP charge token: the active protocol's xMXN (v1 until lead flips; v2's own xMXN after). Fails closed. */
 export function billPaymentToken(): PaymentToken {
-  const override = env("BILL_TOKEN_ADDRESS") as Address | undefined;
-  if (override) return { address: override, symbol: env("BILL_TOKEN_SYMBOL") ?? "TOKEN", interim: true };
-  // Same version gate as the rest of the app: v1 xMXN until lead flips NEXT_PUBLIC_PROTOCOL=v2.
-  const xmxn = activeProtocol().xmxn;
-  if (xmxn) return { address: xmxn, symbol: "xMXN", interim: false };
-  return { address: TEMPO_ADDRESSES.pathUSD, symbol: "pathUSD", interim: true };
+  return { address: requireAddress("xMXN"), symbol: "xMXN", interim: false };
 }
 
 type MppxServer = ReturnType<typeof createMppx>;
@@ -114,7 +106,7 @@ export async function charge(request: Request, opts: ChargeOptions): Promise<Cha
     description: opts.description,
     meta: opts.meta,
     expires: new Date(Date.now() + (opts.expiresMinutes ?? 10) * 60_000).toISOString(),
-    chainId: TEMPO_MODERATO_CHAIN_ID,
+    chainId: serverAddresses().chainId,
   })(request);
 
   if (result.status === 402) return { paid: false, challenge: result.challenge as Response };

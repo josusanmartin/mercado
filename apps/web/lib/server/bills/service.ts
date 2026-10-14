@@ -3,7 +3,7 @@
 // Idempotency: one order per idempotencyKey, one order per quote, one order per payment tx.
 import { randomUUID } from "node:crypto";
 import { formatUnits, parseUnits, type Address } from "viem";
-import { SIMULATED_FULFILLMENT_LABEL, TEMPO_MODERATO_CHAIN_ID, explorerTx } from "@mercado/shared";
+import { SIMULATED_FULFILLMENT_LABEL, explorerTx } from "@mercado/shared";
 import type { BillPayRequest, BillPayResponse, BillQuoteRequest, BillQuoteResponse } from "@mercado/shared";
 import { billPaymentToken, charge, credentialKind, merchantAddress, ownCredential } from "../../mpp/server";
 import { Challenge } from "mppx";
@@ -11,6 +11,7 @@ import { currentBlock, findSettledAttempt, type FoundPayment } from "../../mpp/r
 import { getFx } from "../fx";
 import { getBillProvider } from "./providers";
 import { withKeyLock } from "./lock";
+import { serverAddresses } from "../protocol";
 import { publicOrder, readStore, transition, withStore, type StoredOrder, type StoredQuote } from "./store";
 
 export { BillQuoteError } from "./providers";
@@ -182,6 +183,16 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
   const recovered = await recoverAttempts(order, cred?.challengeId);
   if (recovered) return recovered;
 
+  // Protocol switch: an unpaid order quoted in another protocol version (different xMXN) is never charged
+  // in the new one. Closed like an expired quote once no earlier attempt is unresolved.
+  const activeToken = billPaymentToken().address.toLowerCase();
+  if (order.token.toLowerCase() !== activeToken && !request.headers.get("Authorization")) {
+    const live = await readStore((db) => (db.orders[orderId].pendingAttempts ?? []).filter((a) => a.kind !== "issued" || a.keepUntil > Date.now()).length);
+    if (live) throw settlementPending();
+    await withStore((db) => transition(db.orders[orderId], "FAILED", "Quoted in another protocol version; no payment was received."));
+    throw new BillError(410, "This quote is from another protocol version; request a new quote", "QUOTE_STALE_PROTOCOL");
+  }
+
   // Q-009: an unpaid order whose quote expired is closed rather than charged at a stale price, but only
   // once no earlier attempt is unresolved (recovery above ran first and throws while it can't decide).
   // A request that already carries a credential is still verified (its challenge has its own expiry).
@@ -344,7 +355,7 @@ async function recordPayment(
       token: o.token,
       payer: p.payer,
       recipient: o.recipient,
-      chainId: TEMPO_MODERATO_CHAIN_ID,
+      chainId: serverAddresses().chainId,
       mppReceipt: p.receiptHeader,
       verifiedAt: new Date().toISOString(),
       explorerUrl: explorerTx(p.txHash),

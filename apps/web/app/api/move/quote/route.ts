@@ -5,6 +5,7 @@ import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 import { canonicalJson } from "@/lib/server/credit";
 import { env } from "@/lib/server/env";
 import { jsonError } from "@/lib/server/http";
+import { ProtocolUnavailableError } from "@/lib/server/protocol";
 import { MoveQuoteError, quoteMove } from "@/lib/server/move/quote";
 
 /** Partner fee per signed quote, in decimal token units. */
@@ -54,6 +55,7 @@ export async function GET(request: Request) {
     );
   } catch (e) {
     if (e instanceof MoveQuoteError) return jsonError(e.status, e.message, e.code);
+    if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
     console.error("[api/move/quote]", e);
     return jsonError(500, "Quote failed", "QUOTE_FAILED");
   }

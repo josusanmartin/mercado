@@ -1,30 +1,40 @@
-// Active protocol version, server side. Mirrors apps/web/lib/v2/addresses.ts: v1 is the default until lead
-// flips NEXT_PUBLIC_PROTOCOL=v2 AND v2 is actually deployed (deployments.v2 has vault, AMM and xMXN).
-// Once a version is chosen, every address comes from that version only: never mix or fall back across.
+// Server-side view of the active protocol. The ONE source of truth is packages/shared/src/protocol.ts
+// (activeAddresses(); NEXT_PUBLIC_MERCADO_PROTOCOL / MERCADO_PROTOCOL, default v1, only lead flips).
+// This wrapper only adds fail-closed checks for the addresses each server feature needs: when v2 is
+// active but incomplete, the feature errors (503) instead of falling back to v1 or to an env override.
 import type { Address } from "viem";
-import { getDeployments } from "./deployments";
-import { env } from "./env";
+import {
+  ACTIVE_PROTOCOL,
+  activeAddresses,
+  type ProtocolAddresses,
+} from "@mercado/shared";
 
 const ADDR = /^0x[0-9a-fA-F]{40}$/;
 
-export type Protocol =
-  | { version: "v1"; xmxn?: Address; swapDesk?: Address; creditPool?: Address }
-  | { version: "v2"; xmxn: Address; amm: Address; vault: Address; creditPool?: Address };
-
-export function activeProtocol(): Protocol {
-  const d = getDeployments();
-  const raw = (d.v2 ?? {}) as Record<string, unknown>;
-  const pick = (...keys: string[]) => {
-    for (const k of keys) {
-      const v = raw[k];
-      if (typeof v === "string" && ADDR.test(v)) return v as Address;
-    }
-    return undefined;
-  };
-  const amm = pick("vamm", "moveAmm", "moveAMM", "amm");
-  const vault = pick("vault", "multiCollateralVault");
-  const xmxn = pick("xMXN", "xmxn");
-  if (env("NEXT_PUBLIC_PROTOCOL") === "v2" && amm && vault && xmxn)
-    return { version: "v2", xmxn, amm, vault, creditPool: pick("creditPool") };
-  return { version: "v1", xmxn: d.xMXN, swapDesk: d.swapDesk, creditPool: d.creditPool };
+export class ProtocolUnavailableError extends Error {
+  readonly status = 503;
+  readonly code = "PROTOCOL_UNAVAILABLE";
 }
+
+export function serverAddresses(): ProtocolAddresses {
+  try {
+    return activeAddresses();
+  } catch (e) {
+    throw new ProtocolUnavailableError((e as Error).message);
+  }
+}
+
+/** The named address of the active protocol, or ProtocolUnavailableError if it's missing/invalid. */
+export function requireAddress<K extends keyof ProtocolAddresses>(
+  key: K,
+): Address {
+  const a = serverAddresses();
+  const v = a[key];
+  if (typeof v !== "string" || !ADDR.test(v) || /^0x0{40}$/.test(v))
+    throw new ProtocolUnavailableError(
+      `Mercado ${a.protocol} has no ${String(key)} deployed.`,
+    );
+  return v as Address;
+}
+
+export const activeProtocolName = () => ACTIVE_PROTOCOL;

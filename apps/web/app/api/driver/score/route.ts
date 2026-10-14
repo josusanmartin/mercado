@@ -2,6 +2,7 @@ import { DriverScoreRequestSchema } from "@mercado/shared";
 import type { Address } from "viem";
 import { assessDriver } from "@/lib/server/credit";
 import { jsonError, parseJson } from "@/lib/server/http";
+import { ProtocolUnavailableError } from "@/lib/server/protocol";
 import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 
 /** Fee for third-party underwriter access, in decimal token units. */
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       { headers: { "Payment-Receipt": outcome.receiptHeader, "Cache-Control": "private, no-store" } },
     );
   } catch (e) {
+    if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
     console.error("[api/driver/score]", e);
     return jsonError(500, "Scoring failed", "SCORE_FAILED");
   }

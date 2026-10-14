@@ -3,8 +3,8 @@
 // labeled config value with updatedAt 0 (never "updated just now").
 import { parseAbi, type Address } from "viem";
 import type { FxResponse } from "@mercado/shared";
-import { getDeployments } from "./deployments";
 import { env } from "./env";
+import { requireAddress } from "./protocol";
 import { publicClient } from "./chain";
 
 const oracleAbi = parseAbi([
@@ -16,29 +16,28 @@ const oracleAbi = parseAbi([
 const DEFAULT_FALLBACK = 1_850_000_000n;
 
 export async function getFx(): Promise<FxResponse> {
-  const oracle = (getDeployments().oracle ?? env("FX_ORACLE_ADDRESS")) as Address | undefined;
-  let reason = "oracle not deployed yet";
-  if (oracle) {
-    try {
-      const client = publicClient();
-      const [[mxnPerUsd, updatedAt, valid], isMock] = await Promise.all([
-        client.readContract({ address: oracle, abi: oracleAbi, functionName: "peek" }),
-        client.readContract({ address: oracle, abi: oracleAbi, functionName: "isMock" }).catch(() => true),
-      ]);
-      const feed = isMock ? "Testnet admin-controlled mock FX feed, not a live market rate" : "On-chain FX oracle (testnet)";
-      return {
-        mxnPerUsd: mxnPerUsd.toString(),
-        rate: Number(mxnPerUsd) / 1e8,
-        updatedAt: Number(updatedAt),
-        source: "mock-admin-oracle",
-        isMock,
-        oracle,
-        stale: !valid,
-        label: valid ? feed : `${feed}. STALE or PAUSED: minting and liquidation are blocked until it is updated`,
-      };
-    } catch (err) {
-      reason = `oracle unreadable: ${(err as Error).message.split("\n")[0]}`;
-    }
+  // The active protocol's oracle; throws ProtocolUnavailableError (503) if v2 is active but incomplete.
+  const oracle: Address = requireAddress("oracle");
+  let reason = "oracle unreadable";
+  try {
+    const client = publicClient();
+    const [[mxnPerUsd, updatedAt, valid], isMock] = await Promise.all([
+      client.readContract({ address: oracle, abi: oracleAbi, functionName: "peek" }),
+      client.readContract({ address: oracle, abi: oracleAbi, functionName: "isMock" }).catch(() => true),
+    ]);
+    const feed = isMock ? "Testnet admin-controlled mock FX feed, not a live market rate" : "On-chain FX oracle (testnet)";
+    return {
+      mxnPerUsd: mxnPerUsd.toString(),
+      rate: Number(mxnPerUsd) / 1e8,
+      updatedAt: Number(updatedAt),
+      source: "mock-admin-oracle",
+      isMock,
+      oracle,
+      stale: !valid,
+      label: valid ? feed : `${feed}. STALE or PAUSED: minting and liquidation are blocked until it is updated`,
+    };
+  } catch (err) {
+    reason = `oracle unreadable: ${(err as Error).message.split("\n")[0]}`;
   }
   const raw = env("FX_FALLBACK_MXN_PER_USD");
   const fallback = raw && /^\d+$/.test(raw) ? BigInt(raw) : DEFAULT_FALLBACK;

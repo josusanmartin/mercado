@@ -1,6 +1,7 @@
 import { BillPayRequestSchema } from "@mercado/shared";
 import { BillError, payBill } from "@/lib/server/bills/service";
 import { jsonError, parseJson } from "@/lib/server/http";
+import { ProtocolUnavailableError } from "@/lib/server/protocol";
 
 // POST /api/bills/pay { quoteId, idempotencyKey }
 //   unpaid → 402 + WWW-Authenticate: Payment … (mppx Tempo charge bound to this order)
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     return Response.json(result.body, { headers });
   } catch (e) {
     if (e instanceof BillError) return jsonError(e.status, e.message, e.code);
+    if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
     console.error("[api/bills/pay]", e);
     return jsonError(500, "Payment processing failed", "PAY_FAILED");
   }

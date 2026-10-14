@@ -1,12 +1,13 @@
 // Credit service: demo earnings → deterministic score → signed, expiring EIP-712 eligibility attestation.
 import { formatUnits, parseAbi, parseUnits, type Address, type Hex } from "viem";
-import { DEMO_UBER_LABEL, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
+import { DEMO_UBER_LABEL } from "@mercado/shared";
 import type { DriverProfileId, DriverScoreResponse } from "@mercado/shared";
-import { activeProtocol } from "../protocol";
+import { requireAddress, serverAddresses } from "../protocol";
 import { env } from "../env";
 import { publicClient } from "../chain";
 import { DemoEarningsProvider, type EarningsProvider } from "./provider";
 import { SCORE_FLOOR, SCORE_VERSION, scoreDriver } from "./score";
+import { privateKeyToAccount } from "viem/accounts";
 import { ATTESTATION_TTL_SECONDS, randomNonce, reportDataHash, signEligibility } from "./attest";
 
 export * from "./provider";
@@ -15,11 +16,9 @@ export * from "./attest";
 
 const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
 
-export function creditPoolAddress(): Address | undefined {
-  const proto = activeProtocol();
-  // v2 fails closed: never sign an attestation for the v1 pool (or an env override) while v2 is active.
-  if (proto.version === "v2") return proto.creditPool;
-  return proto.creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
+/** The active protocol's CreditPool (packages/shared/src/protocol.ts). Fails closed: no v1/env fallback. */
+export function creditPoolAddress(): Address {
+  return requireAddress("creditPool");
 }
 
 /**
@@ -36,6 +35,9 @@ export interface AssessOptions {
   borrowCapacityMxn?: number | null;
   pool?: Address;
   signerKey?: Hex;
+  /** Address the pool trusts (default: the active protocol's attestationSigner). */
+  expectedSigner?: Address;
+  chainId?: number;
   now?: number; // unix seconds
 }
 
@@ -51,7 +53,8 @@ export async function assessDriver(
     provider.getPayments(profile),
   ]);
 
-  const pool = opts.pool ?? creditPoolAddress();
+  const pool = "pool" in opts ? opts.pool : creditPoolAddress();
+  const chainId = opts.chainId ?? serverAddresses().chainId;
   const result = scoreDriver(weeks);
   const maxAmount = parseUnits(String(result.capMxn), 6);
 
@@ -129,7 +132,9 @@ export async function assessDriver(
           ? "no borrowing capacity available right now"
           : !signerKey
             ? "the attestation signer key is not configured"
-            : undefined;
+            : !signerMatches(signerKey, opts.expectedSigner ?? serverAddresses().attestationSigner)
+              ? "this server's signing key isn't the one the credit pool trusts"
+              : undefined;
   if (withheld || !pool || !signerKey) {
     response.explanation.push(`No attestation issued: ${withheld ?? "unavailable"}.`);
     response.attestationWithheld = withheld ?? "unavailable";
@@ -139,7 +144,7 @@ export async function assessDriver(
   const now = opts.now ?? Math.floor(Date.now() / 1000);
   const expiry = BigInt(now + ATTESTATION_TTL_SECONDS);
   const nonce = randomNonce();
-  const { signature, signer } = await signEligibility(signerKey, pool, { borrower, maxAmount, expiry, nonce, dataHash });
+  const { signature, signer } = await signEligibility(signerKey, pool, { borrower, maxAmount, expiry, nonce, dataHash }, chainId);
   response.attestation = {
     borrower,
     maxAmount: maxAmount.toString(),
@@ -149,7 +154,12 @@ export async function assessDriver(
     signature,
     signer,
     pool,
-    chainId: TEMPO_MODERATO_CHAIN_ID,
+    chainId,
   };
   return response;
+}
+
+function signerMatches(key: Hex, expected: Address | undefined): boolean {
+  if (!expected) return false;
+  return privateKeyToAccount(key).address.toLowerCase() === expected.toLowerCase();
 }

@@ -16,7 +16,7 @@ const KEY = generatePrivateKey();
 const SIGNER = privateKeyToAccount(KEY).address;
 const POOL: Address = "0x000000000000000000000000000000000000bEEF";
 const BORROWER: Address = "0x1111111111111111111111111111111111111111";
-const base = { pool: POOL, signerKey: KEY, borrowCapacityMxn: 100_000 } as const;
+const base = { pool: POOL, signerKey: KEY, expectedSigner: SIGNER, chainId: 42431, borrowCapacityMxn: 100_000 } as const;
 
 describe("credit score", () => {
   it("is deterministic for the same fixture and borrower (nonce aside)", async () => {
@@ -77,20 +77,28 @@ describe("credit score", () => {
   });
 
   it("withholds the attestation when pool capacity can't be read (R-001)", async () => {
-    const r = await assessDriver(BORROWER, "steady", { pool: POOL, signerKey: KEY });
+    const r = await assessDriver(BORROWER, "steady", { pool: POOL, signerKey: KEY, expectedSigner: SIGNER, chainId: 42431 });
     expect(r.eligible).toBe(true);
     expect(r.attestation).toBeUndefined();
     expect(r.attestationWithheld).toMatch(/capacity/);
   });
 
   it("withholds the attestation when the pool isn't deployed", async () => {
-    const r = await assessDriver(BORROWER, "steady", { pool: undefined, signerKey: KEY, borrowCapacityMxn: null });
+    const r = await assessDriver(BORROWER, "steady", { pool: undefined, signerKey: KEY, expectedSigner: SIGNER, chainId: 42431, borrowCapacityMxn: null });
     expect(r.attestation).toBeUndefined();
     expect(r.attestationWithheld).toBeTruthy();
   });
 });
 
 describe("eligibility attestation", () => {
+  it("withholds the attestation if this server's key isn't the signer the pool trusts", async () => {
+    const other = privateKeyToAccount(generatePrivateKey()).address;
+    const r = await assessDriver(BORROWER, "steady", { ...base, expectedSigner: other });
+    expect(r.eligible).toBe(true);
+    expect(r.attestation).toBeUndefined();
+    expect(r.attestationWithheld).toMatch(/signing key/);
+  });
+
   it("signature recovers to the attestation signer over the EIP-712 domain", async () => {
     const r = await assessDriver(BORROWER, "steady", base);
     const att = r.attestation!;

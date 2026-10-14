@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClientOnly } from "@/components/console";
 import { CreditScreen } from "@/components/credit/credit-screen";
 
 export const metadata: Metadata = { title: "Get an advance" };
@@ -8,5 +9,10 @@ export const metadata: Metadata = { title: "Get an advance" };
 export const instant = false;
 
 export default function Page() {
-  return <CreditScreen />;
+  // Wallet state restores before hydration, so render only on the client (no hydration mismatch).
+  return (
+    <ClientOnly>
+      <CreditScreen />
+    </ClientOnly>
+  );
 }
