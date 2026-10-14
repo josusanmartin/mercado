@@ -2,7 +2,12 @@
 // v5 UI pass gate (lead 04:44): after each web/mobile push, READ-ONLY. For every route at 1440x900 in dark + light,
 // with normal and reduced motion, plus a 390x844 phone-width pass (dark): HTTP 200, zero console errors, no horizontal overflow, the phone ending ≤868px
 // (lead 04:53) or the page's primary action inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
+// Motion (v6): no animation > 2 s after settle unless it's an intentional loop ([data-loop] / counter / ticker; FlowPath
+// dots must be still at arrival, lead 09:12 V6 #2),
+// and nothing long or infinite under reduced motion. CLS on arrival ≤ 0.05 (desktop gate).
 // Headings: h1/h2 accessible names must be words, not spaced letters (lead 06:11).
+// v6: product pages keep ≥1 visible data-honesty label in normal mode (gate); 'walls' = paragraphs > 30 words in the
+// desktop panels outside phones/closed <details> (informational: v6 should drive it toward 0).
 // Screenshots go to review/qa-v5/<label>/ for before/after comparison.
 //   node scripts/v5-check.mjs before        # baseline
 //   node scripts/v5-check.mjs after-<sha>   # after a push; exit 1 on any FAIL
@@ -42,6 +47,15 @@ const RUNS = [
 for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390' ? x.w < 1000 : ONLY === 'desktop' && x.w >= 1000))) {
   {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: motion, ...(w < 500 ? { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : {}) })
+    // lead 08:4x: CLS ~0 on route arrival (layout shifts without recent input, buffered from navigation start)
+    await ctx.addInitScript(() => {
+      window.__cls = 0
+      try {
+        new PerformanceObserver((l) => {
+          for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value
+        }).observe({ type: 'layout-shift', buffered: true })
+      } catch {}
+    })
     await ctx.addInitScript((t) => {
       try {
         localStorage.setItem('mercado.theme', t)
@@ -87,11 +101,51 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
           // gate the fold on desktop only; at 390px the page scrolls by design (informational)
           if (w >= 1000 && (!box || box.y + box.height > limit)) row.notes.push(r.phone ? 'phone below the fold' : 'primary action below the fold')
         }
+        // v6 guardrails (PRINCIPLES §v6): honesty labels stay visible in normal mode; count 'text walls'
+        // (paragraphs > 30 words in the desktop panels, outside the phones and outside closed <details>)
+        if (motion === 'no-preference' && w >= 1000) {
+          const m = await page.evaluate(() => {
+            const vis = (el) => { const b = el.getBoundingClientRect(); const cs = getComputedStyle(el); return b.width > 0 && b.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' }
+            const honesty = [...document.querySelectorAll('[data-honesty]')].filter(vis).length
+            const walls = [...document.querySelectorAll('main p, main li')]
+              .filter((el) => !el.closest('.m-root, [role=group][aria-label*=Android], details:not([open])') && vis(el))
+              .map((el) => (el.textContent ?? '').trim().split(/\s+/).filter(Boolean).length)
+              .filter((n) => n > 30)
+            return { honesty, walls: walls.length, maxWords: Math.max(0, ...walls) }
+          })
+          row.honesty = m.honesty
+          row.walls = m.walls
+          row.fold += ` · honesty ${m.honesty} · walls ${m.walls}${m.walls ? ` (max ${m.maxWords}w)` : ''}`
+          if (r.path !== '/' && m.honesty === 0) row.notes.push('no visible data-honesty labels in normal mode (v6 guardrail)')
+        }
         // lead 06:11: every h1/h2 accessible name is the word, not 'C r é d i t o' (LetterReveal a11y)
         if (motion === 'no-preference') {
           const snap = await page.locator('body').ariaSnapshot().catch(() => '')
           const spaced = [...snap.matchAll(/heading "([^"]*)" \[level=[12]\]/g)].map((m) => m[1]).filter((t) => /(?:^|\s)(?:\S\s){3,}\S(?:\s|$)/u.test(t))
           if (spaced.length) row.notes.push(`heading name spelled out: "${spaced[0].slice(0, 40)}"`)
+        }
+        // lead 08:4x: no animation running > 2 s after settle, except intentional loops (live counters, FlowPath dots)
+        // marked [data-loop] or with a flow/counter/ticker class; those must stop under reduced motion (checked below)
+        const longAnims = await page.evaluate(() =>
+          document
+            .getAnimations()
+            .filter((a) => a.playState === 'running')
+            .map((a) => {
+              const t = a.effect?.getTiming?.() ?? {}
+              const el = a.effect?.target
+              const allowed = !!el?.closest?.('[data-loop], [class*="counter" i], [class*="ticker" i]') // lead 09:12 V6 #2: FlowPath dots travel only while a payment is pending, so on arrival (nothing pending) a moving flow dot is a fail
+              return { d: Number(t.duration) || 0, it: t.iterations, allowed, name: a.animationName ?? a.constructor.name, el: el ? `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)}` : '' }
+            })
+            .filter((x) => x.d * (x.it === Infinity ? Infinity : x.it || 1) > 2000),
+        )
+        const loops = longAnims.filter((a) => a.allowed).length
+        const bad = longAnims.filter((a) => !a.allowed)
+        if (motion === 'no-preference') {
+          row.anims = `${loops} loop${bad.length ? ` + ${bad.length} long` : ''}`
+          if (bad.length) row.notes.push(`animation > 2 s not marked data-loop: ${bad.slice(0, 2).map((l) => `${l.name}@${l.el}`).join(', ')}`)
+          const cls = await page.evaluate(() => window.__cls ?? 0)
+          row.fold += ` · CLS ${cls.toFixed(3)}`
+          if (w >= 1000 && cls > 0.05) row.notes.push(`CLS ${cls.toFixed(3)} > 0.05 on arrival`)
         }
         if (motion === 'reduce') {
           // anything still animating 1.5s after settle, longer than 1s and not a 1-frame tick, is a reduced-motion leak
