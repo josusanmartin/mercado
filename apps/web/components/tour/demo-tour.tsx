@@ -537,7 +537,7 @@ export function TourChip({ className }: { className?: string }) {
       onClick={() => setMinimized(!minimized)}
       aria-expanded={!minimized}
       aria-label={`Demo Tour step ${index + 1} of ${TOUR.length}: ${product.short}. ${minimized ? "Show" : "Hide"} the step`}
-      className={cn("meta flex items-center gap-1.5 rounded-full border px-3 py-1.5", className)}
+      className={cn("meta flex items-center gap-1.5 rounded-full border px-3 py-1.5 max-sm:h-[34px] max-sm:w-[6.875rem] max-sm:justify-center", className)}
     >
       <span className="size-2 rounded-full" style={{ background: product.color }} aria-hidden />
       Tour {index + 1}/{TOUR.length}

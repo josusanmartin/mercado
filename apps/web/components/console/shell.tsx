@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Mercado home">
               <Wordmark compact />
             </Link>
-            <ClientOnly fallback={<div className="ml-auto h-9 w-64" />}>
+            <ClientOnly fallback={<TopBarPlaceholder />}>
               <TopBar />
             </ClientOnly>
           </div>
@@ -104,6 +104,20 @@ function EnterGroup({ children }: { children: ReactNode }) {
     <div ref={ref} className="mx-enter" onAnimationEnd={(e: AnimationEvent<HTMLDivElement>) => e.target === e.currentTarget && settle(e.currentTarget)}>
       {children}
     </div>
+  );
+}
+
+/** The top bar's box before hydration. On phones it draws the same fixed-size pills (Demo 110×34, wallet 154×36)
+ *  that TopBar renders, so the bar doesn't shift when the wallet resolves (390 CLS ≤ 0.05). */
+function TopBarPlaceholder() {
+  return (
+    <>
+      <div className="ml-auto flex items-center gap-2 sm:hidden" aria-hidden>
+        <div className="h-[34px] w-[6.875rem] rounded-full border" />
+        <div className="bg-foreground h-9 w-[9.625rem] rounded-full" />
+      </div>
+      <div className="ml-auto hidden h-9 w-64 sm:block" aria-hidden />
+    </>
   );
 }
 

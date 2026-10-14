@@ -26,7 +26,9 @@ export function TopBar() {
       {on && <PersonaRestore />}
       <NetworkBadge className="hidden sm:inline-flex" />
       <TourChip className="sm:hidden" />
-      <label className={cn("meta flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5", busy && "cursor-not-allowed opacity-60", tourOnPhone && "max-sm:hidden")}>
+      {/* 390 CLS (lead 09:41): on phones the Demo pill, the tour chip and the wallet pill have fixed sizes, and the
+          pre-hydration placeholder (shell.tsx) draws the same boxes, so nothing moves when the account resolves. */}
+      <label className={cn("meta flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 max-sm:h-[34px] max-sm:w-[6.875rem] max-sm:justify-between", busy && "cursor-not-allowed opacity-60", tourOnPhone && "max-sm:hidden")}>
         <span className="hidden sm:inline">Demo mode</span>
         <span className="sm:hidden">Demo</span>
         <button
@@ -42,7 +44,7 @@ export function TopBar() {
         </button>
       </label>
       <WalletDialog>
-        <button type="button" disabled={busy} className="bg-foreground text-background flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap disabled:opacity-60">
+        <button type="button" disabled={busy} className="bg-foreground text-background flex h-9 items-center gap-2 overflow-hidden rounded-full px-4 text-sm font-medium whitespace-nowrap disabled:opacity-60 max-sm:w-[9.625rem] max-sm:justify-center">
           <Wallet className="size-4" aria-hidden />
           {isConnected ? (
             <span className="tabular">

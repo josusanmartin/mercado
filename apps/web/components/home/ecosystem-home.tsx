@@ -134,12 +134,13 @@ const ago = (unix: number | undefined, now: number | undefined) => {
   return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s / 60)}m ago` : s < 129600 ? `${Math.round(s / 3600)}h ago` : `${Math.round(s / 86400)}d ago`;
 };
 
-const BRANCHES: { id: Pid; verb: string }[] = [
-  { id: "remesas", verb: "sends home" },
-  { id: "global", verb: "pays suppliers" },
-  { id: "credito", verb: "lends" },
-  { id: "card", verb: "spends" },
-  { id: "invest", verb: "saves" },
+// unit: the qualifier that makes each product's own number readable in the same row (lead 09:41).
+const BRANCHES: { id: Pid; verb: string; unit: string }[] = [
+  { id: "remesas", verb: "sends home", unit: "xMXN issued" },
+  { id: "global", verb: "pays suppliers", unit: "backing" },
+  { id: "credito", verb: "lends", unit: "xMXN to lend" },
+  { id: "card", verb: "spends", unit: "xMXN spent" },
+  { id: "invest", verb: "saves", unit: "a year" },
 ];
 
 /**
@@ -196,7 +197,7 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
           <Link
             key={br.id}
             href={P(br.id).href}
-            className="absolute left-[43%] flex w-[30%] -translate-y-1/2 items-baseline gap-2 truncate text-[13px] hover:underline"
+            className="absolute left-[42%] flex w-[33%] -translate-y-1/2 items-baseline gap-1.5 truncate text-[13px] hover:underline"
             style={{ top: `${ys[i]}%` }}
           >
             <span className="font-semibold" style={{ color: color(br.id) }}>
@@ -204,6 +205,7 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
             </span>
             <span className="text-muted-foreground">{br.verb}</span>
             <span className="ml-auto font-semibold tabular">{live[br.id].value}</span>
+            <span className="text-muted-foreground">{br.unit}</span>
           </Link>
         ))}
         <div className="absolute top-1/2 right-0 grid w-[24%] -translate-y-1/2 gap-0.5 text-[13px]">
@@ -230,7 +232,8 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
             </Link>
           ))}
         </div>
-        <p className="text-[13px]">
+        {/* Two lines reserved from first paint, so the receipt arriving doesn't push the index (390 CLS). */}
+        <p className="min-h-[2.8em] text-[13px] leading-[1.4]">
           <span className="text-muted-foreground">Latest exchange receipt </span>
           {receiptLine}
         </p>
