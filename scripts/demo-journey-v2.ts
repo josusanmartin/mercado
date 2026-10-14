@@ -206,15 +206,17 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const [c0, d0] = await read(A.vault, multiCollateralVaultAbi, 'getPosition', [lp.address, s.token])
       await approveIfNeeded(lp, s.token, A.vault, shares, 'sOUSD → vault')
       await send(`depositCollateral ${fmt(shares)} sOUSD`, lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'depositCollateral', args: [s.token, shares] })
-      const value: bigint = await read(A.vault, multiCollateralVaultAbi, 'collateralValue', [s.token, c0 + shares])
-      const target = (value * 10_000n) / 25_000n // land the whole position at ~250%
-      const amount = target > d0 ? target - d0 : 0n
-      assert(amount > 0n, 'room to mint at 250%')
+      // mint against THIS deposit at 250% (the existing position's ratio moves with FX), capped by maxMintable
+      const value: bigint = await read(A.vault, multiCollateralVaultAbi, 'collateralValue', [s.token, shares])
+      const maxM0: bigint = await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, s.token])
+      const amount = [(value * 10_000n) / 25_000n, maxM0].reduce((a, b) => (b < a ? b : a))
+      void c0; void d0
+      assert(amount > 0n, `room to mint (maxMintable ${fmt(maxM0)})`)
       const supply0: bigint = await read(A.xMXN, tip20Abi, 'totalSupply')
       await send(`mint ${fmt(amount)} xMXN v2 against sOUSD`, lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'mint', args: [s.token, amount] })
       assert((await read(A.xMXN, tip20Abi, 'totalSupply')) - supply0 === amount, 'xMXN v2 supply grew by exactly the minted debt')
       const ratio = await read(A.vault, multiCollateralVaultAbi, 'collateralRatio', [lp.address, s.token])
-      ok(`LP sOUSD position ratio ${pct(ratio)} (collateral valued at the sOUSD share price × OUSD feed × FX)`)
+      ok(`this deposit: 200 sOUSD worth ${fmt(value)} xMXN at ${fmt(await read(A.oracle, fxOracleAdapterAbi, 'price').then((x: any) => x[0]), 8)} MXN/USD → minted ${fmt(amount)} (250% on the deposit); whole LP sOUSD position now ${pct(ratio)}`)
       const v = { address: A.vault, abi: multiCollateralVaultAbi, account: lp } as const
       const maxM: bigint = await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, s.token])
       await expectRevert('mint above the sOUSD 150% limit', { ...v, functionName: 'mint', args: [s.token, maxM + 1_000_000n] }, ['RatioTooLow'])
@@ -238,12 +240,14 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const [c0, d0] = await read(A.vault, multiCollateralVaultAbi, 'getPosition', [lp.address, t.token])
       await approveIfNeeded(lp, t.token, A.vault, qty, 'tTBILL → vault')
       await send('depositCollateral 10 tTBILL', lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'depositCollateral', args: [t.token, qty] })
-      const value: bigint = await read(A.vault, multiCollateralVaultAbi, 'collateralValue', [t.token, c0 + qty])
-      const target = (value * 10_000n) / 30_000n // ~300%, above the RWA's 200% mint ratio
-      const amount = target > d0 ? target - d0 : 0n
-      assert(amount > 0n, 'room to mint at 300%')
+      // mint against THIS deposit at 300% (above the RWA's 200% mint ratio), capped by maxMintable
+      const value: bigint = await read(A.vault, multiCollateralVaultAbi, 'collateralValue', [t.token, qty])
+      const maxM0: bigint = await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, t.token])
+      const amount = [(value * 10_000n) / 30_000n, maxM0].reduce((a, b) => (b < a ? b : a))
+      void c0; void d0
+      assert(amount > 0n, `room to mint (maxMintable ${fmt(maxM0)})`)
       await send(`mint ${fmt(amount)} xMXN v2 against tTBILL`, lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'mint', args: [t.token, amount] })
-      ok(`tTBILL position ratio ${pct(await read(A.vault, multiCollateralVaultAbi, 'collateralRatio', [lp.address, t.token]))} (RWA mint ratio ${pct(BigInt(p.mintRatioBps))}, liq <${pct(BigInt(p.liqRatioBps))})`)
+      ok(`this deposit: 10 tTBILL worth ${fmt(value)} xMXN → minted ${fmt(amount)} (300% on the deposit); whole tTBILL position ${pct(await read(A.vault, multiCollateralVaultAbi, 'collateralRatio', [lp.address, t.token]))} (RWA mint ratio ${pct(BigInt(p.mintRatioBps))}, liq <${pct(BigInt(p.liqRatioBps))})`)
       const maxM: bigint = await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, t.token])
       await expectRevert(`mint above the tTBILL ${pct(BigInt(p.mintRatioBps))} limit`, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'mint', args: [t.token, maxM + 1_000_000n], account: lp }, ['RatioTooLow', 'DebtCeilingExceeded'])
       // positions are independent: the sOUSD position is unaffected by the tTBILL one

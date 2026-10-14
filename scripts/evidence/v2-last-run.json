@@ -1,10 +1,9 @@
 {
-  "at": "2026-10-14T02:04:15.058Z",
+  "at": "2026-10-14T02:23:38.388Z",
   "protocol": "v2",
   "steps": [
-    "V5",
-    "V6",
-    "V7"
+    "V1",
+    "V2"
   ],
   "evidence": {
     "V0": {
@@ -12,26 +11,24 @@
       "txs": {},
       "notes": []
     },
-    "V5": {
+    "V1": {
       "status": "pass",
       "txs": {
-        "borrow 500 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xff722d0c3b2c94509ce2174bdc7f494a31cf0604c09c9063159eeb2811c35703"
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x9abecc8d6504abb07fa84a89b115921fbed5c650fb60126252291cd38dbb02fb",
+        "stake 200 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xf9c406ded5fd4e31534f84796261ec94aefe0661842dc56e2bffa0cbf35c9b9d",
+        "approve sOUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x5a4c5b74684d66313a067e1048b8576c48f1ec6e1714613da0d94a318a2fd3e3",
+        "depositCollateral 200 sOUSD": "https://explore.testnet.tempo.xyz/tx/0x0cb1c60b4a59bb6ba581be41ee521c8dd5a4017406342ea0fa8a1ec9e633eeda",
+        "mint 1,469.93 xMXN v2 against sOUSD": "https://explore.testnet.tempo.xyz/tx/0xcff60f04384cf61cc073b504a717d51fa719b9a31bf68a0eb38cbe71ed820166"
       },
       "notes": []
     },
-    "V6": {
+    "V2": {
       "status": "pass",
       "txs": {
-        "MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0xb956c7998e1bd7e4ca20af26fa5bcfcabca069ac122209746480a5de5fed8077"
-      },
-      "notes": []
-    },
-    "V7": {
-      "status": "pass",
-      "txs": {
-        "top-up 90 xMXN v2 LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x4a0b1cd1383e6aa3d87b9581760d59ba4025afdea86a5d36bdc2e41d858b5107",
-        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0x3f59d64e031174acd49b1a647c20a7d8f525e58165f9934d04d18def8f68937d",
-        "repay 510 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xcca5832d15f85f026ec7307c5911177488d840943118e470338a127e3308711b"
+        "tTBILL faucet 10 (demo, not a security)": "https://explore.testnet.tempo.xyz/tx/0x9dbe4054267d495f81243b750efaf669ccf379a30410f59e835ca5b0db2280bc",
+        "approve tTBILL → vault": "https://explore.testnet.tempo.xyz/tx/0xa4d1a188a00012c64ad8855e66e838c813fa55dd9203aa0d9b90d666305d4734",
+        "depositCollateral 10 tTBILL": "https://explore.testnet.tempo.xyz/tx/0x68f6639e35eb13e0d0dfd4dba5ed92c97c0b142f5c9ec44d9e48b15270b964e0",
+        "mint 6,124.71 xMXN v2 against tTBILL": "https://explore.testnet.tempo.xyz/tx/0xaeaacdf5e0dbddfbfff3f5f29dca4dd63f970915712bc8df2be407c24fbff179"
       },
       "notes": []
     }
