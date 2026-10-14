@@ -132,7 +132,10 @@ export function SplitStats({ items }: { items: { label: ReactNode; value: ReactN
         const inner = (
           <>
             <span className="m-meta block">{it.label}</span>
-            <span className="m-display mt-2 block text-[24px]">{it.value}</span>
+            {/* fit: a half-width column can't hold "MX$1,125.00" at 24px; shrink instead of clipping */}
+            <KitDisplay fit as="span" size={24} className="mt-2 block">
+              {it.value}
+            </KitDisplay>
             {it.sub && <span className="mt-1 block text-[12.5px] text-[var(--m-on-surface-variant)]">{it.sub}</span>}
           </>
         );
