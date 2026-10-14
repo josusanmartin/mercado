@@ -306,3 +306,148 @@ export function useThreeBuckets() {
     xmxnSupply,
   };
 }
+
+// ---------------------------------------------------------------- collateral book (Mint dashboard)
+
+export type CollateralBookRow = {
+  symbol: string;
+  token: Address;
+  label: string;
+  demo: boolean;
+  decimals?: number;
+  /** USD per unit, 8dp (v1 OUSD: assumed 1.00) */
+  usdPx8?: bigint;
+  collateral?: bigint;
+  debt?: bigint;
+  /** collateral value in xMXN (6dp) at current prices */
+  valueXmxn?: bigint;
+  mintRatioBps?: number;
+  liqRatioBps?: number;
+  penaltyBps?: number;
+  /** undefined = no ceiling (v1) */
+  debtCeiling?: bigint;
+  mintPaused?: boolean;
+};
+
+const priceAbi = [
+  { type: "function", name: "price", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }, { type: "uint256" }] },
+] as const;
+const decimalsAbi = [{ type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] }] as const;
+
+/** Every collateral of the active protocol with totals, risk params, prices and xMXN value. All live reads. */
+export function useCollateralBook() {
+  const fx = useOracle();
+  const v1 = useReadContracts({
+    contracts: [
+      { address: ADDR.vault, abi: vaultAbi, functionName: "totalCollateral", chainId: CHAIN_ID },
+      { address: ADDR.vault, abi: vaultAbi, functionName: "totalDebt", chainId: CHAIN_ID },
+      { address: ADDR.vault, abi: vaultAbi, functionName: "MIN_MINT_RATIO_BPS", chainId: CHAIN_ID },
+      { address: ADDR.vault, abi: vaultAbi, functionName: "LIQUIDATION_THRESHOLD_BPS", chainId: CHAIN_ID },
+      { address: ADDR.vault, abi: vaultAbi, functionName: "LIQUIDATION_PENALTY_BPS", chainId: CHAIN_ID },
+    ],
+    query: { enabled: !V2, ...REFRESH },
+  });
+  const v2 = useReadContracts({
+    contracts: COLLATERALS.flatMap((c) => [
+      { address: ADDR.vault, abi: multiCollateralVaultAbi, functionName: "params", args: [c.token], chainId: CHAIN_ID },
+      { address: ADDR.vault, abi: multiCollateralVaultAbi, functionName: "totals", args: [c.token], chainId: CHAIN_ID },
+      { address: c.token, abi: decimalsAbi, functionName: "decimals", chainId: CHAIN_ID },
+      ...(c.feed ? [{ address: c.feed, abi: priceAbi, functionName: "price", chainId: CHAIN_ID }] : []),
+    ]) as never,
+    query: { enabled: V2, ...REFRESH },
+  });
+  const fxPx = fx.mxnPerUsd;
+  const value = (coll?: bigint, usdPx8?: bigint, dec = 6) =>
+    coll === undefined || usdPx8 === undefined || fxPx === undefined
+      ? undefined
+      : (((coll * usdPx8 * 1_000_000n) / (10n ** BigInt(dec) * 100_000_000n)) * fxPx) / 100_000_000n;
+
+  let rows: CollateralBookRow[];
+  if (!V2) {
+    const d = v1.data;
+    const c = COLLATERALS[0];
+    const coll = ok<bigint>(d?.[0]);
+    rows = [
+      {
+        ...c,
+        decimals: 6,
+        usdPx8: 100_000_000n, // v1 values OUSD at $1.00 (an assumption, labeled on the page)
+        collateral: coll,
+        debt: ok<bigint>(d?.[1]),
+        valueXmxn: value(coll, 100_000_000n),
+        mintRatioBps: d ? Number(ok<bigint>(d[2]) ?? 0) || undefined : undefined,
+        liqRatioBps: d ? Number(ok<bigint>(d[3]) ?? 0) || undefined : undefined,
+        penaltyBps: d ? Number(ok<bigint>(d[4]) ?? 0) || undefined : undefined,
+        debtCeiling: undefined,
+        mintPaused: false,
+      },
+    ];
+  } else {
+    const d = (v2.data ?? []) as { status: string; result?: unknown }[];
+    let i = 0;
+    rows = COLLATERALS.map((c) => {
+      const p = ok<{ mintRatioBps: number; liqRatioBps: number; liqPenaltyBps: number; debtCeiling: bigint; mintPaused: boolean }>(d[i++]);
+      const t = ok<readonly [bigint, bigint]>(d[i++]);
+      const dec = ok<number>(d[i++]);
+      const px = c.feed ? ok<readonly [bigint, bigint]>(d[i++]) : undefined;
+      return {
+        ...c,
+        decimals: dec,
+        usdPx8: px?.[0],
+        collateral: t?.[0],
+        debt: t?.[1],
+        valueXmxn: value(t?.[0], px?.[0], dec ?? 6),
+        mintRatioBps: p?.mintRatioBps,
+        liqRatioBps: p?.liqRatioBps,
+        penaltyBps: p?.liqPenaltyBps,
+        debtCeiling: p?.debtCeiling,
+        mintPaused: p?.mintPaused,
+      };
+    });
+  }
+  const all = <K extends keyof CollateralBookRow>(k: K) =>
+    rows.some((r) => r[k] === undefined) ? undefined : rows.reduce((s, r) => s + ((r[k] as bigint | undefined) ?? 0n), 0n);
+  return {
+    protocol: PROTOCOL,
+    rows,
+    totalValueXmxn: all("valueXmxn"),
+    totalDebt: all("debt"),
+    isLoading: (V2 ? v2.isLoading : v1.isLoading) || fx.isLoading,
+    error: V2 ? v2.error : v1.error,
+  };
+}
+
+/** The connected user's position on every collateral of the active protocol. */
+export function useMyPositions(user?: Address) {
+  const who = useWho(user);
+  const q = useReadContracts({
+    contracts: V2
+      ? COLLATERALS.flatMap((c) =>
+          (["getPosition", "collateralRatio", "maxMintable", "maxWithdrawable", "isLiquidatable"] as const).map(
+            (functionName) => ({ address: ADDR.vault, abi: multiCollateralVaultAbi, functionName, args: [who!, c.token], chainId: CHAIN_ID }) as const,
+          ),
+        )
+      : (["getPosition", "collateralRatio", "maxMintable", "maxWithdrawable", "isLiquidatable"] as const).map(
+          (functionName) => ({ address: ADDR.vault, abi: vaultAbi, functionName, args: [who!], chainId: CHAIN_ID }) as const,
+        ),
+    query: { enabled: !!who, ...REFRESH },
+  } as never);
+  const d = (q.data ?? []) as { status: string; result?: unknown }[];
+  const positions = COLLATERALS.map((c, i) => {
+    const o = i * 5;
+    const raw = ok<readonly [bigint, bigint] & { collateral?: bigint; debt?: bigint }>(d[o]);
+    const coll = raw === undefined ? undefined : raw.collateral ?? raw[0];
+    const debt = raw === undefined ? undefined : raw.debt ?? raw[1];
+    const ratio = ok<bigint>(d[o + 1]);
+    return {
+      ...c,
+      collateral: coll,
+      debt,
+      ratioBps: ratio === undefined ? undefined : ratio === 2n ** 256n - 1n ? null : ratio,
+      maxMintable: ok<bigint>(d[o + 2]),
+      maxWithdrawable: ok<bigint>(d[o + 3]),
+      isLiquidatable: ok<boolean>(d[o + 4]),
+    };
+  });
+  return { ...q, positions, open: positions.filter((p) => (p.collateral ?? 0n) > 0n || (p.debt ?? 0n) > 0n) };
+}

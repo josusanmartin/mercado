@@ -28,7 +28,8 @@ import { RatioMeter } from "./ratio-meter";
 type Section = "mint" | "repay" | "position" | "fx" | "stress";
 const strip = (v: bigint) => fmtAmount(v, 2).replace(/,/g, "");
 
-export function MintScreen() {
+/** `embedded`: section tabs + panels without the product shell (Mercado Mint dashboard → "Issue & manage"). */
+export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const { address } = useConnection();
   const bal = useBalances();
   const fx = useOracle();
@@ -128,8 +129,9 @@ export function MintScreen() {
     { id: "stress", label: "Peso stress test", icon: Activity },
   ];
 
-  return (
-    <SettingsLayout title="Create pesos" list={<ListPane label="Create pesos sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}>
+  const list = <ListPane label="Issue and manage sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />;
+  const body = (
+    <>
       {section === "mint" && (
         <Panel
           key="mint"
@@ -302,6 +304,18 @@ export function MintScreen() {
           <PesoStress collateral={drafting ? nextColl : coll} debt={drafting ? nextDebt : debt} mxnPerUsd={fx.mxnPerUsd} usdPx8={USE_V2 ? col?.usdPx8 : undefined} lines={lines} projected={drafting} />
         </Panel>
       )}
+    </>
+  );
+  if (embedded)
+    return (
+      <div className="grid gap-4">
+        {list}
+        {body}
+      </div>
+    );
+  return (
+    <SettingsLayout title="Create pesos" list={list}>
+      {body}
     </SettingsLayout>
   );
 }

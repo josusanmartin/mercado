@@ -1,14 +1,14 @@
-import { ClientOnly } from "@/components/console";
 import type { Metadata } from "next";
-import { MintScreen } from "@/components/vault/mint-screen";
+import { ClientOnly } from "@/components/console";
+import { MintDashboard } from "@/components/mint/mint-dashboard";
 
-export const metadata: Metadata = { title: "Create pesos" };
+export const metadata: Metadata = { title: "Mercado Mint" };
 
 export default function MintPage() {
   // Wallet state is restored before hydration, so the screen renders on the client only (no mismatch).
   return (
     <ClientOnly>
-      <MintScreen />
+      <MintDashboard />
     </ClientOnly>
   );
 }
