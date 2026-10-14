@@ -29,7 +29,7 @@ import { Honesty, usePresent } from "@/components/console/present";
 import { PaidCalls } from "@/components/credito/paid-calls";
 import { usePricing } from "@/components/credito/use-pricing";
 import { fmtAmount } from "@/lib/format";
-import { Stagger, SuccessCheck } from "@/lib/motion";
+import { FlowPath, Stagger, SuccessCheck } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ENDPOINTS,
@@ -275,10 +275,59 @@ function Code({ title, code }: { title: string; code: string }) {
   );
 }
 
+/** The 402 handshake as one flow (v6 "show, don't tell"); each node ticks as the live call reaches it. */
+function HandshakeFlow({
+  endpoint,
+  trace,
+  busy,
+  price,
+}: {
+  endpoint: PaidEndpoint;
+  trace: TraceStep[];
+  busy: boolean;
+  price?: string;
+}) {
+  const reached = (k: TraceStep["kind"]) => trace.some((s) => s.kind === k);
+  const ok = trace.some((s) => s.kind === "response");
+  const tick = (on: boolean) => (on ? " ✓" : "");
+  return (
+    <FlowPath
+      active={busy}
+      label="HTTP 402 handshake: request, 402 challenge, payment, 200 with Payment-Receipt"
+      className="pb-5"
+      nodes={[
+        {
+          label: "Request",
+          value: `${endpoint.method}${tick(reached("request"))}`,
+          sub: "no credential",
+        },
+        {
+          label: "402",
+          value: `${price ?? "…"}${tick(reached("challenge"))}`,
+          sub: "the challenge",
+        },
+        {
+          label: "Pay",
+          value: `xMXN${tick(reached("credential"))}`,
+          sub: "TIP-20 on Tempo",
+        },
+        { label: "200", value: `Receipt${tick(ok)}`, sub: "Payment-Receipt" },
+      ]}
+    />
+  );
+}
+
 function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
   const t = useTryIt(endpoint, DRIVER);
   const partner = personaById("partner");
   const receiptTx = t.result?.receipt?.reference;
+  const pricing = usePricing().data;
+  const price =
+    endpoint.id === "bills"
+      ? "bill"
+      : pricing
+        ? `${fmtAmount(BigInt(pricing[endpoint.id].amount))}`
+        : undefined;
   return (
     <Panel
       variant="card"
@@ -294,6 +343,12 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
         </>
       }
     >
+      <HandshakeFlow
+        endpoint={endpoint}
+        trace={t.trace}
+        busy={t.busy}
+        price={price}
+      />
       <ConnectGate
         persona="partner"
         why="The live call is paid by the API partner demo account (or your own wallet)."
