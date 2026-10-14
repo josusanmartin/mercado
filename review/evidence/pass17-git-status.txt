@@ -1,0 +1,33 @@
+ M apps/web/app/api/mpp/pricing/route.ts
+ M apps/web/app/globals.css
+ M apps/web/app/layout.tsx
+ M apps/web/components/console/hint-bar.tsx
+ M apps/web/components/console/index.ts
+ M apps/web/components/console/products.ts
+ M apps/web/components/console/settings.tsx
+ M apps/web/components/console/shell.tsx
+ M apps/web/components/console/top-bar.tsx
+ M apps/web/components/credito/use-pricing.ts
+ M apps/web/components/home/ecosystem-home.tsx
+ M apps/web/components/invest/invest-screen.tsx
+ M apps/web/components/shell/network-badge.tsx
+ M apps/web/components/ui/badge.tsx
+ M apps/web/components/ui/button.tsx
+ M apps/web/components/ui/card.tsx
+ M apps/web/components/ui/dialog.tsx
+ M apps/web/components/ui/input.tsx
+ M apps/web/components/ui/tabs.tsx
+ M apps/web/components/wallet/personas.ts
+ M scripts/demo-journey-v2.ts
+ M scripts/evidence/v2-last-run.json
+?? apps/web/app/(dashboard)/developers/
+?? apps/web/art/
+?? apps/web/components/console/meta.tsx
+?? apps/web/components/developers/
+?? apps/web/components/mint/use-mint-meta.ts
+?? apps/web/lib/server/__tests__/setup-partner.mts
+?? apps/web/public/photos/
+?? packages/contracts/broadcast/DemoResetV2.s.sol/
+?? review/evidence/irc-pass17-start.txt
+?? review/evidence/pass17-git-status.txt
+?? scripts/evidence/v2-run-2026-10-14T02-59-56-720Z.json

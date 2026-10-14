@@ -1,0 +1,8 @@
+ee8fddb review: latest evidence
+39fef7f mobile: kit restyled to PRINCIPLES.md: paper/ink themes, Archivo Black display + Inter Tight, Meta labels, black pills, hairlines, RoundAction, TickUp; Spanish-only ConsentSheet
+439da15 /contracts: keys labeled 'Key, not a contract'; KPI counts unique contracts with source
+e26cc83 qa: hero-spend gates on the POS receipt (paid sheet auto-closes)
+23b344b sponsor: first-draw exception requires a fully valid attestation (R-016 recheck) + tests; /contracts 'Every contract, live and verified' proof page
+1ea0206 web: six-product Demo Tour with an on-chain trail (judge item 1)
+093272a Design guiding principles (Future-in-Black-inspired editorial system)
+ea04052 mobile: Card TapPrompt is a kit BottomSheet: Cerrar + swipe-down/scrim in every settled state, auto-close after paid (qa P1)

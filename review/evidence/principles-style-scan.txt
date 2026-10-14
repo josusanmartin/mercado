@@ -1,0 +1,28 @@
+apps/web/app/globals.css:9:  palette (jade, terracotta, cream) with tuned product accents. Display = Archivo Black, uppercase;
+apps/web/app/globals.css:22:  --terracotta: #e2603f;
+apps/web/app/globals.css:146:  --color-terracotta: var(--terracotta);
+apps/web/app/globals.css:166:      outline-color: var(--focus);
+apps/web/app/globals.css:169:      outline-color: color-mix(in oklab, var(--focus) 45%, transparent);
+apps/web/app/globals.css:240:    color: transparent;
+apps/web/components/mobile/extra/editorial.css:18:  --m-accent-container: color-mix(in oklab, var(--m-accent) 12%, white);
+apps/web/components/mobile/extra/editorial.css:19:  --m-on-accent-container: color-mix(in oklab, var(--m-accent) 55%, black);
+apps/web/components/mobile/extra/editorial.css:47:  color: var(--m-on-surface-variant);
+apps/web/components/mobile/extra/editorial.css:61:    opacity: 0;
+apps/web/components/mobile/extra/editorial.tsx:3://   <EdApp> canvas · <Meta> tiny uppercase line · <BigMoney> Archivo Black balance · <Display> titles
+apps/web/components/mobile/extra/editorial.tsx:30:export function Meta({ parts, mark, className }: { parts: (ReactNode | false | undefined | null)[]; mark?: string; className?: string }) {
+apps/web/components/mobile/extra/editorial.tsx:48:    <Tag className={cn("m-display", className)} style={{ fontSize: size }}>
+apps/web/components/mobile/extra/editorial.tsx:75:    <p className={cn("m-display m-tick flex items-baseline whitespace-nowrap", className)} style={{ fontSize: size }} key={s}>
+apps/web/components/mobile/extra/editorial.tsx:85:          {dec && <span style={{ fontSize: size * 0.46 }}>.{dec}</span>}
+apps/web/components/mobile/extra/editorial.tsx:87:            <span className="ml-2 font-[family-name:var(--font-inter-tight)] font-semibold tracking-normal normal-case" style={{ fontSize: Math.max(13, size * 0.28) }}>
+apps/web/components/mobile/extra/editorial.tsx:144:        primary ? "bg-[var(--m-accent)] text-white" : "border border-[var(--m-on-surface)] text-[var(--m-on-surface)]",
+apps/web/components/mobile/extra/editorial.tsx:151:  const cls = "m-press grid w-[72px] justify-items-center gap-2 rounded-[8px] py-1 disabled:opacity-35";
+apps/web/components/mobile/extra/editorial.tsx:195:        variant === "solid" && (accent ? "bg-[var(--m-accent)] text-white" : "bg-[#0a0a0a] text-white"),
+apps/web/components/mobile/extra/editorial.tsx:346:            <span aria-hidden className={cn("size-1 rounded-full", on ? "bg-[var(--m-accent)]" : "bg-transparent")} />
+apps/web/components/console/products.ts:16:  color: string;
+apps/web/components/console/products.ts:37:    color: "var(--ink)",
+apps/web/components/console/products.ts:49:    color: "var(--c-mint)",
+apps/web/components/console/products.ts:62:    color: "var(--c-remesas)",
+apps/web/components/console/products.ts:75:    color: "var(--c-global)",
+apps/web/components/console/products.ts:88:    color: "var(--c-credito)",
+apps/web/components/console/products.ts:101:    color: "var(--c-card)",
+apps/web/components/console/products.ts:114:    color: "var(--c-invest)",

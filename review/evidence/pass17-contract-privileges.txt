@@ -1,0 +1,162 @@
+packages/contracts/src/CreditPool.sol:78:    constructor(address owner_, IERC20 xmxn_, address attestationSigner_)
+packages/contracts/src/CreditPool.sol:79:        Ownable(owner_)
+packages/contracts/src/CreditPool.sol:90:    function supply(uint256 amount) external nonReentrant {
+packages/contracts/src/CreditPool.sol:103:    function withdrawAvailable(uint256 amount) external nonReentrant {
+packages/contracts/src/CreditPool.sol:119:    function borrow(
+packages/contracts/src/CreditPool.sol:146:    function repay(uint256 amount) external nonReentrant {
+packages/contracts/src/CreditPool.sol:162:    function _verifySignature(
+packages/contracts/src/CreditPool.sol:175:    function _checkLimits(address borrower, uint256 amount, uint256 maxAmount) internal view {
+packages/contracts/src/CreditPool.sol:187:    function eligibilityDigest(address borrower, uint256 maxAmount, uint256 expiry, uint256 nonce, bytes32 dataHash)
+packages/contracts/src/CreditPool.sol:195:    function domainSeparator() external view returns (bytes32) {
+packages/contracts/src/CreditPool.sol:200:    function getDebt(address borrower) external view returns (uint256) {
+packages/contracts/src/CreditPool.sol:207:    function borrowCapacity(address borrower, uint256 maxAmount) public view returns (uint256 cap) {
+packages/contracts/src/CreditPool.sol:219:    function maxBorrowable(address borrower) external view returns (uint256) {
+packages/contracts/src/CreditPool.sol:223:    function availableLiquidity() external view returns (uint256) {
+packages/contracts/src/CreditPool.sol:228:    function totalAssets() public view returns (uint256) {
+packages/contracts/src/CreditPool.sol:233:    function lenderBalance(address lender) public view returns (uint256) {
+packages/contracts/src/CreditPool.sol:242:    function stats()
+packages/contracts/src/CreditPool.sol:250:    function nonceUsed(address borrower, uint256 nonce) external view returns (bool) {
+packages/contracts/src/CreditPool.sol:254:    // ---------------------------------------------------------------- owner
+packages/contracts/src/CreditPool.sol:256:    function setAttestationSigner(address signer) external onlyOwner {
+packages/contracts/src/CreditPool.sol:262:    function setParams(uint256 feeBps_, uint256 perUserCap_, uint256 maxUtilizationBps_) external onlyOwner {
+packages/contracts/src/FXOracleAdapter.sol:11:///      Safety rails enforced on read (`price()`):
+packages/contracts/src/FXOracleAdapter.sol:12:///        - paused            -> revert OraclePaused
+packages/contracts/src/FXOracleAdapter.sol:16:///      Safety rails enforced on write (`setPrice`): sanity band, plus a max jump of `maxJumpBps` vs the
+packages/contracts/src/FXOracleAdapter.sol:17:///      previous value. `forceSet` skips only the jump check (FX stress demo) and still enforces the band.
+packages/contracts/src/FXOracleAdapter.sol:28:    bool public paused;
+packages/contracts/src/FXOracleAdapter.sol:37:    event Paused(bool paused);
+packages/contracts/src/FXOracleAdapter.sol:40:    /// @param owner_ admin allowed to push prices
+packages/contracts/src/FXOracleAdapter.sol:42:    constructor(address owner_, uint256 initialPrice) Ownable(owner_) {
+packages/contracts/src/FXOracleAdapter.sol:51:    function price() external view returns (uint256, uint256) {
+packages/contracts/src/FXOracleAdapter.sol:52:        if (paused) revert OraclePaused();
+packages/contracts/src/FXOracleAdapter.sol:64:    function peek() external view returns (uint256 mxnPerUsd_, uint256 updatedAt_, bool valid) {
+packages/contracts/src/FXOracleAdapter.sol:67:        valid = !paused && mxnPerUsd_ != 0 && updatedAt_ != 0 && block.timestamp - updatedAt_ <= maxAge
+packages/contracts/src/FXOracleAdapter.sol:71:    function decimals() external pure returns (uint8) {
+packages/contracts/src/FXOracleAdapter.sol:75:    function isMock() external pure returns (bool) {
+packages/contracts/src/FXOracleAdapter.sol:81:    /// @notice Push a new price (8dp). Enforces the sanity band and the max jump vs the previous value.
+packages/contracts/src/FXOracleAdapter.sol:82:    function setPrice(uint256 newPrice) external onlyOwner {
+packages/contracts/src/FXOracleAdapter.sol:90:    /// @notice Stress-mode push: skips the jump check (FX stress demo), still enforces the sanity band.
+packages/contracts/src/FXOracleAdapter.sol:91:    function forceSet(uint256 newPrice) external onlyOwner {
+packages/contracts/src/FXOracleAdapter.sol:96:    function pause() external onlyOwner {
+packages/contracts/src/FXOracleAdapter.sol:97:        paused = true;
+packages/contracts/src/FXOracleAdapter.sol:101:    function unpause() external onlyOwner {
+packages/contracts/src/FXOracleAdapter.sol:102:        paused = false;
+packages/contracts/src/FXOracleAdapter.sol:106:    function setConfig(uint256 maxAge_, uint256 minPrice_, uint256 maxPrice_, uint256 maxJumpBps_)
+packages/contracts/src/FXOracleAdapter.sol:108:        onlyOwner
+packages/contracts/src/FXOracleAdapter.sol:115:    function _write(uint256 p) internal {
+packages/contracts/src/FXOracleAdapter.sol:121:    function _checkBand(uint256 p) internal view {
+packages/contracts/src/FXOracleAdapter.sol:126:    function _setConfig(uint256 maxAge_, uint256 minPrice_, uint256 maxPrice_, uint256 maxJumpBps_) internal {
+packages/contracts/src/v2/MoveAMM.sol:26:///        - equity: anyone may add OUSD equity (raises R, not L); the owner may withdraw only while c ≥ target after
+packages/contracts/src/v2/MoveAMM.sol:76:    constructor(address owner_, IERC20 ousd_, ITIP20 xmxn_, IPriceFeed fx_) Ownable(owner_) {
+packages/contracts/src/v2/MoveAMM.sol:87:    function quote(bool usdToMxn, uint256 amountIn)
+packages/contracts/src/v2/MoveAMM.sol:93:        if (paused()) revert EnforcedPause(); // quotes are never offered for an impossible trade
+packages/contracts/src/v2/MoveAMM.sol:125:    function state()
+packages/contracts/src/v2/MoveAMM.sol:138:    function swapOusdForXmxn(uint256 amountIn, uint256 minOut, address to)
+packages/contracts/src/v2/MoveAMM.sol:157:    function swapXmxnForOusd(uint256 amountIn, uint256 minOut, address to)
+packages/contracts/src/v2/MoveAMM.sol:182:    function addEquity(uint256 amount) external nonReentrant {
+packages/contracts/src/v2/MoveAMM.sol:191:    function withdrawEquity(uint256 amount, address to) external onlyOwner nonReentrant {
+packages/contracts/src/v2/MoveAMM.sol:203:    // ---------------------------------------------------------------- owner
+packages/contracts/src/v2/MoveAMM.sol:205:    function setParams(
+packages/contracts/src/v2/MoveAMM.sol:212:    ) external onlyOwner {
+packages/contracts/src/v2/MoveAMM.sol:221:    function pause() external onlyOwner {
+packages/contracts/src/v2/MoveAMM.sol:222:        _pause();
+packages/contracts/src/v2/MoveAMM.sol:225:    function unpause() external onlyOwner {
+packages/contracts/src/v2/MoveAMM.sol:226:        _unpause();
+packages/contracts/src/v2/MoveAMM.sol:231:    function _coverage(uint256 r, uint256 l, uint256 mid) internal pure returns (uint256) {
+packages/contracts/src/v2/MoveAMM.sol:236:    function _bucket() internal view returns (uint256 used, uint256 cap) {
+packages/contracts/src/v2/InvestDesk.sol:20:///      Reserves are tracked internally (donations ignored). A stale/paused feed reverts. Max per trade in USD.
+packages/contracts/src/v2/InvestDesk.sol:22:///      free faucet tTBILL can't be sold in to drain the OUSD reserve. Quotes revert while paused (R-043).
+packages/contracts/src/v2/InvestDesk.sol:55:    constructor(address owner_, IERC20 ousd_, IERC20 tbill_, IERC20 xmxn_, IPriceFeed feed_, MoveAMM amm_) Ownable(owner_) {
+packages/contracts/src/v2/InvestDesk.sol:62:    function quoteBuy(uint256 ousdIn) public view returns (uint256 tbillOut, uint256 fee, uint256 px) {
+packages/contracts/src/v2/InvestDesk.sol:63:        if (paused()) revert EnforcedPause();
+packages/contracts/src/v2/InvestDesk.sol:74:    function quoteSell(uint256 tbillIn) public view returns (uint256 ousdOut, uint256 fee, uint256 px) {
+packages/contracts/src/v2/InvestDesk.sol:75:        if (paused()) revert EnforcedPause();
+packages/contracts/src/v2/InvestDesk.sol:87:    function quoteBuyWithXmxn(uint256 xmxnIn) external view returns (uint256 tbillOut, uint256 ousdUsed, uint256 px) {
+packages/contracts/src/v2/InvestDesk.sol:93:    function quoteSellForXmxn(uint256 tbillIn) external view returns (uint256 xmxnOut, uint256 ousdOut, uint256 px) {
+packages/contracts/src/v2/InvestDesk.sol:100:    function buy(uint256 ousdIn, uint256 minTbillOut) external nonReentrant whenNotPaused returns (uint256 tbillOut) {
+packages/contracts/src/v2/InvestDesk.sol:105:    function sell(uint256 tbillIn, uint256 minOusdOut) external nonReentrant whenNotPaused returns (uint256 ousdOut) {
+packages/contracts/src/v2/InvestDesk.sol:119:    function buyWithXmxn(uint256 xmxnIn, uint256 minTbillOut) external nonReentrant whenNotPaused returns (uint256 tbillOut) {
+packages/contracts/src/v2/InvestDesk.sol:121:        xmxn.forceApprove(address(amm), xmxnIn);
+packages/contracts/src/v2/InvestDesk.sol:127:    function sellForXmxn(uint256 tbillIn, uint256 minXmxnOut) external nonReentrant whenNotPaused returns (uint256 xmxnOut) {
+packages/contracts/src/v2/InvestDesk.sol:133:        ousd.forceApprove(address(amm), ousdOut);
+packages/contracts/src/v2/InvestDesk.sol:138:    function _buy(uint256 ousdIn, uint256 minTbillOut, bool withXmxn, uint256 payIn) internal returns (uint256 tbillOut) {
+packages/contracts/src/v2/InvestDesk.sol:150:    function _spendBought(uint256 tbillIn) internal {
+packages/contracts/src/v2/InvestDesk.sol:156:    // ---------------------------------------------------------------- inventory (owner)
+packages/contracts/src/v2/InvestDesk.sol:158:    function seed(uint256 ousdAmount, uint256 tbillAmount) external onlyOwner nonReentrant {
+packages/contracts/src/v2/InvestDesk.sol:166:    function withdraw(uint256 ousdAmount, uint256 tbillAmount, address to) external onlyOwner nonReentrant {
+packages/contracts/src/v2/InvestDesk.sol:176:    function setParams(uint256 spreadBps_, uint256 maxTradeUsd_) external onlyOwner {
+packages/contracts/src/v2/InvestDesk.sol:182:    function pause() external onlyOwner {
+packages/contracts/src/v2/InvestDesk.sol:183:        _pause();
+packages/contracts/src/v2/InvestDesk.sol:186:    function unpause() external onlyOwner {
+packages/contracts/src/v2/InvestDesk.sol:187:        _unpause();
+packages/contracts/src/v2/InvestDesk.sol:190:    function reserves() external view returns (uint256, uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:60:    event MintPaused(address indexed token, bool paused);
+packages/contracts/src/v2/MultiCollateralVault.sol:79:    constructor(address owner_, ITIP20 xmxn_, IPriceFeed fx_) Ownable(owner_) {
+packages/contracts/src/v2/MultiCollateralVault.sol:87:    function addCollateral(
+packages/contracts/src/v2/MultiCollateralVault.sol:94:    ) external onlyOwner {
+packages/contracts/src/v2/MultiCollateralVault.sol:104:    function setRiskParams(address token, uint16 mintRatioBps, uint16 liqRatioBps, uint16 penaltyBps) external onlyOwner {
+packages/contracts/src/v2/MultiCollateralVault.sol:111:    function setDebtCeiling(address token, uint128 debtCeiling) external onlyOwner {
+packages/contracts/src/v2/MultiCollateralVault.sol:117:    function setMintPaused(address token, bool paused) external onlyOwner {
+packages/contracts/src/v2/MultiCollateralVault.sol:118:        _known(token).mintPaused = paused;
+packages/contracts/src/v2/MultiCollateralVault.sol:119:        emit MintPaused(token, paused);
+packages/contracts/src/v2/MultiCollateralVault.sol:122:    function setFeed(address token, IPriceFeed feed) external onlyOwner {
+packages/contracts/src/v2/MultiCollateralVault.sol:129:    function _checkRisk(uint256 mintR, uint256 liqR, uint256 pen) internal pure {
+packages/contracts/src/v2/MultiCollateralVault.sol:137:    function depositCollateral(address token, uint256 amount) external nonReentrant {
+packages/contracts/src/v2/MultiCollateralVault.sol:146:    function mint(address token, uint256 amount) external nonReentrant {
+packages/contracts/src/v2/MultiCollateralVault.sol:162:    function repayAndBurn(address token, uint256 amount) external nonReentrant {
+packages/contracts/src/v2/MultiCollateralVault.sol:174:    function withdrawCollateral(address token, uint256 amount) external nonReentrant {
+packages/contracts/src/v2/MultiCollateralVault.sol:193:    function liquidate(address user, address token, uint256 debtToCover) external nonReentrant {
+packages/contracts/src/v2/MultiCollateralVault.sol:219:    function collaterals() external view returns (address[] memory) {
+packages/contracts/src/v2/MultiCollateralVault.sol:223:    function params(address token) external view returns (CollateralParams memory) {
+packages/contracts/src/v2/MultiCollateralVault.sol:227:    function totals(address token) external view returns (uint256 collateral, uint256 debt) {
+packages/contracts/src/v2/MultiCollateralVault.sol:232:    function getPosition(address user, address token) external view returns (uint256 collateral, uint256 debt) {
+packages/contracts/src/v2/MultiCollateralVault.sol:238:    function collateralValue(address token, uint256 amount) external view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:244:    function collateralRatio(address user, address token) external view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:251:    function maxMintable(address user, address token) external view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:264:    function maxWithdrawable(address user, address token) external view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:276:    function isLiquidatable(address user, address token) external view returns (bool) {
+packages/contracts/src/v2/MultiCollateralVault.sol:285:    function _known(address token) internal view returns (CollateralParams storage p) {
+packages/contracts/src/v2/MultiCollateralVault.sol:290:    function _prices(CollateralParams storage p) internal view returns (uint256 usdPx, uint256 fxPx) {
+packages/contracts/src/v2/MultiCollateralVault.sol:295:    function _value(address token, uint256 amount, uint256 usdPx, uint256 fxPx) internal view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:300:    function _ratioAt(address token, uint256 coll, uint256 debt, uint256 usdPx, uint256 fxPx) internal view returns (uint256) {
+packages/contracts/src/v2/MultiCollateralVault.sol:305:    function _ratio(address token, CollateralParams storage p, uint256 coll, uint256 debt) internal view returns (uint256) {
+packages/contracts/src/v2/AdminPriceFeed.sol:8:/// @dev 8dp. price() reverts when paused, zero, stale (> maxAge) or outside [minPrice, maxPrice].
+packages/contracts/src/v2/AdminPriceFeed.sol:9:///      setPrice enforces the band and a max jump vs the previous value; forceSet skips the jump (stress demos).
+packages/contracts/src/v2/AdminPriceFeed.sol:19:    bool public paused;
+packages/contracts/src/v2/AdminPriceFeed.sol:28:    event Paused(bool paused);
+packages/contracts/src/v2/AdminPriceFeed.sol:31:        address owner_,
+packages/contracts/src/v2/AdminPriceFeed.sol:38:    ) Ownable(owner_) {
+packages/contracts/src/v2/AdminPriceFeed.sol:49:    function price() external view returns (uint256, uint256) {
+packages/contracts/src/v2/AdminPriceFeed.sol:50:        if (paused) revert FeedPaused();
+packages/contracts/src/v2/AdminPriceFeed.sol:56:    function peek() external view returns (uint256 px8, uint256 at, bool valid) {
+packages/contracts/src/v2/AdminPriceFeed.sol:59:        valid = !paused && block.timestamp - at <= maxAge && px8 >= minPrice && px8 <= maxPrice;
+packages/contracts/src/v2/AdminPriceFeed.sol:62:    function decimals() external pure returns (uint8) {
+packages/contracts/src/v2/AdminPriceFeed.sol:66:    function setPrice(uint256 p) external onlyOwner {
+packages/contracts/src/v2/AdminPriceFeed.sol:73:    function forceSet(uint256 p) external onlyOwner {
+packages/contracts/src/v2/AdminPriceFeed.sol:78:    function setPaused(bool p) external onlyOwner {
+packages/contracts/src/v2/AdminPriceFeed.sol:79:        paused = p;
+packages/contracts/src/v2/AdminPriceFeed.sol:83:    function _band(uint256 p) internal view {
+packages/contracts/src/v2/AdminPriceFeed.sol:88:    function _write(uint256 p) internal {
+packages/contracts/src/v2/MercadoFactoryV2.sol:27:    constructor(address owner_) Ownable(owner_) {}
+packages/contracts/src/v2/MercadoFactoryV2.sol:29:    function createToken(string calldata name, string calldata symbol, string calldata currency, ITIP20 quoteToken, bytes32 salt)
+packages/contracts/src/v2/MercadoFactoryV2.sol:31:        onlyOwner
+packages/contracts/src/v2/MercadoFactoryV2.sol:41:    function lockIssuers(address vault_, address amm_) external onlyOwner {
+packages/contracts/src/v2/MercadoFactoryV2.sol:47:        ITIP20RolesAuth(token).grantRole(issuer, vault_);
+packages/contracts/src/v2/MercadoFactoryV2.sol:48:        ITIP20RolesAuth(token).grantRole(issuer, amm_);
+packages/contracts/src/v2/DemoRWA.sol:13:    constructor(string memory name_, string memory symbol_, address owner_, uint256 faucetCap_)
+packages/contracts/src/v2/DemoRWA.sol:15:        Ownable(owner_)
+packages/contracts/src/v2/DemoRWA.sol:20:    function decimals() public pure override returns (uint8) {
+packages/contracts/src/v2/DemoRWA.sol:25:    function faucet(uint256 amount) external {
+packages/contracts/src/v2/DemoRWA.sol:30:    function mint(address to, uint256 amount) external onlyOwner {
+packages/contracts/src/v2/StakedOUSD.sol:10:/// @notice Yield is a mock: the owner sets an APR and funds the OUSD that pays it via `fundYield`. No real staking,
+packages/contracts/src/v2/StakedOUSD.sol:32:    constructor(IERC20 ousd, address owner_, uint256 aprBps_)
+packages/contracts/src/v2/StakedOUSD.sol:35:        Ownable(owner_)
+packages/contracts/src/v2/StakedOUSD.sol:42:    function _pending() internal view returns (uint256) {
+packages/contracts/src/v2/StakedOUSD.sol:47:    function totalAssets() public view override returns (uint256) {
+packages/contracts/src/v2/StakedOUSD.sol:52:    function yieldReserve() external view returns (uint256) {
+packages/contracts/src/v2/StakedOUSD.sol:56:    function setApr(uint256 aprBps_) external onlyOwner {
+packages/contracts/src/v2/StakedOUSD.sol:64:    function fundYield(uint256 amount) external onlyOwner {
+packages/contracts/src/v2/StakedOUSD.sol:71:    function _checkpoint() internal {
+packages/contracts/src/v2/StakedOUSD.sol:78:    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
+packages/contracts/src/v2/StakedOUSD.sol:84:    function _withdraw(address caller, address receiver, address owner_, uint256 assets, uint256 shares)
+packages/contracts/src/v2/StakedOUSD.sol:90:        super._withdraw(caller, receiver, owner_, assets, shares);

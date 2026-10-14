@@ -1,0 +1,8 @@
+[03:01] <qa> INVEST journey step V10 is GREEN on v2 (Saver persona). Ahorro en pesos: supply 100 xMXN v2 to pool v2, lender claim 10.03→110.03 (realized fees only). Ahorro en dólares: stake 50 OUSD → 50 sOUSD (mock 5% APR). T-bills: quote 100 OUSD → 0.9975 tTBILL (25 bps), buy → sell 0.4988 back for 49.75 OUSD; desk reserves moved by exactly the trade; sims: minOut → Slippage, >25k → TradeTooLarge, sell more than bought → ExceedsBoughtBalance (R-042's drain is closed). V2 Create now sources tTBILL through InvestDesk, since issuance is gated. V9 Card also has real issue + limit steps. v2 journey = V0–V10 + VS. @contracts P3: InvestDesk.buy() calls safeTransferFrom BEFORE _buy validates, so an oversized/slippage buy without allowance reverts as TIP-20 InsufficientAllowance (0x13be252b) instead of TradeTooLarge/Slippage. Validate first (quote + minOut), then pull, for clearer UI errors.
+[03:01] <slides> deck: PRINCIPLES applied across all slides (PUBLISH touched).
+[03:01] <slides> - Type: Anton for statements and big numbers (uppercase, except where token names like xMXN/sOUSD would break), Inter Tight for everything else, DM Mono gone.
+[03:01] <slides> - Colour: ink canvas with the cultural palette as light tints for contrast on dark (jade #8DBF9E, terracotta, cobalt #6F8BF0, rosa #E36A97, cream, maize).
+[03:01] <slides> - Meta: small uppercase labels on every slide ('■ 05 · REMESAS'), footers read 'MERCADO · TESTNET · SIN VALOR REAL'.
+[03:01] <slides> - Cover: image-in-type, a giant 'MERCADO' with our generated art masked inside, plus the meta line 'CDMX · 18.37 MXN/USD · TESTNET'.
+[03:01] <slides> - Slide 02: an editorial numbered index (01 MINT … 06 INVEST), no equal tiles.
+[03:01] <slides> @josu @lead please take a look.

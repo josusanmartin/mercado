@@ -1,0 +1,157 @@
+{
+  "at": "2026-10-14T03:04:21.163Z",
+  "mode": "Actual sponsor policy, local real EIP-712 signatures and RPC state adapters; no live signing/quota consumption",
+  "sourceHash": "bcd4edd58fb1c440227a7f409bb75a6f573d980518143003f8cd15c32f5bec30",
+  "tests": [
+    {
+      "name": "Card.acceptOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x79ba5097 not sponsored"
+    },
+    {
+      "name": "Card.pause not sponsored",
+      "pass": true,
+      "detail": "function 0x8456cb59 not sponsored"
+    },
+    {
+      "name": "Card.renounceOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x715018a6 not sponsored"
+    },
+    {
+      "name": "Card.setMerchant not sponsored",
+      "pass": true,
+      "detail": "function 0x50b9d6f7 not sponsored"
+    },
+    {
+      "name": "Card.transferOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0xf2fde38b not sponsored"
+    },
+    {
+      "name": "Card.unpause not sponsored",
+      "pass": true,
+      "detail": "function 0x3f4ba83a not sponsored"
+    },
+    {
+      "name": "InvestDesk.acceptOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x79ba5097 not sponsored"
+    },
+    {
+      "name": "InvestDesk.pause not sponsored",
+      "pass": true,
+      "detail": "function 0x8456cb59 not sponsored"
+    },
+    {
+      "name": "InvestDesk.renounceOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x715018a6 not sponsored"
+    },
+    {
+      "name": "InvestDesk.seed not sponsored",
+      "pass": true,
+      "detail": "function 0x166a00e4 not sponsored"
+    },
+    {
+      "name": "InvestDesk.setParams not sponsored",
+      "pass": true,
+      "detail": "function 0xc0324c77 not sponsored"
+    },
+    {
+      "name": "InvestDesk.transferOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0xf2fde38b not sponsored"
+    },
+    {
+      "name": "InvestDesk.unpause not sponsored",
+      "pass": true,
+      "detail": "function 0x3f4ba83a not sponsored"
+    },
+    {
+      "name": "InvestDesk.withdraw not sponsored",
+      "pass": true,
+      "detail": "function 0x0ad58d2f not sponsored"
+    },
+    {
+      "name": "sOUSD.acceptOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x79ba5097 not sponsored"
+    },
+    {
+      "name": "sOUSD.fundYield not sponsored",
+      "pass": true,
+      "detail": "function 0xb0048de0 not sponsored"
+    },
+    {
+      "name": "sOUSD.mint not sponsored",
+      "pass": true,
+      "detail": "function 0x94bf804d not sponsored"
+    },
+    {
+      "name": "sOUSD.renounceOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0x715018a6 not sponsored"
+    },
+    {
+      "name": "sOUSD.setApr not sponsored",
+      "pass": true,
+      "detail": "function 0x59cee29c not sponsored"
+    },
+    {
+      "name": "sOUSD.transfer not sponsored",
+      "pass": true,
+      "detail": "function 0xa9059cbb not sponsored"
+    },
+    {
+      "name": "sOUSD.transferFrom not sponsored",
+      "pass": true,
+      "detail": "function 0x23b872dd not sponsored"
+    },
+    {
+      "name": "sOUSD.transferOwnership not sponsored",
+      "pass": true,
+      "detail": "function 0xf2fde38b not sponsored"
+    },
+    {
+      "name": "valid-first-draw",
+      "pass": true
+    },
+    {
+      "name": "wrong-borrower",
+      "pass": true
+    },
+    {
+      "name": "expired",
+      "pass": true
+    },
+    {
+      "name": "over-max",
+      "pass": true
+    },
+    {
+      "name": "zero",
+      "pass": true
+    },
+    {
+      "name": "wrong-chain-domain",
+      "pass": true
+    },
+    {
+      "name": "wrong-key",
+      "pass": true
+    },
+    {
+      "name": "used-nonce-refused",
+      "pass": true
+    },
+    {
+      "name": "borrow-plus-admin-refused",
+      "pass": true
+    },
+    {
+      "name": "31st-distinct-fill-refused",
+      "pass": true
+    }
+  ]
+}

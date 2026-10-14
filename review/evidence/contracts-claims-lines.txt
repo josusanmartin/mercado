@@ -1,0 +1,68 @@
+3:// verification check, an explorer link, a one-line purpose, admin powers in plain words, and live key state read
+57:  ...R("fx.owner", V2.oracle, fxOracleAdapterAbi, "owner"),
+60:  ...R("vault.owner", V2.vault, multiCollateralVaultAbi, "owner"),
+66:  ...R("amm.paused", V2.vamm, moveAmmAbi, "paused"),
+75:  ...R("card.paused", V2.card, mercadoCardAbi, "paused"),
+77:  ...R("desk.paused", V2.investDesk, investDeskAbi, "paused"),
+123:  purpose: string;
+124:  admin: string;
+126:  /** native TIP-20 precompile tokens have no Solidity source to verify */
+141:        <Loader2 className="size-3 animate-spin" /> checking source…
+167:          <span className="text-foreground/80">{it.purpose}</span>
+169:            <span className="text-foreground/70 font-medium">Admin powers:</span> {it.admin}
+196:  const [section, setSection] = useState<Section>("v2");
+209:  const deployer = L.get<Address>("vault.owner");
+218:  const paused = (k: string) => (L.get<boolean>(k) === undefined ? "…" : L.get<boolean>(k) ? "PAUSED" : "running");
+221:    const p = L.get<{ mintRatioBps: number; liqRatioBps: number; liqPenaltyBps: number; debtCeiling: bigint; mintPaused: boolean }>(`vault.params.${sym}`);
+224:    return `${fmtAmount(t[0])} ${sym} locked · debt ${x(t[1])} of ${x(p.debtCeiling)} ceiling · mint ≥ ${fmtBps(p.mintRatioBps, 0)}, liquidation < ${fmtBps(p.liqRatioBps, 0)}${p.mintPaused ? " · minting PAUSED" : ""}`;
+230:      description: "Institutions lock collateral and mint xMXN. Only the vault and the exchange can ever issue xMXN.",
+236:          purpose: "Mercado Synthetic Peso (testnet), a native Tempo TIP-20, 6 decimals.",
+237:          admin: "None for people: issuer roles were granted once to the vault and the exchange by the factory, then locked forever.",
+243:          purpose: "Created xMXN v2 through Tempo's TIP20Factory and granted ISSUER_ROLE to the vault and the exchange.",
+244:          admin: "None left: lockIssuers() is one-shot and has already run; no function can add issuers.",
+250:          purpose: "Per-collateral positions: deposit, mint, repay and burn, withdraw, liquidate. Repay never needs an oracle.",
+251:          admin: `${OWNER} can add collaterals, change risk parameters (within enforced bounds), set debt ceilings, pause new minting per collateral, and swap a price feed. It cannot move anyone's collateral or mint to itself.`,
+259:          purpose: c.label,
+260:          admin:
+262:              ? "Tempo's testnet faucet token; Mercado has no powers over it."
+264:                ? `${OWNER} sets a mock APR (≤ 20%) and funds the yield; it can't take deposits.`
+265:                : `${OWNER} is the only minter (demo issuance${c.symbol === "tTBILL" ? "; the public faucet is disabled" : ""}).`,
+271:          purpose: "Constant $1.00 for testnet OUSD (an assumption, labeled as such).",
+272:          admin: "None: immutable.",
+278:          purpose: "Share price of sOUSD × OUSD price; donation-proof (accrual-based).",
+279:          admin: "None: immutable; follows the sOUSD vault.",
+286:          purpose: "Admin-set price for the demo T-bill, with a sanity band, 2% max move and a 24h staleness limit.",
+287:          admin: `${OWNER} sets the price (within the band) or pauses it.`,
+294:      description: "OUSD in mints xMXN, xMXN in is burned and redeemed from the exchange's own reserve, never from Mint collateral.",
+299:          purpose: "Oracle-anchored vAMM: size-dependent pricing, fee, mint-to-recipient in one tx, pro-rata NAV redemptions under 100% coverage.",
+300:          admin: `${OWNER} can pause, tune fee/depth/caps within bounds, and withdraw equity only while coverage stays ≥ 120%. Anyone may add equity.`,
+302:            ? `${paused("amm.paused")} · reserve ${x(ammS[0], "OUSD")} · issued ${x(ammS[1])} · equity ${x(ammS[2], "OUSD")} · coverage ${ammS[3] > 10_000_000n ? "∞" : fmtBps(ammS[3], 0)} · redemptions ${x(ammS[4], "OUSD")} of ${x(ammS[5], "OUSD")} bucket · fee ${fmtBps(L.get<bigint>("amm.fee"), 2)}`
+314:          purpose: "Lender supply/withdraw (idle cash only), attested borrow with nonce replay protection, repay; flat fee realized on repayment.",
+315:          admin: `${OWNER} can rotate the attestation signer and set the fee (≤ 20%), per-driver cap and utilization cap. It can't withdraw lenders' funds.`,
+324:          purpose: "Backend key that signs EIP-712 eligibility from Demo Uber/DiDi/Rappi data (an illustrative score, not a credit model).",
+325:          admin: "A key, not a contract: it can only sign eligibility; the pool enforces caps and liquidity.",
+336:          purpose: "Virtual cards with a calendar-day limit (midnight CDMX), freeze, allowlisted terminals; every charge needs the holder's EIP-712 tap signature.",
+337:          admin: `${OWNER} can allowlist/delist merchant terminals and pause. It can't charge a card: only an allowlisted terminal with the holder's signature can.`,
+339:            ? `${paused("card.paused")} · ${cardS[0]} cards · ${cardS[4]} charges · spent ${x(cardS[1])} · refunded ${x(cardS[2])} · ${cardS[3]} merchant${cardS[3] === 1n ? "" : "s"}`
+346:          purpose: "Demo merchant account: submits Card charges and receives MPP bill payments.",
+347:          admin: "A key, not a contract.",
+359:          purpose: "Buy/sell demo tTBILL for OUSD or xMXN (via the exchange) from finite inventory at the admin feed price + spread; buys back only what each wallet bought.",
+360:          admin: `${OWNER} can seed/withdraw inventory, set spread (≤ 2%) and trade cap, and pause. It never mints tTBILL.`,
+361:          state: deskR ? `${paused("desk.paused")} · inventory ${x(deskR[1], "tTBILL")} · ${x(deskR[0], "OUSD")} · spread ${fmtBps(L.get<bigint>("desk.spread"), 2)}` : "…",
+367:          purpose: "ERC-4626 over OUSD; mock APR paid from funded OUSD; balance never read (donation-proof).",
+368:          admin: `${OWNER} sets the APR (≤ 20%) and funds the yield reserve; it can't move deposits.`,
+384:          purpose: "USD/MXN relayed by an admin key from a public source (Coinbase, intraday); band 5–50, 20% max move, 1h staleness. Not a decentralized oracle.",
+385:          admin: `${OWNER} pushes the rate (relay, never stepping past the jump limit), can force-set for stress demos, and can pause.`,
+392:          purpose: "Pays network fees for Mercado calls so drivers, savers and cardholders need no fee tokens (allowlisted functions only).",
+393:          admin: "A key used by our /api/sponsor relay; it only co-signs as fee payer, never sends funds.",
+402:          purpose: "USD test stablecoin that pays transaction fees on Tempo.",
+403:          admin: "Tempo's; none for Mercado.",
+410:    { name: "CollateralVault (v1)", address: V1.vault, purpose: "OUSD-only vault for xMXN v1.", admin: "None: constants and immutables." },
+411:    { name: "xMXN v1", address: V1.xMXN, precompile: true, purpose: "v1 synthetic peso (TIP-20).", admin: "Issuer locked to the v1 vault." },
+412:    { name: "SwapDesk (v1)", address: V1.swapDesk, purpose: "Separately seeded, capped OUSD/xMXN desk.", admin: `${OWNER} can pause, set params, withdraw its own reserves.` },
+413:    { name: "CreditPool (v1)", address: V1.creditPool, purpose: "v1 lender pool on xMXN v1.", admin: `${OWNER} can rotate the signer and set fee/caps.` },
+414:    { name: "LocalStableFactory (v1)", address: V1.factory, purpose: "Created xMXN v1 and granted its vault the issuer role.", admin: "No role-granting function." },
+422:  // unique deployed contracts with Solidity source (not precompile tokens, not keys)
+428:      purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state."
+430:        { label: "Contracts with source", value: String(total), sub: "each checked live against Sourcify" },
+438:          onChange={(id) => setSection(id as Section)}

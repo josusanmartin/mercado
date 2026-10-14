@@ -1,0 +1,1 @@
+{"file":"review/evidence/tour-trace-1791947059790.json","tests":[{"name":"snapshot-block-excluded-from-step","pass":false},{"name":"later-card-payment-not-attributed-to-credit","pass":false},{"name":"balance-snapshots-pinned-to-recorded-block","pass":false},{"name":"whole-trail-renders-seven-transfer-rows","pass":false,"rendered":5}]}

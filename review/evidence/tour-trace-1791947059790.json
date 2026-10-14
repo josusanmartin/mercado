@@ -1,0 +1,206 @@
+{
+  "at": "2026-10-14T03:04:19.789Z",
+  "sourceHash": "f2d04da970ccf9984167dbae573b9860044f4d4701826a94edb3cecd027da3e9",
+  "mode": "Actual Tour module with local block/log adapters. No browser or chain mutations.",
+  "tests": [
+    {
+      "name": "snapshot-block-excluded-from-step",
+      "pass": false
+    },
+    {
+      "name": "later-card-payment-not-attributed-to-credit",
+      "pass": false
+    },
+    {
+      "name": "balance-snapshots-pinned-to-recorded-block",
+      "pass": false
+    },
+    {
+      "name": "whole-trail-renders-seven-transfer-rows",
+      "pass": false,
+      "rendered": 5
+    }
+  ],
+  "requests": [
+    {
+      "address": [
+        "0x20C0000000000000000000004fE3A8219136ca54",
+        "0x20c0000000000000000000006a37DA5C996874BE"
+      ],
+      "event": {
+        "name": "Transfer",
+        "type": "event",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "from",
+            "indexed": true
+          },
+          {
+            "type": "address",
+            "name": "to",
+            "indexed": true
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ]
+      },
+      "fromBlock": "100",
+      "toBlock": "latest",
+      "args": {
+        "from": "0x1111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "address": [
+        "0x20C0000000000000000000004fE3A8219136ca54",
+        "0x20c0000000000000000000006a37DA5C996874BE"
+      ],
+      "event": {
+        "name": "Transfer",
+        "type": "event",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "from",
+            "indexed": true
+          },
+          {
+            "type": "address",
+            "name": "to",
+            "indexed": true
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ]
+      },
+      "fromBlock": "100",
+      "toBlock": "latest",
+      "args": {
+        "to": "0x1111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "address": [
+        "0x20C0000000000000000000004fE3A8219136ca54",
+        "0x20c0000000000000000000006a37DA5C996874BE"
+      ],
+      "event": {
+        "name": "Transfer",
+        "type": "event",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "from",
+            "indexed": true
+          },
+          {
+            "type": "address",
+            "name": "to",
+            "indexed": true
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ]
+      },
+      "fromBlock": "120",
+      "toBlock": "latest",
+      "args": {
+        "from": "0x1111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "address": [
+        "0x20C0000000000000000000004fE3A8219136ca54",
+        "0x20c0000000000000000000006a37DA5C996874BE"
+      ],
+      "event": {
+        "name": "Transfer",
+        "type": "event",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "from",
+            "indexed": true
+          },
+          {
+            "type": "address",
+            "name": "to",
+            "indexed": true
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ]
+      },
+      "fromBlock": "120",
+      "toBlock": "latest",
+      "args": {
+        "to": "0x1111111111111111111111111111111111111111"
+      }
+    }
+  ],
+  "balanceRequests": [
+    {
+      "address": "0x20C0000000000000000000004fE3A8219136ca54",
+      "abi": [],
+      "functionName": "balanceOf",
+      "args": [
+        "0x1111111111111111111111111111111111111111"
+      ],
+      "chainId": 42431
+    },
+    {
+      "address": "0x20c0000000000000000000006a37DA5C996874BE",
+      "abi": [],
+      "functionName": "balanceOf",
+      "args": [
+        "0x1111111111111111111111111111111111111111"
+      ],
+      "chainId": 42431
+    }
+  ],
+  "credit": [
+    {
+      "hash": "0x0000000000000000000000000000000000000000000000000000000000000082",
+      "token": "xMXN",
+      "amount": "50",
+      "dir": "out",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "block": "130"
+    },
+    {
+      "hash": "0x000000000000000000000000000000000000000000000000000000000000006e",
+      "token": "xMXN",
+      "amount": "100",
+      "dir": "in",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "block": "110"
+    },
+    {
+      "hash": "0x0000000000000000000000000000000000000000000000000000000000000064",
+      "token": "xMXN",
+      "amount": "3",
+      "dir": "in",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "block": "100"
+    }
+  ],
+  "card": [
+    {
+      "hash": "0x0000000000000000000000000000000000000000000000000000000000000082",
+      "token": "xMXN",
+      "amount": "50",
+      "dir": "out",
+      "counterparty": "0x2222222222222222222222222222222222222222",
+      "block": "130"
+    }
+  ]
+}
