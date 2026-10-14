@@ -1,0 +1,9 @@
+apps/web/app/(dashboard)/page.tsx
+apps/web/app/(dashboard)/layout.tsx
+apps/web/app/(dashboard)/mint/page.tsx
+apps/web/app/(dashboard)/pay/page.tsx
+apps/web/app/layout.tsx
+apps/web/app/(dashboard)/credit/page.tsx
+apps/web/app/(dashboard)/contracts/page.tsx
+apps/web/app/(dashboard)/earn/page.tsx
+apps/web/app/(dashboard)/send/page.tsx

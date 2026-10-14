@@ -1,0 +1,53 @@
+{
+  "file": "review/evidence/v2-screens-1791943490996.json",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    },
+    {
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    },
+    {
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    },
+    {
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    },
+    {
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    },
+    {
+      "path": "/earn",
+      "error": "page.goto: net::ERR_ABORTED at http://localhost:3101/earn\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3101/earn\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "errors": [],
+      "consoleErrors": []
+    },
+    {
+      "path": "/contracts",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "overflow": false
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+ M apps/web/app/(dashboard)/mint/page.tsx
+ M apps/web/app/globals.css
+ M apps/web/components/vault/mint-screen.tsx
+ M apps/web/lib/contracts/reads.ts
+ M apps/web/tsconfig.json
+ M packages/contracts/broadcast/DemoReset.s.sol/42431/run-latest.json
+ M review/FINDINGS.md
+ M review/PRODUCT.md
+ M review/V2-REVIEW.md
+?? apps/web/components/mint/
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943269607.json
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943307204.json
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943540420.json
+?? packages/contracts/script/.shot.mjs
+?? review/ECOSYSTEM-REVIEW.md
+?? review/MOCK-AUDIT.md
+?? review/evidence/api-v2-switch-independent.txt
+?? review/evidence/api-v2-switch-independent2.txt
+?? review/evidence/api-v2-switch-independent3.txt
+?? review/evidence/check-mocks-independent.txt
+?? review/evidence/ecosystem-start-routes.txt
+?? review/evidence/irc-ecosystem-unread.txt
+?? review/evidence/irc-reframe-13.txt
+?? review/evidence/irc-reframe-14.txt
+?? review/evidence/irc-reframe-15.txt
+?? review/evidence/irc-reframe-16.txt
+?? review/evidence/irc-reframe-17.txt
+?? review/evidence/irc-resume-wiring.txt
+?? review/evidence/irc-wire-everything.txt
+?? review/evidence/irc-wiring-2.txt
+?? review/evidence/irc-wiring-3.txt
+?? review/evidence/mock-wiring-search.txt
+?? review/evidence/review-checkpoint-status.txt
+?? review/evidence/status-resume.txt
+?? review/evidence/typecheck-v2-switch.txt
+?? review/evidence/v2-protocol-sponsor-1791943265715.json
+?? review/evidence/v2-protocol-sponsor-1791943549343.json
+?? review/evidence/v2-protocol-sponsor-recheck.txt
+?? review/evidence/v2-protocol-sponsor-summary.txt
+?? review/evidence/v2-screens-1791943490996.json
+?? review/evidence/v2-screens-summary.txt
+?? review/evidence/v2-send-state-1791943431699.json
+?? review/evidence/v2-send-state-summary.txt
+?? review/v2-protocol-sponsor-check.mjs
+?? review/v2-screen-check.mjs
+?? review/v2-send-state-check.mjs

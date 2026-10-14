@@ -1,0 +1,327 @@
+apps/web/app/(dashboard)/layout.tsx:10:            <ClientOnly fallback={<ProfileBarPlaceholder />}>
+apps/web/app/(dashboard)/layout.tsx:26:function ProfileBarPlaceholder() {
+packages/contracts/src/FXOracleAdapter.sol:7:/// @title FXOracleAdapter: admin-controlled MXN/USD mock feed (TESTNET ONLY)
+packages/contracts/src/FXOracleAdapter.sol:8:/// @notice No verified USD/MXN feed is known to exist on Tempo Moderato. This adapter is an admin mock
+packages/contracts/src/FXOracleAdapter.sol:9:///         feed and `isMock()` returns true. It is NOT a market price and does not peg anything.
+packages/contracts/src/FXOracleAdapter.sol:75:    function isMock() external pure returns (bool) {
+scripts/bills-crash-proof.ts:13: *      idempotency key must recover the payment from chain: FULFILLED_SIMULATED, no new 402, exactly ONE
+scripts/bills-crash-proof.ts:36:const chain = tempoModerato.extend({ feeToken: '0x20c0000000000000000000000000000000000001' as Address })
+scripts/bills-crash-proof.ts:85:      : { kind: 'ok', orderId: r.body.orderId, status: r.body.status, txHash: r.body.receipt?.txHash, ref: r.body.fulfillment?.reference, history: r.body.order?.history }
+scripts/bills-crash-proof.ts:196:  check(r.kind === 'ok' && r.status === 'FULFILLED_SIMULATED', `plain retry (same idempotency key, no credential) → ${r.kind} ${r.status ?? r.code} (no new 402)`)
+scripts/bills-crash-proof.ts:198:  const notes = (r.history ?? []).map((h: any) => `${h.status}${h.note ? `: ${h.note}` : ''}`)
+scripts/bills-crash-proof.ts:199:  check(notes.some((n: string) => /Recovered/i.test(n)), `history: ${(r.history ?? []).map((h: any) => h.status).join(' → ')} ("${notes.find((n: string) => /Recovered/i.test(n))?.slice(0, 80)}…")`)
+scripts/bills-crash-proof.ts:205:  check(o.history.filter((h: any) => h.status === 'FULFILLED_SIMULATED').length === 1, 'fulfilled exactly once')
+scripts/bills-crash-proof.ts:237:  check(r3?.kind === 'ok' && r3.status === 'FULFILLED_SIMULATED', `paying the fresh challenge → ${r3?.status} ${C.dim}${tx(r3?.txHash)}${C.x}`)
+scripts/bills-crash-proof.ts:239:  check(o.history.filter((h: any) => h.status === 'FULFILLED_SIMULATED').length === 1, 'fulfilled exactly once')
+scripts/underwriter-agent.ts:30:const chain = tempoModerato.extend({ feeToken: ALPHA_USD })
+scripts/underwriter-agent.ts:58:  const { request } = await pub.simulateContract({ ...(req as any), account: agent })
+scripts/underwriter-agent.ts:71:  const fee = parseUnits('2', 6)
+apps/web/lib/activity.ts:7:export type Activity = { hash: Hash; label: string; account: Address; at: number; url: string };
+apps/web/lib/activity.ts:9:const KEY = "mercado.activity.v1";
+apps/web/lib/activity.ts:11:let cache: Activity[] | undefined;
+apps/web/lib/activity.ts:12:const EMPTY: Activity[] = [];
+apps/web/lib/activity.ts:14:function read(): Activity[] {
+apps/web/lib/activity.ts:17:    cache = JSON.parse(localStorage.getItem(KEY) ?? "[]") as Activity[];
+apps/web/lib/activity.ts:24:export function recordActivity(a: Activity) {
+apps/web/lib/activity.ts:34:export function useActivity(account?: Address) {
+packages/contracts/src/v2/DemoRWA.sol:13:    constructor(string memory name_, string memory symbol_, address owner_, uint256 faucetCap_)
+packages/contracts/src/v2/StakedOUSD.sol:9:/// @title StakedOUSD (sOUSD): DEMO staked OUSD, an ERC-4626 vault over OUSD with admin-set mock yield (testnet)
+packages/contracts/src/v2/StakedOUSD.sol:10:/// @notice Yield is a mock: the owner sets an APR and funds the OUSD that pays it via `fundYield`. No real staking,
+packages/contracts/src/v2/StakedOUSD.sol:24:    uint256 public assetsAccounted; // principal + realized yield
+packages/contracts/src/v2/StakedOUSD.sol:25:    uint256 public fundedReserve; // funded OUSD not yet realized as yield
+packages/contracts/src/v2/StakedOUSD.sol:33:        ERC20("Demo staked OUSD (mock yield, testnet)", "sOUSD")
+packages/contracts/src/v2/StakedOUSD.sol:51:    /// @notice Funded OUSD still available to pay future mock yield.
+packages/contracts/src/v2/StakedOUSD.sol:63:    /// @notice Fund future mock yield. Checkpoints first: unfunded past accrual is forfeited, not back-paid.
+apps/web/lib/tempo/config.ts:18:const sponsor = process.env.NEXT_PUBLIC_FEE_SPONSOR !== "0";
+packages/contracts/src/interfaces/IFXOracleAdapter.sol:13:    /// @notice true for the admin-controlled testnet feed. UIs must label it as a mock.
+packages/contracts/src/interfaces/IFXOracleAdapter.sol:14:    function isMock() external view returns (bool);
+packages/contracts/src/v2/ERC4626PriceFeed.sol:18:    constructor(IERC4626 vault_, IPriceFeed underlyingFeed_) {
+packages/contracts/src/v2/MultiCollateralVault.sol:79:    constructor(address owner_, ITIP20 xmxn_, IPriceFeed fx_) Ownable(owner_) {
+apps/web/app/api/bills/orders/[id]/route.ts:4:// GET /api/bills/orders/:id → the order with its state history (id may also be the idempotencyKey).
+scripts/demo-journey.ts:59:const FEE_TOKEN = (process.env.FEE_TOKEN ?? '0x20c0000000000000000000000000000000000001') as Address
+scripts/demo-journey.ts:60:const chain = tempoModerato.extend({ feeToken: FEE_TOKEN })
+scripts/demo-journey.ts:128:  'function isMock() view returns (bool)',
+scripts/demo-journey.ts:168:  'function stats() view returns (uint256 totalSupplied, uint256 totalBorrowed, uint256 outstanding, uint256 realizedFees)',
+scripts/demo-journey.ts:199:  // simulate first so reverts come back with a readable reason
+scripts/demo-journey.ts:200:  const { request } = await pub.simulateContract({ ...req, account: acct } as any)
+scripts/demo-journey.ts:269:      warn(`oracle ${valid ? `goes stale in ${headroom}s` : 'is stale/invalid'}; deployer re-pushes the same mock price ${fmt(opx, 8)}`)
+scripts/demo-journey.ts:270:      await send('oracle setPrice (refresh mock feed)', account('DEPLOYER'), { address: d.oracle, abi: oracleAbi, functionName: 'setPrice', args: [opx] })
+scripts/demo-journey.ts:349:      const mock = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'isMock' })
+scripts/demo-journey.ts:350:      ok(`oracle: ${fmt(px, 8)} MXN/USD, updated ${Math.round(Date.now() / 1000 - Number(at))}s ago${mock ? ' (MOCK admin feed, labeled)' : ''}`)
+scripts/demo-journey.ts:351:      note(`mxnPerUsd=${px} isMock=${mock}`)
+scripts/demo-journey.ts:353:      // oracle sanity rails, simulated as the real owner (no state change): zero, out-of-band and outlier
+scripts/demo-journey.ts:404:      // negative check (simulation only, no gas): minting past 150% must revert
+scripts/demo-journey.ts:429:      const [out, fee] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'quote', args: [true, AMT.senderSwapIn] })
+scripts/demo-journey.ts:433:      // negative checks (simulation): slippage guard and per-swap size cap
+scripts/demo-journey.ts:486:      const capacity = s.availableToBorrow !== undefined ? BigInt(s.availableToBorrow) : maxAmount
+scripts/demo-journey.ts:492:      // negative checks before the real draw (simulation only)
+scripts/demo-journey.ts:501:      const feeBps = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'feeBps' })
+scripts/demo-journey.ts:502:      const expectedFee = (amount * feeBps + 9_999n) / 10_000n // CreditPool rounds the fee up
+scripts/demo-journey.ts:527:    title: 'Driver pays Telcel airtime via MPP HTTP 402, in pull AND push mode (SIMULATED fulfillment)',
+scripts/demo-journey.ts:539:      // provider failure path: phones ending 0000 make the mock provider reject → FAILED + paidButUnfulfilled
+scripts/demo-journey.ts:546:    title: 'Driver repays; lender sees repayment and realized fees',
+scripts/demo-journey.ts:573:        `pool: lender claims ${fmt(stats[0])}, borrowed ${fmt(stats[1])}, outstanding ${fmt(statsBefore[2])} → ${fmt(stats[2])}, realized fees ${fmt(statsBefore[3])} → ${fmt(stats[3])} xMXN`,
+scripts/demo-journey.ts:575:      assert(stats[3] > statsBefore[3], 'realized fees increased after repayment')
+scripts/demo-journey.ts:578:        `lender claim: ${fmt(await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'lenderBalance', args: [lender] }))} xMXN (principal + realized fee share; no APY promised)`,
+scripts/demo-journey.ts:638:  opts: { phone?: string; expect?: 'FULFILLED_SIMULATED' | 'FAILED' } = {},
+scripts/demo-journey.ts:640:  const expect = opts.expect ?? 'FULFILLED_SIMULATED'
+scripts/demo-journey.ts:646:  assert(quote.body.simulated === true, 'quote is labeled simulated')
+scripts/demo-journey.ts:681:  assert(order.fulfillment?.simulated === true && /SIMULATED/.test(order.fulfillment?.label ?? ''), 'fulfillment labeled SIMULATED')
+scripts/demo-journey.ts:726:  const states = (hist.body.history ?? hist.body.order?.history ?? []).map((h: any) => h.status)
+scripts/demo-journey.ts:727:  assert(JSON.stringify(states) === JSON.stringify(['CREATED', 'PAYMENT_VERIFIED', expect]), `order history ${JSON.stringify(states)}`)
+scripts/demo-journey.ts:728:  ok(`order history: ${states.join(' → ')}`)
+scripts/demo-journey.ts:731:/** Negative check via simulation (no gas). Passes only on a genuine contract revert, not on RPC/network errors. */
+scripts/demo-journey.ts:739:    await pub.simulateContract(req as any)
+scripts/demo-journey.ts:758:  console.log(`${C.b}Mercado demo journey on Tempo Moderato${C.x}  ${C.dim}(testnet prototype; demo data; SIMULATED fulfillment; mock oracle)${C.x}`)
+scripts/demo-journey.ts:793:  writeFileSync(join(outDir, `run-${new Date().toISOString().replace(/[:.]/g, '-')}.json`), run) // keep history for ACCEPTANCE links
+apps/web/app/api/bills/quote/route.ts:6:// POST /api/bills/quote → price a SIMULATED Telcel top-up / CFE bill, payable via MPP at /api/bills/pay.
+packages/contracts/src/CreditPool.sol:24:///      Fee: `feeBps` flat, added to debt at borrow time and realized for lenders only when repaid.
+packages/contracts/src/CreditPool.sol:27:///      totalAssets = cash + outstanding principal (unrealized fees are excluded). Lenders can only withdraw
+packages/contracts/src/CreditPool.sol:29:///      Demo simplifications: because unrealized fees are excluded from the share price, a lender who supplies
+packages/contracts/src/CreditPool.sol:53:    uint256 public realizedFees; // cumulative fees repaid
+packages/contracts/src/CreditPool.sol:155:        realizedFees += feePart;
+packages/contracts/src/CreditPool.sol:232:    /// @notice A lender's claim: principal plus their share of realized fees.
+packages/contracts/src/CreditPool.sol:241:    /// @return realizedFees_ cumulative fees repaid to the pool
+packages/contracts/src/CreditPool.sol:245:        returns (uint256 totalSupplied, uint256 totalBorrowed_, uint256 outstanding, uint256 realizedFees_)
+packages/contracts/src/CreditPool.sol:247:        return (totalAssets(), totalBorrowed, outstandingPrincipal, realizedFees);
+packages/contracts/src/v2/MoveAMM.sol:15:///         oracle mid on a virtual constant-product curve (size-dependent impact) plus a fee. It never holds or
+packages/contracts/src/v2/MoveAMM.sol:76:    constructor(address owner_, IERC20 ousd_, ITIP20 xmxn_, IPriceFeed fx_) Ownable(owner_) {
+apps/web/app/api/fx/route.ts:5:// GET /api/fx → USD/MXN from the active protocol's oracle (admin mock feed on testnet), always labeled.
+apps/web/app/api/bills/pay/route.ts:8://   paid   → on-chain verified receipt, then SIMULATED fulfillment. Retries never charge or fulfill twice.
+apps/web/lib/v2/actions.ts:2:// v2 writes composed on contracts' useTx (simulate → sign → confirm, readable errors, pinned account).
+scripts/demo-journey-v2.ts:39:const { activeAddresses, multiCollateralVaultAbi, moveAmmAbi, stakedOusdAbi, demoRwaAbi, priceFeedAbi, creditPoolAbi, tip20Abi, fxOracleAdapterAbi } = shared as any
+scripts/demo-journey-v2.ts:44:const FEE_TOKEN = (process.env.FEE_TOKEN ?? '0x20c0000000000000000000000000000000000001') as Address
+scripts/demo-journey-v2.ts:45:const chain = tempoModerato.extend({ feeToken: FEE_TOKEN })
+scripts/demo-journey-v2.ts:80:  const { request } = await pub.simulateContract({ ...req, account: acct } as any)
+scripts/demo-journey-v2.ts:99:/** Negative check by simulation: passes only on a genuine contract revert with one of the expected custom errors. */
+scripts/demo-journey-v2.ts:102:    await pub.simulateContract(req as any)
+scripts/demo-journey-v2.ts:135:  const [reserve, liability, equity, coverageBps, redeemedToday, redeemCap] = await read(A.vamm!, moveAmmAbi, 'state')
+scripts/demo-journey-v2.ts:172:      ok(`FX ${fmt(mxn, 8)} MXN/USD (mock admin feed, ${Math.round(Date.now() / 1000 - Number(at))}s old)`)
+scripts/demo-journey-v2.ts:175:        const [px] = await read(p.feed, priceFeedAbi, 'price')
+scripts/demo-journey-v2.ts:192:    title: 'Create: institution stakes OUSD → sOUSD (demo, mock yield) and mints xMXN v2 against it',
+scripts/demo-journey-v2.ts:199:      log(`sOUSD share price ${fmt(pps0)} OUSD (APR ${Number(await read(s.token, stakedOusdAbi, 'aprBps')) / 100}% mock, labeled demo)`)
+scripts/demo-journey-v2.ts:262:      const [out, fee, mid, impactBps] = await read(A.vamm!, moveAmmAbi, 'quote', [true, amountIn])
+scripts/demo-journey-v2.ts:296:      const [out, fee, mid, impactBps] = await read(A.vamm!, moveAmmAbi, 'quote', [false, amountIn])
+scripts/demo-journey-v2.ts:331:      const capacity = s.availableToBorrow !== undefined ? BigInt(s.availableToBorrow) : maxAmount
+scripts/demo-journey-v2.ts:332:      const amount = [maxAmount, capacity, parseUnits('500', 6)].reduce((a, b) => (b < a ? b : a))
+scripts/demo-journey-v2.ts:339:      const feeBps: bigint = await read(A.creditPool, creditPoolAbi, 'feeBps')
+scripts/demo-journey-v2.ts:355:      assert(q.simulated === true, 'quote labeled simulated')
+scripts/demo-journey-v2.ts:371:      assert(paid.kind === 'ok' && paid.body.status === 'FULFILLED_SIMULATED', `paid → ${paid.body?.status}`)
+scripts/demo-journey-v2.ts:377:      ok(`paid ${fmt(amt)} xMXN v2 → merchant on-chain ${C.dim}${txUrl(tx)}${C.x}; SIMULATED ref ${paid.body.fulfillment?.reference}`)
+scripts/demo-journey-v2.ts:386:    title: 'Lend: driver repays CreditPool v2; fees realized',
+scripts/demo-journey-v2.ts:401:      assert(st1[3] > st0[3], 'realized fees increased')
+scripts/demo-journey-v2.ts:402:      ok(`debt ${fmt(debt)} → 0; realized fees ${fmt(st0[3])} → ${fmt(st1[3])} xMXN v2`)
+scripts/demo-journey-v2.ts:408:  console.log(`${C.b}Mercado v2 journey on Tempo Moderato${C.x}  ${C.dim}(PROTOCOL=v2 · testnet · demo collateral · mock oracle · SIMULATED fulfillment)${C.x}\n`)
+apps/web/app/api/sponsor/policy.ts:31:export const MAX_FEE_PER_GAS = 5_000_000_000n; // 5 gwei
+apps/web/app/api/sponsor/policy.ts:32:export const MAX_PRIORITY_FEE = 1_000_000_000n; // 1 gwei
+apps/web/app/api/sponsor/policy.ts:41:export const FEE_TOKENS: ReadonlySet<string> = new Set(
+apps/web/app/api/sponsor/policy.ts:159:  const maxFee = big(req.maxFeePerGas);
+apps/web/app/api/sponsor/policy.ts:160:  const tip = big(req.maxPriorityFeePerGas);
+apps/web/app/api/sponsor/policy.ts:197:  const skip = new Set(["signature", "feePayerSignature", "hash", "r", "s", "v", "yParity"]);
+apps/web/lib/server/credit/index.ts:17:const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
+apps/web/lib/server/credit/index.ts:59:  const maxAmount = parseUnits(String(result.capMxn), 6);
+apps/web/lib/server/credit/index.ts:104:    const injected = parseUnits(String(opts.borrowCapacityMxn), 6);
+apps/web/lib/server/credit/provider.ts:2:// deterministic, clearly labeled synthetic fixtures ("Demo Uber Data"). No real Uber data is used.
+apps/web/lib/server/credit/provider.ts:5:import { EarningsFixtureSchema } from "@mercado/shared";
+apps/web/lib/server/credit/provider.ts:6:import type { DriverProfile, DriverProfileId, EarningsFixture, PaymentRecord, WeeklyEarnings } from "@mercado/shared";
+apps/web/lib/server/credit/provider.ts:18:const cache = new Map<DriverProfileId, EarningsFixture>();
+apps/web/lib/server/credit/provider.ts:20:export function loadFixture(profile: DriverProfileId): EarningsFixture {
+apps/web/lib/server/credit/provider.ts:23:  const file = path.join(repoRoot(), "fixtures/uber", `${profile}.json`);
+apps/web/lib/server/credit/provider.ts:24:  const fixture = EarningsFixtureSchema.parse(JSON.parse(readFileSync(file, "utf8")));
+apps/web/lib/server/credit/provider.ts:25:  cache.set(profile, fixture);
+apps/web/lib/server/credit/provider.ts:26:  return fixture;
+apps/web/lib/server/credit/provider.ts:34:    return loadFixture(driverRef as DriverProfileId).driver;
+apps/web/lib/server/credit/provider.ts:37:    return loadFixture(driverRef as DriverProfileId).weeks;
+apps/web/lib/server/credit/provider.ts:40:    return loadFixture(driverRef as DriverProfileId).payments;
+apps/web/lib/server/credit/provider.ts:51: *     partner.trips     → GET /v1/partners/trips     (trip history, distance, duration, status)
+apps/web/app/api/move/quote/route.ts:12:const PARTNER_FEE = "0.50"; // xMXN
+apps/web/app/api/driver/score/route.ts:9:const UNDERWRITER_FEE = "2";
+apps/web/app/api/driver/score/route.ts:33:    const report = await assessDriver(body.borrower as Address, body.profile, { borrowCapacityMxn: null });
+apps/web/lib/server/move/quote.ts:3:// from the v1 capped SwapDesk at the (mock admin) oracle price. Quotes are indicative: on-chain execution is bound only by
+apps/web/lib/server/move/quote.ts:31:  StalePrice: "The FX feed (testnet mock oracle) is stale, so quoting is paused until it updates.",
+apps/web/lib/server/move/quote.ts:32:  OraclePaused: "The FX feed (testnet mock oracle) is paused.",
+apps/web/lib/server/move/quote.ts:67:  const isMock = await client
+apps/web/lib/server/move/quote.ts:68:    .readContract({ address: oracle, abi: fxOracleAdapterAbi, functionName: "isMock" })
+apps/web/lib/server/move/quote.ts:98:  const feeBps = amountOut + fee > 0n ? Number((fee * BigInt(BPS * 100)) / (amountOut + fee)) / 100 : 0;
+apps/web/lib/server/move/quote.ts:99:  const sizeImpactBps = impactBps ?? Math.max(0, Math.round((effectiveSpreadBps - feeBps) * 100) / 100);
+apps/web/lib/server/move/quote.ts:126:    isMock,
+apps/web/lib/server/move/quote.ts:132:      ` Priced off ${isMock ? "an admin-controlled mock FX feed" : "the on-chain FX oracle"}; testnet OUSD has no real value and xMXN is not redeemable for pesos. Indicative: execution is bound only by your swap's minOut.`,
+apps/web/lib/server/fx.ts:2:// The testnet oracle is an ADMIN MOCK feed; responses always say so. Before deploy we fall back to a
+apps/web/lib/server/fx.ts:11:  "function isMock() view returns (bool)",
+apps/web/lib/server/fx.ts:24:    const [[mxnPerUsd, updatedAt, valid], isMock] = await Promise.all([
+apps/web/lib/server/fx.ts:26:      client.readContract({ address: oracle, abi: oracleAbi, functionName: "isMock" }).catch(() => true),
+apps/web/lib/server/fx.ts:28:    const feed = isMock ? "Testnet admin-controlled mock FX feed, not a live market rate" : "On-chain FX oracle (testnet)";
+apps/web/lib/server/fx.ts:33:      source: "mock-admin-oracle",
+apps/web/lib/server/fx.ts:34:      isMock,
+apps/web/lib/server/bills/service.ts:2:// → simulated provider fulfillment (FULFILLED_SIMULATED | FAILED with paidButUnfulfilled).
+apps/web/lib/server/bills/service.ts:6:import { SIMULATED_FULFILLMENT_LABEL, explorerTx } from "@mercado/shared";
+apps/web/lib/server/bills/service.ts:62:    simulated: true,
+apps/web/lib/server/bills/service.ts:63:    label: SIMULATED_FULFILLMENT_LABEL,
+apps/web/lib/server/bills/service.ts:95:      history: [{ status: "CREATED", at: now }],
+apps/web/lib/server/bills/service.ts:98:      simulated: true,
+apps/web/lib/server/bills/service.ts:122:      if (f.status === "SUCCESS") transition(order, "FULFILLED_SIMULATED", `${f.providerName} ref ${f.reference}`);
+apps/web/lib/server/bills/service.ts:380:    o.history.push({ status: o.status, at: new Date().toISOString(), note: `Unapplied payment ${outcome.txHash}: ${reason}. Needs manual refund.` });
+apps/web/lib/server/credit/score.ts:1:// Deterministic, illustrative credit heuristic. These are FAKE underwriting parameters for a testnet demo,
+apps/web/lib/server/credit/score.ts:10:export const ABSOLUTE_CAP_MXN = 1500;
+apps/web/lib/server/credit/score.ts:11:const CAP_STEP_MXN = 10; // caps round down to 10 MXN
+apps/web/lib/server/credit/score.ts:51:    activity: r1(20 * clamp01(active.length / 8)),
+apps/web/lib/server/credit/score.ts:86:  const score = r1(c.income + c.stability + c.activity + c.tripConsistency);
+apps/web/lib/server/credit/score.ts:90:    `Active in ${f.activeWeeks} of ${f.weeksObserved} weeks (${c.activity}/20 pts).`,
+apps/web/lib/server/credit/score.ts:95:  if (f.activeWeeks < MIN_ACTIVE_WEEKS) failures.push(`needs at least ${MIN_ACTIVE_WEEKS} active weeks of history (has ${f.activeWeeks})`);
+apps/web/lib/server/credit/score.ts:105:  const incomeCap = INCOME_SHARE * f.medianWeeklyNetMxn;
+apps/web/lib/server/credit/score.ts:106:  const cap = Math.min(incomeCap, ABSOLUTE_CAP_MXN);
+apps/web/lib/server/credit/score.ts:107:  const capReason: CapReason = incomeCap <= ABSOLUTE_CAP_MXN ? "income-share" : "absolute-cap";
+apps/web/lib/server/credit/score.ts:113:  const capMxn = Math.floor(cap / CAP_STEP_MXN) * CAP_STEP_MXN;
+apps/web/lib/contracts/errors.ts:16:  // oracle (mock admin feed)
+apps/web/lib/contracts/errors.ts:17:  StalePrice: () => "The FX feed (mock admin oracle) is stale, so minting, withdrawing against debt and swaps are paused until it updates.",
+apps/web/lib/contracts/errors.ts:18:  OraclePaused: () => "The FX feed (mock admin oracle) is paused.",
+apps/web/lib/v2/reads.ts:53:  const feeds = useReadContracts({
+apps/web/lib/v2/reads.ts:59:    const px = ok<readonly [bigint, bigint]>(feeds.data?.[i]);
+apps/web/components/ui/input.tsx:10:        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-11 w-full min-w-0 rounded-[10px] border bg-card focus-visible:border-product px-3.5 py-1 text-base transition-[color,box-shadow] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm tabular-nums",
+apps/web/lib/contracts/reads.ts:57:// ---------------------------------------------------------------- oracle (MOCK admin feed)
+apps/web/lib/contracts/reads.ts:79:    /** Always true on testnet: label it "mock admin oracle". */
+apps/web/lib/contracts/reads.ts:80:    isMock: true as const,
+apps/web/lib/contracts/reads.ts:131:  const d = (functionName: "reserves" | "paused" | "spreadBps" | "maxSwapXmxn" | "dailyCapOusd") =>
+apps/web/lib/contracts/reads.ts:208:    realizedFees: stats?.[3],
+apps/web/lib/contracts/reads.ts:255:  const pool = { cash: ok<bigint>(d?.[1]), loansOut: stats?.[2], lenderClaims: stats?.[0], realizedFees: stats?.[3] };
+apps/web/components/ui/badge.tsx:15:        mock: "border-warning/40 bg-warning/10 text-warning-ink",
+apps/web/lib/server/bills/store.ts:90:  order.history.push({ status, at, ...(note ? { note } : {}) });
+apps/web/lib/vault-math.ts:2:// For previews only; the contract is the authority and every write is simulated first.
+apps/web/lib/server/bills/providers.ts:1:// Bill providers. Everything here is SIMULATED: no real top-up or bill payment happens.
+apps/web/lib/server/bills/providers.ts:4:import { SIMULATED_FULFILLMENT_LABEL } from "@mercado/shared";
+apps/web/lib/server/bills/providers.ts:31:abstract class MockProvider implements BillProvider {
+apps/web/lib/server/bills/providers.ts:46:      simulated: true,
+apps/web/lib/server/bills/providers.ts:47:      label: SIMULATED_FULFILLMENT_LABEL,
+apps/web/lib/server/bills/providers.ts:53:        ? "Simulated provider rejection (demo accounts ending in 0000 always fail)."
+apps/web/lib/server/bills/providers.ts:54:        : `Simulated: ${quote.description}. No real ${this.id === "telcel" ? "airtime was sent" : "bill was paid"}.`,
+apps/web/lib/server/bills/providers.ts:66:/** Mock Telcel prepaid airtime ("recarga"). Fixed denominations like the real product. */
+apps/web/lib/server/bills/providers.ts:67:export class MockTelcelProvider extends MockProvider {
+apps/web/lib/server/bills/providers.ts:69:  readonly name = "Telcel (mock)";
+apps/web/lib/server/bills/providers.ts:74:    if (!MockTelcelProvider.DENOMINATIONS.includes(req.amountMxn))
+apps/web/lib/server/bills/providers.ts:75:      throw new BillQuoteError(`Telcel amount must be one of ${MockTelcelProvider.DENOMINATIONS.join(", ")} MXN`);
+apps/web/lib/server/bills/providers.ts:85:/** Mock CFE electricity bill. */
+apps/web/lib/server/bills/providers.ts:86:export class MockCFEProvider extends MockProvider {
+apps/web/lib/server/bills/providers.ts:88:  readonly name = "CFE (mock)";
+apps/web/lib/server/bills/providers.ts:126:  telcel: new MockTelcelProvider(),
+apps/web/lib/server/bills/providers.ts:127:  cfe: new MockCFEProvider(),
+apps/web/app/api/driver/demo/route.ts:2:import { loadFixture } from "@/lib/server/credit";
+apps/web/app/api/driver/demo/route.ts:10:  const f = loadFixture(parsed.data.profile);
+apps/web/lib/v2/collaterals.ts:5:// so risk params and prices are never hard-coded here.
+apps/web/lib/v2/collaterals.ts:34:  sOUSD: { name: "Staked OUSD", yieldSource: "Share price grows inside the token (mock APR, admin-set)", demo: true, label: "Demo staked OUSD (mock yield, testnet)" },
+apps/web/lib/contracts/tx.ts:3:// Each write is simulated first (so reverts surface before the wallet prompt), then sent and awaited.
+apps/web/lib/contracts/tx.ts:7:import { getConnection, simulateContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
+apps/web/lib/contracts/tx.ts:13:export type TxStatus = "idle" | "simulating" | "signing" | "pending" | "success" | "error";
+apps/web/lib/contracts/tx.ts:30:  /** Simulate, sign, send and wait for one write. Throws (already recorded in state) on failure. */
+apps/web/lib/contracts/tx.ts:60:      setStatus("simulating");
+apps/web/lib/contracts/tx.ts:61:      const { request } = await simulateContract(config, {
+apps/web/lib/contracts/tx.ts:62:        ...(req as Parameters<typeof simulateContract>[1]),
+apps/web/lib/contracts/tx.ts:68:      // The registered config narrows `chain` to tempoModerato; the simulated request is for that chain.
+apps/web/lib/contracts/tx.ts:142:    isBusy: status === "simulating" || status === "signing" || status === "pending",
+apps/web/components/credit/credit-screen.tsx:5:// separately funded CreditPool → manual repayment. Everything mocked is labeled as such.
+apps/web/components/credit/credit-screen.tsx:48:const FEE_BPS = 200n; // CreditPool borrow fee, added to debt at draw time
+apps/web/components/credit/credit-screen.tsx:54:    <Badge variant="mock">Demo Uber Data</Badge>
+apps/web/components/credit/credit-screen.tsx:55:    <Badge variant="mock">Illustrative, not a credit model</Badge>
+apps/web/components/credit/credit-screen.tsx:85:  const capacity = useBorrowCapacity(att ? BigInt(att.maxAmount) : undefined);
+apps/web/components/credit/credit-screen.tsx:225:          {demo.data && (
+apps/web/components/credit/credit-screen.tsx:230:                  value={demo.data.driver.firstName}
+apps/web/components/credit/credit-screen.tsx:231:                  sub={`${demo.data.driver.city} · ${demo.data.driver.vehicle}`}
+apps/web/components/credit/credit-screen.tsx:233:                <Row label="Rating" value={`★ ${demo.data.driver.rating}`} />
+apps/web/components/credit/credit-screen.tsx:235:                  label="Weeks of history"
+apps/web/components/credit/credit-screen.tsx:236:                  value={demo.data.weeks.length}
+apps/web/components/credit/credit-screen.tsx:242:                  weeks={demo.data.weeks}
+apps/web/components/credit/credit-screen.tsx:270:          description="A fixed rule from median weekly net, earnings volatility, active weeks and trip consistency. These are fake underwriting parameters for a testnet demo."
+apps/web/components/credit/credit-screen.tsx:318:                  points={score.features.components.activity}
+apps/web/components/credit/credit-screen.tsx:404:                        placeholder="Amount in xMXN"
+apps/web/components/credit/credit-screen.tsx:494:                      placeholder="Amount"
+apps/web/components/credit/credit-screen.tsx:556:              label="Realized fees"
+apps/web/components/credit/credit-screen.tsx:557:              value={`${fmtAmount(pool.realizedFees)} xMXN`}
+apps/web/components/billpay/use-bill-pay.ts:3:// → SIMULATED fulfillment. Recent orders are remembered per browser (localStorage) by idempotency key.
+apps/web/components/billpay/use-bill-pay.ts:44:    /* storage unavailable: history just won't persist */
+apps/web/components/vault/mint-screen.tsx:5:// is simulated first.
+apps/web/components/vault/mint-screen.tsx:8:import { Activity, ArrowDownToLine, ArrowUpFromLine, Gauge, LineChart } from "lucide-react";
+apps/web/components/vault/mint-screen.tsx:17:import { MockOracleBadge } from "@/components/shell/labels";
+apps/web/components/vault/mint-screen.tsx:128:    { id: "stress", label: "Peso stress test", icon: Activity },
+apps/web/components/vault/mint-screen.tsx:279:        <Panel key="fx" title="Exchange rate" description="Used for minting limits and swap quotes." aside={<MockOracleBadge />}>
+apps/web/components/vault/mint-screen.tsx:282:            <Row label="Source" sub="An admin sets it on testnet. Not a market price." value="Mock admin oracle" />
+apps/web/components/vault/mint-screen.tsx:300:          aside={<span className="bg-warning/15 text-warning-ink rounded-full px-3 py-1 text-sm">Mock scenario, preview only</span>}
+apps/web/components/billpay/pay-screen.tsx:2:// "Pay bills" in the console Settings layout: Bill · Checkout · Receipt · History.
+apps/web/components/billpay/pay-screen.tsx:3:// Quote a mock Telcel top-up (or CFE bill) → pay through a real MPP HTTP 402 flow with the connected
+apps/web/components/billpay/pay-screen.tsx:4:// wallet → on-chain receipt next to the SIMULATED fulfillment and the remaining advance.
+apps/web/components/billpay/pay-screen.tsx:6:import { History, Receipt, ShoppingCart, Smartphone } from "lucide-react";
+apps/web/components/billpay/pay-screen.tsx:29:type Section = "bill" | "checkout" | "receipt" | "history";
+apps/web/components/billpay/pay-screen.tsx:34:    <Badge variant="mock">Fulfillment: SIMULATED</Badge>
+apps/web/components/billpay/pay-screen.tsx:125:        ? r.status === "FULFILLED_SIMULATED"
+apps/web/components/billpay/pay-screen.tsx:131:      id: "history",
+apps/web/components/billpay/pay-screen.tsx:132:      label: "History",
+apps/web/components/billpay/pay-screen.tsx:133:      icon: History,
+apps/web/components/billpay/pay-screen.tsx:153:          description="Pay with xMXN through a real HTTP 402 payment (MPP) on Tempo. Mock providers: no real airtime is sent and no real bill is paid."
+apps/web/components/billpay/pay-screen.tsx:174:                        ? "Telcel airtime (mock)"
+apps/web/components/billpay/pay-screen.tsx:175:                        : "CFE electricity (mock)"}
+apps/web/components/billpay/pay-screen.tsx:301:                <Row label="Fulfillment" value="SIMULATED, no real top-up" />
+apps/web/components/billpay/pay-screen.tsx:347:          description="The payment is a real testnet transfer, verified on-chain before anything was fulfilled. The top-up is simulated."
+apps/web/components/billpay/pay-screen.tsx:396:                Top-up <Badge variant="mock">SIMULATED</Badge>
+apps/web/components/billpay/pay-screen.tsx:399:                {r.status === "FULFILLED_SIMULATED" && r.fulfillment ? (
+apps/web/components/billpay/pay-screen.tsx:420:                        ? "The (simulated) provider rejected it. Your payment is recorded and flagged for a refund."
+apps/web/components/billpay/pay-screen.tsx:459:      {section === "history" && (
+apps/web/components/billpay/pay-stepper.tsx:30:    label: "Top-up (SIMULATED)",
+apps/web/components/billpay/pay-stepper.tsx:31:    detail: "Mock provider returns a reference; no real airtime",
+apps/web/components/billpay/pay-stepper.tsx:36:  if (result) return result.status === "FULFILLED_SIMULATED" ? 5 : 4;
+apps/web/components/vault/collateral-picker.tsx:40:                  <Badge variant="mock">Demo token</Badge>
+apps/web/components/shell/token-input.tsx:52:          placeholder="0.00"
+apps/web/components/transfer/send-screen.tsx:75:  const overCap = !USE_V2 && swapping && desk.remainingDailyCap !== undefined && amt > desk.remainingDailyCap;
+apps/web/components/transfer/send-screen.tsx:159:                    <Row label="Oracle mid" sub="Mock admin oracle" value={quoteV2.mid !== undefined ? `${fmtNumber(Number(quoteV2.mid) / 1e8, 4)} MXN/USD` : fx.rate !== undefined ? `${fmtNumber(fx.rate, 4)} MXN/USD` : "—"} />
+apps/web/components/transfer/send-screen.tsx:177:                      sub="Mock oracle rate minus the desk spread"
+apps/web/components/transfer/send-screen.tsx:201:                  placeholder="0x… wallet address on Tempo"
+apps/web/components/transfer/send-screen.tsx:227:                <Input id="memo" placeholder="para mamá" value={memo} disabled={m.tx.isBusy} onChange={(e) => setMemo(e.target.value)} aria-invalid={memoTooLong || undefined} />
+apps/web/components/transfer/send-screen.tsx:294:            OUSD reserve valued at the mock rate, divided by the xMXN the exchange has issued. A stronger peso lowers it.
+apps/web/components/transfer/send-screen.tsx:311:        <Panel key="desk" title="Swap desk" description="Its own finite inventory, funded separately. It can't touch vault collateral. A capped demo liquidity source priced off the mock oracle, not a market.">
+apps/web/components/credito/underwriting-api.tsx:79:        aside={<Badge variant="mock">Demo Uber Data · illustrative score</Badge>}
+apps/web/components/billpay/recent-orders.tsx:2:// Orders started from this browser, with their state history (CREATED → PAYMENT_VERIFIED → FULFILLED_SIMULATED).
+apps/web/components/billpay/recent-orders.tsx:12:  FULFILLED_SIMULATED: "Done (simulated)",
+apps/web/components/billpay/recent-orders.tsx:30:      description="Payments started from this browser, with their full state history."
+apps/web/components/billpay/recent-orders.tsx:105:                {o.history.map((h, i) => (
+apps/web/components/credito/credito-screen.tsx:4://   Lenders  → supply / withdraw xMXN, pool stats, realized fees (contracts' Earn screen)
+apps/web/components/credito/credito-screen.tsx:33:    window.history.replaceState(null, "", url);
+apps/web/components/credito/credito-screen.tsx:40:    { label: "Fees paid to lenders", value: pool.realizedFees, digits: 2 },
+apps/web/components/credito/credito-screen.tsx:55:              <Badge variant="mock">Demo Uber Data</Badge>
+apps/web/components/credito/credito-screen.tsx:56:              <Badge variant="mock">Illustrative score, not a credit model</Badge>
+apps/web/components/credito/credito-screen.tsx:57:              <Badge variant="mock">No guaranteed return</Badge>
+apps/web/components/credit/agent-api-panel.tsx:57:      aside={<Badge variant="mock">Recorded trace</Badge>}
+apps/web/components/earn/earn-screen.tsx:19:const FEE_PCT = 2; // CreditPool feeBps = 200, flat per advance
+apps/web/components/earn/earn-screen.tsx:20:const MAX_UTILIZATION = 80;
+apps/web/components/earn/earn-screen.tsx:24:const NO_YIELD = <Badge variant="mock">No guaranteed return</Badge>;
+apps/web/components/earn/earn-screen.tsx:51:  const utilization = pct(pool.outstanding, pool.totalAssets);
+apps/web/components/earn/earn-screen.tsx:173:              <Row label="Realized fees" sub={`${FEE_PCT}% flat, counted only when repaid`} value={xmxn(pool.realizedFees)} />
+apps/web/components/earn/earn-screen.tsx:187:            <Row label="Illustrative underwriting" sub="Eligibility comes from a demo score on Demo Uber Data, not a validated credit model." value={<Badge variant="mock">Demo data</Badge>} />
+apps/web/components/earn/earn-screen.tsx:190:            <Row label="Synthetic peso" sub="xMXN is a testnet token with no market peg and no peso redemption." value={<Badge variant="mock">Testnet</Badge>} />
+apps/web/components/home/system-map.tsx:17:  // seed funds and withdrawals), so it's labeled as a wallet balance, not cumulative payment volume.
+apps/web/components/home/system-map.tsx:55:      note: "Real 402 payments, SIMULATED top-ups",
+apps/web/components/home/system-map.tsx:97:        Testnet: collateral and xMXN have no real value. Lend uses Demo Uber Data; Spend top-ups are SIMULATED.
+apps/web/components/vault/peso-slider.tsx:91:                <>This is today&apos;s mock rate.</>
+apps/web/components/home/contracts-screen.tsx:5:import { Boxes, ExternalLink, History, ShieldCheck } from "lucide-react";
+apps/web/components/home/contracts-screen.tsx:20:  { name: "FXOracleAdapter", what: "MXN-per-USD price with staleness and sanity checks", address: a("oracle"), verified: true, note: "Mock admin feed" },
+apps/web/components/home/contracts-screen.tsx:26:  { name: "Bill merchant", what: "Receives MPP payments for SIMULATED top-ups", address: a("merchant") },
+apps/web/components/home/contracts-screen.tsx:43:            { id: "txs", label: "Deployment history", icon: History, hint: String(txs.length) },
+apps/web/components/home/contracts-screen.tsx:57:                    {e.note && <Badge variant="mock">{e.note}</Badge>}
+apps/web/components/home/contracts-screen.tsx:86:          title="Deployment history"
+apps/web/components/earn/three-buckets.tsx:9:const MAX_UTILIZATION = 80; // CreditPool maxUtilizationBps / 100
+apps/web/components/earn/three-buckets.tsx:28:  const utilization = lent !== undefined && claims ? Number((lent * 10_000n) / claims) / 100 : undefined;
+apps/web/components/shell/tx-progress.tsx:8:import { recordActivity } from "@/lib/activity";
+apps/web/components/shell/tx-progress.tsx:15:  simulating: "Checking it will succeed",
+apps/web/components/shell/tx-progress.tsx:26:      if (s.receipt && address) recordActivity({ hash: s.hash, label: s.label, account: address, at: Date.now(), url: s.url });
+apps/web/components/home/home-screen.tsx:9:import { useActivity } from "@/lib/activity";
+apps/web/components/home/home-screen.tsx:52:    { title: "Earn", icon: Sprout, href: "/earn", value: n0(buckets.pool.realizedFees), caption: "xMXN fees paid to lenders" },
+apps/web/components/home/home-screen.tsx:138:        {usd !== undefined ? `≈ ${fmtNumber(usd)} USD at the mock rate. ` : ""}Synthetic pesos, not redeemable for pesos.
+apps/web/components/home/home-screen.tsx:185:  const activity = useActivity(address).slice(0, 8);
+apps/web/components/home/home-screen.tsx:195:      {activity.length === 0 && bills.length === 0 ? (
+apps/web/components/home/home-screen.tsx:209:              <Badge variant={o.status === "FULFILLED_SIMULATED" ? "mock" : o.status === "FAILED" ? "destructive" : "secondary"}>
+apps/web/components/home/home-screen.tsx:210:                {o.status === "FULFILLED_SIMULATED" ? "Paid · SIMULATED top-up" : o.status.replace("_", " ").toLowerCase()}
+apps/web/components/home/home-screen.tsx:214:          {activity.map((a) => (
+apps/web/components/home/home-screen.tsx:239:        <DialogDescription>What&apos;s real here, and what is mocked.</DialogDescription>
+apps/web/components/home/home-screen.tsx:253:        <Row label="Exchange rate" sub="Admin-set testnet feed, not a market price" value={<Badge variant="mock">Mock oracle</Badge>} />
+apps/web/components/home/home-screen.tsx:254:        <Row label="Driver earnings" sub="Synthetic fixtures, not a real Uber account" value={<Badge variant="mock">Demo Uber Data</Badge>} />
+apps/web/components/home/home-screen.tsx:255:        <Row label="Bill top-ups" sub="Payment is real; no airtime is delivered" value={<Badge variant="mock">SIMULATED</Badge>} />
+apps/web/components/shell/labels.tsx:4:export function MockOracleBadge() {
+apps/web/components/shell/labels.tsx:5:  return <Badge variant="mock">Mock admin oracle</Badge>;
+apps/web/components/tour/demo-tour.tsx:63:    doThis: "Buy 100 MXN of Telcel airtime. Payment is real on Tempo; the top-up is SIMULATED.",
+apps/web/components/tour/demo-tour.tsx:77:    doThis: "Realized fees went up and loans out went down. No APY is promised.",

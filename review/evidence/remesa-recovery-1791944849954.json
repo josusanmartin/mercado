@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-14T02:27:29.953Z",
+  "mode": "actual hook with local React/tx adapters, no network or broadcasts",
+  "sourceSha256": "7d6c9197558b43bf021e2416e0fbc950504a90a17d98971f9fb1e364ce834060",
+  "beforeFailedRecovery": {
+    "amount": "55000000",
+    "to": "0x00000000000000000000000000000000000000aa",
+    "memo": "para mamá"
+  },
+  "afterFailedRecovery": null,
+  "writes": [
+    "mint",
+    "transfer-attempt",
+    "mint"
+  ]
+}

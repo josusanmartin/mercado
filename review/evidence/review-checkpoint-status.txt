@@ -1,0 +1,43 @@
+ M apps/web/components/transfer/send-screen.tsx
+ M apps/web/components/wallet/use-persona.ts
+ M apps/web/components/wallet/wallet-menu.tsx
+ M apps/web/lib/tempo/config.ts
+ M apps/web/tsconfig.json
+ M packages/contracts/broadcast/DemoReset.s.sol/42431/run-latest.json
+ M review/FINDINGS.md
+ M review/PRODUCT.md
+ M review/V2-REVIEW.md
+ M scripts/demo-journey.ts
+ M scripts/evidence/last-run.json
+?? deck/assets/hero-driver-advance.png
+?? deck/assets/hero-driver-receipt.png
+?? deck/assets/hero-driver.mp4
+?? deck/assets/hero-driver.webm
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943269607.json
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943307204.json
+?? packages/contracts/broadcast/DemoReset.s.sol/42431/run-1791943540420.json
+?? review/evidence/api-v2-switch-independent.txt
+?? review/evidence/api-v2-switch-independent2.txt
+?? review/evidence/irc-reframe-13.txt
+?? review/evidence/irc-reframe-14.txt
+?? review/evidence/irc-reframe-15.txt
+?? review/evidence/irc-reframe-16.txt
+?? review/evidence/review-checkpoint-status.txt
+?? review/evidence/typecheck-v2-switch.txt
+?? review/evidence/v2-protocol-sponsor-1791943265715.json
+?? review/evidence/v2-protocol-sponsor-1791943549343.json
+?? review/evidence/v2-protocol-sponsor-recheck.txt
+?? review/evidence/v2-protocol-sponsor-summary.txt
+?? review/evidence/v2-screens-1791943490996.json
+?? review/evidence/v2-screens-summary.txt
+?? review/evidence/v2-send-state-1791943431699.json
+?? review/evidence/v2-send-state-summary.txt
+?? review/v2-protocol-sponsor-check.mjs
+?? review/v2-screen-check.mjs
+?? review/v2-send-state-check.mjs
+?? scripts/demo-journey-v2.ts
+?? scripts/evidence/run-2026-10-14T01-52-53-881Z.json
+?? scripts/evidence/run-2026-10-14T02-06-28-287Z.json
+?? scripts/evidence/v2-last-run.json
+?? scripts/evidence/v2-run-2026-10-14T02-03-37-566Z.json
+?? scripts/evidence/v2-run-2026-10-14T02-04-15-058Z.json

@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-14T02:21:31.335Z",
+  "mode": "actual v2 helper / local adapters; no chain calls",
+  "sourceSha256": "b2db6ae8e2a6cf07edce01cf8afb3492198301655353aa129d8b72456f6fab12",
+  "results": [
+    {
+      "name": "valid",
+      "result": {
+        "ok": true
+      },
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "name": "invalid-recipient",
+      "result": {
+        "error": "That recipient address isn't valid."
+      },
+      "writes": []
+    },
+    {
+      "name": "oversize-memo",
+      "result": {
+        "error": "Memo exceeds 32 bytes"
+      },
+      "writes": []
+    },
+    {
+      "name": "missing-mint-amount",
+      "result": {
+        "error": "The mint went through but its amount couldn't be read. Send it with 'xMXN I hold'."
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    }
+  ]
+}

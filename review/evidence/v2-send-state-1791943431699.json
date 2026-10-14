@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-14T02:03:51.469Z",
+  "sourceSha256": "6f2e4cc0d36dfb044395c058287655f1524078b57a6658bb44e512b1893b38f2",
+  "cases": [
+    {
+      "status": "pending",
+      "receiptVisible": false,
+      "buttons": [
+        {
+          "text": "Send xMXN",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "status": "success",
+      "receiptVisible": false,
+      "buttons": [
+        {
+          "text": "Send xMXN",
+          "disabled": false
+        }
+      ]
+    }
+  ]
+}

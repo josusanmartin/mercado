@@ -1,0 +1,126 @@
+{
+  "at": "2026-10-14T02:23:59.656Z",
+  "overflow": [
+    {
+      "route": "/",
+      "scrollWidth": 414,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\nConnect wallet",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 414,
+          "width": 272
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Connect wallet",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 414,
+          "width": 155
+        }
+      ]
+    },
+    {
+      "route": "/mint",
+      "scrollWidth": 404,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x819c…B4D4",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 404,
+          "width": 262
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x819c…B4D4",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 404,
+          "width": 145
+        }
+      ]
+    },
+    {
+      "route": "/remesas",
+      "scrollWidth": 402,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x21B0…E245",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 402,
+          "width": 260
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x21B0…E245",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 402,
+          "width": 143
+        }
+      ]
+    },
+    {
+      "route": "/credito?tab=drivers",
+      "scrollWidth": 406,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x871a…cC63",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 406,
+          "width": 264
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x871a…cC63",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 406,
+          "width": 147
+        },
+        {
+          "tag": "SPAN",
+          "text": "0x871a…cC63",
+          "class": "tabular",
+          "right": 394,
+          "width": 99
+        }
+      ]
+    },
+    {
+      "route": "/credito?tab=lenders",
+      "scrollWidth": 407,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x6773…499D",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 407,
+          "width": 265
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x6773…499D",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 407,
+          "width": 148
+        },
+        {
+          "tag": "SPAN",
+          "text": "0x6773…499D",
+          "class": "tabular",
+          "right": 395,
+          "width": 100
+        }
+      ]
+    }
+  ],
+  "flow": [
+    {
+      "name": "home-tile-arrow-right",
+      "href": "/remesas"
+    }
+  ],
+  "error": "locator.fill: Error: strict mode violation: getByPlaceholder('55 1234 5678') resolved to 2 elements:\n    1) <input value=\"\" inputmode=\"numeric\" placeholder=\"55 1234 5678\" class=\"h-11 flex-1 bg-transparent text-[16px] tabular outline-none\"/> aka getByPlaceholder('1234 5678').first()\n    2) <input value=\"\" inputmode=\"numeric\" placeholder=\"55 1234 5678\" class=\"h-11 flex-1 bg-transparent text-[16px] tabular outline-none\"/> aka getByRole('textbox', { name: 'Número Telcel · phone (10 dí' })\n\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('55 1234 5678')\u001b[22m\n"
+}

@@ -1,0 +1,22 @@
+protocol v2 · xMXN 0x20C0000000000000000000004fE3A8219136ca54 · pool 0xaB32daeF142B442d24589D2161967a843720C6D7 · vamm 0x9ecD19ebd398E73C2E1C196b8f7845CDD9872b7F · oracle 0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B
+
+PASS  active protocol is v2 in this process
+[credit] borrower=0x871aF8b66406F96C6b5f8a156242d9B7a026cC63 profile=steady score=96.5 eligible=true cap=1500 reason=absolute-cap dataHash=0x2129faf12aff69193af95ca22694732da314c8ab751d3a06793b8bbb009fb31d {"weeksObserved":12,"activeWeeks":12,"medianWeeklyNetMxn":10077.31,"meanWeeklyNetMxn":10237.1,"netEarningsCv":0.047,"tripsCv":0.0386,"medianWeeklyTrips":114.5,"components":{"income":35,"stability":27.7,"activity":20,"tripConsistency":13.8}}
+PASS  attestation issued for the v2 pool  (0xaB32daeF142B442d24589D2161967a843720C6D7)
+PASS  attestation chainId  (42431)
+PASS  signer is v2's attestationSigner  (0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee)
+PASS  EIP-712 signature verifies for the v2 pool domain
+PASS  CreditPool v2 accepts the attestation (borrow eth_call)  (1 xMXN)
+PASS  bill payment token is v2 xMXN  (0x20C0000000000000000000004fE3A8219136ca54)
+PASS  MPP recipient is v2 merchant
+PASS  bill quote token is v2 xMXN
+PASS  bills 402 challenge currency = v2 xMXN  (0x20C0000000000000000000004fE3A8219136ca54)
+PASS  bills 402 challenge recipient = v2 merchant
+PASS  bills 402 challenge chainId
+PASS  fx reads the v2 oracle  (20 MXN/USD, mock-admin-oracle)
+PASS  move quote venue = v2 vAMM  (1995.201918 xMXN)
+PASS  move quote token = v2 xMXN, protocol v2
+PASS  underwriter 402 currency = v2 xMXN  (0x20C0000000000000000000004fE3A8219136ca54)
+PASS  underwriter 402 recipient = v2 merchant
+
+GREEN: api V2-SWITCH box

@@ -1,0 +1,14 @@
+import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';import * as viem from 'viem';import {createHash} from 'node:crypto';
+const file='apps/web/lib/remesas/use-remesa-send.ts',src=fs.readFileSync(file,'utf8');
+const d=JSON.parse(fs.readFileSync('packages/shared/src/deployments/42431.json','utf8'));
+let states=[],cursor=0;const writes=[];const self=d.merchant,to='0x00000000000000000000000000000000000000aa';
+const react={useCallback:f=>f,useState:init=>{let i=cursor++;if(!(i in states))states[i]=init;return[states[i],value=>{states[i]=typeof value==='function'?value(states[i]):value;}];}};
+const tx=()=>({status:'idle',isBusy:false,steps:[],reset(){this.status='idle';this.steps=[];}}),m1={tx:tx()},m2={tx:tx()};
+m2.sendUsdToMxnWithMemo=async()=>{writes.push('mint');m2.tx.status='error';m2.tx.steps=[{label:'Mint xMXN',receipt:{logs:[]}}];return undefined;};
+m1.transfer=async()=>{writes.push('transfer-attempt');m1.tx.status='error';return undefined;};
+const deps={react,viem,'@/lib/contracts':{ADDR:{xmxn:d.v2.xMXN},deliveredFromReceipt:()=>({amount:55000000n}),MEMO_MAX_BYTES:32,memoByteLength:m=>new TextEncoder().encode(m).length,readableError:e=>e?.message,useMercado:()=>m1,useOracle:()=>({mxnPerUsd:1837413067n}),useSwapQuote:()=>({}),useWho:()=>self,withSlippage:x=>x},'@/lib/v2/addresses':{USE_V2:true,V2:{xmxn:d.v2.xMXN}},'@/lib/v2/actions':{useMercadoV2:()=>m2},'@/lib/v2/reads':{useMoveQuote:()=>({amountOut:55000000n})},'@/lib/busy':{useReportBusy(){}}};
+const m={exports:{}};vm.runInNewContext(ts.transpileModule(src,{compilerOptions:{module:1,target:99}}).outputText,{module:m,exports:m.exports,require:n=>{if(!(n in deps))throw Error(n);return deps[n];},Date,BigInt});
+const render=()=>{cursor=0;return m.exports.useRemesaSend(3000000n);};
+let h=render();await h.send(to,'para mamá');h=render();const before=h.stranded;await h.deliverStranded();h=render();const after=h.stranded;await h.send(to,'para mamá');
+const e={at:new Date().toISOString(),mode:'actual hook with local React/tx adapters, no network or broadcasts',sourceSha256:createHash('sha256').update(src).digest('hex'),beforeFailedRecovery:before,afterFailedRecovery:after??null,writes};const out=`review/evidence/remesa-recovery-${Date.now()}.json`;
+fs.writeFileSync(out,JSON.stringify(e,(_,v)=>typeof v==='bigint'?v.toString():v,2));console.log(JSON.stringify({file:out,...e},(_,v)=>typeof v==='bigint'?v.toString():v));

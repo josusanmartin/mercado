@@ -1,14 +1,26 @@
 # Mercado product review
 
-Updated 2026-10-14, 01:57 UTC for **SPEC v0.2**. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
+Updated2026-10-14 through02:30 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
 
 **A parallel financial system for emerging markets, built on Tempo.** One synthetic local currency connects four jobs: institutions **Create** money against collateral, senders **Move** it across an on-chain corridor, gig workers access **Lend**, and people or agents **Spend** through MPP.
+
+## Current ecosystem presentation (supersedes module-only navigation)
+
+**Five products, one currency:** Mercado Mint for institutional issuance; Mercado Remesas for family remittances and Tiempo Aire/services; Mercado Global for businesses and partner API access; Mercado Crédito for drivers, lenders and paid underwriting; Mercado Card for spending existing xMXN at authorized demo merchants. The old Create/Move/Lend/Spend verbs explain operations within these products; they are no longer the site's product names. Home must communicate this map in ten seconds. `crew/DESIGN-ECOSYSTEM.md` replaces the console-menu visual brief.
+
+Brand v4 is clean white/neutral, with flat teal/orange/blue/pink/violet product colors, five keyboard-accessible tiles, unboxed KPIs and one tab row. Glitch art belongs only to the deck. Remesas, the Crédito driver app and Card use generic Android framing on desktop and full-screen mobile. Demo mode maps product roles explicitly; external-wallet navigation and pending actions must preserve the initiating account.
+
+**Wire everything:** balances, fees, quotes, coverage, KPIs, charts, activity and receipts must come from actual chain/API state. Only unavoidable external integrations remain mocked: income/OAuth, airtime/service fulfillment, and demo collateral yield/price sources. The real FX relay now rejects abnormal jumps/stale dated sources and distinguishes unknown source time from fetch/block time. Card PAN/network and Uber/DiDi/Rappi connections are additional explicit simulations. See `review/MOCK-AUDIT.md` and `MOCKS.md`.
+
+The top three product priorities are now: (1) one coherent five-product Home/tour with traceable balances and no dead ends; (2) a complete spending proof—family transfer or driver advance → holder-authorized Card charge/MPP payment → exact receipt, with interrupted-flow recovery; (3) visible risk proof—current FX provenance, reserve coverage/haircut/bucket and an executed v2 stress recovery. Global's paid signed indicative quote connects this to MPP beyond consumer billpay. Finish these journeys before expanding simulated features.
+
+Money-flow diagrams must distinguish credit repayment (returns tokens to lenders) from CDP repayment and AMM redemption (burns tokens). Payment for a quote purchases an API response, not the supplier transfer. Detailed UX acceptance lives in `review/ECOSYSTEM-REVIEW.md`.
 
 ## Current evidence boundary
 
 The working default remains **v1 on Moderato**: OUSD CDPs, a separately funded SwapDesk, the unsecured advance pool, and actual xMXN settlement through MPP with simulated bill fulfillment. The console screens are live; the latest review verifies navigation, offer-to-draw navigation, quote invalidation, keyboard/dialog behavior and mobile disclosures without broadcasting transactions.
 
-**V2 is being designed and built alongside v1.** Multi-collateral institutional minting, demo yield-bearing sOUSD, demo tTBILL, and integrated mint/burn vAMM must be labeled planned/in progress until deployed and independently checked. No demo token is a real staking product, Treasury claim, equity claim or source of real yield. A new pitch does not promote v1 receipts into v2 proof. Distinguish implementation, deployment, configured app target, and completed journey.
+**V2 is deployed alongside v1, but the default app has not switched.** Independent review atblock39491154 confirms35 successful deployment/seed receipts,9 reviewed runtime matches, correct issuer/pool token bindings, funded reserve/yield and aggregate supply accounting. Local solvency tests pass. Multi-collateral sOUSD/tTBILL and mint/burn exchange are therefore deployed testnet contracts; the complete v2 browser/MPP journey and atomic switch remain pending. No demo token is a real staking product, Treasury claim, equity claim or source of real yield. Distinguish deployment from the configured app and completed journey.
 
 ## People and their jobs (v0.2)
 
@@ -41,33 +53,33 @@ The aha is the connection between creation, circulation, credit and programmable
 2. **One compact v2 solvency demonstration.** After deployment, show a funded reserve at a named FX rate, peso appreciation, a denied unsafe redemption and the documented recapitalization/recovery path. Include a funded demo sOUSD accrual and unchanged direct-donation valuation. This makes the difficult engineering inspectable; animations alone are not acceptance.
 3. **One partner quote-to-settlement trace.** Reuse the paid API machinery for a bot buying a Move quote, then clearly separate payment for the API from execution of the currency swap. Display source, expiry, min-out and actual delivery. Keep the existing underwriter trace as the proven fallback; no claims of competitive remittance costs without sourced comparison.
 
-## Judge Q&A (v0.2 — eight hard questions)
+## Judge Q&A — eight hard questions (02:30 UTC, five products / Brand v4)
 
-1. **What is actually live, and why Tempo and MPP?**
-   V1 has testnet issuance, exchange inventory, unsecured lending, and xMXN HTTP payment settlement. Tempo supplies native token transfers/memos and fee sponsorship; MPP makes an HTTP response payable with a verified receipt. V2 adds the proposed collateral and mint/burn exchange design. We distinguish source, deployment and completed journeys; the broader design is not yet evidence of a working financial system.
+1. **Why does this need Tempo and MPP instead of a database and Stripe?**
+   Tempo gives the five products a shared token ledger, transfers with public memos and fee sponsorship. MPP lets an HTTP client pay for a bill or API response and receive verified settlement evidence. We demonstrate those integrations on testnet; we have not proved superior cost, adoption or production economics.
 
-2. **Who creates the money, and what makes xMXN a peso?**
-   The intended minter is an institution or sophisticated collateral owner; the unit of debt is MXN, valued through an oracle. On Moderato, OUSD and every added collateral are test assets. There is no fiat redemption, guaranteed peg, real Treasury/equity backing or assurance of issuer-backed collateral. The retail driver borrows existing xMXN rather than opening the institutional mint position.
+2. **Is xMXN actually a peso, and where can I cash it out?**
+   It is a synthetic MXN-denominated testnet token. Institutions create collateralized debt; the exchange creates reserve liabilities; drivers borrow existing tokens. There is no bank cashout, SPEI integration or guaranteed peso peg. OUSD has no real value and is valued at an assumed $1 for this demo.
 
-3. **Where does the yield come from, and can a donation fake it?**
-   Production collateral would carry its own externally earned yield; the Mercado vault runs no strategy. Our proposed sOUSD is an ERC-4626 demo with admin-driven, funded accrual, not real investment income. Local review now verifies accounted funded yield, ignored direct donations and no retrospective accrual on late funding. Deployment acceptance remains separate. An increased displayed share price alone proves neither earned yield nor redeemable assets.
+3. **What is real, and what is still mocked?**
+   Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the rebuilt five-product UI and default-v2 switch are separate acceptance gates. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
 
-4. **If the peso appreciates, can everyone redeem the same USD reserve?**
-   No automatic guarantee follows from virtual reserves or a spread. For example, 1,000 OUSD against 19,900 xMXN is undercollateralized when the mock rate falls from 20 to 18 MXN/USD. The reviewed v2 design rejects mints that leave coverage below100%, pays redemptions at the lower of oracle pricing and NAV with fees/size impact, and limits redemption flow with a25%-of-reserve leaky bucket. The donor/admin backstop supplies capital; holders bear the stressed redemption haircut. These rules pass bounded local tests; deployment and the complete journey remain pending. Those limits cannot manufacture missing backing or assure immediate redemption. The bucket has a burst allowance plus continuous refill; it is not a promise of at most25% across every rolling day.
+4. **Who controls the exchange rate, and can they liquidate users?**
+   An admin relays Coinbase data into the oracle; this is not decentralized. Coinbase publishes no source timestamp, so we show that uncertainty alongside fetch and block time. The keeper rejects abnormal jumps and stale dated fallback data. Admin stress/override authority remains a trust risk; a real market observation does not remove that authority.
 
-5. **Are exchange redemptions or gig loans spending institutional collateral?**
-   V1 uses three separate pools: CDP collateral, seeded exchange inventory and lender-supplied xMXN. V2 proposes separate accounting for CDP collateral and a protocol OUSD reserve, even inside the same vault. Swap minting creates reserve debt; CDP minting creates borrower debt. xMXN is fungible, so the design must bound redemptions by aggregate reserve liabilities without assuming a token remembers its origin. The advance pool remains separately funded and unsecured.
+5. **If the peso appreciates or everyone exits, who takes the loss?**
+   Reserve coverage can fall. V2 blocks issuance that would leave coverage below100%, prices redemption at the lower of oracle value and reserve NAV, and applies fees, size impact and a25%-of-reserve leaky bucket. Holders can face a haircut or wait; outside capital can recapitalize the reserve. The bucket permits a burst plus continuous refill, not a strict25% ceiling in every rolling day.
 
-6. **What makes an RWA price, haircut or credit line trustworthy?**
-   In this demo, admin-set prices and income fixtures are explicit trust assumptions. A haircut and debt ceiling cap exposure; they cannot make an invented price or fake income true. Real assets need enforceable redemption/custody and suitable price/liquidity controls; real lending needs approved income access, identity, underwriting and collections. Signed loan limits prevent replay and excess draws, not Sybil fraud or default.
+6. **Where does yield come from, and whose assets fund loans or redemptions?**
+   sOUSD accrual comes from an owner-funded demo reserve, not real investment income. Reviewed accounting ignores direct donations and does not credit unfunded past yield. CDP collateral, exchange OUSD reserves and lender xMXN are separately accounted. Credit-pool repayment returns lender funds; it does not burn xMXN. Lending carries default risk and no guaranteed APY.
 
-7. **Does an MPP receipt mean a real bill was paid, and are retries free?**
-   It proves verified testnet token settlement for the API order, while airtime fulfillment is always SIMULATED. Tested single-process pull recovery and same-order retries avoid a second settlement; the browser's settlement check does not pay. Those are bounded tests, not a universal exactly-once guarantee. A partner paying for a quote buys the API response, not the subsequent currency swap or a guaranteed FX fill after expiry.
+7. **Can a merchant charge me without approval, or a retry charge twice?**
+   Card is newly assigned, not yet accepted: the required design binds each holder tap to the merchant, amount, card, nonce, expiry, chain and deployed contract. Allowance alone must not authorize a charge, and refunds must not revive used signatures. We will test that boundary before claiming it works. Existing MPP bill settlement uses a stable order key, verified payment and unpaid recovery; a transfer to the merchant alone is only an inflow, not proof of MPP attribution.
 
-8. **What stops sponsor drain, and what remains before real money?**
-   The demo sponsor has target/function/spender restrictions, fee caps and process-local quotas. Unsigned requests can still consume an eligible sender's quota; restart/multiple processes weaken the budget. Sponsorship funds fees, not purchases. Beyond that bounded demo, v2 needs tested solvency and collateral valuation, reliable oracles/liquidity, real asset/fulfillment arrangements, robust recovery and legal/compliance review before handling actual customers or funds.
+8. **Can this lend to real drivers and pay real bills tomorrow?**
+   No. The score is illustrative, income is synthetic, loans are unsecured and repaid manually, and fulfillment is SIMULATED. Production needs real integrations, independently reviewed contracts and operations, durable payment recovery, credible liquidity/oracle controls and appropriate arrangements for customers and assets. The demo proves a connected transaction path, not repayment quality or production readiness.
 
-Evidence pointers: `review/FINDINGS.md` distinguishes independent checks from crew evidence; `ACCEPTANCE.md` and `scripts/evidence/` preserve runs. The v2 review will live in `review/V2-REVIEW.md` once the design arrives. Answers above are intentionally conditional where v2 is still a proposal.
+Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card source/deployment/charge-auth tests are pending. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
 
 ---
 

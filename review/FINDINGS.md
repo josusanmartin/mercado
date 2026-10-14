@@ -1,8 +1,8 @@
 # Mercado review findings
 
-Last reviewed commit: `914c1f2` plus v2 design/contracts WIP and API gate fix reported as `9ac7e08` (approximately 01:48 UTC). Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
+Last reviewed commit: `f81cadb` plus v2 switch/UI WIP through02:04 UTC; deployment snapshot atblock39491154. Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
 
-Current status: console navigation/quote invalidation/mobile disclosure regressions pass. Sponsor fee/call boundaries and memo receipt checks pass at the recorded evidence levels; R-016 unsigned eligible-sender quota grief and R-022 reset/writer race remain residual open. Priority is now SPEC v0.2 solvency review. New sOUSD late-donation valuation issue R-027 is locally reproduced; v2 quote/version and cap/pause issues are tracked below. No reviewer chain transaction was broadcast.
+Current status: FIVE-PRODUCT ECOSYSTEM + Mercado Card charge-auth review active (02:30). Read review/CARD-REVIEW.md first for the new assignment. Card source pending; no Card acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
 
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -248,7 +248,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-032 — P1 — web — V2 memo helper reintroduces partial-flow validation
 
-- Status: LOCALLY REPRODUCED with the actual v2 helper and isolated adapters; `v2-memo-1791942909980.json` confirms invalid recipient mints first, missing amount reaches transfer encoding, oversized memo writes nothing. Owner notified. No real transaction sent.
+- Status: LOCAL FIX VERIFIED02:21 in `v2-memo-1791944491336.json`: invalid recipient and oversized memo write nothing; missing decoded amount stops after mint with recovery error, without undefined transfer. Original failure evidence retained. New Remesas recovery must expose the referenced direct-token send action. No real transaction sent.
 - Location: `lib/v2/actions.ts:sendUsdToMxnWithMemo`.
 - Scenario: invalid recipient passes until after mint-to-self; undefined decoded mint amount bypasses an out===0n guard and reaches transfer encoding. The screen checks recipient validity, but the helper no longer preserves v1's before-write validation boundary.
 - Fix: validate recipient and memo before any approval/mint; reject undefined and zero mint receipt amounts with the explicit Send-only recovery hint. Keep the delivered receipt frozen and tied to the actual token/version.
@@ -260,9 +260,73 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Scenario: anonymous390px /send has403px document width. “Continue as Miguel (Sender in Houston)” button is343px wide atx60 and escapes its panel.
 - Evidence: `evidence/send-mobile-overflow.json` and screenshot. Fix button sizing/wrapping within available width.
 
+### R-034 — P1 — web — V2 direct Send observes the wrong transaction state
+
+- Status: LOCALLY REPRODUCED; owner notified.
+- Location: `components/transfer/send-screen.tsx:54`,`:79`,`:254` at discovery.
+- Scenario: in v2 “xMXN I hold” calls m1.transfer, but form/submit disabling and success-receipt condition read m2.tx. Pending direct transfer leaves Send enabled; successful direct transfer while m2 is idle hides the Delivered receipt. Adding m1 TxProgress does not fix those conditions. The useTx busy ref prevents a second call to that same hook; controls can still switch to the independent swap hook.
+- Evidence: actual TSX with isolated pending/success adapters in `v2-send-state-1791943431699.json`: Send disabled=false while m1 pending, receiptVisible=false after m1 success.
+- Fix: use the transaction state for the selected operation and disable all operation controls while either hook is busy; preserve the frozen actual-delivery receipt.
+
+### R-035 — P1 — api / contracts — Crédito displays configurable loan terms as constants
+
+- Status: SOURCE FIX VERIFIED02:21: usePool reads feeBps/perUserCap/maxUtilizationBps; Drivers uses rounded-up live fee; Earn labels use the live params. The separate unknown locked-in-loans fallback is also fixed to unavailable. No admin params were changed by review.
+- Location: `components/credit/credit-screen.tsx:47`,`:417`; `components/earn/earn-screen.tsx:19`,`:20`,`:175`; `packages/contracts/src/CreditPool.sol:setParams`.
+- Scenario: admin changes feeBps from200 to300. Draw preview still uses200 and claims2%, while actual debt adds3%. Utilization and per-user cap can likewise differ from hardcoded80%/1500. Current equality with deployment defaults does not make them live reads.
+- Fix: expose feeBps/perUserCap/maxUtilizationBps in active pool hook and use them for terms/debt previews. Show unavailable rather than inventing defaults if those reads fail. Wire new Crédito Drivers/Lenders as they replace old pages.
+
+### R-036 — P1 — contracts — FX keeper walks around the oracle jump guard
+
+- Status: LOCAL FIX VERIFIED02:25 in `fx-relay-1791944691686.json`:20→10 refuses before any write. Owner policy tests5/5 also pass.
+- Location: `packages/contracts/script/fx-relay.mjs:80` (step loop).
+- Scenario: one external rate moves20→10 while maxJumpBps=2000. Keeper writes16,12.8,10.24,10 in sequence, bypassing the intended20% shock rejection and exposing synthetic intermediate prices to mint/liquidation/swaps. This requires a bad/stale/extreme source observation; it is not an arbitrary-user oracle permission bypass.
+- Evidence: actual fetch/relay functions in a VM with local adapters, `fx-relay-1791944443248.json`. No keys loaded or live transaction sent.
+- Fix: reject a target outside the configured jump before any write. Keep explicitly approved stress/restore operations separate from the normal source relay.
+
+### R-037 — P1 — contracts / api — Relay invents source freshness and accepts stale/future observations
+
+- Status: LOCAL/API FIX VERIFIED02:25:2020/2099 dates refuse before writes; sourceTime remains null when absent; confirmed block time used. API verifies successful oracle-target receipt and matching block timestamp, and live3100/3101 show corrected provenance (`fx-api-live2.json`). Explicit daily policy48hours, future-clock tolerance5minutes.
+- Location: `packages/contracts/script/fx-relay.mjs:48`,`:61`,`:91`; `apps/web/lib/server/fx.ts:65`.
+- Scenario: fallback daily timestamps2020-01-01 and2099-01-01 both result in a fresh on-chain update. Coinbase supplies no observation timestamp but relay calls local fetch time sourceTime. onchainAt is process wall time after receipt, not block time. API authenticates provenance by numerical rate equality only, so same-price admin refresh can incorrectly inherit an older relay record.
+- Evidence: actual-function VM cases in `fx-relay-1791944443248.json`; source review of API record comparison. No claim about Coinbase update frequency is needed for this finding.
+- Fix: explicit source-age/future validation and documented daily/weekend policy; unknown source timestamp remains unknown; use receipt block timestamp and bind cached record to chain/oracle/rate/updatedAt. Mark stress/admin overrides honestly.
+
+### R-038 — P1 honesty — contracts — Merchant inflows are labeled MPP payments
+
+- Status: SOURCE FIX VERIFIED02:25: row is now Transfer to merchant, total merchantInflows, node-side recipient topic filter. QA independently spotted the same semantic gap.
+- Location: `apps/web/lib/contracts/activity.ts:88`,`:149`,`:251`.
+- Scenario: any direct xMXN transfer to merchant increments mppPaid and creates an MPP payment row without an order, challenge or verified settlement. A memo alone is also forgeable. Supply/loan reconciliation does not validate MPP attribution.
+- Fix: label merchant inflows until joined to verified bill/API settlement records. Keep amount/order identity separate from recipient filtering. Using single event rather than events also enables RPC topic filtering; current viem filters recipient locally, so correctness of recipient filtering is preserved but fetch cost is higher.
+
+### R-039 — P1 — web — New Remesas drops recovery for already-minted tokens
+
+- Status: PARTIAL FIX REPRODUCED02:27: recovery action added but disappears after its transfer fails; actual hook probe shows mint→transfer-attempt→mint (`remesa-recovery-1791944849954.json`). Active=recover suppresses stranded detection; fresh Send remains enabled and attempt is not persisted. Owner notified.
+- Location: `apps/web/lib/remesas/use-remesa-send.ts:61`; `apps/web/components/remesas/phone-app.tsx:174`; `apps/web/lib/v2/actions.ts:64`.
+- Scenario: mint/swap succeeds but the later memo transfer fails. The helper instructs using xMXN I hold, but Remesas exposes only a fresh USD swap/send. Clicking Send again spends USD and mints again; the already-minted tokens are still in the sender wallet. R-032 prevalidation is fixed, but transaction interruption still needs recovery.
+- Fix: persist confirmed mint amount/recipient/token/account and expose an explicit send-existing-token recovery without another swap; disable duplicate flow starts. Preserve explorer evidence for the completed first leg.
+
+### R-040 — P1 — web — New Remesas drops saved payment recovery controls
+
+- Status: BROWSER FIX VERIFIED02:28 in `recovery-ui-1791944850580.json`: real unpaid order persisted through reload, one Check settlement request reused its exact key/quote with no Authorization. No payment sent.
+- Location: `apps/web/components/remesas/phone-app.tsx:Pagar`; `components/billpay/use-bill-pay.ts:useRecentOrders`; old `components/billpay/pay-screen.tsx:459`.
+- Scenario: an order's payment is pending or paid but fulfillment unresolved, then page reloads. The old Pay history offered an unpaid settlement check by stored idempotency key. Remesas imports only useBillPay and never renders useRecentOrders/RecentOrders, while /pay redirects there. Keys remain stored but users cannot inspect/recover them through the new screen.
+- Fix: restore recent-order rows and the unwrapped/unpaid status check; never route Check settlement through an auto-paying fetch. Keep provider completion distinct from token payment.
+
+## Pass 11 — ecosystem IA and mock/data audit (from02:07 UTC)
+
+- Read `crew/DESIGN-ECOSYSTEM.md` and02:08 wire-everything assignment immediately. New product names/routes: Mint /mint, Remesas /remesas, Global /global, Crédito /credito. Persona selector removed in favor of explicit Demo mode with per-product role mapping. Existing console acceptance is historical.
+- Created `review/ECOSYSTEM-REVIEW.md`: ten-second Home test, role/funding coherence, mobile Android/full-screen behavior, redirects/recovery, truthful accounting flows and carry-forward findings. Created `review/MOCK-AUDIT.md` from327 scoped code matches saved in evidence; qa posted MOCKS.md at02:12; reconciliation is recorded in MOCK-AUDIT. G1 needs fee/utilization expansion beyond the cap literal; a marker-lint PASS does not prove data wiring. R-035 is a concrete current wiring defect.
+- Lead accepted indicative rather than firm Global quote wording and updated the design. Posted credit repayment≠burn, activity/volume provenance and Sender airtime funding requirements to owners.
+- The newest shared-gate probe `v2-protocol-sponsor-1791943549343.json` passes all7 version/completeness cases and15 sponsor boundary checks. R-030 remains ecosystem UI/e2e gated, not a missing-pool/gate helper issue anymore.
+- Independently ran the actual API read-only switch checker:17 checks PASS (`api-v2-switch-independent3.txt`) including accepted borrow eth_call, v2 attestation binding, xMXN-v2/merchant402 challenges and Move venue/token. Local launcher/npm cache failures are preserved separately and are not API defects. Used cached tsx directly; no dependency install or broadcast.
+- Anonymous3101 preview `v2-screens-1791943490996.json`: Home/Mint/Send/Credit/Pay/Contracts200 with no page or console errors; Earn navigation was aborted during WIP, so no all-routes acceptance. Rebuild supersedes these screens.
+- QA reports v2 scripted journey green at02:08; reviewer has not yet re-read those new journey receipts (deployment receipts ARE independently checked). Q-011 appears to be a mistaken expected revert: maxMintable already honors debt-ceiling room; a ceiling-bound MAX+1 correctly throws DebtCeilingExceeded. Owner/QA alerted; no contract bug confirmed.
+
 ## Pass 10 — v0.2 reframe and adversarial design review (from 01:42 UTC)
 
-- Final local no-floor recheck:15 executions /10 distinct tests (5 inherited repeats), including256 fuzz cases, pass. Artifact `v2-no-floor-recheck.log`; exact source hashes `v2-reviewed-source-sha256.txt`. No deployed v2 acceptance yet.
+- Read-only v2 deployment check `v2-live-1791943177493.json` atblock39491154: all35 manifest receipts succeed;9 runtimes match reviewed artifacts after immutable-slot masking; supply=CDP debt+AMM liability; pool/issuers use v2 token; issuer membership+factory lock correct; reserve and mock yield funded; equity>=2500; quarter-reserve bucket. Initial `v2-live-1791943147800.json` used an incorrect reviewer hasRole argument order and saved only runtime/receipt checks; corrected to Tempo hasRole(address,bytes32). No deployed acceptance of UI/MPP journey yet.
+- Shared protocol/policy probe `v2-protocol-sponsor-1791943265715.json`:15 sponsor boundary checks pass across versions. Gate respects default/public/script versions and missing pool, but missing vault/oracle is not refused (owner notified). Shared hook/ABI and all UI consumers remain part of R-030.
+- Final local no-floor recheck:15 executions /10 distinct tests (5 inherited repeats), including256 fuzz cases, pass. Artifact `v2-no-floor-recheck.log`; exact source hashes `v2-reviewed-source-sha256.txt`. Deployed contracts independently checked below; atomic app switch/e2e acceptance still pending.
 - Fresh anonymous browser check `redesign-1791942908388.json`: all12 desktop/mobile route loads return200; footer visible/unclipped; no pageerror events. Send mobile overflow is R-033. This probe does not observe React console-only hydration warnings or certify paid flows. The old immediate Escape-count check remains timing-sensitive; the separate awaited check already passes.
 - Read latest IRC assignments and SPEC v0.2; prioritizing `crew/V2-DESIGN.md`. Updated PRODUCT with institutional Create, remittance Move, gig Lend, MPP Spend, a new story, three ranked improvements and eight revised judge questions. Earlier v1 recommendations are marked historical.
 - Lead caught the liability-floor/equity-drain design issue before implementation; current MoveAMM enforces `amountIn <= liability`. Reviewer will test fungible CDP/AMM burns and total-supply accounting rather than assuming token provenance can be tracked.
@@ -359,6 +423,18 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Read local `tempo-std` TIP-20 interfaces and `ForkProbe.t.sol`; issuer-gated burn operates on the caller balance. Pool/vault tests must account for the actual precompile behavior.
 - Official references consulted: [MPP server creation](https://mpp.dev/sdk/typescript/server/Mppx.create), [Tempo source](https://github.com/tempoxyz/tempo), [Tempo integration guide](https://docs.chain.link/ccip/v1/evm/tools-resources/network-specific/tempo-integration-guide). Direct docs.tempo.xyz pages redirected to a location unavailable to the browsing tool; installed source is the implementation evidence used here.
 
-## Next pass (updated 01:48 UTC)
+## Next pass (updated02:12 UTC)
 
-Start with `IRC_NICK=review bin/irc unread`. Continue V2-DESIGN/source review and local tests before any deployment acceptance; verify R-027–R-029 fixes and lead's amountIn<=liability rule. Check v2 explicit version gate, funding provenance, fresh oracle state, roles and manifests before the switch. Keep R-016 and R-022 residuals explicit. Recheck R-025 System labels and unknown-value states as UI changes land. PRODUCT's current section is v0.2; all old v1 narrative is historical. Write only review/, no commits, no reviewer live writes. Large outputs remain under review/evidence.
+Start IRC unread. Current task is DESIGN-ECOSYSTEM IA/UX plus verify qa's MOCKS.md against actual code under josu's wire-everything rule. Read ECOSYSTEM-REVIEW/MOCK-AUDIT; review new shell/Home, Mint/Global (contracts), Remesas (web), Crédito/redirects (api), real FX relay/indexer (contracts). Recheck R-031–R-035 as old components move; source version/gate/pool mapping is substantially fixed but rebuilt UI still needs acceptance. Inspect real-source FX date/provenance and indexer range/dedupe/volume semantics. Re-read QA v2 journey receipts if needed; local/deployment/API evidence already passes at recorded boundaries. No reviewer writes to chain, no commits, no server restarts. Lead alone flips/commits. Large outputs stay under review/evidence.
+
+## Pass12 — Brand v4, relay fixes and migrated recovery (02:19–02:25)
+
+- Brand v4 now owns product visuals. Initial live18-route/viewport snapshot `ecosystem-1791944489822.json`: all implemented routes200, no page errors; /global404 while explicitly assigned/WIP. /credit and /earn preserve tab intent; /pay URL preserves airtime intent but Remesas does not consume it yet; /send still old route. Mobile header overflow persists (390→402–414px); initial Crédito table width also exceeded viewport, improved in later snapshot. Details `ecosystem-flow-1791944639656.json`. Home ArrowRight and Enter open the intended product.
+- Sponsor/version recheck at02:23: all7 gate and15 policy boundaries pass, output `sponsor-ecosystem-recheck-summary.txt`. R-016 quota/ingress/process residual remains; no live quota exhaustion attempted.
+- R-032 helper fix independently verified with actual module; R-035 mutable params and unknown loan-lock display source fixed. New Remesas drops two recovery surfaces (R-039/R-040); owners notified.
+- Relay/indexer R-036–R-038 posted and fixed in this pass; no reviewer live writes. API's first tiny probe mistakenly called Response.status as a method (`fx-api-live.json`); corrected read-only probe `fx-api-live2.json` works. Browser unpaid-quote probe initially had a strict selector matching hidden duplicate phone DOM; rerun targets visible input. These instrumentation issues are not app failures.
+- Judge Q&A rewritten into eight current, honest ecosystem questions/answers in PRODUCT.md, including admin FX authority, reserves, mock boundaries, sponsor residual and production limits.
+
+## New assignment02:29 — Mercado Card / five products
+
+Read IRC immediately on user steering (`irc-card-assignment.txt`). Created CARD-REVIEW.md with authorization/domain/replay/merchant/limit/freeze/refund test matrix and UI/version boundaries. Lead explicitly requires holder EIP-712 tap auth despite optional wording in design; communicated stronger gate to contracts. No Card source available yet. Posted platform-data/cache/signature consistency requirement for Uber/DiDi/Rappi; no mislabeled Uber fallback. PRODUCT and ECOSYSTEM updated to five products/Brand v4, judge Q&A now includes Card trust boundary.

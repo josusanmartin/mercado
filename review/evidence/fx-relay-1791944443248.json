@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-14T02:20:43.248Z",
+  "mode": "actual functions, local adapters, no network or key access",
+  "sourceSha256": "4e466401e30a74b8478f855a2a01dee033c9143ea0c0d576374945b22d67e9b9",
+  "cases": [
+    {
+      "name": "jump-20-to-10",
+      "writes": [
+        "1600000000",
+        "1280000000",
+        "1024000000",
+        "1000000000"
+      ],
+      "record": {
+        "rate": 10,
+        "mxnPerUsd8": "1000000000",
+        "source": "Coinbase exchange-rates API",
+        "sourceKind": "intraday",
+        "sourceTime": "2026-10-14T02:20:43.246Z",
+        "fetchedAt": "2026-10-14T02:20:43.245Z",
+        "onchainAt": "2026-10-14T02:20:43.246Z",
+        "txHash": "0x1212121212121212121212121212121212121212121212121212121212121212",
+        "label": "Admin-relayed from Coinbase exchange-rates API (intraday indicative rate) · fetched 02:20 UTC · on-chain 02:20 UTC · not a decentralized oracle"
+      }
+    },
+    {
+      "name": "stale-daily-2020",
+      "writes": [
+        "2000000000"
+      ],
+      "record": {
+        "rate": 20,
+        "mxnPerUsd8": "2000000000",
+        "source": "open.er-api.com",
+        "sourceKind": "daily",
+        "sourceTime": "2020-01-01T00:00:00.000Z",
+        "fetchedAt": "2026-10-14T02:20:43.247Z",
+        "onchainAt": "2026-10-14T02:20:43.247Z",
+        "txHash": "0x1212121212121212121212121212121212121212121212121212121212121212",
+        "label": "Admin-relayed from open.er-api.com (daily reference rate of 2020-01-01) · fetched 02:20 UTC · on-chain 02:20 UTC · not a decentralized oracle"
+      }
+    },
+    {
+      "name": "future-daily-2099",
+      "writes": [
+        "2000000000"
+      ],
+      "record": {
+        "rate": 20,
+        "mxnPerUsd8": "2000000000",
+        "source": "open.er-api.com",
+        "sourceKind": "daily",
+        "sourceTime": "2099-01-01T00:00:00.000Z",
+        "fetchedAt": "2026-10-14T02:20:43.247Z",
+        "onchainAt": "2026-10-14T02:20:43.248Z",
+        "txHash": "0x1212121212121212121212121212121212121212121212121212121212121212",
+        "label": "Admin-relayed from open.er-api.com (daily reference rate of 2099-01-01) · fetched 02:20 UTC · on-chain 02:20 UTC · not a decentralized oracle"
+      }
+    },
+    {
+      "name": "coinbase-no-source-timestamp",
+      "writes": [
+        "2000000000"
+      ],
+      "record": {
+        "rate": 20,
+        "mxnPerUsd8": "2000000000",
+        "source": "Coinbase exchange-rates API",
+        "sourceKind": "intraday",
+        "sourceTime": "2026-10-14T02:20:43.248Z",
+        "fetchedAt": "2026-10-14T02:20:43.248Z",
+        "onchainAt": "2026-10-14T02:20:43.248Z",
+        "txHash": "0x1212121212121212121212121212121212121212121212121212121212121212",
+        "label": "Admin-relayed from Coinbase exchange-rates API (intraday indicative rate) · fetched 02:20 UTC · on-chain 02:20 UTC · not a decentralized oracle"
+      }
+    }
+  ]
+}

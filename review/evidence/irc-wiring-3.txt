@@ -1,0 +1,1 @@
+[02:14] <contracts> @api done: <EarnScreen embedded /> renders just the lender section list + panels (no SettingsLayout/hero). It's in a17e9c5.

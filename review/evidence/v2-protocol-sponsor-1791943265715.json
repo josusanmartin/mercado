@@ -1,0 +1,141 @@
+{
+  "at": "2026-10-14T02:01:05.714Z",
+  "mode": "actual protocol/policy source with local dependencies; no RPC/signing",
+  "hashes": {
+    "protocol": "5dab97ab67cebe553e4d50c4a9f5895e900e71ba6f33449fc9d29368593803de",
+    "policy": "d63e9ab7943248b05f856dc71c88877c2042a0d443d605fc54ccb6641799e1eb"
+  },
+  "tests": [
+    {
+      "name": "default-v1",
+      "expected": "v1",
+      "observed": "v1",
+      "pass": true
+    },
+    {
+      "name": "public-v2",
+      "expected": "v2",
+      "observed": "v2",
+      "pass": true
+    },
+    {
+      "name": "script-v2",
+      "expected": "v2",
+      "observed": "v2",
+      "pass": true
+    },
+    {
+      "name": "public-overrides-script",
+      "expected": "v1",
+      "observed": "v1",
+      "pass": true
+    },
+    {
+      "name": "missing-v2-pool",
+      "expected": "throw",
+      "observed": "throw",
+      "pass": true
+    },
+    {
+      "name": "missing-v2-vault",
+      "expected": "throw",
+      "observed": "v2",
+      "pass": false
+    },
+    {
+      "name": "missing-v2-oracle",
+      "expected": "throw",
+      "observed": "v2",
+      "pass": false
+    }
+  ],
+  "policyChecks": [
+    {
+      "version": "v1",
+      "name": "allowed-approval",
+      "pass": true
+    },
+    {
+      "version": "v1",
+      "name": "cross-version-token",
+      "pass": true,
+      "reason": "target not a Mercado contract"
+    },
+    {
+      "version": "v1",
+      "name": "external-target",
+      "pass": true,
+      "reason": "target not a Mercado contract"
+    },
+    {
+      "version": "v1",
+      "name": "foreign-spender",
+      "pass": true,
+      "reason": "approval spender not a Mercado contract"
+    },
+    {
+      "version": "v1",
+      "name": "unknown-selector",
+      "pass": true,
+      "reason": "function 0xdeadbeef not sponsored"
+    },
+    {
+      "version": "v1",
+      "name": "huge-fee",
+      "pass": true,
+      "reason": "maxFeePerGas too high"
+    },
+    {
+      "version": "v2",
+      "name": "allowed-approval",
+      "pass": true
+    },
+    {
+      "version": "v2",
+      "name": "cross-version-token",
+      "pass": true,
+      "reason": "target not a Mercado contract"
+    },
+    {
+      "version": "v2",
+      "name": "external-target",
+      "pass": true,
+      "reason": "target not a Mercado contract"
+    },
+    {
+      "version": "v2",
+      "name": "foreign-spender",
+      "pass": true,
+      "reason": "approval spender not a Mercado contract"
+    },
+    {
+      "version": "v2",
+      "name": "unknown-selector",
+      "pass": true,
+      "reason": "function 0xdeadbeef not sponsored"
+    },
+    {
+      "version": "v2",
+      "name": "admin-equity-withdrawal",
+      "pass": true,
+      "reason": "function 0xeb484f3d not sponsored"
+    },
+    {
+      "version": "v2",
+      "name": "admin-fund-yield",
+      "pass": true,
+      "reason": "function 0xb0048de0 not sponsored"
+    },
+    {
+      "version": "v2",
+      "name": "demo-rwa-faucet",
+      "pass": true
+    },
+    {
+      "version": "v2",
+      "name": "huge-fee",
+      "pass": true,
+      "reason": "maxFeePerGas too high"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+MOCKS.md lists 42 code paths
+
+✓ every file with a mock marker is listed in MOCKS.md
+✓ no unlisted hardcoded data values in UI rows
+
+PASS: all mocks are listed

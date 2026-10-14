@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-14T02:24:51.686Z",
+  "mode": "actual functions, local adapters, no network or key access",
+  "sourceSha256": "1401688049417805fede60c3558235db8137ab8ed3404b017605b3437c8aba15",
+  "cases": [
+    {
+      "name": "jump-20-to-10",
+      "writes": [],
+      "error": "FX relay REFUSED Coinbase exchange-rates API rate 10 vs on-chain 20: a 50.00% move exceeds the 20% jump limit; needs a human (forceSet). Nothing written."
+    },
+    {
+      "name": "stale-daily-2020",
+      "writes": [],
+      "error": "no FX source reachable (coinbase: https://api.coinbase.com/v2/exchange-rates?currency=USD → HTTP 503; open.er-api: source date too old (Wed, 01 Jan 2020 00:00:00 GMT))"
+    },
+    {
+      "name": "future-daily-2099",
+      "writes": [],
+      "error": "no FX source reachable (coinbase: https://api.coinbase.com/v2/exchange-rates?currency=USD → HTTP 503; open.er-api: source date in the future (Thu, 01 Jan 2099 00:00:00 GMT))"
+    },
+    {
+      "name": "coinbase-no-source-timestamp",
+      "writes": [
+        "2000000000"
+      ],
+      "record": {
+        "oracle": "mock",
+        "updatedAt": 1791944520,
+        "blockNumber": 123,
+        "rate": 20,
+        "mxnPerUsd8": "2000000000",
+        "source": "Coinbase exchange-rates API",
+        "sourceKind": "intraday",
+        "sourceTime": null,
+        "fetchedAt": "2026-10-14T02:24:51.686Z",
+        "onchainAt": "2026-10-14T02:22:00.000Z",
+        "txHash": "0x1212121212121212121212121212121212121212121212121212121212121212",
+        "label": "Admin-relayed from Coinbase exchange-rates API (intraday indicative rate, source time not published) · fetched 02:24 UTC · on-chain 02:22 UTC · not a decentralized oracle"
+      }
+    }
+  ]
+}

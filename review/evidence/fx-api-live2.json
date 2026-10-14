@@ -1,0 +1,43 @@
+{
+  "3100": {
+    "status": 200,
+    "body": {
+      "mxnPerUsd": "1837413067",
+      "rate": 18.37413067,
+      "updatedAt": 1791944520,
+      "source": "admin-relay",
+      "isMock": true,
+      "oracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+      "stale": false,
+      "label": "Admin-relayed from Coinbase exchange-rates API (intraday indicative rate, source time not published) · fetched 02:21 UTC · on-chain 02:22 UTC (block time) · not a decentralized oracle",
+      "relay": {
+        "source": "Coinbase exchange-rates API",
+        "sourceKind": "intraday",
+        "fetchedAt": "2026-10-14T02:21:59.495Z",
+        "onchainAt": "2026-10-14T02:22:00.000Z",
+        "txHash": "0x514c5c03e01c62984510b8929d525cea9600ef37ce6a55f64e3dbbcea9c322fc"
+      }
+    }
+  },
+  "3101": {
+    "status": 200,
+    "body": {
+      "mxnPerUsd": "1837413067",
+      "rate": 18.37413067,
+      "updatedAt": 1791944520,
+      "source": "admin-relay",
+      "isMock": true,
+      "oracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+      "stale": false,
+      "label": "Admin-relayed from Coinbase exchange-rates API (intraday indicative rate, source time not published) · fetched 02:21 UTC · on-chain 02:22 UTC (block time) · not a decentralized oracle",
+      "relay": {
+        "source": "Coinbase exchange-rates API",
+        "sourceKind": "intraday",
+        "fetchedAt": "2026-10-14T02:21:59.495Z",
+        "onchainAt": "2026-10-14T02:22:00.000Z",
+        "txHash": "0x514c5c03e01c62984510b8929d525cea9600ef37ce6a55f64e3dbbcea9c322fc"
+      }
+    }
+  },
+  "at": "2026-10-14T02:23:56.351Z"
+}

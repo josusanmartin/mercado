@@ -1,0 +1,141 @@
+{
+  "at": "2026-10-14T02:24:52.219Z",
+  "overflow": [
+    {
+      "route": "/",
+      "scrollWidth": 414,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\nConnect wallet",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 414,
+          "width": 272
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Connect wallet",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 414,
+          "width": 155
+        }
+      ]
+    },
+    {
+      "route": "/mint",
+      "scrollWidth": 404,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x819c…B4D4",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 404,
+          "width": 262
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x819c…B4D4",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 404,
+          "width": 145
+        }
+      ]
+    },
+    {
+      "route": "/remesas",
+      "scrollWidth": 402,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x21B0…E245",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 402,
+          "width": 260
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x21B0…E245",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 402,
+          "width": 143
+        }
+      ]
+    },
+    {
+      "route": "/credito?tab=drivers",
+      "scrollWidth": 406,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x871a…cC63",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 406,
+          "width": 264
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x871a…cC63",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 406,
+          "width": 147
+        },
+        {
+          "tag": "SPAN",
+          "text": "0x871a…cC63",
+          "class": "tabular",
+          "right": 394,
+          "width": 99
+        }
+      ]
+    },
+    {
+      "route": "/credito?tab=lenders",
+      "scrollWidth": 407,
+      "nodes": [
+        {
+          "tag": "DIV",
+          "text": "Demo\n0x6773…499D",
+          "class": "ml-auto flex items-center gap-2 sm:gap-3",
+          "right": 407,
+          "width": 265
+        },
+        {
+          "tag": "BUTTON",
+          "text": "0x6773…499D",
+          "class": "bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60",
+          "right": 407,
+          "width": 148
+        },
+        {
+          "tag": "SPAN",
+          "text": "0x6773…499D",
+          "class": "tabular",
+          "right": 395,
+          "width": 100
+        }
+      ]
+    }
+  ],
+  "flow": [
+    {
+      "name": "home-tile-arrow-right",
+      "href": "/remesas"
+    },
+    {
+      "name": "unpaid-airtime-quote",
+      "url": "http://localhost:3100/remesas",
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nContracts\nDark theme\nModerato 42431\nDemo mode\nSender (US) · 0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n—\nreading the oracle…\nReady to send\n13,823\nxMXN on the swap desk\nFamilia (MX) balance\n—\nxMXN in 0x2D94…9700\n02:25\n\nRecargar Tiempo Aire\n\nTelcel airtime top-up\n\nSIMULADO · SIMULATED: el pago es real en Tempo; la recarga no se entrega · the payment is real, the top-up is not delivered.\n\nNúmero Telcel · phone (10 dígitos)\n\nMonto · amount (MXN)\n\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n\nTelcel airtime 100 MXN → 55****5678\n\n100.00 xMXN\n\nTu saldo · balance: 0.30 xMXN\n\nNecesitas pesos para pagar · You need xMXN to pay this bill.\n\nConvertir dólares a pesos · Convert\nPagar 100.00 xMXN · Pay\nWhat just happened\n\nTelcel airtime 100 MXN → 55****5678\n\nFulfillment SIMULATED\n\nPOST /api/bills/pay\n\nOrder created for this quote\n\n402 Payment Required\n\nThe server answers with an amount-bound MPP challenge\n\nPayment sent in xMXN\n\nA real transfer on Tempo to the merchant\n\nPayment verified\n\nThe server checks the on-chain receipt before fulfilling\n\nTop-up: SIMULATED\n\nNo real airtime or bill payment is delivered\n\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos"
+    },
+    {
+      "name": "reload-recovery-controls",
+      "buttons": [
+        "Dark theme",
+        "Sender (US) · 0x21B0…E245",
+        "Enviar a MéxicoSend money home · to Familia (MX)",
+        "Recargar Tiempo AireAirtime top-up",
+        "Pagar serviciosPay bills (CFE)"
+      ],
+      "savedKeys": 0
+    }
+  ]
+}

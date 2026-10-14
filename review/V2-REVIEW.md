@@ -52,3 +52,9 @@ Shared mock FX means live v2 stress also changes v1 health and desk quotes. Pref
 - Fungible burns, L+1 refusal, NAV payout bound, two-borrower ceiling and lowering below debt, RWA gap-down liquidation, paused-feed repay/debt-free withdrawal, and exact18dp max withdrawal pass.
 
 Initial source/probes/results are preserved separately. `v2-move-initial.log` failed on the reviewer constructor signature; the first L+1 test in `v2-move-initial2.log` placed a getter after expectRevert and consumed the expectation. Both instrumentation defects were corrected before acceptance. Neither indicates a protocol bypass.
+
+## Deployed snapshot (block39491154,02:00 UTC)
+
+`evidence/v2-live-1791943177493.json`:35/35 manifest receipts succeed;9/9 deployed runtimes match the reviewed artifacts, masking only immutable-reference slots. The factory is locked, vault/AMM are issuer members, factory/merchant are not, and vault/AMM/pool all bind the v2 token. Aggregate supply equals summed CDP debt plus AMM liability; tracked reserve and accounted sOUSD assets/future yield are funded. Equity is at least2500 OUSD, pool cash is positive and the redemption cap is precisely25% of tracked reserve.
+
+This qualifies the contracts/deployment snapshot, not the atomic app switch or complete browser/MPP journey. Shared-version gate probes still allow missing vault/oracle, and v1-shaped shared vault reads still need migration for Home under R-030. The initial read-only probe had a reviewer `hasRole` argument-order error; corrected probe uses Tempo's address-first signature.

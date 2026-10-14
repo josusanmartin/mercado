@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-14T02:04:40.173Z",
+  "base": "http://localhost:3101",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\n\nCreate pesos\n\n—\nxMXN in circulation\nCreate pesos\n—\nxMXN on the swap desk\nSend money\n—\nxMXN available to lend\nGet an advance\nTelcel\nairtime, paid over HTTP 402\nPay bills\n—\nxMXN fees paid to lenders\nEarn\n7 steps\none peso, start to finish\nDemo Tour\nReceipts\nWallet\nContracts\nNetwork\nDark\nThe system\n\nA parallel financial system for emerging markets, on Tempo: four modules around one synthetic currency.\n\nCreate\nMint xMXN against collateral\n—\nOUSD locked as collateral\nLive: OUSD. Yield-bearing collateral (staked OUSD, T-bills) is v2, in progress\nMove\nSend money across borders\n—\nxMXN of exchange liquidity\nLive: capped swap desk. Vault-as-exchange is v2, in progress\nLend\nAdvances for gig workers\n—\nxMXN lent · — available\nUncollateralized, on Demo Uber Data\nSpend\nPay bills and APIs over HTTP\n—\nxMXN in the merchant wallet\nReal 402 payments, SIMULATED top-ups\nxMXN\n—\nin circulation\n\nTestnet: collateral and xMXN have no real value. Lend uses Demo Uber Data; Spend top-ups are SIMULATED.\n\nYour wallet\n\nPick a profile at the top to try Mercado with a testnet demo account, or connect your own wallet.\n\nChoose a wallet\nWhere the money sits\n\nThree separately funded pots. None of them can spend another's money: the vault doesn't fund the desk or the advances.\n\nVault collateral\nBacks minted xMXN only. Never lent or swapped.\nUnavailable\nVault debt\nAll xMXN in circulation was minted against it\nUnavailable\nSwap desk inventory\nIts own capped demo reserves, not a market\nUnavailable\nAdvance pool cash\nSupplied by lenders, available to drivers\nUnavailable\nLent to drivers\nOutstanding principal, repaid manually\nUnavailable\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    },
+    {
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\nCreate pesos\nDeposit and mint\nRepay and withdraw\nYour position\nExchange rate\nPeso stress test\nDeposit and mint\n\nInstitutions lock collateral and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from a position like this. Testnet OUSD (Tempo faucet, no real value).\n\nConnect a wallet holding collateral to open a position.\n\nContinue as Lucía (Liquidity provider)\n\nDemo personas use testnet demo keys with no real value. Or pick another profile at the top.\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    },
+    {
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\nSend money\nSend money\nRecipient\nExchange backing\nSend money\n\nDollars sent in are minted into pesos at the Mercado exchange and delivered to any wallet on Tempo in one step. On-chain delivery only: no cash-out to a Mexican bank (SPEI) in this prototype.\n\nConnect a wallet with testnet OUSD or xMXN to send money.\n\nContinue as Miguel (Sender in Houston)\n\nDemo personas use testnet demo keys with no real value. Or pick another profile at the top.\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    },
+    {
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\nGet an advance\nDriver\nCredit line\nDraw\nYour advance\nLenders\nAgent API\nChoose a demo driver\n\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for an Uber password.\n\nDemo Uber Data\nIllustrative, not a credit model\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    },
+    {
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\nPay bills\nBill\nTelcel\nCheckout\nReceipt\nHistory\nWhat do you want to pay?\n\nPay with xMXN through a real HTTP 402 payment (MPP) on Tempo. Mock providers: no real airtime is sent and no real bill is paid.\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\nProvider\nTelcel airtime (mock)\nCFE electricity (mock)\nMobile number\n10 digits\nAmount\nMXN\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n$300\n$500\nGet quote\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    },
+    {
+      "path": "/earn",
+      "error": "page.goto: net::ERR_ABORTED at http://localhost:3101/earn\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3101/earn\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "errors": [],
+      "consoleErrors": []
+    },
+    {
+      "path": "/contracts",
+      "status": 200,
+      "errors": [],
+      "consoleErrors": [],
+      "text": "L\nM\nR\nJ\nE\nPick a profile\nModerato 42431\n2:04 AM\nContracts\nAddresses\n10\nDeployment history\n38\nAddresses\n\nEverything the app shows can be checked on Tempo Moderato (chain 42431). Contract sources are verified, exact match.\n\nCollateralVault\nHolds OUSD collateral, tracks each position; the only minter and burner of xMXN\n0xDB8dF7…241Ca2\nSource\nxMXN\nMercado Synthetic Peso (testnet), a TIP-20 from Tempo's TIP20Factory, 6 decimals\n0x20C000…68a6dd\nFXOracleAdapter\nMock admin feed\nMXN-per-USD price with staleness and sanity checks\n0xe5Be42…11f14B\nSource\nSwapDesk\nSeparately funded OUSD/xMXN inventory with spread and caps\n0x038296…4abec5\nSource\nCreditPool\nLender-funded xMXN pool; advances need a signed, expiring attestation\n0xbda927…f063A4\nSource\nLocalStableFactory\nCreated the xMXN market and gave the vault its issuer role\n0x0F11Ab…6B5591\nSource\nOUSD collateral\nFaucet token\nTestnet OUSD from the Tempo faucet. No real value\n0x20c000…6874BE\nAttestation signer\nBackend key that signs advance eligibility (EIP-712)\n0xbDdc0C…bdd8Ee\nBill merchant\nReceives MPP payments for SIMULATED top-ups\n0x672720…a1d4d3\nFee token (AlphaUSD)\nUSD test token that pays transaction fees on Tempo\n0x20C000…000001\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nA\nOpen\nB\nBack\n+\nDemo Tour",
+      "overflow": false
+    }
+  ]
+}
