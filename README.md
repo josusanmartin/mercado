@@ -22,6 +22,8 @@ The demo must keep all of these visible:
 - **Testnet OUSD only.** The collateral is **"Testnet OUSD (Tempo faucet, no real value)"**: the OpenUSD token instance on Moderato, which anyone can get from the faucet. Testnet balances have no real value and can't be redeemed. Mercado never claims its collateral is issuer-backed. (A self-deployed `dOUSD` test token is kept as a fallback.)
 - **Demo data.** Driver earnings are fixtures labeled **"Demo Uber Data"**. No Uber account is connected, and Mercado never asks for Uber credentials.
 - **Simulated fulfillment.** Telcel/CFE top-ups are **SIMULATED**. The MPP payment is real on testnet, but no airtime is delivered and no bill is paid.
+- **Third-party collateral token.** Testnet OUSD is controlled by its issuer (transfer policy, pause), not by Mercado, so collateral could be frozen outside our control.
+- **Open demo eligibility.** Any wallet can request a score for any demo profile. The attestation binds the borrower and the pool caps per-user exposure, but the profile isn't tied to a real identity.
 - **Mock oracle.** The MXN/USD price comes from an admin-controlled testnet feed (`isMock() == true`), not a verified market feed.
 - **No yield promises.** Lender fees come only from repaid loans. There's no guaranteed APY.
 
