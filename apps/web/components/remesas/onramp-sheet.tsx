@@ -44,6 +44,21 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
       </div>
     );
 
+  // Card top-ups stay paused until review accepts the route (ONRAMP_ENABLED); Tempo Wallet funding is always real.
+  if (!o.enabled)
+    return (
+      <div className="grid gap-4 px-6">
+        <Banner tone="info" icon={<CreditCard strokeWidth={1.75} />}>
+          <span className="font-medium">Próximamente · Coming soon.</span> Card top-ups are paused while we finish a safety review.
+        </Banner>
+        {o.canTempoDeposit && (
+          <Button variant="tonal" icon={<Wallet className="size-5" strokeWidth={1.75} />} onClick={() => o.tempoDeposit()}>
+            Agregar fondos con Tempo Wallet
+          </Button>
+        )}
+      </div>
+    );
+
   return (
     <div className="grid gap-4 px-6">
       {busy && <LinearProgress />}
