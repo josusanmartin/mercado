@@ -28,7 +28,7 @@ export function TxProgress({ tx, className, successNote }: { tx: Tx; className?:
 
   if (tx.status === "idle") return null;
   return (
-    <div aria-live="polite" className={cn("grid gap-2 rounded-lg border bg-background/60 p-3 text-sm", className)}>
+    <div aria-live="polite" className={cn("bg-muted grid gap-2 rounded-[14px] p-4 text-sm", className)}>
       {tx.steps.map((s) => (
         <a
           key={s.hash}
@@ -40,7 +40,7 @@ export function TxProgress({ tx, className, successNote }: { tx: Tx; className?:
           {s.receipt ? <CheckCircle2 className="text-success size-4 shrink-0" /> : <Loader2 className="size-4 shrink-0 animate-spin" />}
           <span className="font-medium">{s.label}</span>
           <span className="text-muted-foreground truncate tabular">{s.hash.slice(0, 10)}…</span>
-          <span className="text-primary ml-auto inline-flex shrink-0 items-center gap-1 text-xs group-hover:underline">
+          <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs group-hover:underline">
             Explorer <ExternalLink className="size-3" />
           </span>
         </a>

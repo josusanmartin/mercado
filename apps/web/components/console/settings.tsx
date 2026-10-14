@@ -91,8 +91,12 @@ export function Row({ label, value, sub, className }: { label: ReactNode; value:
   );
 }
 
-export function Rows({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("grid", className)}>{children}</div>;
+export function Rows({ children, className, ...rest }: React.ComponentProps<"div">) {
+  return (
+    <div className={cn("grid", className)} {...rest}>
+      {children}
+    </div>
+  );
 }
 
 /** Big number with a small unit, for the one figure that matters in a panel. */
