@@ -22,9 +22,7 @@ export function useFxLabel() {
   const short = fx?.relay
     ? `admin-relayed from ${fx.relay.source.split(" ")[0]}${time ? ` · on-chain ${time}` : ""}`
     : fx
-      ? fx.isMock
-        ? "admin-set testnet feed"
-        : fx.label
+      ? "admin-relayed USD/MXN (relay provenance not verified for this update)"
       : undefined;
   return { ...q, rate: fx?.rate, short, full: fx?.label, stale: fx?.stale };
 }
