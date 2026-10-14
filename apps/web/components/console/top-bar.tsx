@@ -21,7 +21,7 @@ export function TopBar() {
     <div className="ml-auto flex items-center gap-2 sm:gap-3">
       {on && <PersonaRestore />}
       <NetworkBadge className="hidden sm:inline-flex" />
-      <label className={cn("bg-well flex cursor-pointer items-center gap-2 rounded-[12px] px-3 py-1.5 text-sm", busy && "cursor-not-allowed opacity-60")}>
+      <label className={cn("meta flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5", busy && "cursor-not-allowed opacity-60")}>
         <span className="hidden sm:inline">Demo mode</span>
         <span className="sm:hidden">Demo</span>
         <button
@@ -31,13 +31,13 @@ export function TopBar() {
           aria-label="Demo mode: use testnet demo accounts"
           disabled={busy}
           onClick={() => setOn(!on)}
-          className={cn("relative h-5 w-9 rounded-full transition-colors duration-150", on ? "bg-success" : "bg-input")}
+          className={cn("relative h-5 w-9 rounded-full transition-colors duration-150", on ? "bg-foreground" : "bg-input")}
         >
-          <span className={cn("bg-card absolute top-0.5 size-4 rounded-full shadow transition-[left] duration-150", on ? "left-[18px]" : "left-0.5")} />
+          <span className={cn("bg-background absolute top-0.5 size-4 rounded-full transition-[left] duration-150", on ? "left-[18px]" : "left-0.5")} />
         </button>
       </label>
       <WalletDialog>
-        <button type="button" disabled={busy} className="bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60">
+        <button type="button" disabled={busy} className="bg-foreground text-background flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap disabled:opacity-60">
           <Wallet className="size-4" aria-hidden />
           {isConnected ? (
             <span className="tabular">

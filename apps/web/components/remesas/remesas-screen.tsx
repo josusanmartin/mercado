@@ -115,8 +115,8 @@ function WhatHappened({ s }: { s: RemesasState }) {
 
 function FlowNode({ title, value, sub, accent }: { title: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className={cn("min-w-0 flex-1 rounded-[14px] p-3", accent ? "bg-product text-white" : "bg-well")}>
-      <p className={cn("text-[13px]", accent ? "text-white/85" : "text-muted-foreground")}>{title}</p>
+    <div className={cn("min-w-0 flex-1 p-3", accent ? "bg-product text-white rounded-[4px]" : "border-t-2 border-foreground")}>
+      <p className={cn("meta", accent ? "text-white/85" : "text-muted-foreground")}>{title}</p>
       <p className="truncate text-lg font-semibold tabular">{value}</p>
       {sub && <p className={cn("truncate text-[13px]", accent ? "text-white/85" : "text-muted-foreground")}>{sub}</p>}
     </div>

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { PersonaId } from "@/components/wallet/personas";
 import { PRODUCTS, productForPath, type ProductId } from "./products";
 import { useDemoAccount } from "./demo-mode";
+import { LiveMeta, Meta } from "./meta";
 
 export type Kpi = { label: string; value: ReactNode; sub?: ReactNode };
 
@@ -25,6 +26,8 @@ export function SettingsLayout({
   purpose,
   kpis,
   demo,
+  statement,
+  meta,
 }: {
   title: string;
   list?: ReactNode;
@@ -35,68 +38,85 @@ export function SettingsLayout({
   kpis?: Kpi[];
   /** Demo-mode account for this page/tab; defaults to the product's. */
   demo?: PersonaId | null;
+  /** Giant display statement instead of the product name, e.g. "Crea pesos." */
+  statement?: ReactNode;
+  /** Tiny uppercase line replacing the default live meta (CDMX · rate · time · testnet). */
+  meta?: ReactNode;
 }) {
   const path = usePathname();
   const p = product ? PRODUCTS.find((x) => x.id === product)! : productForPath(path);
   return (
-    <div className="grid gap-8">
-      <ProductHero product={p.id} title={title} purpose={purpose ?? p.purpose} kpis={kpis} demo={demo === null ? undefined : (demo ?? p.demo)} />
+    <div className="grid gap-10">
+      <ProductHero
+        product={p.id}
+        title={title}
+        purpose={purpose ?? p.purpose}
+        kpis={kpis}
+        demo={demo === null ? undefined : (demo ?? p.demo)}
+        statement={statement}
+        meta={meta}
+      />
       {list}
       <div className="min-w-0">{children}</div>
     </div>
   );
 }
 
-/** Product header: solid icon chip + product name + one-line purpose, then up to 3 unboxed KPIs. */
+/**
+ * Editorial product header (PRINCIPLES): a tiny meta row (index · product · live CDMX/rate/time ·
+ * testnet), the product name set huge in the display face, one plain purpose line, then up to three
+ * big unboxed KPIs separated by hairlines.
+ */
 export function ProductHero({
   product,
   title,
   purpose,
   kpis,
   demo,
+  statement,
+  meta,
 }: {
   product: ProductId;
   title?: string;
   purpose?: ReactNode;
   kpis?: Kpi[];
   demo?: PersonaId;
+  statement?: ReactNode;
+  meta?: ReactNode;
 }) {
   const p = PRODUCTS.find((x) => x.id === product)!;
   const persona = useDemoAccount(demo);
   const { address } = useConnection();
-  const Icon = p.icon;
   return (
-    <section className="grid gap-7 pt-2">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <span className="bg-product text-product-fg grid size-14 shrink-0 place-items-center rounded-[16px]" style={p.id === "home" ? { background: "var(--ink)", color: "white" } : undefined}>
-            <Icon className="size-7" strokeWidth={1.75} aria-hidden />
-          </span>
-          <div className="max-w-2xl">
-            <h1 className="text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-[2.6rem]">{p.id === "home" ? (title ?? p.name) : p.name}</h1>
-            {(purpose ?? p.purpose) && <p className="text-muted-foreground mt-1 text-base text-pretty">{purpose ?? p.purpose}</p>}
-          </div>
+    <section className="grid gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
+        <Meta>
+          <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
+          {p.index} · {p.id === "home" ? "Mercado" : p.name}
+        </Meta>
+        {meta ? <Meta>{meta}</Meta> : <LiveMeta />}
+      </div>
+      <div className="grid gap-4">
+        <h1 className="display text-product text-[clamp(3.2rem,9vw,8rem)] break-words" style={p.id === "home" ? { color: "var(--ink)" } : undefined}>
+          {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
+        </h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          {(purpose ?? p.purpose) && <p className="max-w-2xl text-lg leading-snug text-pretty sm:text-xl">{purpose ?? p.purpose}</p>}
+          {persona && (
+            <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className="meta text-muted-foreground hover:text-foreground" title="Testnet demo key, no real value">
+              Cuenta demo · <span className="text-foreground">{persona.name}</span>
+              {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
+            </a>
+          )}
         </div>
-        {persona && (
-          <a
-            href={address ? explorerAddress(address) : undefined}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-well text-muted-foreground hover:text-foreground rounded-[8px] px-2.5 py-1 text-[13px]"
-            title="Testnet demo key, no real value"
-          >
-            Demo account · <span className="text-foreground font-medium">{persona.name}</span>
-            {address && persona.address?.toLowerCase() === address.toLowerCase() && <span className="font-mono"> · {shortAddr(address)}</span>}
-          </a>
-        )}
       </div>
       {kpis && kpis.length > 0 && (
-        <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-10">
-          {kpis.slice(0, 3).map((k) => (
-            <div key={k.label} className="min-w-0">
-              <dt className="text-muted-foreground text-sm">{k.label}</dt>
-              <dd className="mt-1 truncate text-[2rem] leading-none font-semibold tracking-tight tabular sm:text-[2.6rem]">{k.value}</dd>
-              {k.sub && <dd className="text-muted-foreground mt-1 text-[13px]">{k.sub}</dd>}
+        <dl className="grid grid-cols-1 border-t sm:grid-cols-3">
+          {kpis.slice(0, 3).map((k, i) => (
+            <div key={k.label} className={cn("min-w-0 py-4", i > 0 && "border-t sm:border-t-0 sm:border-l sm:pl-6", i < 2 && "sm:pr-6")}>
+              <dt className="meta text-muted-foreground">{k.label}</dt>
+              <dd className="display mt-2 truncate text-[clamp(2.2rem,4.5vw,3.6rem)] tabular">{k.value}</dd>
+              {k.sub && <dd className="text-muted-foreground mt-1.5 text-[13px]">{k.sub}</dd>}
             </div>
           ))}
         </dl>
@@ -110,7 +130,7 @@ export type ListItemDef = { id: string; label: string; icon?: LucideIcon; hint?:
 /** Section tabs under the hero (scrolls horizontally on phones). */
 export function ListPane({ items, value, onChange, label }: { items: ListItemDef[]; value: string; onChange: (id: string) => void; label: string }) {
   return (
-    <nav aria-label={label} role="tablist" className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
+    <nav aria-label={label} role="tablist" className="scrollbar-none -mx-4 flex gap-6 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
       {items.map((it) => {
         const on = it.id === value;
         const Icon = it.icon;
@@ -123,13 +143,13 @@ export function ListPane({ items, value, onChange, label }: { items: ListItemDef
             aria-current={on ? "true" : undefined}
             onClick={() => onChange(it.id)}
             className={cn(
-              "-mb-px flex shrink-0 items-center gap-2 border-b-[3px] px-3 py-3 text-base transition-colors duration-150",
-              on ? "border-product font-semibold" : "text-muted-foreground hover:text-foreground border-transparent",
+              "meta -mb-px flex shrink-0 items-center gap-2 border-b-2 py-3 transition-colors duration-150",
+              on ? "border-foreground text-foreground" : "text-muted-foreground hover:text-foreground border-transparent",
             )}
           >
-            {Icon && <Icon className={cn("size-[18px]", on && "text-product")} strokeWidth={1.75} aria-hidden />}
+            {Icon && <Icon className="size-4" strokeWidth={1.75} aria-hidden />}
             {it.label}
-            {it.hint && <span className="text-muted-foreground text-[13px] tabular">{it.hint}</span>}
+            {it.hint && <span className="text-muted-foreground tabular">{it.hint}</span>}
           </button>
         );
       })}
@@ -158,11 +178,11 @@ export function Panel({
 }) {
   const card = variant === "card";
   return (
-    <section className={cn("animate-in fade-in-0 duration-150", card && "bg-well rounded-[20px]", className)}>
+    <section className={cn("animate-in fade-in-0 duration-150", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
       {(title || aside) && (
         <header className={cn("flex flex-wrap items-start justify-between gap-3", card && "px-5 pt-5 sm:px-6")}>
           <div className="min-w-0">
-            {title && <h2 className="text-xl font-semibold tracking-tight">{title}</h2>}
+            {title && <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>}
             {description && <p className="text-muted-foreground mt-1 max-w-prose text-[15px] text-pretty">{description}</p>}
           </div>
           {aside}
@@ -197,13 +217,24 @@ export function Rows({ children, className, ...rest }: React.ComponentProps<"div
 /** The one figure that matters in a panel, in the product's color. */
 export function BigNumber({ value, unit, className }: { value: ReactNode; unit?: ReactNode; className?: string }) {
   return (
-    <p className={cn("text-[2.6rem] leading-none font-semibold tracking-tight tabular sm:text-5xl", className)}>
+    <p className={cn("display text-[clamp(2.6rem,5vw,4rem)] tabular", className)}>
       {value}
-      {unit && <span className="text-muted-foreground ml-2 text-lg font-medium tracking-normal">{unit}</span>}
+      {unit && <span className="text-muted-foreground ml-2 font-sans text-lg font-medium tracking-normal normal-case">{unit}</span>}
     </p>
   );
 }
 
 export function PanelActions({ children }: { children: ReactNode }) {
   return <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap [&>*]:sm:min-w-48">{children}</div>;
+}
+
+/** "■ 01 · COLATERAL"-style section label (tiny uppercase meta with an index). */
+export function SectionLabel({ index, children, className }: { index?: string; children: ReactNode; className?: string }) {
+  return (
+    <Meta className={className}>
+      <span className="bg-product mr-1.5 inline-block size-2 align-baseline" aria-hidden />
+      {index && <>{index} · </>}
+      {children}
+    </Meta>
+  );
 }

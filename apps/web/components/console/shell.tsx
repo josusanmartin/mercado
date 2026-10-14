@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { FileCode2, Moon, Sun } from "lucide-react";
+import { Code2, FileCode2, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PRODUCTS, productForPath } from "./products";
 import { TopBar } from "./top-bar";
@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div data-product={product.id === "home" ? undefined : product.id} className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <Sidebar active={product.id} path={path} />
       <div className="flex min-h-dvh min-w-0 flex-col">
-        <header className="bg-background/90 supports-[backdrop-filter]:bg-background/75 sticky top-0 z-30 backdrop-blur">
+        <header className="bg-background/95 sticky top-0 z-30 border-b">
           <div className="mx-auto flex max-w-[84rem] items-center gap-2 px-4 py-3 sm:gap-3 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Mercado home">
               <Wordmark compact />
@@ -42,14 +42,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function Wordmark({ className, compact }: { className?: string; compact?: boolean }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
-      <span className="relative grid size-7 grid-cols-2 grid-rows-2 gap-[3px]" aria-hidden>
-        <span className="bg-mint rounded-[3px]" />
-        <span className="bg-remesas rounded-[3px]" />
-        <span className="bg-global rounded-[3px]" />
-        <span className="bg-credito rounded-[3px]" />
-        <span className="bg-mcard absolute top-1/2 left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white" />
+      <span className="grid grid-cols-3 gap-[2px]" aria-hidden>
+        {["--c-mint", "--c-remesas", "--c-global", "--c-credito", "--ink", "--c-invest"].map((c) => (
+          <span key={c} className="size-[7px]" style={{ background: `var(${c})` }} />
+        ))}
       </span>
-      <span className={cn("text-lg font-bold tracking-tight", compact && "hidden sm:inline")}>Mercado</span>
+      <span className={cn("display text-[1.35rem]", compact && "hidden sm:inline")}>Mercado</span>
     </span>
   );
 }
@@ -57,11 +55,11 @@ export function Wordmark({ className, compact }: { className?: string; compact?:
 function Sidebar({ active, path }: { active: string; path: string }) {
   const { theme, toggle } = useTheme();
   return (
-    <aside className="bg-background sticky top-0 hidden h-dvh flex-col border-r px-3 py-6 lg:flex">
-      <Link href="/" className="mb-7 px-2" aria-label="Mercado home">
+    <aside className="bg-background sticky top-0 hidden h-dvh flex-col border-r px-4 py-6 lg:flex">
+      <Link href="/" className="mb-8 px-2" aria-label="Mercado home">
         <Wordmark />
       </Link>
-      <nav aria-label="Products" className="grid gap-0.5">
+      <nav aria-label="Products" className="grid border-t">
         {PRODUCTS.map((p) => {
           const on = p.id === active;
           return (
@@ -70,31 +68,43 @@ function Sidebar({ active, path }: { active: string; path: string }) {
               href={p.href}
               aria-current={on ? "page" : undefined}
               className={cn(
-                "relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[15px] transition-colors duration-150",
-                on ? "bg-well font-semibold" : "hover:bg-well/70",
+                "group relative flex items-baseline gap-3 border-b px-2 py-3 transition-colors duration-150",
+                on ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <span className="grid size-7 shrink-0 place-items-center rounded-[8px] text-white" style={{ background: p.color, color: p.onColor }} aria-hidden>
-                <p.icon className="size-4" strokeWidth={1.75} />
+              <span className="meta w-5 tabular">{p.index}</span>
+              <span className={cn("display flex-1 text-[1.05rem]", on && "underline decoration-2 underline-offset-[6px]")} style={on ? { textDecorationColor: p.id === "home" ? "var(--ink)" : p.color } : undefined}>
+                {p.id === "home" ? "Inicio" : p.short}
               </span>
-              <span className="flex-1">{p.id === "home" ? "Overview" : p.short}</span>
+              <span className="size-2 shrink-0 self-center" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
             </Link>
           );
         })}
       </nav>
       <div className="mt-auto grid gap-0.5 border-t pt-3">
         <Link
+          href="/developers"
+          aria-current={path.startsWith("/developers") ? "page" : undefined}
+          className={cn(
+            "meta flex items-center gap-3 px-2 py-2",
+            path.startsWith("/developers") ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Code2 className="size-4" aria-hidden />
+          Developers
+        </Link>
+        <Link
           href="/contracts"
           aria-current={path.startsWith("/contracts") ? "page" : undefined}
           className={cn(
-            "flex items-center gap-3 rounded-[10px] px-3 py-2 text-sm",
-            path.startsWith("/contracts") ? "bg-well font-semibold" : "text-muted-foreground hover:text-foreground",
+            "meta flex items-center gap-3 px-2 py-2",
+            path.startsWith("/contracts") ? "text-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
           <FileCode2 className="size-4" aria-hidden />
           Contracts
         </Link>
-        <button type="button" onClick={toggle} className="text-muted-foreground hover:text-foreground flex items-center gap-3 rounded-[10px] px-3 py-2 text-left text-sm">
+        <button type="button" onClick={toggle} className="meta text-muted-foreground hover:text-foreground flex items-center gap-3 px-2 py-2 text-left">
           {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
           {theme === "dark" ? "Light theme" : "Dark theme"}
         </button>
@@ -110,7 +120,7 @@ function MobileTabs({ active }: { active: string }) {
         const on = p.id === active;
         const Icon = p.icon;
         return (
-          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2 text-[13px]", on ? "font-semibold" : "text-muted-foreground")}>
+          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("meta flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2", on ? "text-foreground" : "text-muted-foreground")}>
             <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
             {p.id === "home" ? "Inicio" : p.short}
           </Link>

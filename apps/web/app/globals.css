@@ -4,32 +4,37 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Mercado Brand v4 (crew/DESIGN-ECOSYSTEM.md §3): clean, bright, Switch-menu-like and grown-up.
-  White canvas, few boxes (spacing and hairlines instead), flat product colors used as solid fills,
-  tab underlines and key numbers: Mint teal, Remesas orange, Global blue, Crédito pink.
-  data-product sets --accent for everything below it. Focus is a cyan ring, the one shared accent.
+  Mercado design principles (crew/PRINCIPLES.md, above every other design doc): editorial confidence.
+  Black and white first (#FFFFFF / #0A0A0A, inverted in dark), culture second: a deliberate cultural
+  palette (jade, terracotta, cream) with tuned product accents. Display = Archivo Black, uppercase;
+  everything else Inter Tight. Black pill buttons, hairlines, 0-8px corners, almost no shadows.
+  data-product sets --accent for everything below it.
 */
 :root {
   --page: #ffffff;
   --tile: #ffffff;
-  --ink: #111418;
-  --ink-2: #5b6270;
-  --line: #e6e8ec;
-  --well: #f4f5f7;
+  --ink: #0a0a0a;
+  --ink-2: #5c5c5c;
+  --line: #e4e4e4;
+  --well: #f4f2ec;
 
-  --c-mint: #00a68a;
-  --c-remesas: #ff8a1f;
-  --c-global: #2f6bff;
-  --c-credito: #f2357d;
-  --c-card: #7c5cff;
-  --c-invest: #f2b807;
-  --focus: #00c3e3;
+  --jade: #1f3d2b;
+  --terracotta: #e2603f;
+  --cream: #f2e6c9;
+
+  --c-mint: #1f3d2b;
+  --c-remesas: #e2603f;
+  --c-global: #2448c8;
+  --c-credito: #d93a7a;
+  --c-card: #0a0a0a;
+  --c-invest: #e5a823;
+  --focus: #2448c8;
 
   --accent: var(--ink);
   --accent-fg: #ffffff;
-  --accent-soft: color-mix(in oklab, var(--accent) 9%, white);
+  --accent-soft: color-mix(in oklab, var(--accent) 8%, white);
 
-  --shadow: 0 10px 30px -12px rgb(17 20 24 / 0.25);
+  --shadow: none;
 
   --background: var(--page);
   --foreground: var(--ink);
@@ -37,24 +42,25 @@
   --card-foreground: var(--ink);
   --popover: var(--tile);
   --popover-foreground: var(--ink);
-  --primary: var(--accent);
-  --primary-foreground: var(--accent-fg);
+  /* buttons are black pills by default (principle 7); product color lives in blocks and numbers */
+  --primary: var(--ink);
+  --primary-foreground: #ffffff;
   --secondary: var(--well);
   --secondary-foreground: var(--ink);
   --muted: var(--well);
   --muted-foreground: var(--ink-2);
   --accent-bg: var(--well);
-  --destructive: #d92d20;
+  --destructive: #c4321b;
   --border: var(--line);
-  --input: #d5d9e0;
+  --input: #cfcfcf;
   --ring: var(--focus);
-  --radius: 12px;
+  --radius: 6px;
 
   --brand: var(--accent);
   --brand-foreground: var(--accent-fg);
-  --warning: #b54708;
-  --warning-ink: #93370d;
-  --success: #079455;
+  --warning: #a86200;
+  --warning-ink: #7a4700;
+  --success: #1f6b3f;
 }
 
 [data-product="mint"] {
@@ -72,33 +78,34 @@
 [data-product="card"] {
   --accent: var(--c-card);
 }
-/* gold is light: ink text on gold fills */
+/* maize gold is light: ink on gold */
 [data-product="invest"] {
   --accent: var(--c-invest);
-  --accent-fg: #111418;
+  --accent-fg: #0a0a0a;
 }
 
 .dark {
-  --page: #0f1115;
-  --tile: #1a1d23;
-  --ink: #f3f4f6;
-  --ink-2: #a3a9b5;
-  --line: #2a2e36;
-  --well: #1a1d23;
-  --input: #3a3f49;
-  --accent-soft: color-mix(in oklab, var(--accent) 18%, #1a1d23);
-  --shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
-  --destructive: #f97066;
-  --warning: #fdb022;
-  --warning-ink: #fec84b;
-  --success: #47cd89;
+  --page: #0a0a0a;
+  --tile: #0a0a0a;
+  --ink: #ffffff;
+  --ink-2: #a3a3a3;
+  --line: #262626;
+  --well: #161616;
+  --input: #3a3a3a;
+  --primary: #ffffff;
+  --primary-foreground: #0a0a0a;
+  --c-mint: #4f8f68;
+  --c-card: #f2e6c9;
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, #0a0a0a);
+  --destructive: #ff6b57;
+  --warning: #f0a53a;
+  --warning-ink: #f6c776;
+  --success: #5fbf86;
+  --focus: #7d99ff;
   color-scheme: dark;
 }
-.dark {
-  --accent-fg: #0f1115;
-}
-.dark [data-product]:not([data-product="invest"]) {
-  --accent-fg: #ffffff;
+.dark [data-product="card"] {
+  --accent-fg: #0a0a0a;
 }
 
 @theme inline {
@@ -135,6 +142,9 @@
   --color-global: var(--c-global);
   --color-credito: var(--c-credito);
   --color-mcard: var(--c-card);
+  --color-jade: var(--jade);
+  --color-terracotta: var(--terracotta);
+  --color-cream: var(--cream);
   --color-invest: var(--c-invest);
   --color-page: var(--page);
   --color-tile: var(--tile);
@@ -146,10 +156,10 @@
   --color-tinta: var(--ink);
   --color-papel: var(--page);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: var(--radius);
-  --radius-xl: 20px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
   --animate-ring-pulse: ring-pulse 1.4s ease-in-out infinite alternate;
   @keyframes ring-pulse {
     from {
@@ -162,8 +172,9 @@
   --shadow-tile: var(--shadow);
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-code), ui-monospace, monospace;
+  --font-display: var(--font-display-face), "Arial Black", var(--font-body), sans-serif;
+  /* no third face: hashes/addresses use Inter Tight's tabular figures */
+  --font-mono: var(--font-body), ui-sans-serif, sans-serif;
 }
 
 @layer base {
@@ -179,9 +190,13 @@
   h3 {
     letter-spacing: -0.02em;
   }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
   /* One shared focus treatment: the cyan ring (tiles add a gentle pulse). */
   :focus-visible {
-    outline: 3px solid var(--focus);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
   .tabular,
@@ -200,6 +215,30 @@
 }
 
 @layer utilities {
+  /* Principle 1: one massive ultra-heavy display face, uppercase, tight. */
+  .display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.88;
+    font-weight: 400;
+  }
+  /* Principle 5: tiny precise meta text. */
+  .meta {
+    font-size: 11.5px;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+  /* Principle 3: image inside type (hero only, once per page). */
+  .image-type {
+    background-size: cover;
+    background-position: center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   .scrollbar-none {
     scrollbar-width: none;
   }

@@ -5,10 +5,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Route } from "lucide-react";
-import { PROTOCOL, useThreeBuckets } from "@/lib/contracts";
+import { CARD_ENABLED, PROTOCOL, useCardStats, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { PRODUCTS, type ProductId } from "@/components/console";
+import { LiveMeta, Meta, PRODUCTS, type ProductId } from "@/components/console";
 import { useTour } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +19,7 @@ type Live = Record<Pid, { value: string; caption: string }>;
 
 function useLive() {
   const b = useThreeBuckets();
+  const card = useCardStats();
   const v2 = PROTOCOL === "v2";
   const live: Live = {
     mint: v2
@@ -31,8 +32,9 @@ function useLive() {
       ? { value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), caption: "exchange backing" }
       : { value: n0(b.desk.ousd), caption: "OUSD of exchange liquidity" },
     credito: { value: n0(b.pool.cash), caption: "xMXN available to lend" },
-    // Wired to MercadoCard's events once contracts deploys it (deployments.v2.card); never a placeholder number.
-    card: { value: "—", caption: "spent with Card (runs on v2)" },
+    card: CARD_ENABLED
+      ? { value: n0(card.totalSpent), caption: `xMXN spent with Card · ${card.charges?.toString() ?? "—"} charges` }
+      : { value: "—", caption: "Card runs on v2" },
     // Ahorro en pesos IS the credit pool's supply: lender claims are real savings today.
     invest: { value: n0(b.pool.lenderClaims), caption: "xMXN saved by lenders" },
   };
@@ -43,103 +45,109 @@ export function EcosystemHome() {
   const { b, live } = useLive();
   const tour = useTour();
   return (
-    <div className="grid gap-12 pt-2">
-      <section className="grid gap-3">
-        <h1 className="text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-[3.4rem]">
-          Mercado: one currency, six products.
+    <div className="grid gap-14 pt-1">
+      <section className="grid gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
+          <Meta>■ 00 · Mercado · un sistema financiero paralelo</Meta>
+          <LiveMeta />
+        </div>
+        {/* Principle 3: image inside type, once, on the hero. Our own generated sarape texture. */}
+        <h1
+          className="display image-type text-[clamp(3.6rem,12.5vw,12rem)]"
+          style={{ backgroundImage: "url(/photos/sarape.webp)" }}
+          aria-label="Una moneda. Seis productos."
+        >
+          Una moneda.
+          <br />
+          Seis productos.
         </h1>
-        <p className="text-muted-foreground max-w-2xl text-lg text-pretty">
-          A parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.
-        </p>
-        <dl className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-10">
-          <Kpi label="xMXN in circulation" value={n0(b.xmxnSupply)} sub="each backed by a debt position or the exchange reserve" />
-          <Kpi label="Collateral locked" value={live.mint.value} sub={live.mint.caption} />
-          <Kpi label="Lent to drivers" value={n0(b.pool.loansOut)} sub={`${n0(b.pool.cash)} xMXN available`} />
-        </dl>
-      </section>
-
-      <ProductRow live={live} />
-
-      <section aria-labelledby="flow-h" className="grid gap-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 id="flow-h" className="text-2xl font-semibold tracking-tight">
-              How money moves
-            </h2>
-            <p className="text-muted-foreground">Live on Tempo Moderato. Numbers update as transactions land.</p>
-          </div>
-          <Button variant="outline" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <p className="max-w-2xl text-xl leading-snug text-pretty">
+            A parallel financial system for emerging markets, on Tempo. Institutions mint xMXN, families and businesses move it across the border,
+            drivers borrow it, shops take it, savers grow it.
+          </p>
+          <Button size="lg" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
             <Route strokeWidth={1.75} />
             {tour.active ? "Resume the Demo Tour" : "Start the Demo Tour"}
           </Button>
         </div>
+        <dl className="grid grid-cols-1 border-t sm:grid-cols-3">
+          <Kpi label="xMXN en circulación" value={n0(b.xmxnSupply)} sub="each backed by a debt position or the exchange reserve" />
+          <Kpi label="Colateral bloqueado" value={live.mint.value} sub={live.mint.caption} edge />
+          <Kpi label="Prestado a choferes" value={n0(b.pool.loansOut)} sub={`${n0(b.pool.cash)} xMXN available`} edge />
+        </dl>
+      </section>
+
+      <ProductIndex live={live} />
+
+      <section aria-labelledby="flow-h" className="grid gap-4 border-t pt-4">
+        <Meta>Live on Tempo Moderato · updates as transactions land</Meta>
+        <h2 id="flow-h" className="display text-[clamp(2.2rem,5vw,4rem)]">
+          Así se mueve el dinero
+        </h2>
         <FlowMap live={live} supply={b.xmxnSupply} />
       </section>
     </div>
   );
 }
 
-function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Kpi({ label, value, sub, edge }: { label: string; value: string; sub?: string; edge?: boolean }) {
   return (
-    <div className="min-w-0">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="mt-1 truncate text-[2.2rem] leading-none font-semibold tracking-tight tabular sm:text-[2.6rem]">{value}</dd>
-      {sub && <dd className="text-muted-foreground mt-1 text-[13px]">{sub}</dd>}
+    <div className={cn("min-w-0 py-4", edge && "border-t sm:border-t-0 sm:border-l sm:pl-6")}>
+      <dt className="meta text-muted-foreground">{label}</dt>
+      <dd className="display mt-2 truncate text-[clamp(2.4rem,5vw,4rem)] tabular">{value}</dd>
+      {sub && <dd className="text-muted-foreground mt-1.5 text-[13px]">{sub}</dd>}
     </div>
   );
 }
 
-/** The Switch row: four big solid tiles; arrows move, Enter opens. */
-function ProductRow({ live }: { live: Live }) {
+/** The six products as an editorial numbered index (no tiles): ↑/↓ move, Enter opens. */
+function ProductIndex({ live }: { live: Live }) {
   const products = PRODUCTS.filter((p) => p.id !== "home");
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   const [sel, setSel] = useState(0);
-  useEffect(() => {
-    refs.current = refs.current.slice(0, products.length);
-  }, [products.length]);
-
-  function onKey(e: KeyboardEvent<HTMLDivElement>) {
-    const cols = getComputedStyle(e.currentTarget).gridTemplateColumns.split(" ").length || 1;
-    const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key as string];
+  function onKey(e: KeyboardEvent<HTMLOListElement>) {
+    const d = ({ ArrowDown: 1, ArrowUp: -1 } as Record<string, number>)[e.key];
     if (d === undefined) return;
     const next = sel + d;
     if (next < 0 || next >= products.length) return;
     e.preventDefault();
     refs.current[next]?.focus();
   }
-
   return (
-    <section aria-label="Products">
-      <p className="mb-3 h-7 text-lg font-semibold" style={{ color: products[sel].color }} aria-hidden>
-        {products[sel].name}
-      </p>
-      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
+    <section aria-label="Products" className="grid gap-3">
+      <Meta>Índice · six products, one currency</Meta>
+      <ol onKeyDown={onKey} className="border-t">
         {products.map((p, i) => (
-          <Link
-            key={p.id}
-            ref={(el) => {
-              refs.current[i] = el;
-            }}
-            href={p.href}
-            tabIndex={i === sel ? 0 : -1}
-            onFocus={() => setSel(i)}
-            onMouseEnter={() => setSel(i)}
-            aria-label={`${p.name}: ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
-            className={cn(
-              "relative flex aspect-[16/10] flex-col justify-between rounded-[20px] p-5 text-white transition-[transform,box-shadow] duration-150 ease-out sm:p-6",
-              "hover:shadow-tile focus-visible:shadow-tile hover:scale-[1.03] focus-visible:scale-[1.03] focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:animate-ring-pulse",
-            )}
-            style={{ background: p.color, color: p.onColor }}
-          >
-            <p.icon className="size-10 sm:size-12" strokeWidth={1.75} aria-hidden />
-            <span className="grid gap-1">
-              <span className="text-2xl leading-none font-semibold tracking-tight tabular sm:text-[2rem]">{live[p.id as Pid].value}</span>
-              <span className="text-[13px] leading-snug opacity-85">{live[p.id as Pid].caption}</span>
-              <span className="mt-2 text-lg font-semibold">{p.short}</span>
-            </span>
-          </Link>
+          <li key={p.id} className="border-b">
+            <Link
+              ref={(el) => {
+                refs.current[i] = el;
+              }}
+              href={p.href}
+              tabIndex={i === sel ? 0 : -1}
+              onFocus={() => setSel(i)}
+              onMouseEnter={() => setSel(i)}
+              className="group grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-5 transition-colors duration-150 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:py-6"
+              aria-label={`${p.index} ${p.name}: ${p.line}. ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
+            >
+              <span className="meta text-muted-foreground tabular">{p.index}</span>
+              <span className="min-w-0">
+                <span className="display block text-[clamp(2.4rem,6vw,5rem)] transition-colors duration-150 group-hover:text-[var(--hover)] group-focus-visible:text-[var(--hover)]" style={{ ["--hover" as string]: p.color }}>
+                  {p.short}
+                </span>
+                <span className="text-muted-foreground mt-1 block text-lg">— {p.line}</span>
+              </span>
+              <span className="col-start-2 text-left sm:col-start-3 sm:text-right">
+                <span className="display block text-[clamp(1.6rem,3vw,2.6rem)] tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
+                  {live[p.id as Pid].value}
+                </span>
+                <span className="meta text-muted-foreground">{live[p.id as Pid].caption}</span>
+              </span>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }
@@ -207,8 +215,8 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
           <circle cx={HUB.x} cy={HUB.y} r={10} fill="var(--ink)" />
         </svg>
         <div className="absolute grid -translate-x-1/2 text-center" style={{ left: "50%", top: `${((HUB.y - 118) / H) * 100}%` }}>
-          <p className="text-xl font-semibold">xMXN</p>
-          <p className="text-[2rem] leading-none font-semibold tracking-tight tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</p>
+          <p className="display text-2xl">xMXN</p>
+          <p className="display text-[2.6rem] tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</p>
           <p className="text-muted-foreground text-[13px]">in circulation</p>
         </div>
         {FLOWS.map((f) => {
@@ -230,7 +238,7 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
               <span className="text-base font-semibold" style={{ color: p.color }}>
                 {p.short}
               </span>
-              <span className="text-2xl font-semibold tracking-tight tabular">{live[f.product].value}</span>
+              <span className="display text-[2rem] tabular">{live[f.product].value}</span>
               <span className="text-muted-foreground text-[13px] leading-snug">{live[f.product].caption}</span>
               <span className="text-muted-foreground text-[13px] leading-snug">· {f.label}</span>
             </Link>

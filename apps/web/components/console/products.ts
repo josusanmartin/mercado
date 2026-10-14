@@ -16,6 +16,9 @@ export type Product = {
   color: string;
   /** Text color on a solid fill of `color` (ink on gold, white elsewhere). */
   onColor?: string;
+  /** Editorial index number ("01") and one Spanish line for the Home index. */
+  index: string;
+  line: string;
   /** Demo-mode account for this product (Crédito picks per tab). */
   demo?: PersonaId;
 };
@@ -23,6 +26,8 @@ export type Product = {
 export const PRODUCTS: Product[] = [
   {
     id: "home",
+    index: "00",
+    line: "Una moneda, seis productos",
     href: "/",
     name: "Mercado",
     short: "Mercado",
@@ -33,6 +38,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "mint",
+    index: "01",
+    line: "Las instituciones crean xMXN",
     href: "/mint",
     name: "Mercado Mint",
     short: "Mint",
@@ -44,6 +51,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "remesas",
+    index: "02",
+    line: "Envía dinero a casa",
     href: "/remesas",
     name: "Mercado Remesas",
     short: "Remesas",
@@ -55,6 +64,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "global",
+    index: "03",
+    line: "Paga a proveedores entre países",
     href: "/global",
     name: "Mercado Global",
     short: "Global",
@@ -66,6 +77,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "credito",
+    index: "04",
+    line: "Adelantos para choferes",
     href: "/credito",
     name: "Mercado Crédito",
     short: "Crédito",
@@ -77,6 +90,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "card",
+    index: "05",
+    line: "Paga en la tiendita",
     href: "/card",
     name: "Mercado Card",
     short: "Card",
@@ -88,6 +103,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "invest",
+    index: "06",
+    line: "Ahorra en pesos, dólares y CETES",
     href: "/invest",
     name: "Mercado Invest",
     short: "Invest",

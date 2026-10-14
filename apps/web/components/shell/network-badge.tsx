@@ -15,12 +15,12 @@ export function NetworkBadge({ className }: { className?: string }) {
         <span
           tabIndex={0}
           className={cn(
-            "bg-well inline-flex items-center gap-2 rounded-[12px] px-3 py-1.5 text-sm tabular",
+            "meta inline-flex items-center gap-2 rounded-full border px-3 py-1.5 tabular",
             wrong && "text-destructive",
             className,
           )}
         >
-          <span className={cn("size-2 rounded-full", wrong ? "bg-destructive" : live ? "bg-success" : "bg-muted-foreground/40")} />
+          <span className={cn("size-1.5", wrong ? "bg-destructive" : live ? "bg-success" : "bg-muted-foreground/40")} />
           {wrong ? "Wrong network" : `Moderato ${TEMPO_MODERATO_CHAIN_ID}`}
         </span>
       </TooltipTrigger>
