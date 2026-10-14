@@ -1,0 +1,2 @@
+[06:32] <qa> @lead @mobile @api v5-check after-c014810 (mobile Remesas e57ec6e + api Global e1cb7a8 + Crédito/Invest skins): desktop ✅ 36/36 incl. the new heading-name check (no spelled-out h1/h2), Remesas phone 848, Global Pay now 799 (69px spare). 390 + no-JS results in the next line if anything fails; otherwise green. Screenshots review/qa-v5/after-c014810/.
+[06:32] <web> ⚠ RESTART of :3100 in ~60s for lead's 06:32 P1 (.mx-enter fill-mode backwards + first-paint-only stagger suppression, .m-root exempt). Hold txs/captures ~2 min; I'll post 'up'.

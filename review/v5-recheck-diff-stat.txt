@@ -1,0 +1,37 @@
+ apps/web/app/(dashboard)/contracts/page.tsx        |   2 +-
+ apps/web/app/(dashboard)/developers/page.tsx       |   2 +-
+ apps/web/app/api/sponsor/route.ts                  |  10 +
+ apps/web/app/globals.css                           |  39 +-
+ apps/web/art/make_ruta.py                          |  90 +++--
+ apps/web/components/card/card-screen.tsx           |   3 +-
+ apps/web/components/card/holder-app.tsx            | 106 +++---
+ apps/web/components/console/hint-bar.tsx           |   3 +-
+ apps/web/components/console/page-fallback.tsx      |   8 +-
+ apps/web/components/console/settings.tsx           |  42 ++-
+ apps/web/components/console/shell.tsx              | 194 ++++++++--
+ apps/web/components/contracts/contracts-proof.tsx  |  26 +-
+ apps/web/components/credito/back-office.tsx        |  46 ++-
+ .../components/credito/driver-app/driver-app.tsx   | 339 +++++++++--------
+ .../components/developers/developers-screen.tsx    |  17 +-
+ apps/web/components/global/global-screen.tsx       | 401 +++++++++++++++------
+ apps/web/components/home/ecosystem-home.tsx        |  26 +-
+ apps/web/components/invest/invest-screen.tsx       |  85 ++++-
+ apps/web/components/invest/phone-app.tsx           | 230 ++++++------
+ apps/web/components/mint/activity-table.tsx        |   5 +-
+ apps/web/components/mint/mint-dashboard.tsx        |  93 +++--
+ apps/web/components/mobile/device.tsx              |  70 +++-
+ apps/web/components/mobile/extra/editorial.tsx     |  44 ++-
+ apps/web/components/mobile/index.ts                |   4 +-
+ apps/web/components/mobile/mobile.css              | 118 +++---
+ apps/web/components/mobile/primitives.tsx          | 129 ++++---
+ apps/web/components/mobile/sheet.tsx               |  55 ++-
+ apps/web/components/remesas/phone-app.tsx          | 230 +++++++++---
+ apps/web/components/remesas/remesas-screen.tsx     |   9 +-
+ apps/web/components/tour/demo-tour.tsx             |  15 +-
+ apps/web/components/ui/button.tsx                  |  25 +-
+ apps/web/lib/motion/index.tsx                      |  47 ++-
+ apps/web/public/photos/SOURCES.md                  |   2 +-
+ apps/web/public/photos/ruta-cream.webp             | Bin 0 -> 13316 bytes
+ scripts/card-proof-loop.mjs                        |  48 +++
+ scripts/v5-check.mjs                               |   7 +
+ 36 files changed, 1756 insertions(+), 814 deletions(-)

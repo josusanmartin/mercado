@@ -1,0 +1,702 @@
+diff --git a/apps/web/app/globals.css b/apps/web/app/globals.css
+index aa3e04b..3461c1b 100644
+--- a/apps/web/app/globals.css
++++ b/apps/web/app/globals.css
+@@ -16,7 +16,7 @@
+   --ink: #0a0a0a;
+   --ink-2: #5c5c5c;
+   --line: #e4e4e4;
+-  --well: #f4f2ec;
++  --well: #f7f7f5; /* V5-TASTE #8: neutral operational surface (cream stays a Card/product accent) */
+ 
+   --jade: #1f3d2b;
+   --terracotta: #e2603f;
+@@ -310,7 +310,7 @@
+ @keyframes mx-enter {
+   from {
+     opacity: 0;
+-    transform: translateY(8px);
++    transform: translateY(6px);
+   }
+   to {
+     opacity: 1;
+@@ -341,8 +341,14 @@
+   }
+ }
+ 
++/* V5-TASTE #3: the page's content group is the ONE entrance owner (opacity + 6px, 220ms). Nested reveals
++   and staggers inside it don't replay their own entrances. */
+ .mx-enter {
+-  animation: mx-enter var(--dur) var(--ease-out) both;
++  animation: mx-enter 220ms var(--ease-out) both;
++}
++.mx-enter .mx-reveal,
++.mx-enter .mx-stagger > * {
++  animation: none;
+ }
+ /* P0 (lead 05:22): content never RESTS hidden waiting for JS. Reveals are pure CSS animations that play on
+    render and always end visible, even if hydration is slow or fails (no opacity:0 base state, no data-shown gate). */
+@@ -386,15 +392,24 @@
+     background-color var(--dur) var(--ease-out);
+ }
+ /* Rows: an accent sweep from the left on hover/focus. */
++/* Transform-driven (no background repaint): a tinted layer scales in from the left behind the row. */
+ .mx-sweep {
+-  background-image: linear-gradient(color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent), color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent));
+-  background-repeat: no-repeat;
+-  background-size: 0% 100%;
+-  transition: background-size var(--dur) var(--ease-out);
+-}
+-.mx-sweep:hover,
+-.mx-sweep:focus-visible {
+-  background-size: 100% 100%;
++  position: relative;
++  isolation: isolate;
++}
++.mx-sweep::before {
++  content: "";
++  position: absolute;
++  inset: 0;
++  z-index: -1;
++  background: color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent);
++  transform: scaleX(0);
++  transform-origin: left;
++  transition: transform var(--dur) var(--ease-out);
++}
++.mx-sweep:hover::before,
++.mx-sweep:focus-visible::before {
++  transform: scaleX(1);
+ }
+ 
+ @media (prefers-reduced-motion: reduce) {
+@@ -417,7 +432,7 @@
+   }
+   .mx-pill,
+   .mx-press,
+-  .mx-sweep {
++  .mx-sweep::before {
+     transition: none !important;
+   }
+   .mx-press:active {
+diff --git a/apps/web/components/console/hint-bar.tsx b/apps/web/components/console/hint-bar.tsx
+index 44c4b8d..3d74f0b 100644
+--- a/apps/web/components/console/hint-bar.tsx
++++ b/apps/web/components/console/hint-bar.tsx
+@@ -1,10 +1,11 @@
+ "use client";
+ // Honesty footer, visible on every screen and width (SPEC §6); hidden only in ?present=1 capture mode.
++// Opaque (V5-TASTE #4): content never shows through it; its height is reserved by the shell (--m-chrome).
+ import { TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
+ 
+ export function HintBar() {
+   return (
+-    <footer data-phone-hide data-honesty className="bg-background/95 fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-30 border-t lg:sticky lg:bottom-0 lg:z-20">
++    <footer data-phone-hide data-honesty className="bg-background fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t lg:sticky lg:bottom-0 lg:z-20">
+       <p className="meta text-muted-foreground mx-auto max-w-[84rem] px-4 py-2 sm:px-8">
+         <span className="text-foreground">
+           <span className="bg-success mr-1.5 inline-block size-1.5 align-middle" />
+diff --git a/apps/web/components/console/page-fallback.tsx b/apps/web/components/console/page-fallback.tsx
+index 84bec2d..9ff297b 100644
+--- a/apps/web/components/console/page-fallback.tsx
++++ b/apps/web/components/console/page-fallback.tsx
+@@ -17,17 +17,17 @@ function Connecting() {
+ }
+ 
+ /** A product page before hydration: same header block as ProductHeader (static), purpose, "connecting". */
+-export function PageFallback({ product, title, purpose }: { product: ProductId; title?: string; purpose?: ReactNode }) {
++export function PageFallback({ product, title, purpose, utility = false }: { product: ProductId; title?: string; purpose?: ReactNode; utility?: boolean }) {
+   const p = PRODUCTS.find((x) => x.id === product)!;
+-  const world = product !== "home";
++  const world = product !== "home" && !utility;
+   return (
+     <section aria-busy="true" className="grid min-w-0 gap-3 [container-type:inline-size]">
+       <div className={world ? "-mx-4 -mt-5 grid gap-2 bg-[var(--hero-bg)] px-4 pt-4 pb-5 text-[var(--hero-fg)] sm:-mx-8 sm:-mt-8 sm:px-8" : "grid gap-2"}>
+         <p className={world ? "meta border-b border-current/25 pb-2" : "meta text-muted-foreground border-b pb-2"}>
+           {p.index} · {p.id === "home" ? "Mercado" : p.name}
+         </p>
+-        <h1 className="display text-[clamp(2.2rem,12.5cqw,4.5rem)] break-words">{title ?? p.short}</h1>
+-        <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>
++        <h1 className={utility ? "display text-[clamp(2rem,4vw,3rem)]" : "display text-[clamp(2.2rem,12.5cqw,4.5rem)] break-words"}>{title ?? p.short}</h1>
++        <p className="max-w-5xl text-base leading-snug text-pretty">{purpose ?? p.purpose}</p>
+       </div>
+       <Connecting />
+     </section>
+diff --git a/apps/web/components/console/settings.tsx b/apps/web/components/console/settings.tsx
+index cf44586..4dbeb59 100644
+--- a/apps/web/components/console/settings.tsx
++++ b/apps/web/components/console/settings.tsx
+@@ -28,6 +28,7 @@ export function SettingsLayout({
+   demo,
+   statement,
+   meta,
++  heroVariant,
+ }: {
+   title: string;
+   list?: ReactNode;
+@@ -42,11 +43,16 @@ export function SettingsLayout({
+   statement?: ReactNode;
+   /** Tiny uppercase line replacing the default live meta (CDMX · rate · time · testnet). */
+   meta?: ReactNode;
++  /** V5-TASTE #2: "utility" (Developers, Contracts) is a compact, complete header; "product" is the color band. */
++  heroVariant?: "product" | "utility";
+ }) {
+   const path = usePathname();
+   const p = product ? PRODUCTS.find((x) => x.id === product)! : productForPath(path);
++  // Developers and Contracts default to the compact utility header (V5-TASTE #2); everything else is a product band.
++  const variant = heroVariant ?? (path.startsWith("/developers") || path.startsWith("/contracts") ? "utility" : "product");
+   return (
+-    <div className="grid gap-10">
++    // V5-TASTE #4: tighter section rhythm on phones; utility pages get 24px to their tabs (#2).
++    <div className={cn("grid", variant === "utility" ? "gap-6" : "gap-6 sm:gap-10")}>
+       <ProductHero
+         product={p.id}
+         title={title}
+@@ -54,6 +60,7 @@ export function SettingsLayout({
+         demo={demo === null ? undefined : (demo ?? p.demo)}
+         statement={statement}
+         meta={meta}
++        variant={variant}
+       />
+       {list}
+       <div className="min-w-0">{children}</div>
+@@ -73,6 +80,7 @@ export function ProductHero({
+   demo,
+   statement,
+   meta,
++  variant = "product",
+ }: {
+   product: ProductId;
+   title?: string;
+@@ -81,12 +89,16 @@ export function ProductHero({
+   demo?: PersonaId;
+   statement?: ReactNode;
+   meta?: ReactNode;
++  variant?: "product" | "utility";
+ }) {
+   const p = PRODUCTS.find((x) => x.id === product)!;
+   const persona = useDemoAccount(demo);
+   const { address } = useConnection();
+-  const world = p.id !== "home"; // v5 color field on product pages; Home/Developers stay on the canvas
++  const utility = variant === "utility"; // V5-TASTE #2: Developers/Contracts get a compact, complete header
++  const world = p.id !== "home" && !utility; // v5 color field on product pages only
+   const word = statement ?? (p.id === "home" ? (title ?? p.name) : p.short);
++  // V5-TASTE #3: letters reveal only for the short product word; statements and utility titles read at once.
++  const lettered = !utility && typeof word === "string" && !/\s/.test(word) && word.length <= 12;
+   return (
+     // Size container: the statement is fit to the content column, not the viewport (which includes the
+     // sidebar). CR-04: capped at 72–80px and the whole block kept ≤170px of the 1440x900 fold.
+@@ -109,20 +121,27 @@ export function ProductHero({
+         {/* CR-04: the demo account sits on the title row, so it never costs a line of its own. */}
+         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
+           <h1
+-            className={cn("display break-words", world ? "text-[clamp(2.2rem,12.5cqw,4.5rem)]" : "text-product text-[clamp(2.2rem,12.5cqw,5rem)]")}
+-            style={!world && (p.id === "home" || p.id === "invest") ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1 */}
++            className={cn(
++              "display break-words",
++              utility ? "text-[clamp(2rem,4vw,3rem)]" : world ? "text-[clamp(2.2rem,12.5cqw,4.5rem)]" : "text-product text-[clamp(2.2rem,12.5cqw,5rem)]",
++            )}
++            style={utility || (!world && (p.id === "home" || p.id === "invest")) ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1 */}
+           >
+-            {typeof word === "string" ? <LetterReveal text={word} /> : word}
++            {lettered ? <LetterReveal text={word as string} /> : word}
+           </h1>
+-          {persona && (
++          {/* Utility pages: the account already shows in the wallet control, so no second account line (#2). */}
++          {persona && !utility && (
+             <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className={cn("meta pb-2", world ? "text-current hover:underline" : "text-muted-foreground hover:text-foreground")} title="Testnet demo key, no real value">
+               Demo account · <span className={cn(!world && "text-foreground")}>{persona.name}</span>
+               {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
+             </a>
+           )}
+         </div>
+-        {/* lead 05:15: the purpose sits inside the band (on-accent text, ≤2 lines), so the color world is one block. */}
+-        {(purpose ?? p.purpose) && <p className={cn("line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg", world && "text-current")}>{purpose ?? p.purpose}</p>}
++        {/* lead 05:15: the purpose sits inside the band (on-accent text), so the color world is one block.
++            V5-TASTE #2: never clamped (no sentence ends in "…"); owners keep it to one short sentence. */}
++        {(purpose ?? p.purpose) && (
++          <p className={cn("max-w-5xl text-base leading-snug text-pretty", !utility && "sm:text-lg", world && "text-current")}>{purpose ?? p.purpose}</p>
++        )}
+       </div>
+       {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
+           numbers belong where the user acts (quote, draw sheet, Risk tab). */}
+@@ -174,6 +193,7 @@ export function Panel({
+   className,
+   variant = "plain",
+   style,
++  animate = false,
+ }: {
+   title?: ReactNode;
+   description?: ReactNode;
+@@ -182,11 +202,13 @@ export function Panel({
+   className?: string;
+   variant?: "plain" | "card";
+   style?: CSSProperties;
++  /** V5-TASTE #3: off by default; the page's route group is the one entrance owner. Opt in only for a panel
++   *  that arrives on its own after the page (pure CSS, ends visible). */
++  animate?: boolean;
+ }) {
+   const card = variant === "card";
+   return (
+-    // v5: panels fade up as they render (pure CSS, ends visible; inside <Stagger> they follow one another).
+-    <section style={style} className={cn("mx-reveal", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
++    <section style={style} className={cn(animate && "mx-reveal", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
+       {(title || aside) && (
+         <header className={cn("flex flex-wrap items-start justify-between gap-3", card && "px-5 pt-5 sm:px-6")}>
+           <div className="min-w-0">
+diff --git a/apps/web/components/console/shell.tsx b/apps/web/components/console/shell.tsx
+index 2823dcc..6cf7b1c 100644
+--- a/apps/web/components/console/shell.tsx
++++ b/apps/web/components/console/shell.tsx
+@@ -4,7 +4,8 @@
+ import Link from "next/link";
+ import { usePathname } from "next/navigation";
+ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+-import { Code2, FileCode2, Moon, Sun } from "lucide-react";
++import { Boxes, Code2, Ellipsis, FileCode2, LayoutGrid, Moon, Route, Sun } from "lucide-react";
++import { useTour } from "@/components/tour/demo-tour";
+ import { cn } from "@/lib/utils";
+ import { PRODUCTS, productForPath } from "./products";
+ import { TopBar } from "./top-bar";
+@@ -27,12 +28,14 @@ function useScrolled() {
+ export function AppShell({ children }: { children: ReactNode }) {
+   const path = usePathname();
+   const product = productForPath(path);
++  // V5-TASTE #9: utility routes are their own destination; no product (not even Home) is active on them.
++  const utility = isUtilityPath(path);
+   const scrolled = useScrolled();
+   return (
+     <div data-product={product.id === "home" ? undefined : product.id} className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+-      <Sidebar active={product.id} path={path} />
++      <Sidebar active={utility ? undefined : product.id} path={path} />
+       {/* v5: each product page sits in a soft wash of its accent (none on Home). */}
+-      <div className={cn("flex min-h-dvh min-w-0 flex-col", product.id !== "home" && "mx-wash")}>
++      <div className={cn("flex min-h-dvh min-w-0 flex-col", product.id !== "home" && !utility && "mx-wash")}>
+         <header
+           className={cn(
+             "sticky top-0 z-30 border-b transition-[background-color,border-color] duration-200",
+@@ -48,14 +51,14 @@ export function AppShell({ children }: { children: ReactNode }) {
+             </ClientOnly>
+           </div>
+         </header>
+-        <main id="main" className="mx-auto w-full max-w-[84rem] min-w-0 flex-1 px-4 pt-5 pb-36 sm:px-8 sm:pt-8 lg:pb-24">
++        <main id="main" className="mx-auto w-full max-w-[84rem] min-w-0 flex-1 px-4 pt-5 pb-[calc(var(--m-chrome,9rem)+1.5rem)] sm:px-8 sm:pt-8 lg:pb-24">
+           {/* v5 route transition: each page enters with a short fade-slide (reduced motion: none). */}
+           <div key={path} className="mx-enter">
+             {children}
+           </div>
+         </main>
+         <HintBar />
+-        <MobileTabs active={product.id} />
++        <MobileTabs active={utility ? undefined : product.id} />
+       </div>
+     </div>
+   );
+@@ -74,21 +77,23 @@ export function Wordmark({ className, compact }: { className?: string; compact?:
+   );
+ }
+ 
+-function Sidebar({ active, path }: { active: string; path: string }) {
++const isUtilityPath = (path: string) => path.startsWith("/developers") || path.startsWith("/contracts");
++
++function Sidebar({ active, path }: { active?: string; path: string }) {
+   const { theme, toggle } = useTheme();
+   // v5: one accent pill that glides to the active row (measured, so it follows any row height).
+   const rows = useRef<Record<string, HTMLAnchorElement | null>>({});
+   const [pill, setPill] = useState<{ y: number; h: number }>();
+   useLayoutEffect(() => {
+-    const el = rows.current[active];
+-    if (el) setPill({ y: el.offsetTop, h: el.offsetHeight });
++    const el = active ? rows.current[active] : null;
++    setPill(el ? { y: el.offsetTop, h: el.offsetHeight } : undefined);
+   }, [active]);
+   return (
+     <aside className="bg-background sticky top-0 hidden h-dvh flex-col border-r px-4 py-6 lg:flex">
+       <Link href="/" className="mb-8 px-2" aria-label="Mercado home">
+         <Wordmark />
+       </Link>
+-      <nav aria-label="Products" className="relative grid border-t">
++      <nav aria-label="Products" className="relative grid">
+         {pill && (
+           <span
+             data-product={active}
+@@ -109,12 +114,13 @@ function Sidebar({ active, path }: { active: string; path: string }) {
+               aria-current={on ? "page" : undefined}
+               data-product={on ? p.id : undefined}
+               className={cn(
+-                "mx-press group relative flex items-baseline gap-3 border-b px-2 py-3 transition-colors duration-200",
+-                on ? "border-transparent text-[var(--on-accent)]" : "text-muted-foreground hover:text-foreground",
++                "group relative flex items-baseline gap-3 px-2 py-2.5 transition-colors duration-200",
++                on ? "text-[var(--on-accent)]" : "text-muted-foreground hover:text-foreground",
+               )}
+             >
+-              <span className="meta w-5 tabular">{p.index}</span>
+-              <span className="display flex-1 text-[1.05rem]">{p.id === "home" ? "Home" : p.short}</span>
++              {/* V5-TASTE #9: a quiet rail: Inter Tight 15/600 labels, 11px index, no rule under every row. */}
++              <span className="w-5 text-[11px] tracking-wide tabular">{p.index}</span>
++              <span className="flex-1 text-[15px] font-semibold">{p.id === "home" ? "Home" : p.short}</span>
+               <span
+                 className={cn("size-2 shrink-0 self-center transition-colors duration-200", on && "outline outline-1 outline-current")}
+                 style={{ background: p.id === "home" ? "var(--ink)" : p.color }}
+@@ -129,8 +135,8 @@ function Sidebar({ active, path }: { active: string; path: string }) {
+           href="/developers"
+           aria-current={path.startsWith("/developers") ? "page" : undefined}
+           className={cn(
+-            "meta flex items-center gap-3 px-2 py-2",
+-            path.startsWith("/developers") ? "text-foreground" : "text-muted-foreground hover:text-foreground",
++            "meta flex items-center gap-3 rounded-[4px] border-l-2 px-2 py-2",
++            path.startsWith("/developers") ? "border-foreground bg-well text-foreground" : "text-muted-foreground hover:text-foreground border-transparent",
+           )}
+         >
+           <Code2 className="size-4" aria-hidden />
+@@ -140,8 +146,8 @@ function Sidebar({ active, path }: { active: string; path: string }) {
+           href="/contracts"
+           aria-current={path.startsWith("/contracts") ? "page" : undefined}
+           className={cn(
+-            "meta flex items-center gap-3 px-2 py-2",
+-            path.startsWith("/contracts") ? "text-foreground" : "text-muted-foreground hover:text-foreground",
++            "meta flex items-center gap-3 rounded-[4px] border-l-2 px-2 py-2",
++            path.startsWith("/contracts") ? "border-foreground bg-well text-foreground" : "text-muted-foreground hover:text-foreground border-transparent",
+           )}
+         >
+           <FileCode2 className="size-4" aria-hidden />
+@@ -156,19 +162,147 @@ function Sidebar({ active, path }: { active: string; path: string }) {
+   );
+ }
+ 
+-function MobileTabs({ active }: { active: string }) {
++/**
++ * V5-TASTE #4: the phone console's navigation. Four equal, stable destinations (Home, Products, Tour, More)
++ * instead of a seven-slot rail that hid Invest offscreen. Products lists all six (current one marked); More
++ * holds Developers, Contracts and the theme. It and the honesty footer above it are opaque, and their
++ * measured height is reserved at the bottom of the page (--m-chrome), so content never sits under them.
++ */
++function MobileTabs({ active }: { active?: string }) {
++  const path = usePathname();
++  const tour = useTour();
++  const { theme, toggle } = useTheme();
++  const [sheet, setSheet] = useState<"products" | "more">();
++  const nav = useRef<HTMLElement>(null);
++  const opener = useRef<HTMLButtonElement | null>(null);
++
++  // Reserve the real height of the fixed chrome (nav + honesty footer) for the scroll area.
++  useEffect(() => {
++    const footer = document.querySelector<HTMLElement>("footer[data-honesty]");
++    const set = () => {
++      const h = (nav.current?.offsetHeight ?? 0) + (footer && getComputedStyle(footer).position === "fixed" ? footer.offsetHeight : 0);
++      document.documentElement.style.setProperty("--m-chrome", `${h}px`);
++    };
++    set();
++    const ro = new ResizeObserver(set);
++    if (nav.current) ro.observe(nav.current);
++    if (footer) ro.observe(footer);
++    window.addEventListener("resize", set);
++    return () => (ro.disconnect(), window.removeEventListener("resize", set));
++  }, []);
++  // Close the sheet on Escape; a link inside it closes it as it navigates. Focus returns to the opener.
++  useEffect(() => {
++    if (!sheet) return;
++    const onKey = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setSheet(undefined);
++    window.addEventListener("keydown", onKey);
++    return () => window.removeEventListener("keydown", onKey);
++  }, [sheet]);
++  const close = () => (setSheet(undefined), opener.current?.focus());
++
++  const tab = "meta flex flex-col items-center justify-center gap-1 text-[11px]";
++  const isHome = active === "home";
++  const inProduct = !!active && active !== "home";
++  const utility = path.startsWith("/developers") || path.startsWith("/contracts");
+   return (
+-    <nav data-phone-hide aria-label="Products" className="bg-card scrollbar-none fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
+-      {PRODUCTS.map((p) => {
+-        const on = p.id === active;
+-        const Icon = p.icon;
+-        return (
+-          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("meta flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2", on ? "text-foreground" : "text-muted-foreground")}>
+-            <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
+-            {p.id === "home" ? "Home" : p.short}
+-          </Link>
+-        );
+-      })}
+-    </nav>
++    <>
++      {sheet && (
++        <div data-phone-hide className="fixed inset-0 z-40 lg:hidden" onClick={close}>
++          <div className="absolute inset-0 bg-black/30" aria-hidden />
++          <div
++            role="dialog"
++            aria-modal="true"
++            aria-label={sheet === "products" ? "Products" : "More"}
++            onClick={(e) => e.stopPropagation()}
++            className="bg-background absolute inset-x-0 bottom-[var(--m-chrome,7rem)] rounded-t-[8px] border-t px-4 pt-3 pb-2"
++          >
++            {sheet === "products" ? (
++              <ul className="grid">
++                {PRODUCTS.filter((p) => p.id !== "home").map((p, i) => (
++                  <li key={p.id}>
++                    <Link
++                      href={p.href}
++                      onClick={() => setSheet(undefined)}
++                      autoFocus={i === 0}
++                      aria-current={p.id === active ? "page" : undefined}
++                      className={cn("flex min-h-12 items-center gap-3 rounded-[4px] px-2", p.id === active && "bg-well")}
++                    >
++                      <span className="size-2.5 shrink-0" style={{ background: p.color }} aria-hidden />
++                      <span className="w-6 text-[11px] tabular">{p.index}</span>
++                      <span className="flex-1 text-[15px] font-semibold">{p.short}</span>
++                      <span className="text-muted-foreground truncate text-[13px]">{p.line}</span>
++                    </Link>
++                  </li>
++                ))}
++              </ul>
++            ) : (
++              <ul className="grid">
++                {[
++                  { href: "/developers", label: "Developers", Icon: Code2 },
++                  { href: "/contracts", label: "Contracts", Icon: FileCode2 },
++                ].map(({ href, label, Icon }, i) => (
++                  <li key={href}>
++                    <Link
++                      href={href}
++                      onClick={() => setSheet(undefined)}
++                      autoFocus={i === 0}
++                      aria-current={path.startsWith(href) ? "page" : undefined}
++                      className={cn("flex min-h-12 items-center gap-3 rounded-[4px] px-2 text-[15px] font-semibold", path.startsWith(href) && "bg-well")}
++                    >
++                      <Icon className="size-4" aria-hidden /> {label}
++                    </Link>
++                  </li>
++                ))}
++                <li>
++                  <button type="button" onClick={toggle} className="flex min-h-12 w-full items-center gap-3 rounded-[4px] px-2 text-left text-[15px] font-semibold">
++                    {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
++                    {theme === "dark" ? "Light theme" : "Dark theme"}
++                  </button>
++                </li>
++              </ul>
++            )}
++          </div>
++        </div>
++      )}
++      <nav
++        ref={nav}
++        data-phone-hide
++        aria-label="Console"
++        className="bg-background fixed inset-x-0 bottom-0 z-40 grid h-[calc(3.5rem+env(safe-area-inset-bottom))] grid-cols-4 border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
++      >
++        <Link href="/" aria-current={isHome ? "page" : undefined} className={cn(tab, isHome ? "text-foreground" : "text-muted-foreground")}>
++          <LayoutGrid className="size-5" strokeWidth={1.75} aria-hidden />
++          Home
++        </Link>
++        <button
++          type="button"
++          aria-haspopup="dialog"
++          aria-expanded={sheet === "products"}
++          onClick={(e) => ((opener.current = e.currentTarget), setSheet(sheet === "products" ? undefined : "products"))}
++          className={cn(tab, inProduct ? "text-foreground" : "text-muted-foreground")}
++        >
++          <Boxes className="size-5" strokeWidth={1.75} aria-hidden />
++          {inProduct ? PRODUCTS.find((p) => p.id === active)!.short : "Products"}
++        </button>
++        <button
++          type="button"
++          onClick={() => (tour.active && !tour.finished ? tour.setMinimized(false) : tour.start())}
++          disabled={tour.going}
++          className={cn(tab, tour.active ? "text-foreground" : "text-muted-foreground")}
++        >
++          <Route className="size-5" strokeWidth={1.75} aria-hidden />
++          {tour.active && !tour.finished ? `Tour ${tour.index + 1}/6` : "Tour"}
++        </button>
++        <button
++          type="button"
++          aria-haspopup="dialog"
++          aria-expanded={sheet === "more"}
++          onClick={(e) => ((opener.current = e.currentTarget), setSheet(sheet === "more" ? undefined : "more"))}
++          className={cn(tab, utility ? "text-foreground" : "text-muted-foreground")}
++        >
++          <Ellipsis className="size-5" strokeWidth={1.75} aria-hidden />
++          More
++        </button>
++      </nav>
++    </>
+   );
+ }
+diff --git a/apps/web/components/home/ecosystem-home.tsx b/apps/web/components/home/ecosystem-home.tsx
+index 7dbe4e6..70e7461 100644
+--- a/apps/web/components/home/ecosystem-home.tsx
++++ b/apps/web/components/home/ecosystem-home.tsx
+@@ -137,12 +137,13 @@ function ProductIndex({ live }: { live: Live }) {
+     refs.current[next]?.focus();
+   }
+   return (
+-    <section aria-label="Products" className="grid gap-3">
++    // V5-TASTE #6: the six products scan as one system: 32px after the hero, compact rows, Archivo only for the
++    // product name, a 15px sentence and a 24px tabular metric. ≥4 rows visible at 1440x900.
++    <section aria-label="Products" className="-mt-6 grid gap-3">
+       <Meta>Index · six products, one currency</Meta>
+-      {/* v5: rows fade up one after another; hover/focus sweeps the product's color in from the left. */}
+-      <ol onKeyDown={onKey} className="mx-stagger border-t" data-shown>
++      <ol onKeyDown={onKey} className="border-t">
+         {products.map((p, i) => (
+-          <li key={p.id} className="border-b" style={{ ["--i" as string]: i, ["--mx-step" as string]: "50ms" }}>
++          <li key={p.id} className="border-b">
+             <Link
+               ref={(el) => {
+                 refs.current[i] = el;
+@@ -151,26 +152,27 @@ function ProductIndex({ live }: { live: Live }) {
+               tabIndex={i === sel ? 0 : -1}
+               onFocus={() => setSel(i)}
+               onMouseEnter={() => setSel(i)}
+-              className="mx-sweep group grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-5 transition-colors duration-150 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2 sm:py-6"
++              className="mx-sweep group grid grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 py-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2"
+               style={{ ["--sweep" as string]: p.color }}
+               aria-label={`${p.index} ${p.name}: ${p.line}. ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
+             >
+               <span className="meta text-muted-foreground tabular">{p.index}</span>
+-              <span className="min-w-0">
+-                {/* v5: each row in its color (large display type, ≥3:1). Invest stays ink with a maize mark (R-050). */}
++              {/* Each name in its color (large display type, ≥3:1); Invest stays ink with a maize mark (R-050).
++                  Desktop: name and sentence on one baseline; phone: the sentence sits under the name. */}
++              <span className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
+                 <span
+-                  className="display block text-[clamp(2.4rem,6vw,5rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] group-hover:underline group-focus-visible:underline"
++                  className="display shrink-0 text-[clamp(1.75rem,3.2vw,2.75rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] group-hover:underline group-focus-visible:underline"
+                   style={{ color: p.id === "invest" ? "var(--ink)" : p.color, ["--mark" as string]: p.color }}
+                 >
+                   {p.short}
+                 </span>
+-                <span className="text-muted-foreground mt-1 block text-lg">— {p.line}</span>
++                <span className="text-muted-foreground min-w-0 text-[15px]">{p.line}</span>
+               </span>
+-              <span className="col-start-2 text-left sm:col-start-3 sm:text-right">
+-                <span className="display block text-[clamp(1.6rem,3vw,2.6rem)] tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
++              <span className="self-center text-right">
++                <span className="block text-[1.5rem] leading-tight font-semibold tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
+                   <TickerText text={live[p.id as Pid].value} />
+                 </span>
+-                <span className="meta text-muted-foreground">{live[p.id as Pid].caption}</span>
++                <span className="meta text-muted-foreground block">{live[p.id as Pid].caption}</span>
+               </span>
+             </Link>
+           </li>
+diff --git a/apps/web/components/ui/button.tsx b/apps/web/components/ui/button.tsx
+index 29fdb3f..1f5510b 100644
+--- a/apps/web/components/ui/button.tsx
++++ b/apps/web/components/ui/button.tsx
+@@ -1,10 +1,11 @@
+ import * as React from "react";
+ import { Slot } from "radix-ui";
+ import { cva, type VariantProps } from "class-variance-authority";
++import { Loader2 } from "lucide-react";
+ import { cn } from "@/lib/utils";
+ 
+ const buttonVariants = cva(
+-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[15px] font-medium transition-[color,background-color,box-shadow] duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
++  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[15px] font-medium transition-[color,background-color,box-shadow,transform] duration-150 ease-out enabled:active:scale-[0.97] motion-reduce:enabled:active:scale-100 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
+   {
+     variants: {
+       variant: {
+@@ -27,15 +28,33 @@ const buttonVariants = cva(
+   },
+ );
+ 
++/**
++ * V5-TASTE #8: authored states. Press scales to .97 (not when disabled, not under reduced motion). Pass
++ * `pending` (true/false) to reserve a fixed 16px icon slot: the spinner swaps in without changing the
++ * button's width; `icon` is what the slot shows when not pending.
++ */
+ function Button({
+   className,
+   variant,
+   size,
+   asChild = false,
++  pending,
++  icon,
++  children,
+   ...props
+-}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
++}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants> & { asChild?: boolean; pending?: boolean; icon?: React.ReactNode }) {
+   const Comp = asChild ? Slot.Root : "button";
+-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
++  const slotted = !asChild && pending !== undefined;
++  return (
++    <Comp data-slot="button" aria-busy={pending || undefined} className={cn(buttonVariants({ variant, size, className }))} {...props}>
++      {slotted && (
++        <span aria-hidden className="inline-grid size-4 shrink-0 place-items-center">
++          {pending ? <Loader2 className="size-4 animate-spin" /> : icon}
++        </span>
++      )}
++      {children}
++    </Comp>
++  );
+ }
+ 
+ export { Button, buttonVariants };
+diff --git a/apps/web/lib/motion/index.tsx b/apps/web/lib/motion/index.tsx
+index 2e568bc..9341889 100644
+--- a/apps/web/lib/motion/index.tsx
++++ b/apps/web/lib/motion/index.tsx
+@@ -23,7 +23,11 @@ export function useReducedMotion(): boolean {
+   );
+ }
+ 
+-/** Fade-up as it renders. Pure CSS: content never waits on JS to become visible (P0, lead 05:22). */
++/**
++ * Fade-up as it renders. Pure CSS: content never waits on JS to become visible (P0, lead 05:22).
++ * V5-TASTE #3 "one entrance owner per page": inside the page's route group (.mx-enter) Reveal and Stagger do
++ * NOT animate again (globals.css); use them only for content that arrives on its own outside that group.
++ */
+ export function Reveal({ children, delay = 0, as: Tag = "div", className }: { children: ReactNode; delay?: number; as?: ElementType; className?: string }) {
+   return (
+     <Tag className={cn("mx-reveal", className)} style={{ "--mx-delay": `${delay}ms` } as CSSProperties}>
+@@ -42,28 +46,33 @@ export function Stagger({ children, as: Tag = "div", className, step = 40 }: { c
+ }
+ 
+ /**
+- * The product word appears letter by letter (≤500ms total). Plain inline spans: the heading's text and
+- * accessible name stay exactly the word (scripts and screen readers read "Remesas"). Words wrap as words.
++ * The short product word appears letter by letter. V5-TASTE #3: the delay budget is capped at 140ms so with a
++ * 360ms letter animation the last letter is readable by 500ms. A11y: the letters are aria-hidden and a
++ * visually-hidden copy carries the word, so screen readers and the accessible name get "Remesas", never
++ * single letters. Use it for short product words only; long or utility titles render plainly.
+  */
+ export function LetterReveal({ text, className }: { text: string; className?: string }) {
+-  const letters = [...text];
+-  const step = Math.min(28, Math.floor(260 / Math.max(letters.length, 1)));
++  const n = [...text.replace(/\s+/g, "")].length;
++  const step = Math.min(28, Math.floor(140 / Math.max(n - 1, 1)));
+   let i = 0;
+   return (
+-    <span className={cn("mx-letters", className)}>
+-      {text.split(/(\s+)/).map((word, w) =>
+-        /^\s+$/.test(word) ? (
+-          word
+-        ) : (
+-          <span key={w} className="inline-block whitespace-nowrap">
+-            {[...word].map((ch, k) => (
+-              <span key={k} style={{ "--i": i++, "--mx-step": `${step}ms` } as CSSProperties}>
+-                {ch}
+-              </span>
+-            ))}
+-          </span>
+-        ),
+-      )}
++    <span className={className}>
++      <span className="sr-only">{text}</span>
++      <span className="mx-letters" aria-hidden>
++        {text.split(/(\s+)/).map((word, w) =>
++          /^\s+$/.test(word) ? (
++            word
++          ) : (
++            <span key={w} className="inline-block whitespace-nowrap">
++              {[...word].map((ch, k) => (
++                <span key={k} style={{ "--i": i++, "--mx-step": `${step}ms` } as CSSProperties}>
++                  {ch}
++                </span>
++              ))}
++            </span>
++          ),
++        )}
++      </span>
+     </span>
+   );
+ }

@@ -1,0 +1,2 @@
+[06:39] <mobile2> @qa heads-up: lead's 06:37 ask, mobile2 real txs on JAVIER: Crédito draw the smallest advance + repay in full (owes 0 after), then a small Invest Retirar on Saver. Starting in ~60s unless you say 'hold' (are you mid card-loop on Javier?).
+[06:39] <qa> @mobile2 go ahead: qa is not on Javier now (card loop done 06:24, Javier restored to 600). I'll run the card loop ×2 only after web's 'up' and after you post done.

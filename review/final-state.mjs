@@ -1,0 +1,13 @@
+import fs from 'node:fs';import{createPublicClient,http,parseAbi}from'viem';import{tempoModerato}from'viem/chains';
+const d=JSON.parse(fs.readFileSync('packages/shared/src/deployments/42431.json')),v=d.v2,c=createPublicClient({chain:tempoModerato,transport:http('https://rpc.moderato.tempo.xyz',{retryCount:2})});
+const e={at:new Date().toISOString(),reads:{}};const block=await c.getBlockNumber();e.block=block;
+const read=async(key,address,abi,fn,args=[])=>{try{e.reads[key]=await c.readContract({address,abi,functionName:fn,args,blockNumber:block});return e.reads[key]}catch(x){e.reads[key]={error:(x.shortMessage||x.message).slice(0,200)}}};
+const artifact=name=>JSON.parse(fs.readFileSync(`review/final-evidence/forge-out/${name}.sol/${name}.json`)).abi;
+const envText=['.env.local','apps/web/.env.local'].filter(f=>fs.existsSync(f)).map(f=>fs.readFileSync(f,'utf8')).join('\n');
+const pubAddr=name=>{const matches=[...envText.matchAll(new RegExp('^(?:NEXT_PUBLIC_DEMO_)?'+name+'_ADDRESS=(0x[0-9a-fA-F]{40})','gm'))];return matches.at(-1)?.[1]};
+const driver=pubAddr('DRIVER');e.driver=driver;
+const tokenAbi=parseAbi(['function balanceOf(address) view returns (uint256)','function allowance(address,address) view returns (uint256)']);
+if(driver){await read('driverXmxn',v.xMXN,tokenAbi,'balanceOf',[driver]);const ids=await read('driverCards',v.card,artifact('MercadoCard'),'cardsOf',[driver]);if(Array.isArray(ids)&&ids.length)await read('driverCard',v.card,artifact('MercadoCard'),'getCard',[ids[0]]);await read('driverDebt',v.creditPool,artifact('CreditPool'),'getDebt',[driver]);await read('driverBorrowCapacity',v.creditPool,artifact('CreditPool'),'borrowCapacity',[driver,1500000000n]);}
+for(const [key,addr,n,fn] of [['oracle',d.oracle,'FXOracleAdapter','peek'],['oracleMaxAge',d.oracle,'FXOracleAdapter','maxAge'],['exchange',v.vamm,'MoveAMM','state'],['depth',v.vamm,'MoveAMM','depthUsd'],['pool',v.creditPool,'CreditPool','stats'],['usdYieldReserve',v.sOUSD,'StakedOUSD','yieldReserve'],['mxnYieldReserve',v.sxMXN,'StakedOUSD','yieldReserve'],['usdApr',v.sOUSD,'StakedOUSD','aprBps'],['mxnApr',v.sxMXN,'StakedOUSD','aprBps'],['stocksReserves',v.investDeskIdx,'InvestDesk','reserves']])await read(key,addr,artifact(n),fn);
+for(const route of ['/api/onramp','/api/sponsor','/api/fx']){try{const r=await fetch('http://localhost:3100'+route);e.reads[route]={status:r.status,body:await r.json()}}catch(x){e.reads[route]={error:x.message}}}
+fs.writeFileSync('review/final-evidence/live-state.json',JSON.stringify(e,(_,v)=>typeof v==='bigint'?v.toString():v,2));console.log(JSON.stringify({block:String(block),reads:Object.keys(e.reads),errors:Object.entries(e.reads).filter(([k,v])=>v?.error)},null,2));

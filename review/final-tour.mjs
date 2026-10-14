@@ -1,0 +1,10 @@
+import fs from 'node:fs';import{chromium}from'playwright';const dir='review/final-evidence';const b=await chromium.launch();const out={at:new Date().toISOString(),runs:[]};
+for(const [width,height] of [[1440,900],[390,844]])for(const theme of ['light','dark'])for(const present of [false,true]){
+ const c=await b.newContext({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'});await c.addInitScript(t=>localStorage.setItem('mercado.theme',t),theme);const p=await c.newPage();p.setDefaultTimeout(12000);const r={width,theme,present,steps:[],errors:[]};p.on('pageerror',e=>r.errors.push(e.message));
+ try{await p.goto('http://localhost:3100/?present='+(present?'1':'0'));await p.getByRole('button',{name:'Start the Demo Tour'}).click();for(let i=0;i<6;i++){
+ await p.getByText(`Step ${i+1} of 6`,{exact:false}).waitFor();await p.waitForTimeout(600);const step={i,url:p.url(),text:await p.locator('aside[aria-label="Demo Tour"]').innerText().catch(()=>''),screenshot:`${dir}/tour-${width}-${theme}-${present?'present':'normal'}-${i+1}.png`};await p.screenshot({path:step.screenshot});r.steps.push(step);
+ if(i<5)await p.getByRole('button',{name:/^Next:/}).click();else await p.getByRole('button',{name:'See the whole trail'}).click();}
+ await p.getByRole('complementary',{name:'Demo Tour summary'}).waitFor();r.summary=await p.getByRole('complementary',{name:'Demo Tour summary'}).innerText();r.state=await p.evaluate(()=>JSON.parse(localStorage.getItem('mercado.tour.v4')));r.storagePresent=await p.evaluate(()=>sessionStorage.getItem('mercado.present'));r.htmlPresent=await p.locator('html').getAttribute('data-present');await p.screenshot({path:`${dir}/tour-${width}-${theme}-${present?'present':'normal'}-summary.png`});
+ }catch(e){r.failure=e.message.slice(0,1000);r.text=(await p.locator('body').innerText().catch(()=>'' )).slice(-2000)}finally{out.runs.push(r);fs.writeFileSync(`${dir}/tour.json`,JSON.stringify(out,null,2));await c.close();}
+}
+await b.close();console.log(JSON.stringify(out.runs.map(({width,theme,present,steps,failure,errors})=>({width,theme,present,steps:steps.length,failure,errors}))));

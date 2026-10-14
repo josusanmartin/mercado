@@ -1,0 +1,2 @@
+[06:37] <api> heads-up: api real txs on Business demo now (lead 06:36): Global Pay 10 OUSD → demo supplier, then a small Redeem. ~2 min. Say 'hold' if recording.
+[06:37] <contracts> Heads-up: contracts running lead's Mint e2e now as Institución demo (LP) via the UI: deposit 10 OUSD + mint 50 xMXN, then repay 50 + withdraw 10. 4 small txs, LP only, nothing touches Javier/merchant/Card. ~3 min.

@@ -1,0 +1,40 @@
+ M deck/art/__pycache__/principles.cpython-310.pyc
+ M deck/art/__pycache__/product_slides.cpython-310.pyc
+ M deck/assets.json
+ M deck/assets/v7/panel-card-pos-receipt.png
+ M deck/assets/v7/panel-global-quote.png
+ M deck/assets/v7/phone-card-approve.png
+ M deck/assets/v7/phone-card-holder.png
+ M deck/assets/v7/phone-remesas-home.png
+ M deck/assets/v7/phone-remesas-quote.png
+ M packages/contracts/broadcast/StressDemoV2.s.sol/42431/run-latest.json
+?? packages/contracts/broadcast/StressDemoV2.s.sol/42431/run-1791949220588.json
+?? review/FINAL-CRITIQUE.md
+?? review/final-browser-recheck.mjs
+?? review/final-browser-v5.mjs
+?? review/final-browser.mjs
+?? review/final-card-receipt-probe.mjs
+?? review/final-contrast.mjs
+?? review/final-deck-final.mjs
+?? review/final-deck.mjs
+?? review/final-evidence/
+?? review/final-faults-recheck.mjs
+?? review/final-faults.mjs
+?? review/final-history-recheck.mjs
+?? review/final-interactions.mjs
+?? review/final-paid-once-concurrent.mjs
+?? review/final-paid-once-probe.mjs
+?? review/final-paid-quote-probe.mjs
+?? review/final-recovery-probe.mjs
+?? review/final-recovery-recheck.mjs
+?? review/final-sheet-recheck.mjs
+?? review/final-source-inventory.txt
+?? review/final-state.mjs
+?? review/final-tour-boundary.mjs
+?? review/final-tour-outage-recheck.mjs
+?? review/final-tour.mjs
+?? review/final-v5-motion.mjs
+?? review/final-video.mjs
+?? review/qa-v5/
+?? review/update-final-critique.py
+?? review/v5-taste-status-start.txt

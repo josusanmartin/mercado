@@ -1,0 +1,7 @@
+import fs from 'node:fs';import {chromium} from 'playwright';
+const dir='review/v5-recheck-evidence/final-ui';fs.mkdirSync(dir,{recursive:true});const b=await chromium.launch();const out={at:new Date().toISOString(),cases:[]};
+for(const [width,height]of[[1440,900],[390,844]])for(const theme of ['light','dark']){
+ const c=await b.newContext({viewport:{width,height},colorScheme:theme});await c.addInitScript(t=>localStorage.setItem('mercado.theme',t),theme);const p=await c.newPage();const r={width,theme,errors:[]};p.on('pageerror',e=>r.errors.push(e.message));
+ await p.goto('http://localhost:3100/developers');await p.waitForTimeout(1800);const run=p.getByRole('button',{name:'Run POST /api/driver/score',exact:true});r.run=await run.boundingBox();await p.screenshot({path:`${dir}/${width}-${theme}-developers.png`});
+ await p.goto('http://localhost:3100/mint');await p.waitForTimeout(1300);await p.getByRole('button',{name:'Issue xMXN',exact:true}).click();r.issue=await p.locator('[role=tab][aria-selected=true]').allTextContents();await p.getByRole('tab',{name:'Overview',exact:true}).click();await p.getByRole('button',{name:'View your positions',exact:true}).click();r.positions=await p.locator('[role=tab][aria-selected=true]').allTextContents();r.overflow=await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth);out.cases.push(r);fs.writeFileSync(`${dir}/inspection.json`,JSON.stringify(out,null,2));await c.close();console.log(JSON.stringify(r));
+}await b.close();

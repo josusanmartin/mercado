@@ -1,0 +1,92 @@
+ M deck/art/__pycache__/principles.cpython-310.pyc
+ M deck/art/__pycache__/product_slides.cpython-310.pyc
+ M deck/assets/hero-spend-final-advance.png
+ M deck/assets/hero-spend-final-declined.png
+ M deck/assets/hero-spend-final-paid.png
+ M deck/assets/hero-spend-final.mp4
+ M deck/assets/hero-spend-final.webm
+ M deck/assets/v7/panel-card-pos-receipt.png
+ M deck/assets/v7/panel-global-quote.png
+ M deck/assets/v7/phone-card-holder.png
+ M packages/contracts/broadcast/StressDemoV2.s.sol/42431/run-latest.json
+?? deck/assets/archive/
+?? packages/contracts/broadcast/StressDemoV2.s.sol/42431/run-1791949220588.json
+?? review/FINAL-CRITIQUE.md
+?? review/V5-TASTE.md
+?? review/V6-TASTE.md
+?? review/final-browser-recheck.mjs
+?? review/final-browser-v5.mjs
+?? review/final-browser.mjs
+?? review/final-card-receipt-probe.mjs
+?? review/final-contrast.mjs
+?? review/final-deck-final.mjs
+?? review/final-deck.mjs
+?? review/final-evidence/
+?? review/final-faults-recheck.mjs
+?? review/final-faults.mjs
+?? review/final-history-recheck.mjs
+?? review/final-interactions.mjs
+?? review/final-paid-once-concurrent.mjs
+?? review/final-paid-once-probe.mjs
+?? review/final-paid-quote-probe.mjs
+?? review/final-recovery-probe.mjs
+?? review/final-recovery-recheck.mjs
+?? review/final-sheet-recheck.mjs
+?? review/final-source-inventory.txt
+?? review/final-state.mjs
+?? review/final-tour-boundary.mjs
+?? review/final-tour-outage-recheck.mjs
+?? review/final-tour.mjs
+?? review/final-v5-motion.mjs
+?? review/final-video.mjs
+?? review/qa-v5/
+?? review/update-final-critique.py
+?? review/v5-recheck-capture.mjs
+?? review/v5-recheck-diff-stat.txt
+?? review/v5-recheck-evidence/
+?? review/v5-recheck-final-motion.mjs
+?? review/v5-recheck-final-ui.mjs
+?? review/v5-recheck-focused-after.mjs
+?? review/v5-recheck-focused.mjs
+?? review/v5-recheck-irc-current.txt
+?? review/v5-recheck-irc-progress1.txt
+?? review/v5-recheck-irc-progress10.txt
+?? review/v5-recheck-irc-progress11.txt
+?? review/v5-recheck-irc-progress12.txt
+?? review/v5-recheck-irc-progress2.txt
+?? review/v5-recheck-irc-progress3.txt
+?? review/v5-recheck-irc-progress4.txt
+?? review/v5-recheck-irc-progress5.txt
+?? review/v5-recheck-irc-progress6.txt
+?? review/v5-recheck-irc-progress7.txt
+?? review/v5-recheck-irc-progress8.txt
+?? review/v5-recheck-irc-progress9.txt
+?? review/v5-recheck-irc-start.txt
+?? review/v5-recheck-motion-resume.mjs
+?? review/v5-recheck-motion.mjs
+?? review/v5-recheck-principles.txt
+?? review/v5-recheck-reduced.mjs
+?? review/v5-recheck-resume.mjs
+?? review/v5-recheck-shell-diff.txt
+?? review/v5-recheck-status-end.txt
+?? review/v5-recheck-status-start.txt
+?? review/v5-recheck-width.mjs
+?? review/v5-taste-capture.mjs
+?? review/v5-taste-evidence/
+?? review/v5-taste-irc-start.txt
+?? review/v5-taste-motion.mjs
+?? review/v5-taste-reduced.mjs
+?? review/v5-taste-references.mjs
+?? review/v5-taste-status-current.txt
+?? review/v5-taste-status-start.txt
+?? review/v6-capture.mjs
+?? review/v6-chart-layout.mjs
+?? review/v6-detail-capture.mjs
+?? review/v6-evidence/
+?? review/v6-focused.mjs
+?? review/v6-irc-start.txt
+?? review/v6-motion.mjs
+?? review/v6-recheck-status-start.txt
+?? review/v6-references.mjs
+?? review/v6-status-start.txt
+?? v5/

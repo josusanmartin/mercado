@@ -1,0 +1,49 @@
+# Mercado design guiding principles (josu, 02:58)
+
+Reference: thefutureinblack.com, a "cultural intelligence studio". It's **inspiration for principles, not something to copy**: no use of their name, photos, logo or layouts verbatim. These principles sit above every other design doc. Where DESIGN-ECOSYSTEM §3 or mobile.md conflict, **this file wins**, but keep their structure (IA, product layouts, the mobile app patterns).
+
+## The principles
+1. **Editorial confidence.** Type is the hero. Use one massive, ultra-heavy, condensed grotesque for display ("Archivo Black" or "Anton" from Google Fonts, uppercase, tight -0.02em tracking, line-height 0.85–0.9) at sizes that feel almost too big, plus **Inter Tight** for everything else (400/500/600). No third face. Numbers that matter (balances, rates, coverage) are set big and heavy, like headlines.
+2. **Black and white first, culture second.** The canvas is white `#FFFFFF` and the ink is pure black `#0A0A0A` (dark mode inverts). Color comes from a **cultural palette** used deliberately, never decoratively: **jade/deep green `#1F3D2B`**, **terracotta `#E2603F`**, **cream `#F2E6C9`**, plus product accents tuned to sit with them (Mint green `#1F3D2B`, Remesas terracotta `#E2603F`, Global cobalt `#2448C8`, Crédito rosa `#D93A7A`, Card ink `#0A0A0A` on cream, Invest maize gold `#E5A823`). Color blocks are large and flat, or they live in imagery.
+3. **Image inside type.** The signature move: big words with imagery masked inside (CSS `background-clip: text` with a photo/texture), e.g. "ENVÍA A CASA", "UNA MONEDA". Use it once per page at most, on the hero.
+4. **Culture-forward imagery.** Real-feeling Mexican life: markets, family, drivers, corner stores, color and texture. Use only royalty-free photos with a clear license (Unsplash/Pexels license; record source + photographer in `apps/web/public/photos/SOURCES.md`) or our own generated art. No stock clichés (handshakes, laptops), no real brands in photos, no identifiable people in sensitive contexts. Grayscale + one cultural color treatment is welcome.
+5. **Small meta, big statement.** Pair huge statements with tiny, precise meta text (11–12px, uppercase or small caps): "CDMX · 18.37 MXN/USD · 02:58", "■ 02 · REMESAS", thin 1px rules, index numbers. That's where honesty labels live too: small, precise, always present ("TESTNET · SIN VALOR REAL").
+6. **Layered, asymmetric layout.** Let an image overlap a headline, offset columns, and leave generous white space. One idea per screen region. No grids of equal boxes, no card soup.
+7. **Restraint in UI chrome.** Black pill buttons (`menu`-style), hairline dividers, almost no shadows, no gradients, no rounded-everything. Corners are 999px for pills, 0–8px elsewhere.
+8. **Motion with intent.** Scroll-driven horizontal type pans, slow reveals, number tick-ups. Never bouncy or gimmicky.
+
+## How it applies
+- **Web app (desktop):** Home hero = a giant "UNA MONEDA. SEIS PRODUCTOS." with image-in-type, a live meta line (CDMX · rate · time · TESTNET), then the six products as an editorial index (large numbered rows "01 MINT — Las instituciones crean xMXN" with the live number at right), not tiles. Product pages: a huge product name, a tiny meta line, big unboxed KPIs, hairline sections. Keep keyboard nav and every label.
+- **Phone apps:** keep the fintech structure from mobile.md v2 (one big balance, round actions, bank-style lists), but restyle to these principles: a white (or ink, for Card) canvas, Archivo Black/Anton for the balance and screen titles, Inter Tight elsewhere, the cultural accent per product, tiny uppercase meta labels, and an optional image-in-type header ("ENVÍA") on Remesas home. Spanish-only in-app.
+- **Deck:** already editorial and dark. Align it: Archivo Black/Anton for statements, the cultural palette, at least one image-in-type statement slide, and small meta labels on every slide.
+
+Owners: `web` (shared tokens, components/console, Home, shell) FIRST, then `mobile` (kit + Remesas + Card), `mobile2` (Crédito + Invest), `api`/`contracts` (their pages via shared components), `slides` (the deck). `review` checks labels/contrast (terracotta on white for small text fails AA, so use it for large text and blocks only).
+
+## Header rule (josu, 03:02)
+**No KPI strip under product headers, on any page.** The three-number band ('USD/MXN 18.37 · Exchange backing 270% · Familia balance 4,066', 'Available to lend · Advances out · Fees paid') is useless there. A number only appears where the user needs it to act (e.g. the rate inside the send quote, 'available' inside the draw sheet, coverage inside the Risk tab).
+
+## v5 · Sleeker, more motion, more color (josu, 04:45)
+josu: "keep improving the UI to make it sleeker, more transitions, colors, animations... more modern." This **adds to** principles 1–8 and doesn't replace them: editorial type, black/white + cultural palette and small meta all stay. What changes: the product now **moves**, and each product has its own **color world**.
+
+**Color**
+- Every product page lives in its accent. The hero becomes a full-bleed color field (Mint jade, Remesas terracotta, Global cobalt, Crédito rosa, Card ink-on-cream, Invest maize) with the giant product word in white/ink. Below the hero it fades to the canvas through a soft accent wash (a 4–8% tint, a radial/mesh gradient allowed here only), so you always know which product you're in.
+- The sidebar's active row fills with the product accent (a sliding pill/bar that animates between rows). Home shows all six colors.
+- Dark mode: the same worlds on #0A0A0A with lighter accent tints (≥3:1 for large text, AA for small).
+- Gradients: only these washes and the image-in-type textures. Still no gradient buttons, no glassy card soup.
+
+**Motion** (transform/opacity only, 60fps, ease-out `cubic-bezier(.2,.8,.2,1)`, 180–420ms; a spring is OK for sheets; never bouncy-cute)
+- Route changes: a View Transition / crossfade-slide between product pages; the hero color field morphs into the next product's color.
+- Hero entrance: the product word reveals with a mask/letter stagger (≤500ms total) and meta lines fade up after.
+- Numbers: balances, quotes and coverage tick up/down to new values (no jumpy re-render); live counters keep their 50ms decimals.
+- Lists and rows: a staggered fade-up on first view (IntersectionObserver), hover = an accent underline/fill sweep from the left.
+- Buttons: press scale .97, hover lift on pills, a loading state that morphs (pill → spinner → check).
+- Success moments (sent, minted, charged, drawn, saved): one signature motion, a check that draws itself + the amount settling + a soft accent ripple. No confetti.
+- Phone apps: tab/screen changes slide horizontally (Android-style shared axis), sheets spring up, skeletons shimmer, the balance card has a subtle parallax/tilt on hover (desktop only).
+- Home: the hero image-in-type texture pans slowly; the six-product index rows expand on hover to show their live number in color.
+- Sticky header: backdrop-blur + hairline once scrolled.
+
+**Guardrails**
+- `prefers-reduced-motion`: everything collapses to simple fades; counters jump straight to the value.
+- No layout shift, no animation that delays a primary action (≤200ms before anything is clickable), and no change to tx logic, copy, honesty labels (data-honesty), testids or the accessible names qa/review scripts use.
+- One small lib is allowed: `motion` (motion.dev), installed via `flock .npm.lock`; or pure CSS + View Transitions. Nothing else.
+- Every PR keeps the 1440x900 fold (CR-04) and the light/dark contrast rules.
