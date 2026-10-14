@@ -629,6 +629,56 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     },
   },
   {
+    id: 'V11',
+    title: 'Stocks: buy/sell the demo US equity index (mIDX) on its InvestDesk, then post it as Mint collateral',
+    async run() {
+      const md = (shared as any).moderatoDeployment?.v2 ?? {}
+      const desk: Address | undefined = (A as any).investDeskIdx ?? md.investDeskIdx
+      const m = A.collaterals.find((c: any) => c.symbol === 'mIDX')
+      if (!desk || !m) throw new SkipStep('mIDX / investDeskIdx not in deployments.v2')
+      const saver = account('SAVER')
+      const lp = account('LP')
+      const d = (who: PrivateKeyAccount) => ({ address: desk, abi: investDeskAbi, account: who }) as const
+      // saver: buy with 200 OUSD, sell part back (buy-back limited to what you bought)
+      const ousdIn = parseUnits('200', 6)
+      await ensureOusd(saver.address, ousdIn, 'Saver')
+      await approveIfNeeded(saver, A.ousd, desk, ousdIn, 'OUSD → stocks desk')
+      const [out, fee, px] = await read(desk, investDeskAbi, 'quoteBuy', [ousdIn])
+      log(`quote: 200 OUSD → ${fmt4(out)} mIDX at $${fmt(px, 8)} (fee ${fmt4(fee)} mIDX; owner price feed, demo index)`)
+      await expectRevert('buy with minOut above the quote', { ...d(saver), functionName: 'buy', args: [ousdIn, out + 1n] }, ['Slippage'])
+      const b0 = await bal(m.token, saver.address)
+      await send('buy mIDX with 200 OUSD', saver, { ...d(saver), functionName: 'buy', args: [ousdIn, (out * 995n) / 1000n] })
+      const got = (await bal(m.token, saver.address)) - b0
+      const bought: bigint = await read(desk, investDeskAbi, 'bought', [saver.address])
+      await expectRevert('sell back more than you bought', { ...d(saver), functionName: 'sell', args: [bought + 1n, 0n] }, ['ExceedsBoughtBalance'])
+      const part = got / 4n
+      const [oOut] = await read(desk, investDeskAbi, 'quoteSell', [part])
+      await approveIfNeeded(saver, m.token, desk, part, 'mIDX → stocks desk')
+      await send(`sell ${fmt4(part)} mIDX back`, saver, { ...d(saver), functionName: 'sell', args: [part, (oOut * 995n) / 1000n] })
+      ok(`saver holds ${fmt4(got - part)} mIDX after selling ${fmt4(part)} back for ~${fmt(oOut)} OUSD`)
+      // institution: acquire mIDX on the desk and post it as Mint collateral (mint line from on-chain params)
+      const p = await read(A.vault, multiCollateralVaultAbi, 'params', [m.token])
+      const qty = parseUnits('2', 6)
+      if ((await bal(m.token, lp.address)) < qty) {
+        const need = ((qty - (await bal(m.token, lp.address))) * px) / 10n ** 8n + parseUnits('2', 6)
+        await ensureOusd(lp.address, need, 'LP')
+        await approveIfNeeded(lp, A.ousd, desk, need, 'OUSD → stocks desk (LP)')
+        const [o2] = await read(desk, investDeskAbi, 'quoteBuy', [need])
+        await send(`institution buys ${fmt4(o2)} mIDX`, lp, { ...d(lp), functionName: 'buy', args: [need, (o2 * 995n) / 1000n] })
+      }
+      await approveIfNeeded(lp, m.token, A.vault, qty, 'mIDX → vault')
+      await send('depositCollateral 2 mIDX', lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'depositCollateral', args: [m.token, qty] })
+      const value: bigint = await read(A.vault, multiCollateralVaultAbi, 'collateralValue', [m.token, qty])
+      const maxM: bigint = await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, m.token])
+      const amount = [(value * 10_000n) / (BigInt(p.mintRatioBps) + 5_000n), maxM].reduce((a, b) => (b < a ? b : a)) // mint line + 50 pts headroom
+      await send(`mint ${fmt(amount)} xMXN v2 against mIDX`, lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'mint', args: [m.token, amount] })
+      await expectRevert(`mint above the mIDX ${pct(BigInt(p.mintRatioBps))} line`, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'mint', args: [m.token, (await read(A.vault, multiCollateralVaultAbi, 'maxMintable', [lp.address, m.token])) + 1_000_000n], account: lp }, ['RatioTooLow', 'DebtCeilingExceeded'])
+      ok(`2 mIDX worth ${fmt(value)} xMXN → minted ${fmt(amount)} (mint line ${pct(BigInt(p.mintRatioBps))}, liquidation < ${pct(BigInt(p.liqRatioBps))}); position ${pct(await read(A.vault, multiCollateralVaultAbi, 'collateralRatio', [lp.address, m.token]))}`)
+      assert((await supplyIdentity()).ok, 'supply identity holds after the mIDX-backed mint')
+      ok('supply identity still holds; mIDX is a demo index on an owner price feed (no real stocks, not a security)')
+    },
+  },
+  {
     id: 'VS',
     title: 'FX stress on v2 (runs last): liquidation enforceable, AMM coverage under appreciation, full restore',
     async run() {

@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-14T03:15:57.397Z",
+  "protocol": "v2",
+  "steps": [
+    "V8"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V8": {
+      "status": "pass",
+      "txs": {
+        "underwriter MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0xe560865f15ac4d253d28d44a1f481f797702ae3917f205e095fb0b278ca122ce"
+      },
+      "notes": []
+    }
+  }
+}

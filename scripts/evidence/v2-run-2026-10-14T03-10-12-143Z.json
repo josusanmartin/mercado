@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-14T03:10:12.142Z",
+  "protocol": "v2",
+  "steps": [
+    "V3",
+    "V4",
+    "V8"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vamm": "https://explore.testnet.tempo.xyz/tx/0x166f41146450f88e453e127dc478a033c859dbe241cea8c36b4bc25893954749",
+        "swapOusdForXmxn 50 OUSD → Rosa": "https://explore.testnet.tempo.xyz/tx/0x3829f78ed58a67fb0182afed88360afad1be03f3d2def1fda4dcb2c13cf15e31"
+      },
+      "notes": []
+    },
+    "V4": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → vamm": "https://explore.testnet.tempo.xyz/tx/0xed5eb828997c0c657b95403e27c47d6dc1978d28fef82e973825d5f1f769c8ea",
+        "swapXmxnForOusd 200 xMXN v2 (burn)": "https://explore.testnet.tempo.xyz/tx/0x61d4f51e63f85c9e9b46ada4cdb9f030d1450172e3e8fe0c170ecf0ec1d54fdb"
+      },
+      "notes": []
+    },
+    "V8": {
+      "status": "fail",
+      "txs": {},
+      "notes": [],
+      "error": "underwriter-agent exited 1: fatal: expected 402, got 500: <!DOCTYPE html><html><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width\" data-next-head=\"\"/><sty"
+    }
+  }
+}
