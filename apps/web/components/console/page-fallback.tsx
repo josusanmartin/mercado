@@ -17,17 +17,17 @@ function Connecting() {
 }
 
 /** A product page before hydration: same header block as ProductHeader (static), purpose, "connecting". */
-export function PageFallback({ product, title, purpose }: { product: ProductId; title?: string; purpose?: ReactNode }) {
+export function PageFallback({ product, title, purpose, utility = false }: { product: ProductId; title?: string; purpose?: ReactNode; utility?: boolean }) {
   const p = PRODUCTS.find((x) => x.id === product)!;
-  const world = product !== "home";
+  const world = product !== "home" && !utility;
   return (
     <section aria-busy="true" className="grid min-w-0 gap-3 [container-type:inline-size]">
       <div className={world ? "-mx-4 -mt-5 grid gap-2 bg-[var(--hero-bg)] px-4 pt-4 pb-5 text-[var(--hero-fg)] sm:-mx-8 sm:-mt-8 sm:px-8" : "grid gap-2"}>
         <p className={world ? "meta border-b border-current/25 pb-2" : "meta text-muted-foreground border-b pb-2"}>
           {p.index} · {p.id === "home" ? "Mercado" : p.name}
         </p>
-        <h1 className="display text-[clamp(2.2rem,12.5cqw,4.5rem)] break-words">{title ?? p.short}</h1>
-        <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>
+        <h1 className={utility ? "display text-[clamp(2rem,4vw,3rem)]" : "display text-[clamp(2.2rem,12.5cqw,4.5rem)] break-words"}>{title ?? p.short}</h1>
+        <p className="max-w-5xl text-base leading-snug text-pretty">{purpose ?? p.purpose}</p>
       </div>
       <Connecting />
     </section>

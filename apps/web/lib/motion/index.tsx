@@ -23,7 +23,11 @@ export function useReducedMotion(): boolean {
   );
 }
 
-/** Fade-up as it renders. Pure CSS: content never waits on JS to become visible (P0, lead 05:22). */
+/**
+ * Fade-up as it renders. Pure CSS: content never waits on JS to become visible (P0, lead 05:22).
+ * V5-TASTE #3 "one entrance owner per page": inside the page's route group (.mx-enter) Reveal and Stagger do
+ * NOT animate again (globals.css); use them only for content that arrives on its own outside that group.
+ */
 export function Reveal({ children, delay = 0, as: Tag = "div", className }: { children: ReactNode; delay?: number; as?: ElementType; className?: string }) {
   return (
     <Tag className={cn("mx-reveal", className)} style={{ "--mx-delay": `${delay}ms` } as CSSProperties}>
@@ -42,28 +46,33 @@ export function Stagger({ children, as: Tag = "div", className, step = 40 }: { c
 }
 
 /**
- * The product word appears letter by letter (≤500ms total). Plain inline spans: the heading's text and
- * accessible name stay exactly the word (scripts and screen readers read "Remesas"). Words wrap as words.
+ * The short product word appears letter by letter. V5-TASTE #3: the delay budget is capped at 140ms so with a
+ * 360ms letter animation the last letter is readable by 500ms. A11y: the letters are aria-hidden and a
+ * visually-hidden copy carries the word, so screen readers and the accessible name get "Remesas", never
+ * single letters. Use it for short product words only; long or utility titles render plainly.
  */
 export function LetterReveal({ text, className }: { text: string; className?: string }) {
-  const letters = [...text];
-  const step = Math.min(28, Math.floor(260 / Math.max(letters.length, 1)));
+  const n = [...text.replace(/\s+/g, "")].length;
+  const step = Math.min(28, Math.floor(140 / Math.max(n - 1, 1)));
   let i = 0;
   return (
-    <span className={cn("mx-letters", className)}>
-      {text.split(/(\s+)/).map((word, w) =>
-        /^\s+$/.test(word) ? (
-          word
-        ) : (
-          <span key={w} className="inline-block whitespace-nowrap">
-            {[...word].map((ch, k) => (
-              <span key={k} style={{ "--i": i++, "--mx-step": `${step}ms` } as CSSProperties}>
-                {ch}
-              </span>
-            ))}
-          </span>
-        ),
-      )}
+    <span className={className}>
+      <span className="sr-only">{text}</span>
+      <span className="mx-letters" aria-hidden>
+        {text.split(/(\s+)/).map((word, w) =>
+          /^\s+$/.test(word) ? (
+            word
+          ) : (
+            <span key={w} className="inline-block whitespace-nowrap">
+              {[...word].map((ch, k) => (
+                <span key={k} style={{ "--i": i++, "--mx-step": `${step}ms` } as CSSProperties}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+          ),
+        )}
+      </span>
     </span>
   );
 }

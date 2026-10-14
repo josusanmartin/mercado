@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Contracts" };
 export default function ContractsPage() {
   // Wallet state is restored before hydration, so the screen renders on the client only (no mismatch).
   return (
-    <ClientOnly fallback={<PageFallback product="home" title="Every contract, verified." purpose="Mercado's contracts on Tempo testnet, each source-verified, with what its admin can and cannot do." />}>
+    <ClientOnly fallback={<PageFallback product="home" utility title="Verified contracts" purpose="Inspect deployed contracts, source verification and admin powers." />}>
       <ContractsProof />
     </ClientOnly>
   );

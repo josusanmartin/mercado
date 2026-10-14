@@ -16,7 +16,7 @@
   --ink: #0a0a0a;
   --ink-2: #5c5c5c;
   --line: #e4e4e4;
-  --well: #f4f2ec;
+  --well: #f7f7f5; /* V5-TASTE #8: neutral operational surface (cream stays a Card/product accent) */
 
   --jade: #1f3d2b;
   --terracotta: #e2603f;
@@ -310,7 +310,7 @@
 @keyframes mx-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -341,8 +341,14 @@
   }
 }
 
+/* V5-TASTE #3: the page's content group is the ONE entrance owner (opacity + 6px, 220ms). Nested reveals
+   and staggers inside it don't replay their own entrances. */
 .mx-enter {
-  animation: mx-enter var(--dur) var(--ease-out) both;
+  animation: mx-enter 220ms var(--ease-out) both;
+}
+.mx-enter .mx-reveal,
+.mx-enter .mx-stagger > * {
+  animation: none;
 }
 /* P0 (lead 05:22): content never RESTS hidden waiting for JS. Reveals are pure CSS animations that play on
    render and always end visible, even if hydration is slow or fails (no opacity:0 base state, no data-shown gate). */
@@ -386,15 +392,24 @@
     background-color var(--dur) var(--ease-out);
 }
 /* Rows: an accent sweep from the left on hover/focus. */
+/* Transform-driven (no background repaint): a tinted layer scales in from the left behind the row. */
 .mx-sweep {
-  background-image: linear-gradient(color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent), color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent));
-  background-repeat: no-repeat;
-  background-size: 0% 100%;
-  transition: background-size var(--dur) var(--ease-out);
+  position: relative;
+  isolation: isolate;
 }
-.mx-sweep:hover,
-.mx-sweep:focus-visible {
-  background-size: 100% 100%;
+.mx-sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur) var(--ease-out);
+}
+.mx-sweep:hover::before,
+.mx-sweep:focus-visible::before {
+  transform: scaleX(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -417,7 +432,7 @@
   }
   .mx-pill,
   .mx-press,
-  .mx-sweep {
+  .mx-sweep::before {
     transition: none !important;
   }
   .mx-press:active {

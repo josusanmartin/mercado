@@ -297,8 +297,7 @@ function Terminal({
             {(live || pending?.status === "error") && pending ? fmtAmount(pending.tap.amount) : amount || "0"}{" "}
             <span className="text-muted-foreground text-lg font-medium">xMXN</span>
           </p>
-          <Button size="lg" disabled={!card || amt === 0n || !!live} onClick={charge}>
-            {live ? <Loader2 className="animate-spin" /> : null}
+          <Button size="lg" disabled={!card || amt === 0n || !!live} onClick={charge} pending={!!live}>
             {live ? "Esperando al cliente · waiting for the tap" : "Cobrar con Mercado Card"}
           </Button>
           {!card && <p className="text-muted-foreground text-[13px]">The customer needs a card first (issue one on the phone).</p>}

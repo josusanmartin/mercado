@@ -137,12 +137,13 @@ function ProductIndex({ live }: { live: Live }) {
     refs.current[next]?.focus();
   }
   return (
-    <section aria-label="Products" className="grid gap-3">
+    // V5-TASTE #6: the six products scan as one system: 32px after the hero, compact rows, Archivo only for the
+    // product name, a 15px sentence and a 24px tabular metric. ≥4 rows visible at 1440x900.
+    <section aria-label="Products" className="-mt-6 grid gap-3">
       <Meta>Index · six products, one currency</Meta>
-      {/* v5: rows fade up one after another; hover/focus sweeps the product's color in from the left. */}
-      <ol onKeyDown={onKey} className="mx-stagger border-t" data-shown>
+      <ol onKeyDown={onKey} className="border-t">
         {products.map((p, i) => (
-          <li key={p.id} className="border-b" style={{ ["--i" as string]: i, ["--mx-step" as string]: "50ms" }}>
+          <li key={p.id} className="border-b">
             <Link
               ref={(el) => {
                 refs.current[i] = el;
@@ -151,26 +152,27 @@ function ProductIndex({ live }: { live: Live }) {
               tabIndex={i === sel ? 0 : -1}
               onFocus={() => setSel(i)}
               onMouseEnter={() => setSel(i)}
-              className="mx-sweep group grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-5 transition-colors duration-150 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2 sm:py-6"
+              className="mx-sweep group grid grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 py-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2"
               style={{ ["--sweep" as string]: p.color }}
               aria-label={`${p.index} ${p.name}: ${p.line}. ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
             >
               <span className="meta text-muted-foreground tabular">{p.index}</span>
-              <span className="min-w-0">
-                {/* v5: each row in its color (large display type, ≥3:1). Invest stays ink with a maize mark (R-050). */}
+              {/* Each name in its color (large display type, ≥3:1); Invest stays ink with a maize mark (R-050).
+                  Desktop: name and sentence on one baseline; phone: the sentence sits under the name. */}
+              <span className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
                 <span
-                  className="display block text-[clamp(2.4rem,6vw,5rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] group-hover:underline group-focus-visible:underline"
+                  className="display shrink-0 text-[clamp(1.75rem,3.2vw,2.75rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] group-hover:underline group-focus-visible:underline"
                   style={{ color: p.id === "invest" ? "var(--ink)" : p.color, ["--mark" as string]: p.color }}
                 >
                   {p.short}
                 </span>
-                <span className="text-muted-foreground mt-1 block text-lg">— {p.line}</span>
+                <span className="text-muted-foreground min-w-0 text-[15px]">{p.line}</span>
               </span>
-              <span className="col-start-2 text-left sm:col-start-3 sm:text-right">
-                <span className="display block text-[clamp(1.6rem,3vw,2.6rem)] tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
+              <span className="self-center text-right">
+                <span className="block text-[1.5rem] leading-tight font-semibold tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
                   <TickerText text={live[p.id as Pid].value} />
                 </span>
-                <span className="meta text-muted-foreground">{live[p.id as Pid].caption}</span>
+                <span className="meta text-muted-foreground block">{live[p.id as Pid].caption}</span>
               </span>
             </Link>
           </li>

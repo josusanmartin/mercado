@@ -120,10 +120,17 @@ function SendFlow({ s }: { s: RemesasState }) {
   const out = r ? r.delivered : q.amountOut;
   const mid = q.mid !== undefined ? Number(q.mid) / 1e8 : undefined;
   const rate = out !== undefined && inUsd > 0n ? Number(out) / Number(inUsd) : undefined;
+  // V5-TASTE #19: before an amount is picked, one clear empty state instead of a diagram full of dashes.
+  if (!r && inUsd === 0n)
+    return (
+      <Panel title="What will happen">
+        <p className="text-muted-foreground text-[15px]">Pick an amount to see what your family receives.</p>
+      </Panel>
+    );
   return (
     <Panel
       title={r ? "What just happened" : "What will happen"}
-      description={r ? "Your transfer, read back from the chain." : "Pick an amount on the phone to see the live quote and where the money goes."}
+      description={r ? "Your transfer, read back from the chain." : "The live quote for this amount, and where the money goes."}
       aside={r ? <Badge variant="success">Delivered</Badge> : undefined}
     >
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">

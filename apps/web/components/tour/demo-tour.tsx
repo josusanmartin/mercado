@@ -17,7 +17,7 @@ import { readContract } from "wagmi/actions";
 import type { Config } from "wagmi";
 import { useQueries } from "@tanstack/react-query";
 import { parseAbiItem, type Address, type Hex } from "viem";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink, Loader2, Route, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink, Route, X } from "lucide-react";
 import { toast } from "sonner";
 import { explorerTx } from "@mercado/shared";
 import { ADDR, CHAIN_ID, tokenAbi, useBalances } from "@/lib/contracts";
@@ -241,8 +241,7 @@ export function TourLauncher() {
   const { active, start, going } = useTour();
   if (active) return null;
   return (
-    <Button variant="outline" size="sm" onClick={start} disabled={going}>
-      {going ? <Loader2 className="animate-spin" /> : <Route />}
+    <Button variant="outline" size="sm" onClick={start} disabled={going} pending={going} icon={<Route className="size-4" />}>
       Demo Tour
     </Button>
   );
@@ -443,7 +442,7 @@ export function TourPanel() {
       aria-label="Demo Tour"
       data-tour-ui
       data-product={step.product}
-      className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[70dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[26rem] lg:bottom-14"
+      className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-[calc(var(--m-chrome,7rem)+0.5rem)] z-40 max-h-[70dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[26rem] lg:bottom-14"
     >
       <div className="flex items-center gap-2">
         <ol className="flex gap-1" aria-label="Tour progress">
@@ -506,13 +505,11 @@ export function TourPanel() {
           Back
         </Button>
         {!here ? (
-          <Button size="sm" className="ml-auto" disabled={going || busy} onClick={() => go(index)}>
-            {going && <Loader2 className="animate-spin" />}
+          <Button size="sm" className="ml-auto" disabled={going || busy} onClick={() => go(index)} pending={going}>
             Open {product.short}
           </Button>
         ) : index < TOUR.length - 1 ? (
-          <Button size="sm" className="ml-auto" disabled={going || busy} onClick={() => go(index + 1)}>
-            {going && <Loader2 className="animate-spin" />}
+          <Button size="sm" className="ml-auto" disabled={going || busy} onClick={() => go(index + 1)} pending={going}>
             Next: {PRODUCTS.find((x) => x.id === TOUR[index + 1].product)!.short}
             <ChevronRight />
           </Button>
@@ -569,7 +566,7 @@ function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: (
   return (
     <aside
       aria-label="Demo Tour summary"
-      className="bg-card animate-in fade-in-0 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[75dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[28rem] lg:bottom-14"
+      className="bg-card animate-in fade-in-0 fixed inset-x-3 bottom-[calc(var(--m-chrome,7rem)+0.5rem)] z-40 max-h-[75dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[28rem] lg:bottom-14"
     >
       <div className="flex items-start justify-between gap-2">
         <div>

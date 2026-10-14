@@ -28,6 +28,7 @@ export function SettingsLayout({
   demo,
   statement,
   meta,
+  heroVariant,
 }: {
   title: string;
   list?: ReactNode;
@@ -42,11 +43,16 @@ export function SettingsLayout({
   statement?: ReactNode;
   /** Tiny uppercase line replacing the default live meta (CDMX · rate · time · testnet). */
   meta?: ReactNode;
+  /** V5-TASTE #2: "utility" (Developers, Contracts) is a compact, complete header; "product" is the color band. */
+  heroVariant?: "product" | "utility";
 }) {
   const path = usePathname();
   const p = product ? PRODUCTS.find((x) => x.id === product)! : productForPath(path);
+  // Developers and Contracts default to the compact utility header (V5-TASTE #2); everything else is a product band.
+  const variant = heroVariant ?? (path.startsWith("/developers") || path.startsWith("/contracts") ? "utility" : "product");
   return (
-    <div className="grid gap-10">
+    // V5-TASTE #4: tighter section rhythm on phones; utility pages get 24px to their tabs (#2).
+    <div className={cn("grid", variant === "utility" ? "gap-6" : "gap-6 sm:gap-10")}>
       <ProductHero
         product={p.id}
         title={title}
@@ -54,6 +60,7 @@ export function SettingsLayout({
         demo={demo === null ? undefined : (demo ?? p.demo)}
         statement={statement}
         meta={meta}
+        variant={variant}
       />
       {list}
       <div className="min-w-0">{children}</div>
@@ -73,6 +80,7 @@ export function ProductHero({
   demo,
   statement,
   meta,
+  variant = "product",
 }: {
   product: ProductId;
   title?: string;
@@ -81,12 +89,16 @@ export function ProductHero({
   demo?: PersonaId;
   statement?: ReactNode;
   meta?: ReactNode;
+  variant?: "product" | "utility";
 }) {
   const p = PRODUCTS.find((x) => x.id === product)!;
   const persona = useDemoAccount(demo);
   const { address } = useConnection();
-  const world = p.id !== "home"; // v5 color field on product pages; Home/Developers stay on the canvas
+  const utility = variant === "utility"; // V5-TASTE #2: Developers/Contracts get a compact, complete header
+  const world = p.id !== "home" && !utility; // v5 color field on product pages only
   const word = statement ?? (p.id === "home" ? (title ?? p.name) : p.short);
+  // V5-TASTE #3: letters reveal only for the short product word; statements and utility titles read at once.
+  const lettered = !utility && typeof word === "string" && !/\s/.test(word) && word.length <= 12;
   return (
     // Size container: the statement is fit to the content column, not the viewport (which includes the
     // sidebar). CR-04: capped at 72–80px and the whole block kept ≤170px of the 1440x900 fold.
@@ -109,20 +121,27 @@ export function ProductHero({
         {/* CR-04: the demo account sits on the title row, so it never costs a line of its own. */}
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
           <h1
-            className={cn("display break-words", world ? "text-[clamp(2.2rem,12.5cqw,4.5rem)]" : "text-product text-[clamp(2.2rem,12.5cqw,5rem)]")}
-            style={!world && (p.id === "home" || p.id === "invest") ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1 */}
+            className={cn(
+              "display break-words",
+              utility ? "text-[clamp(2rem,4vw,3rem)]" : world ? "text-[clamp(2.2rem,12.5cqw,4.5rem)]" : "text-product text-[clamp(2.2rem,12.5cqw,5rem)]",
+            )}
+            style={utility || (!world && (p.id === "home" || p.id === "invest")) ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1 */}
           >
-            {typeof word === "string" ? <LetterReveal text={word} /> : word}
+            {lettered ? <LetterReveal text={word as string} /> : word}
           </h1>
-          {persona && (
+          {/* Utility pages: the account already shows in the wallet control, so no second account line (#2). */}
+          {persona && !utility && (
             <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className={cn("meta pb-2", world ? "text-current hover:underline" : "text-muted-foreground hover:text-foreground")} title="Testnet demo key, no real value">
               Demo account · <span className={cn(!world && "text-foreground")}>{persona.name}</span>
               {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
             </a>
           )}
         </div>
-        {/* lead 05:15: the purpose sits inside the band (on-accent text, ≤2 lines), so the color world is one block. */}
-        {(purpose ?? p.purpose) && <p className={cn("line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg", world && "text-current")}>{purpose ?? p.purpose}</p>}
+        {/* lead 05:15: the purpose sits inside the band (on-accent text), so the color world is one block.
+            V5-TASTE #2: never clamped (no sentence ends in "…"); owners keep it to one short sentence. */}
+        {(purpose ?? p.purpose) && (
+          <p className={cn("max-w-5xl text-base leading-snug text-pretty", !utility && "sm:text-lg", world && "text-current")}>{purpose ?? p.purpose}</p>
+        )}
       </div>
       {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
           numbers belong where the user acts (quote, draw sheet, Risk tab). */}
@@ -174,6 +193,7 @@ export function Panel({
   className,
   variant = "plain",
   style,
+  animate = false,
 }: {
   title?: ReactNode;
   description?: ReactNode;
@@ -182,11 +202,13 @@ export function Panel({
   className?: string;
   variant?: "plain" | "card";
   style?: CSSProperties;
+  /** V5-TASTE #3: off by default; the page's route group is the one entrance owner. Opt in only for a panel
+   *  that arrives on its own after the page (pure CSS, ends visible). */
+  animate?: boolean;
 }) {
   const card = variant === "card";
   return (
-    // v5: panels fade up as they render (pure CSS, ends visible; inside <Stagger> they follow one another).
-    <section style={style} className={cn("mx-reveal", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
+    <section style={style} className={cn(animate && "mx-reveal", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
       {(title || aside) && (
         <header className={cn("flex flex-wrap items-start justify-between gap-3", card && "px-5 pt-5 sm:px-6")}>
           <div className="min-w-0">
