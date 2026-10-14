@@ -1,65 +1,83 @@
-# Mercado demo script (2–3 minutes), v0.2
+# Mercado live demo (2.5–3 min)
 
-**Pitch:** *A parallel financial system for emerging markets, on Tempo.* Four modules around one synthetic local currency, xMXN: **Create · Move · Lend · Spend**.
+**One currency, six products, on Tempo.** This script follows the deck order: Home → Mint (+ Risk) → Remesas → Global → Crédito → Card → Invest → /developers → /contracts.
 
-**Bold** = click/key. *Italics* = talking points. Timings are targets. The aha is the *connection*: money created by institutions circulates to a family, funds a driver's advance, and gets spent through a real HTTP 402 payment. These aren't four separate finance demos.
+**Bold** = click. *Italics* = what to say. Numbers below are from the 14 Oct rehearsal at 18.37 MXN/USD; the app always shows live values, so read them off the screen.
 
-> **Which version is live?** Check the Home "System" view. **If v2 is flipped** (`NEXT_PUBLIC_MERCADO_PROTOCOL=v2`, gate in `crew/V2-SWITCH.md`), Create uses the multi-collateral vault and Move uses the vault-integrated vAMM. **If not**, run the lines marked *(v1)*: OUSD-only vault and the separately seeded swap desk. Present sOUSD/tTBILL and the vAMM as the approved next version. Never switch versions just to match the slides.
+## Pre-demo checklist (5 min before)
 
-## Before recording
+- [ ] **:3100 is up** and compiles: `curl -s localhost:3100/api/fx` returns 200 (one dev server, tmux `mercado:dev`).
+- [ ] **Reset:** `packages/contracts/script/demo-reset` (add `DEMO_RESET_SKIP_ORDERS=1` if a bill order is mid-settlement). Check the state table: Javier owes 0 and his card is active, Familia's card is active, and pool v2 has cash ≥ 10k. The reset never touches the oracle.
+- [ ] **FX is fresh:** `/api/fx` label reads "Admin-relayed from Coinbase … fetched <t> · on-chain <t>" within the last ~10 min. If not, ask contracts to restart `fx-relay.mjs`. Don't hand-set the price.
+- [ ] **Demo mode is ON** (top bar toggle), so each product uses its own testnet demo account automatically.
+- [ ] Browser at 1440×900, no extensions, explorer tab open (https://explore.testnet.tempo.xyz).
+- [ ] Nobody else is sending txs with Javier / Familia / the shop (announce in #mercado). Card on-ramp shows "Próximamente" (disabled on purpose).
+- [ ] Backups ready: `deck/assets/hero-spend-final.mp4` (Crédito → Card, 44 s), `deck/assets/hero-driver.mp4`, and the tx links in `ACCEPTANCE.md`.
 
-- [ ] `npm run demo:reset` (or `npx tsx scripts/demo-journey.ts --steps J0` to heal oracle, desk and pool), then check that the Driver is debt-free.
-- [ ] Dev server on http://localhost:3100. Moderato RPC reachable. No dev error badge on `/`, `/credit` or `/pay`.
-- [ ] Oracle fresh (`J0` prints its age); desk/AMM reserves and pool cash above the floors.
-- [ ] Nobody else is driving a demo persona (announce in #mercado).
-- [ ] Explorer tab open: https://explore.testnet.tempo.xyz
-- [ ] Backup: `deck/assets/hero-driver.mp4` (Lend → Spend, 48s) and the explorer links in `ACCEPTANCE.md`.
+## 0:00 Home: one currency, six products (15 s)
 
-Personas (top-bar avatars, testnet demo keys): **Lucía** (LP / institution), **Miguel** (sender in Houston), **Rosa** (recipient in Puebla), **Javier** (driver in CDMX), **Elena** (lender).
+1. Open **/** (HOME). "ONE CURRENCY. SIX PRODUCTS." and the numbered index with live numbers. Point at the footer: *Tempo Moderato 42431 · testnet prototype · sin valor real · xMXN is not redeemable for pesos.*
+   - *"Mercado is a parallel financial system for emerging markets on Tempo. One synthetic peso, xMXN, and six products that create it, move it, lend it, spend it and save it. Every number here is read live from the chain."*
 
-## 0:00 System (Home)
+## 0:15 Mint: institutions create pesos (25 s)
 
-1. Open **Home**. Point at the footer: *Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos.*
-2. The **System** view: Create → Move → Lend → Spend around xMXN, with live numbers. The three **buckets** stay separate: vault collateral, exchange reserve, and pool cash vs. loans.
-   - *"One synthetic peso, four things you can do with it. Each pot of money has its own balance sheet: the vault never funds the exchange or the loans."*
+2. **Mint**. "CREA PESOS." Collateral mix: testnet OUSD (assumed $1.00), sOUSD (demo staked OUSD, mock yield), tTBILL (demo T-bill, not a security), each with its own mint line, liquidation line and ceiling.
+3. **Risk** tab. Exchange backing ~270%, system backing ~279%, and the breakpoints: the system only reaches the 135% line if the peso strengthens to ~8.9 MXN/USD. Individual positions liquidate earlier, at their own lines.
+   - *"Institutions lock yield-bearing collateral and mint pesos. The collateral keeps its own yield. And we show the one risk that matters for a dollar-backed peso, peso appreciation, with real liquidations on record."*
+   - *Fallback:* if the Risk tab is slow, use the deck's `mint-risk-v5` still.
 
-## 0:20 Create (institutions mint xMXN)
+## 0:40 Remesas: dollars in, pesos at home (25 s)
 
-3. Avatar **Lucía** → **Create pesos**. Show the FX card (**mock admin oracle**, age).
-4. **v2:** pick collateral **sOUSD** (*demo staked OUSD, mock yield*) and show its LTV, liquidation line, debt ceiling and accruing share value. Deposit, then **mint** at ≥250%. Explorer link. Mention **tTBILL** (*demo tokenized T-bill, not a security*, bigger haircut).
-   *(v1)* Deposit 1,000 **Testnet OUSD**, mint **8,000 xMXN** (250%).
-   - *"The minters are institutions. They lock collateral that keeps earning inside the token, here a demo staked stablecoin, and create pesos that enter circulation. On testnet every yield and RWA price is admin-set and labeled."*
-5. Drag the **peso-appreciation slider** (preview only, on this position) until it **goes red at ~10.8**: the dollar falls 46% against the peso (≈85% peso appreciation).
-   - *"A dollar-backed peso is exposed to peso appreciation. We show where this position would be liquidated instead of hiding it."*
+4. **Remesas**. The phone app (Spanish): balance in dollars, "≈ MX$ at today's rate", the live-rate chip. **Enviar** → **Mamá** → amount → send.
+   - *"A sender in the US sends dollars; the exchange mints pesos straight into Mamá's wallet in one transaction, with a public memo. On-chain delivery only: no bank cash-out."*
+   - Show the desktop panel: what happened, the tx link, the network fee covered by Mercado's sponsor.
+   - *Fallback:* skip the send and show the last delivery in the phone's activity (real on-chain row).
 
-## 0:50 Move (remittance: the vault is the exchange)
+## 1:05 Global: businesses and partners (15 s)
 
-6. Avatar **Miguel** → **Send money**: 50 OUSD → Rosa, memo **"para mamá"**. Show the quote: **oracle mid, spread, size impact, min received**.
-   **v2:** the vAMM **mints** xMXN straight to Rosa in one tx, and shows reserve coverage. *(v1)* The seeded swap desk sells inventory, then a transfer with memo.
-7. The **Send receipt**: xMXN delivered, OUSD spent, fee, recipient, the public memo, explorer link.
-   - *"OUSD in mints pesos; pesos out burn and redeem OUSD. Pricing is anchored to the oracle with size-dependent impact, and coverage limits are enforced on-chain. This is on-chain delivery only: no bank cash-out."* (Say "mints/burns" only once v2 is live; on v1 say "a capped exchange desk".)
+5. **Global** → **Pay a supplier**: oracle mid, fee, size impact, minimum received, the exchange's backing. Mention **Partner API**: a signed **indicative** quote, paid per call over MPP.
+   - *"Same exchange, B2B: pay a supplier in pesos from dollars, or redeem pesos back, which burns them. Partners buy a signed indicative quote with an HTTP 402. No API key."* (Never say "firm quote".)
 
-## 1:15 Lend (gig-economy credit)
+## 1:20 Crédito: an advance for a driver (25 s)
 
-8. Avatar **Elena** → **Earn**: pool cash vs. loans out, realized fees, *no guaranteed return*.
-9. Avatar **Javier** → **Get an advance** → **Steady driver** (**Demo Uber Data** chart) → **Check eligibility**: score, *why you get a credit line*, line vs. available now, offer expiry → **Draw an advance** → 300 → **Draw advance**.
-   - *"Synthetic driver earnings, an illustrative score, not a credit model. The backend signs a short-lived attestation bound to this wallet, pool and chain; a replay fails on-chain. The money comes from lenders, not from the peso vault."*
+6. **Crédito** → **Driver app** (Javier). **Continuar con Uber** → simulated consent → **Permitir**. "Disponible ahora". **Adelanto** → 25% → **Recibir … xMXN** → "Listo. Ya es tuyo." → **Ver mi adelanto** → "Debes".
+   - *"Javier connects his gig platform. It's Demo Uber Data with simulated consent, not affiliated, and we never ask for a password. He gets an illustrative score, not a credit model, and a signed eligibility bound to his wallet and this pool. The advance comes from lenders, not from the mint vault. Repayment is manual."*
+   - *Fallback:* play `hero-spend-final.mp4` from the start (it covers this beat and the next).
 
-## 1:40 Spend (MPP: bills and agents)
+## 1:45 Card: spend it at the corner store (30 s), the proof moment
 
-10. **Pay bills** → Telcel **$100** → **Get quote** → **Pay 100.00 xMXN**. Stepper: *402 Payment Required → paid on Tempo → verified on-chain → SIMULATED top-up*.
-11. **Receipt** panel: the real testnet payment (tx link) | **Top-up SIMULATED** (reference) | **Still owed** 306 xMXN, side by side.
-    - *"A real HTTP 402. The server challenged the request, the driver paid in xMXN, and the server verified the on-chain transfer before fulfilling. The airtime is simulated. Retries never charge twice."*
-12. The **Agent API** panel on Get an advance (recorded trace), *or* run `npx tsx scripts/underwriter-agent.ts` live: a bot with no API key gets a 402, pays 2 xMXN, and receives an underwriting report plus receipt.
-    - *"Machines pay for APIs the same way: no keys, no accounts, just a 402 and a stablecoin."*
+7. **Card** (Javier, `/card?holder=driver`): "HOLA, JAVIER", his card (demo network), balance, "Adelanto pendiente". Flip **Congelar** on.
+8. At **Tienda Doña Mary**: type **150** → **Cobrar con Mercado Card** → phone sheet → **Aprobar** → *declined*: "Tarjeta congelada". Nothing is charged. **Cerrar**.
+9. Flip **Congelar** off → **150** → **Cobrar** → **Aprobar** → "Cobrado · Charged 150.00 xMXN" on the terminal and in the phone's Movimientos, with the tx link.
+   - *"Every charge needs Javier's own signature for that exact amount and shop: the store can't pull money. A frozen card is declined and nothing moves; after he unfreezes, the retry is charged exactly once, on-chain. The card network is the only simulated part."*
+   - *Fallback:* play `hero-spend-final.mp4` (44 s, all real txs) and open the charge tx from `ACCEPTANCE.md`.
 
-## 2:10 Risk and close
+## 2:15 Invest: save it (15 s)
 
-13. Repay is manual (**Get an advance → Repay**). Nothing is deducted from Uber payouts, and the repayment funds come from a separately disclosed source.
-14. **v2:** the vAMM's coverage stop: below 100% coverage mints pause and redemptions go pro-rata (NAV), so there's no first-mover run. Optional on-chain proof after the take: `npx tsx scripts/demo-journey.ts --steps J7` (a dedicated stress position is liquidated at 14 MXN/USD, then the oracle is restored).
-15. **Contracts** page: addresses, verified sources, explorer links.
-    - *"Everything you saw settled on Tempo testnet. Uber data, airtime, the FX oracle and the demo collateral are labeled mocks. Next: real issuers, aggregator partners and approved Uber OAuth, after legal review."*
+10. **Invest**: Ahorro en pesos (supply to the credit pool, earns only realized driver fees, no guaranteed return), Ahorro en dólares (sOUSD), T-bills (buy/sell demo tTBILL on the InvestDesk, then post it as Mint collateral).
+    - *"Savers close the loop: pesos fund the drivers, and demo T-bills bought here become collateral that mints new pesos."*
 
-## Disclosures (say out loud or keep on screen)
+## 2:30 /developers and /contracts: it's all real (20 s)
 
-Testnet prototype · tokens have no value · xMXN isn't redeemable for pesos and has no guaranteed peg · OUSD / sOUSD / tTBILL are testnet or demo tokens (no real yield, not securities) · Demo Uber Data · illustrative score, not a credit product · SIMULATED fulfillment · mock admin oracle · manual repayment.
+11. **/developers**: the APIs; the paid ones answer HTTP 402 and settle in xMXN. Mention `scripts/underwriter-agent.ts`: a bot with no API key pays 2 xMXN for a report.
+12. **/contracts**: every v2 contract with a **Verified ✓** link (Tempo's Sourcify, exact match), live state and admin powers in plain words.
+    - *"Every contract is live on Tempo testnet and source-verified. What's simulated is listed in MOCKS.md and labeled on screen: the gig-platform data, airtime fulfillment, the card network, and the demo collateral's yield and price."*
+
+## Close (10 s)
+
+- *"Mint, Remesas, Global, Crédito, Card, Invest: one currency. Next: real issuers, aggregators, approved platform OAuth and a decentralized oracle, after legal review."*
+
+## If something breaks
+
+| Problem | Do this |
+|---|---|
+| :3100 down / 500s | Play `hero-spend-final.mp4`, then walk the deck's v5 screenshots; tx links are in `ACCEPTANCE.md` |
+| A tx hangs > 15 s | Keep talking; the explorer link appears when it lands. Don't retry a card tap (idempotent taps, but avoid a second charge on stage) |
+| FX label stale | Say "admin-relayed rate, refreshing every 10 min"; never force-set it on stage |
+| Sponsor quota exhausted | The wallet pays its own fee in AlphaUSD and the UI says "Comisión de red pagada por ti". That's expected |
+| Wrong persona | Toggle Demo mode off/on. Each product re-maps to its demo account |
+| Need v1 | `NEXT_PUBLIC_MERCADO_PROTOCOL=v1` + restart (one env var; lead only) |
+
+## Disclosures (keep on screen or say)
+
+Testnet prototype · tokens have no value · xMXN isn't redeemable for pesos and has no guaranteed peg · OUSD/sOUSD/tTBILL are testnet/demo (no real yield, not securities) · Demo Uber/DiDi/Rappi Data with simulated consent · illustrative score, not a credit product · SIMULATED airtime/bill fulfillment · demo card network · admin-relayed FX, not a decentralized oracle · no guaranteed returns · manual repayment.
