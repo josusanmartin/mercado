@@ -32,7 +32,9 @@ function useLive() {
       : { value: n0(b.desk.ousd), caption: "OUSD of exchange liquidity" },
     credito: { value: n0(b.pool.cash), caption: "xMXN available to lend" },
     // Wired to MercadoCard's events once contracts deploys it (deployments.v2.card); never a placeholder number.
-    card: { value: "—", caption: "spent with Card (contract launching)" },
+    card: { value: "—", caption: "spent with Card (runs on v2)" },
+    // Ahorro en pesos IS the credit pool's supply: lender claims are real savings today.
+    invest: { value: n0(b.pool.lenderClaims), caption: "xMXN saved by lenders" },
   };
   return { b, live };
 }
@@ -44,7 +46,7 @@ export function EcosystemHome() {
     <div className="grid gap-12 pt-2">
       <section className="grid gap-3">
         <h1 className="text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-[3.4rem]">
-          Mercado: one currency, five products.
+          Mercado: one currency, six products.
         </h1>
         <p className="text-muted-foreground max-w-2xl text-lg text-pretty">
           A parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.
@@ -111,7 +113,7 @@ function ProductRow({ live }: { live: Live }) {
       <p className="mb-3 h-7 text-lg font-semibold" style={{ color: products[sel].color }} aria-hidden>
         {products[sel].name}
       </p>
-      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-5">
+      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
         {products.map((p, i) => (
           <Link
             key={p.id}
@@ -124,15 +126,15 @@ function ProductRow({ live }: { live: Live }) {
             onMouseEnter={() => setSel(i)}
             aria-label={`${p.name}: ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
             className={cn(
-              "relative flex aspect-square flex-col justify-between rounded-[20px] p-5 text-white transition-[transform,box-shadow] duration-150 ease-out sm:p-6",
+              "relative flex aspect-[16/10] flex-col justify-between rounded-[20px] p-5 text-white transition-[transform,box-shadow] duration-150 ease-out sm:p-6",
               "hover:shadow-tile focus-visible:shadow-tile hover:scale-[1.03] focus-visible:scale-[1.03] focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:animate-ring-pulse",
             )}
-            style={{ background: p.color }}
+            style={{ background: p.color, color: p.onColor }}
           >
             <p.icon className="size-10 sm:size-12" strokeWidth={1.75} aria-hidden />
             <span className="grid gap-1">
               <span className="text-2xl leading-none font-semibold tracking-tight tabular sm:text-[2rem]">{live[p.id as Pid].value}</span>
-              <span className="text-[13px] leading-snug text-white/85">{live[p.id as Pid].caption}</span>
+              <span className="text-[13px] leading-snug opacity-85">{live[p.id as Pid].caption}</span>
               <span className="mt-2 text-lg font-semibold">{p.short}</span>
             </span>
           </Link>
@@ -148,7 +150,8 @@ const NODES: Record<Pid, { x: number; y: number }> = {
   remesas: { x: 850, y: 70 },
   global: { x: 850, y: 290 },
   credito: { x: 150, y: 290 },
-  card: { x: 500, y: 380 },
+  card: { x: 360, y: 380 },
+  invest: { x: 640, y: 380 },
 };
 const HUB = { x: 500, y: 180 };
 const FLOWS: { product: Pid; label: string; outbound: boolean }[] = [
@@ -157,6 +160,7 @@ const FLOWS: { product: Pid; label: string; outbound: boolean }[] = [
   { product: "global", label: "MXN↔USD for businesses", outbound: true },
   { product: "credito", label: "advances out, repaid with fees", outbound: true },
   { product: "card", label: "xMXN spent at shops", outbound: true },
+  { product: "invest", label: "savings in, yield out", outbound: true },
 ];
 const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const mx = (a.x + b.x) / 2;
@@ -210,15 +214,15 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
         {FLOWS.map((f) => {
           const p = PRODUCTS.find((x) => x.id === f.product)!;
           const n = NODES[f.product];
+          const center = n.y > 300;
           const right = n.x > 500;
-          const center = n.x === 500;
           return (
             <Link
               key={f.product}
               href={p.href}
-              className={cn("absolute grid w-[24%] rounded-[8px] focus-visible:outline-offset-4", center ? "-translate-x-1/2 text-center" : right ? "text-right" : "text-left")}
+              className={cn("absolute grid rounded-[8px] focus-visible:outline-offset-4", center ? "w-[22%] -translate-x-1/2 text-center" : "w-[24%]", !center && (right ? "text-right" : "text-left"))}
               style={{
-                left: center ? "50%" : right ? undefined : `${((n.x - 10) / 1000) * 100}%`,
+                left: center ? `${(n.x / 1000) * 100}%` : right ? undefined : `${((n.x - 10) / 1000) * 100}%`,
                 right: right && !center ? `${((1000 - n.x - 10) / 1000) * 100}%` : undefined,
                 top: `${((n.y + 16) / H) * 100}%`,
               }}

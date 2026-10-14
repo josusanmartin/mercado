@@ -69,7 +69,7 @@ export function ProductHero({
     <section className="grid gap-7 pt-2">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <span className="bg-product grid size-14 shrink-0 place-items-center rounded-[16px] text-white" style={p.id === "home" ? { background: "var(--ink)" } : undefined}>
+          <span className="bg-product text-product-fg grid size-14 shrink-0 place-items-center rounded-[16px]" style={p.id === "home" ? { background: "var(--ink)", color: "white" } : undefined}>
             <Icon className="size-7" strokeWidth={1.75} aria-hidden />
           </span>
           <div className="max-w-2xl">

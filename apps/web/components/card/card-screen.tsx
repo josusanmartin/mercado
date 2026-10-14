@@ -166,6 +166,9 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
             <div>
               <p className="text-[13px] text-[#5b6270]">Disponible hoy · left today</p>
               <p className="text-xl font-semibold tabular">{fmtAmount(card.availableToday)} xMXN</p>
+              <p className="text-[13px] text-[#5b6270] tabular">
+                {fmtAmount(card.spentToday, 0)} / {fmtAmount(card.dailyLimit, 0)} gastado
+              </p>
             </div>
           </div>
 
@@ -189,7 +192,10 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
             </label>
             <div className="grid gap-1.5">
               <div className="flex items-baseline justify-between">
-                <span className="text-[15px] font-semibold">Límite diario · Daily limit</span>
+                <span>
+                  <span className="block text-[15px] font-semibold">Límite diario · Daily limit</span>
+                  <span className="block text-[13px] text-[#5b6270]">Se reinicia a medianoche (CDMX) · resets at midnight CDMX</span>
+                </span>
                 <span className="text-[15px] font-semibold tabular">{limit === undefined ? "—" : `${limit.toLocaleString("en-US")} xMXN`}</span>
               </div>
               <input

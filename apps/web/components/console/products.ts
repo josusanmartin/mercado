@@ -1,8 +1,8 @@
 // The Mercado ecosystem: one currency, four products (crew/DESIGN-ECOSYSTEM.md).
-import { ArrowLeftRight, Coins, CreditCard, Globe2, HandCoins, LayoutGrid, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Coins, CreditCard, Globe2, HandCoins, LayoutGrid, PiggyBank, type LucideIcon } from "lucide-react";
 import type { PersonaId } from "@/components/wallet/personas";
 
-export type ProductId = "home" | "mint" | "remesas" | "global" | "credito" | "card";
+export type ProductId = "home" | "mint" | "remesas" | "global" | "credito" | "card" | "invest";
 
 export type Product = {
   id: ProductId;
@@ -14,6 +14,8 @@ export type Product = {
   icon: LucideIcon;
   /** CSS color token for the product's signature color. */
   color: string;
+  /** Text color on a solid fill of `color` (ink on gold, white elsewhere). */
+  onColor?: string;
   /** Demo-mode account for this product (Crédito picks per tab). */
   demo?: PersonaId;
 };
@@ -83,6 +85,18 @@ export const PRODUCTS: Product[] = [
     icon: CreditCard,
     color: "var(--c-card)",
     demo: "recipient",
+  },
+  {
+    id: "invest",
+    href: "/invest",
+    name: "Mercado Invest",
+    short: "Invest",
+    purpose: "Save in pesos or dollars, or buy tokenized T-bills.",
+    audience: "Savers",
+    icon: PiggyBank,
+    color: "var(--c-invest)",
+    onColor: "#111418",
+    demo: "lender",
   },
 ];
 

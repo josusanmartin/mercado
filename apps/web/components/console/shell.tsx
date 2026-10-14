@@ -74,7 +74,7 @@ function Sidebar({ active, path }: { active: string; path: string }) {
                 on ? "bg-well font-semibold" : "hover:bg-well/70",
               )}
             >
-              <span className="grid size-7 shrink-0 place-items-center rounded-[8px] text-white" style={{ background: p.color }} aria-hidden>
+              <span className="grid size-7 shrink-0 place-items-center rounded-[8px] text-white" style={{ background: p.color, color: p.onColor }} aria-hidden>
                 <p.icon className="size-4" strokeWidth={1.75} />
               </span>
               <span className="flex-1">{p.id === "home" ? "Overview" : p.short}</span>
@@ -105,12 +105,12 @@ function Sidebar({ active, path }: { active: string; path: string }) {
 
 function MobileTabs({ active }: { active: string }) {
   return (
-    <nav aria-label="Products" className="bg-card fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Products" className="bg-card scrollbar-none fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
       {PRODUCTS.map((p) => {
         const on = p.id === active;
         const Icon = p.icon;
         return (
-          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2 text-[12.5px]", on ? "font-semibold" : "text-muted-foreground")}>
+          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2 text-[13px]", on ? "font-semibold" : "text-muted-foreground")}>
             <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
             {p.id === "home" ? "Inicio" : p.short}
           </Link>

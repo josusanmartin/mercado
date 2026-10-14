@@ -22,6 +22,7 @@
   --c-global: #2f6bff;
   --c-credito: #f2357d;
   --c-card: #7c5cff;
+  --c-invest: #f2b807;
   --focus: #00c3e3;
 
   --accent: var(--ink);
@@ -71,6 +72,11 @@
 [data-product="card"] {
   --accent: var(--c-card);
 }
+/* gold is light: ink text on gold fills */
+[data-product="invest"] {
+  --accent: var(--c-invest);
+  --accent-fg: #111418;
+}
 
 .dark {
   --page: #0f1115;
@@ -91,7 +97,7 @@
 .dark {
   --accent-fg: #0f1115;
 }
-.dark [data-product] {
+.dark [data-product]:not([data-product="invest"]) {
   --accent-fg: #ffffff;
 }
 
@@ -129,6 +135,7 @@
   --color-global: var(--c-global);
   --color-credito: var(--c-credito);
   --color-mcard: var(--c-card);
+  --color-invest: var(--c-invest);
   --color-page: var(--page);
   --color-tile: var(--tile);
   --color-ink: var(--ink);
