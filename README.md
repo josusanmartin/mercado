@@ -42,7 +42,8 @@ Next.js app (apps/web) ── wagmi/viem ──► Tempo Moderato (42431)
         ├─ /api/fx            reads the on-chain mock oracle
         ├─ /api/driver/demo   Demo Uber Data fixtures
         ├─ /api/driver/score  heuristic score + signed eligibility attestation
-        └─ /api/bills/{quote,pay,orders/[id]}  mppx 402 challenge → on-chain verify → SIMULATED fulfillment
+        ├─ /api/bills/{quote,pay,orders/[id]}  mppx 402 challenge → on-chain verify → SIMULATED fulfillment
+        └─ /api/sponsor       Tempo fee-payer relay: pays fees for Mercado calls only (testnet, rate-limited)
 ```
 
 Repository layout:
@@ -57,6 +58,8 @@ Repository layout:
 | `INTERFACES.md` | ABIs, API schemas, protocol parameters |
 | `ACCEPTANCE.md` | SPEC §6 checklist with evidence |
 | `DEMO.md` | 2–3 minute walkthrough script |
+
+**Tempo-native touches:** xMXN is a native TIP-20 created through the `TIP20Factory` precompile. Fees are paid in a USD stablecoin, and a fee-payer relay (`/api/sponsor`) lets a fresh wallet with zero fee tokens transact with Mercado contracts. Remittances use TIP-20 `transferWithMemo`. Bill payments use the MPP `tempo` charge method, with transfers memo-bound to the 402 challenge.
 
 Protocol parameters (demo-only) are in [INTERFACES.md](INTERFACES.md#protocol-parameters-demo-only): 150% minimum mint ratio, 135% liquidation threshold, 10% liquidation penalty, oracle max age of 1h, 50 bps swap spread, and a 2% flat borrow fee.
 
