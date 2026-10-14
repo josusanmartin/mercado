@@ -18,10 +18,13 @@ import { INVEST, useInvestHistory, useInvestPositions } from "./use-invest";
 
 const v = (x: bigint | undefined, unit: string, d = 2) =>
   x === undefined ? "…" : `${fmtAmount(x, d)} ${unit}`;
-const signed = (x: bigint | undefined, unit: string, d = 2) =>
-  x === undefined
-    ? "…"
-    : `${x < 0n ? "−" : "+"}${fmtAmount(x < 0n ? -x : x, d)} ${unit}`;
+/** "+1.23 xMXN" / "−0.40 OUSD"; anything that rounds to zero at `d` decimals is an unsigned "0.00" (no "−0.00"). */
+const signed = (x: bigint | undefined, unit: string, d = 2) => {
+  if (x === undefined) return "…";
+  const abs = x < 0n ? -x : x;
+  if (abs * 2n < 10n ** BigInt(6 - d)) return `${fmtAmount(0n, d)} ${unit}`;
+  return `${x < 0n ? "−" : "+"}${fmtAmount(abs, d)} ${unit}`;
+};
 const pct = (bps: bigint | undefined) =>
   bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`;
 
