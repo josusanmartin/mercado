@@ -335,14 +335,15 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
             </PillChip>
           ))}
         </div>
-        <div className="grid grid-cols-2 border-b border-[var(--m-outline-variant)]">
+        <div role="tablist" aria-label="Operación" className="grid grid-cols-2 border-b border-[var(--m-outline-variant)]">
           {(["in", "out"] as const).map((md) => (
             <button
               key={md}
               type="button"
+              role="tab"
               disabled={busy}
               onClick={() => reset({ product, mode: md })}
-              aria-pressed={mode === md}
+              aria-selected={mode === md}
               className={cn("-mb-px h-11 border-b-2 text-[15px] font-semibold", mode === md ? "border-[var(--m-on-surface)]" : "border-transparent text-[var(--m-on-surface-variant)]")}
             >
               {md === "in" ? P.inLabel : P.outLabel}
@@ -407,7 +408,7 @@ function Listo({ done, close }: { done: Done; close: () => void }) {
   return (
     <div className="flex flex-1 flex-col px-5 pt-10 pb-6">
       <SuccessCheck size={72} color={MAIZ} />
-      <Display size={50} className="m-rise mt-8">
+      <Display size={50} fit className="m-rise mt-8">
         {verb}
       </Display>
       <p className="m-display m-tick m-num mt-4 text-[38px]">

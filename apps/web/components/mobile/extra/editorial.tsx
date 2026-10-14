@@ -47,8 +47,14 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
   );
 }
 
-/** Uppercase Archivo Black statement. */
-export function Display({ children, size = 40, className, as: Tag = "h2" }: { children: ReactNode; size?: number; className?: string; as?: "h1" | "h2" | "h3" | "p" }) {
+/** Uppercase Archivo Black statement. `fit` keeps a one-line word inside the column (kit <Display fit>). */
+export function Display({ children, size = 40, className, as: Tag = "h2", fit }: { children: ReactNode; size?: number; className?: string; as?: "h1" | "h2" | "p"; fit?: boolean }) {
+  if (fit)
+    return (
+      <KitDisplay fit size={size} as={Tag} className={className}>
+        {children}
+      </KitDisplay>
+    );
   return (
     <Tag className={cn("m-display", className)} style={{ fontSize: size }}>
       {children}
