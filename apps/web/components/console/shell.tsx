@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type AnimationEvent, type
 import { Boxes, Code2, Ellipsis, FileCode2, LayoutGrid, Moon, Route, Sun, X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useTour } from "@/components/tour/demo-tour";
+import { FreshLanding } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { PRODUCTS, productForPath } from "./products";
 import { TopBar } from "./top-bar";
@@ -32,6 +33,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   // V5-TASTE #9: utility routes are their own destination; no product (not even Home) is active on them.
   const utility = isUtilityPath(path);
   const scrolled = useScrolled();
+  // V6-TASTE #6: letters reveal only on a fresh landing; once the user navigates, titles render as whole words.
+  const [landing] = useState(path);
+  const [navigated, setNavigated] = useState(false);
+  if (!navigated && path !== landing) setNavigated(true);
   return (
     <div data-product={product.id === "home" ? undefined : product.id} className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <Sidebar active={utility ? undefined : product.id} path={path} />
@@ -54,7 +59,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main id="main" className="mx-auto w-full max-w-[84rem] min-w-0 flex-1 px-4 pt-5 pb-[calc(var(--m-chrome,9rem)+1.5rem)] sm:px-8 sm:pt-8 lg:pb-24">
           {/* v5 route transition: each page enters with a short fade-slide (reduced motion: none). */}
-          <EnterGroup key={path}>{children}</EnterGroup>
+          <FreshLanding.Provider value={!navigated}>
+            <EnterGroup key={path}>{children}</EnterGroup>
+          </FreshLanding.Provider>
         </main>
         <HintBar />
         <MobileTabs active={utility ? undefined : product.id} />

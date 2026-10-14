@@ -4,7 +4,7 @@
 //   <SettingsLayout title list={<ListPane …/>} [product purpose kpis demo]>  → hero band + tabs + content
 //   <Panel title description aside>  <Rows><Row label value sub/></Rows>  <BigNumber/>  <PanelActions/>
 // The product (and its signature color) comes from the route unless `product` is passed.
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useContext, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { useConnection } from "wagmi";
@@ -15,7 +15,7 @@ import type { PersonaId } from "@/components/wallet/personas";
 import { PRODUCTS, productForPath, type ProductId } from "./products";
 import { useDemoAccount } from "./demo-mode";
 import { LiveMeta, Meta } from "./meta";
-import { LetterReveal, TickerText } from "@/lib/motion";
+import { FreshLanding, LetterReveal, TickerText } from "@/lib/motion";
 
 export type Kpi = { label: string; value: ReactNode; sub?: ReactNode };
 
@@ -98,7 +98,8 @@ export function ProductHero({
   const world = p.id !== "home" && !utility; // v5 color field on product pages only
   const word = statement ?? (p.id === "home" ? (title ?? p.name) : p.short);
   // V5-TASTE #3: letters reveal only for the short product word; statements and utility titles read at once.
-  const lettered = !utility && typeof word === "string" && !/\s/.test(word) && word.length <= 12;
+  const fresh = useContext(FreshLanding);
+  const lettered = fresh && !utility && typeof word === "string" && !/\s/.test(word) && word.length <= 12;
   return (
     // Size container: the statement is fit to the content column, not the viewport (which includes the
     // sidebar). CR-04: capped at 72–80px and the whole block kept ≤170px of the 1440x900 fold.
