@@ -14,6 +14,9 @@ import { ConnectGate } from "@/components/shell/connect-gate";
 import { TokenInput } from "@/components/shell/token-input";
 import { TxProgress } from "@/components/shell/tx-progress";
 import { useTourPrefill } from "@/components/tour/demo-tour";
+import { USE_V2, V2 } from "@/lib/v2/addresses";
+import { useMoveQuote, useMoveState, useTokenBalance } from "@/lib/v2/reads";
+import { useMercadoV2 } from "@/lib/v2/actions";
 import { personaByAddress, personaById } from "@/components/wallet/personas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,11 +48,19 @@ export function SendScreen() {
   const bal = useBalances();
   const desk = useDesk();
   const fx = useOracle();
-  const m = useMercado();
+  const m1 = useMercado();
+  const m2 = useMercadoV2();
+  const m = USE_V2 ? m2 : m1;
+  const move = useMoveState();
+  const xmxnToken = (USE_V2 ? V2.xmxn : ADDR.xmxn) ?? ADDR.xmxn;
+  const xmxnBalV2 = useTokenBalance(USE_V2 ? V2.xmxn : undefined);
 
   const amt = toUnits(amount);
   const swapping = payWith === "ousd";
-  const quote = useSwapQuote(true, swapping && amt > 0n ? amt : undefined);
+  // v1: SwapDesk quote. v2: the vault's vAMM (Move), anchored to the oracle mid with size impact.
+  const quoteV1 = useSwapQuote(true, !USE_V2 && swapping && amt > 0n ? amt : undefined);
+  const quoteV2 = useMoveQuote(true, USE_V2 && swapping && amt > 0n ? amt : undefined);
+  const quote = USE_V2 ? quoteV2 : quoteV1;
   const minOut = quote.amountOut !== undefined ? withSlippage(quote.amountOut, SLIPPAGE_BPS) : undefined;
   const quoteError = quote.error ? readableError(quote.error) : undefined;
 
@@ -59,10 +70,10 @@ export function SendScreen() {
 
   const toSelf = recipient && address && recipient.toLowerCase() === address.toLowerCase();
   const memoTooLong = memoByteLength(memo) > MEMO_MAX_BYTES;
-  const balance = swapping ? bal.ousd : bal.xmxn;
+  const balance = swapping ? bal.ousd : USE_V2 ? xmxnBalV2.data : bal.xmxn;
   const overBalance = balance !== undefined && amt > balance;
-  const overCap = swapping && desk.remainingDailyCap !== undefined && amt > desk.remainingDailyCap;
-  const blockedFx = swapping && (fx.valid === false || fx.paused || desk.paused);
+  const overCap = !USE_V2 && swapping && desk.remainingDailyCap !== undefined && amt > desk.remainingDailyCap;
+  const blockedFx = swapping && (fx.valid === false || fx.paused || (!USE_V2 && desk.paused));
 
   const disabled =
     m.tx.isBusy ||
@@ -79,12 +90,16 @@ export function SendScreen() {
     if (!recipient) return;
     setSent(undefined);
     const memoArg = memo.trim() || undefined;
-    const steps = swapping
-      ? await m.swapAndSend(amt, quote.amountOut!, recipient, memoArg, SLIPPAGE_BPS)
-      : await m.transfer(ADDR.xmxn, recipient, amt, memoArg);
+    const steps = !swapping
+      ? await m1.transfer(xmxnToken, recipient, amt, memoArg)
+      : USE_V2
+        ? memoArg
+          ? await m2.sendUsdToMxnWithMemo(amt, quote.amountOut!, recipient, memoArg, SLIPPAGE_BPS)
+          : await m2.sendUsdToMxn(amt, quote.amountOut!, recipient, SLIPPAGE_BPS)
+        : await m1.swapAndSend(amt, quote.amountOut!, recipient, memoArg, SLIPPAGE_BPS);
     const last = steps?.at(-1);
     if (last) {
-      setSent({ to: recipient, amount: deliveredFromReceipt(last, ADDR.xmxn, recipient).amount, hash: last.hash, memo: memoArg });
+      setSent({ to: recipient, amount: deliveredFromReceipt(last, xmxnToken, recipient).amount, hash: last.hash, memo: memoArg });
       setAmount("");
     }
   }
@@ -99,7 +114,9 @@ export function SendScreen() {
       icon: UserRound,
       hint: recipient && recipientBal.xmxn !== undefined ? fmtAmount(recipientBal.xmxn, 0) : undefined,
     },
-    { id: "desk", label: "Swap desk", icon: Store, hint: desk.reserveXmxn !== undefined ? fmtAmount(desk.reserveXmxn, 0) : undefined },
+    USE_V2
+      ? { id: "desk", label: "Exchange backing", icon: Store, hint: move.coverageBps ? fmtBps(move.coverageBps, 0) : undefined }
+      : { id: "desk", label: "Swap desk", icon: Store, hint: desk.reserveXmxn !== undefined ? fmtAmount(desk.reserveXmxn, 0) : undefined },
   ];
 
   return (
@@ -133,6 +150,23 @@ export function SendScreen() {
                   <p className="text-muted-foreground text-sm">They receive about</p>
                   <BigNumber value={quote.amountOut !== undefined ? fmtAmount(quote.amountOut) : amt > 0n && quote.isLoading ? "…" : "0.00"} unit="xMXN" />
                   {quoteError && amt > 0n && <p className="text-destructive mt-1 text-sm">{quoteError}</p>}
+                  {USE_V2 ? (
+                  <Rows className="mt-2">
+                    <Row label="Oracle mid" sub="Mock admin oracle" value={quoteV2.mid !== undefined ? `${fmtNumber(Number(quoteV2.mid) / 1e8, 4)} MXN/USD` : fx.rate !== undefined ? `${fmtNumber(fx.rate, 4)} MXN/USD` : "—"} />
+                    <Row
+                      label="Your rate"
+                      sub="Mid, minus size impact and fee"
+                      value={quote.amountOut !== undefined && amt > 0n ? `${fmtNumber(Number(quote.amountOut) / Number(amt), 4)} MXN/USD` : "—"}
+                    />
+                    <Row label="Size impact" sub="Bigger sends move the price more" value={quoteV2.impactBps !== undefined ? fmtBps(quoteV2.impactBps, 2) : "—"} />
+                    <Row label="Fee" sub="Stays in the reserve as a buffer" value={quote.fee !== undefined ? `${fmtAmount(quote.fee)} xMXN` : "—"} />
+                    <Row
+                      label="Minimum received"
+                      sub={`With ${fmtBps(SLIPPAGE_BPS, 1)} slippage. Less than this and nothing moves.`}
+                      value={minOut !== undefined ? `${fmtAmount(minOut)} xMXN` : "—"}
+                    />
+                  </Rows>
+                  ) : (
                   <Rows className="mt-2">
                     <Row
                       label="Desk rate"
@@ -152,6 +186,7 @@ export function SendScreen() {
                       value={minOut !== undefined ? `${fmtAmount(minOut)} xMXN` : "—"}
                     />
                   </Rows>
+                  )}
                 </div>
               )}
 
@@ -208,6 +243,7 @@ export function SendScreen() {
                 </Button>
               </PanelActions>
               <TxProgress tx={m.tx} />
+              {USE_V2 && <TxProgress tx={m1.tx} />}
               {sent && m.tx.status === "success" && (
                 <div className="bg-muted grid gap-1 rounded-[14px] px-5 py-4 text-[15px]">
                   <p className="font-medium">
@@ -243,7 +279,31 @@ export function SendScreen() {
         </Panel>
       )}
 
-      {section === "desk" && (
+      {USE_V2 && section === "desk" && (
+        <Panel
+          key="backing"
+          title="Exchange backing"
+          description="Dollars in mint pesos directly; pesos out are burned and redeem dollars. The exchange holds its own OUSD reserve and never touches vault collateral."
+        >
+          <BigNumber value={move.coverageBps === undefined ? "—" : move.coverageBps === null ? "∞" : fmtBps(move.coverageBps, 0)} unit="coverage" className="mt-2" />
+          <p className="text-muted-foreground mt-2 text-sm text-pretty">
+            OUSD reserve valued at the mock rate, divided by the xMXN the exchange has issued. A stronger peso lowers it.
+          </p>
+          <Rows className="mt-4">
+            <Row label="OUSD reserve" sub="Its own balance: inflows, fees and an equity buffer" value={move.reserve === undefined ? "Unavailable" : fmtAmount(move.reserve, 0)} />
+            <Row label="xMXN issued" sub="Minted here and not yet bought back" value={move.liability === undefined ? "Unavailable" : fmtAmount(move.liability, 0)} />
+            <Row label="Equity buffer" sub="Backstop capital that absorbs peso appreciation first" value={move.equity === undefined ? "—" : fmtAmount(move.equity, 0)} />
+            <Row
+              label="Redeemed today"
+              sub="Redemptions are capped per 24 hours"
+              value={move.redeemedToday === undefined ? "—" : `${fmtAmount(move.redeemedToday, 0)} of ${fmtAmount(move.redeemCap, 0)} OUSD`}
+            />
+            <Row label="Below 100% coverage" sub="New mints stop, and redemptions pay pro-rata so no one can run first" value="Enforced on-chain" />
+          </Rows>
+        </Panel>
+      )}
+
+      {!USE_V2 && section === "desk" && (
         <Panel key="desk" title="Swap desk" description="Its own finite inventory, funded separately. It can't touch vault collateral. A capped demo liquidity source priced off the mock oracle, not a market.">
           <Rows>
             <Row label="xMXN available" value={desk.reserveXmxn === undefined ? "Unavailable" : fmtAmount(desk.reserveXmxn, 0)} />

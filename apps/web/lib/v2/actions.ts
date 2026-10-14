@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import type { Abi, Address } from "viem";
 import { useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
-import { ADDR, CHAIN_ID, tokenAbi, useTx, withSlippage, type TxApi } from "@/lib/contracts";
+import { ADDR, CHAIN_ID, deliveredFromReceipt, memoToBytes32, tokenAbi, useTx, withSlippage, type TxApi } from "@/lib/contracts";
 import { moveAmmAbi, vaultV2Abi } from "./abis";
 import { V2 } from "./addresses";
 
@@ -50,6 +50,19 @@ export function useMercadoV2() {
       tx.run(async (t) => {
         await approveIfNeeded(t, ADDR.ousd, need(V2.amm, "MoveAMM"), amountIn, "OUSD");
         await t.write(amm("swapOusdForXmxn", [amountIn, withSlippage(quotedOut, slippageBps), to]), "Mint and deliver xMXN");
+      }),
+    /** Move with a note: mint to yourself, then transferWithMemo exactly what was minted (two txs). */
+    sendUsdToMxnWithMemo: (amountIn: bigint, quotedOut: bigint, to: Address, memo: string, slippageBps = 50n) =>
+      tx.run(async (t) => {
+        const memo32 = memoToBytes32(memo); // validate before any write (R-017)
+        await approveIfNeeded(t, ADDR.ousd, need(V2.amm, "MoveAMM"), amountIn, "OUSD");
+        const minted = await t.write(amm("swapOusdForXmxn", [amountIn, withSlippage(quotedOut, slippageBps), t.account]), "Mint xMXN");
+        const out = deliveredFromReceipt(minted, need(V2.xmxn, "xMXN"), t.account).amount;
+        if (out === 0n) throw new Error("The mint went through but its amount couldn't be read. Send it with 'xMXN I hold'.");
+        await t.write(
+          { address: need(V2.xmxn, "xMXN"), abi: tokenAbi as Abi, functionName: "transferWithMemo", args: [to, out, memo32] },
+          "Send xMXN",
+        );
       }),
     /** Move: xMXN in is burned and redeems OUSD to `to`. */
     sendMxnToUsd: (amountIn: bigint, quotedOut: bigint, to: Address, slippageBps = 50n) =>
