@@ -8,9 +8,9 @@ import { jsonError } from "@/lib/server/http";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 import { MoveQuoteError, quoteMove } from "@/lib/server/move/quote";
 import { recordPaidCall } from "@/lib/mpp/ledger";
+import { PRICES } from "@/lib/mpp/pricing";
 
-/** Partner fee per signed indicative quote (MPP buys the API response, not the payment itself). */
-const PARTNER_FEE = "0.50"; // xMXN
+const PARTNER_FEE = PRICES["move-quote"];
 
 // GET /api/move/quote?side=usd_to_mxn|mxn_to_usd&amount=100
 //   (app, free)          → indicative quote from the v2 vAMM, or the v1 SwapDesk fallback.

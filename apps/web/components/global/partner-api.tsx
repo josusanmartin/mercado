@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fmtAmount } from "@/lib/format";
 import { PaidCalls } from "@/components/credito/paid-calls";
+import { usePrice } from "@/components/credito/use-pricing";
 
 const PATH = "/api/move/quote?side=usd_to_mxn&amount=250&access=partner";
 const CURL = `# 1) Ask: the API answers 402 with an MPP challenge (amount, token, merchant, expiry)
@@ -28,6 +29,7 @@ type Probe = {
 };
 
 export function PartnerApi() {
+  const price = usePrice("move-quote");
   const [probe, setProbe] = useState<Probe>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -69,7 +71,7 @@ export function PartnerApi() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-10">
       <Panel
         title="Partner API: signed indicative quotes"
-        description="Remittance apps, fintechs and bots buy a quote signed by Mercado (cotización indicativa firmada) per call: no API key, account or card. The endpoint answers HTTP 402, the caller pays 0.50 xMXN on Tempo, and gets the quote, an EIP-191 signature and a receipt. It's indicative: it expires in 30s and execution is bound only by the swap's minimum received. MPP pays for the quote, not for the payment."
+        description="Remittance apps, fintechs and bots buy a quote signed by Mercado (cotización indicativa firmada) per call: no API key, account or card. The endpoint answers HTTP 402, the caller pays per quote on Tempo, and gets the quote, an EIP-191 signature and a receipt. It's indicative: it expires in 30s and execution is bound only by the swap's minimum received. MPP pays for the quote, not for the payment."
         aside={<Badge variant="mock">Testnet pricing</Badge>}
       >
         <Rows>
@@ -83,7 +85,7 @@ export function PartnerApi() {
           />
           <Row
             label="Price"
-            value="0.50 xMXN per quote"
+            value={price ? `${price} per quote` : "…"}
             sub="Settled on Tempo via MPP (HTTP 402)"
           />
           <Row

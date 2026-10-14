@@ -28,13 +28,22 @@ export function useDriverData(platform: Platform | undefined) {
     queryKey: ["driver-demo", platform],
     enabled: !!platform,
     staleTime: Infinity,
-    queryFn: () => fetch(`/api/driver/demo?profile=steady&platform=${platform}`).then((r) => json<DriverDemoResponse & { platform?: string }>(r)),
+    queryFn: () =>
+      fetch(`/api/driver/demo?profile=steady&platform=${platform}`).then((r) =>
+        json<DriverDemoResponse & { platform?: string }>(r),
+      ),
   });
 }
 
 export function useScore() {
   return useMutation({
-    mutationFn: ({ borrower, platform }: { borrower: Address; platform: Platform }) =>
+    mutationFn: ({
+      borrower,
+      platform,
+    }: {
+      borrower: Address;
+      platform: Platform;
+    }) =>
       fetch("/api/driver/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,14 +65,22 @@ export function useCountdown(expiry: number | undefined) {
   return expiry && now !== undefined ? Math.max(0, expiry - now) : undefined;
 }
 
-export function useAdvance(borrower: Address | undefined, platform: Platform | undefined) {
+export function useAdvance(
+  borrower: Address | undefined,
+  platform: Platform | undefined,
+) {
   const score = useScore();
   const pool = usePool();
   const m = useMercado();
   useReportBusy(m.tx.isBusy);
   const s = score.data;
   // Only use an attestation that was issued for THIS wallet (R-014).
-  const att = s?.attestation && borrower && s.attestation.borrower.toLowerCase() === borrower.toLowerCase() ? s.attestation : undefined;
+  const att =
+    s?.attestation &&
+    borrower &&
+    s.attestation.borrower.toLowerCase() === borrower.toLowerCase()
+      ? s.attestation
+      : undefined;
   const capacity = useBorrowCapacity(att ? BigInt(att.maxAmount) : undefined);
   const secondsLeft = useCountdown(att?.expiry);
   const expired = secondsLeft === 0;
@@ -75,7 +92,11 @@ export function useAdvance(borrower: Address | undefined, platform: Platform | u
   const draw = useCallback(
     async (amount: bigint) => {
       if (!att) return undefined;
-      const steps = await m.borrow(amount, { ...att, dataHash: att.dataHash as Hex, signature: att.signature as Hex });
+      const steps = await m.borrow(amount, {
+        ...att,
+        dataHash: att.dataHash as Hex,
+        signature: att.signature as Hex,
+      });
       // The nonce is consumed: fetch a fresh offer for any further draw (R-014).
       if (steps) check();
       return steps;
@@ -88,7 +109,9 @@ export function useAdvance(borrower: Address | undefined, platform: Platform | u
     att,
     expired,
     secondsLeft,
-    available: (capacity.data as bigint | undefined) ?? (s ? BigInt(s.availableToBorrow) : undefined),
+    available:
+      (capacity.data as bigint | undefined) ??
+      (s ? BigInt(s.availableToBorrow) : undefined),
     pool,
     tx: m.tx,
     check,

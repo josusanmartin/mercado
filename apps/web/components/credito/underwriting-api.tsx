@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { fmtAmount } from "@/lib/format";
 import { PaidCalls } from "./paid-calls";
+import { usePrice } from "./use-pricing";
 
 const ENDPOINT = "/api/driver/score?access=underwriter";
 const DEMO_BORROWER = "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63"; // demo Driver account
@@ -20,7 +21,7 @@ const res = await mppx.fetch("https://<mercado>${ENDPOINT}", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ borrower: "0x…", profile: "steady" }),
-}); // 402 → pays 2 xMXN on Tempo → 200 + Payment-Receipt
+}); // 402 → pays the per-report price on Tempo → 200 + Payment-Receipt
 const report = await res.json();`;
 
 type Probe = {
@@ -34,6 +35,7 @@ type Probe = {
 };
 
 export function UnderwritingApi() {
+  const price = usePrice("underwriting");
   const [probe, setProbe] = useState<Probe>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -79,7 +81,7 @@ export function UnderwritingApi() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <Panel
         title="Underwriting API"
-        description="Lenders, fintechs and bots buy a driver's demo underwriting report per call. No API key, account or card: the endpoint answers HTTP 402, the caller pays 2 xMXN on Tempo, and gets the report with a receipt. Same illustrative score on Demo Uber Data, and never a borrow attestation."
+        description="Lenders, fintechs and bots buy a driver's demo underwriting report per call. No API key, account or card: the endpoint answers HTTP 402, the caller pays per report on Tempo, and gets the report with a receipt. Same illustrative score on the demo platform data, and never a borrow attestation."
         aside={
           <Badge variant="mock">Demo Uber Data · illustrative score</Badge>
         }
@@ -91,7 +93,7 @@ export function UnderwritingApi() {
           />
           <Row
             label="Price"
-            value="2 xMXN per report"
+            value={price ? `${price} per report` : "…"}
             sub="Settled on Tempo via MPP (HTTP 402)"
           />
           <Row

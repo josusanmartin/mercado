@@ -1,30 +1,38 @@
 "use client";
-// Mercado Crédito: the credit platform. ONE product hero (live pool KPIs) and ONE tab row:
-//   Drivers          → Demo Uber Data → score → signed advance → repay (numbered steps inside the tab)
-//   Lenders          → supply / withdraw xMXN, pool stats, realized fees (contracts' Earn screen)
-//   Underwriting API → third parties pay per report over MPP (HTTP 402)
+// Mercado Crédito (v2, crew/DESIGN-ECOSYSTEM.md §5): ONE product header (live pool KPIs) and ONE tab row:
+//   Driver app  → web's Android-framed driver app (Uber/DiDi/Rappi demo connection → line → draw → repay)
+//   Back office → the credit platform: KPIs, loan book, underwriting, lenders, Underwriting API
 // The tab is synced to ?tab= and switches the Demo-mode role (Driver ↔ Lender).
 import { useEffect, useState } from "react";
-import { HandCoins, Landmark, Plug } from "lucide-react";
+import { LayoutDashboard, Smartphone } from "lucide-react";
 import { ListPane, SettingsLayout } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { usePool } from "@/lib/contracts";
 import { fmtAmount } from "@/lib/format";
-import { CreditScreen } from "@/components/credit/credit-screen";
-import { EarnScreen } from "@/components/earn/earn-screen";
-import { CreditActivity } from "./credit-activity";
-import { UnderwritingApi } from "./underwriting-api";
+import { BackOffice } from "./back-office";
+import { DriverApp } from "./driver-app";
 
 const TABS = [
-  { id: "drivers", label: "Drivers", icon: HandCoins, hint: "Advances" },
-  { id: "lenders", label: "Lenders", icon: Landmark, hint: "Fund the pool" },
-  { id: "api", label: "Underwriting API", icon: Plug, hint: "Pay per report" },
+  {
+    id: "driver",
+    label: "Driver app",
+    icon: Smartphone,
+    hint: "Advances on gig income",
+  },
+  {
+    id: "backoffice",
+    label: "Back office",
+    icon: LayoutDashboard,
+    hint: "Loan book · lenders · API",
+  },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
 function tabFromUrl(): Tab {
   const t = new URLSearchParams(window.location.search).get("tab");
-  return TABS.some((x) => x.id === t) ? (t as Tab) : "drivers";
+  // Old deep links: ?tab=drivers → Driver app; ?tab=lenders|api → Back office.
+  if (t === "lenders" || t === "api") return "backoffice";
+  return TABS.some((x) => x.id === t) ? (t as Tab) : "driver";
 }
 
 const xmxn = (v: bigint | undefined, digits = 0) =>
@@ -45,7 +53,7 @@ export function CreditoScreen() {
     <SettingsLayout
       product="credito"
       title="Credit for the gig economy"
-      demo={tab === "lenders" ? "lender" : "driver"}
+      demo={tab === "backoffice" ? "lender" : "driver"}
       purpose={
         <>
           Drivers draw small xMXN advances against their earnings, lenders fund
@@ -89,25 +97,8 @@ export function CreditoScreen() {
         />
       }
     >
-      {tab === "drivers" && (
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-          <CreditScreen />
-          <CreditActivity
-            title="Advances on-chain"
-            description="Every advance drawn and repaid in the credit pool, read live from the chain."
-          />
-        </div>
-      )}
-      {tab === "lenders" && (
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
-          <EarnScreen embedded />
-          <CreditActivity
-            title="Pool activity"
-            description="Lender supplies and withdrawals, advances and repayments, read live from the chain."
-          />
-        </div>
-      )}
-      {tab === "api" && <UnderwritingApi />}
+      {tab === "driver" && <DriverApp />}
+      {tab === "backoffice" && <BackOffice />}
     </SettingsLayout>
   );
 }

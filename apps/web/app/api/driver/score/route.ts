@@ -7,10 +7,10 @@ import {
   activeProtocolName,
 } from "@/lib/server/protocol";
 import { recordPaidCall } from "@/lib/mpp/ledger";
+import { PRICES } from "@/lib/mpp/pricing";
 import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 
-/** Fee for third-party underwriter access, in decimal xMXN. */
-const UNDERWRITER_FEE = "2";
+const UNDERWRITER_FEE = PRICES.underwriting;
 
 // POST /api/driver/score { borrower, profile }
 //   (app, free)              → deterministic demo score + signed EIP-712 Eligibility (15 min expiry).
