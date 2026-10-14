@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-14T00:56:23.968Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J5"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J5": {
+      "status": "fail",
+      "txs": {},
+      "notes": [],
+      "error": "assertion failed: driver holds 0 xMXN, needs 300 for 3 bill payments (run J4 first)"
+    }
+  }
+}

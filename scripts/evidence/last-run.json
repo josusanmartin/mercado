@@ -1,6 +1,7 @@
 {
-  "at": "2026-10-14T00:54:37.792Z",
+  "at": "2026-10-14T00:58:36.093Z",
   "api": "http://localhost:3100",
+  "steps": "all",
   "evidence": {
     "J0": {
       "status": "pass",
@@ -12,17 +13,59 @@
     "J1": {
       "status": "pass",
       "txs": {
-        "approve OUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x0c323827458c2a4a9d6aa0915047a9f6c9524ec9fd16fc21796010ac6be81dff",
-        "depositCollateral 1,000 OUSD": "https://explore.testnet.tempo.xyz/tx/0x2cc7cc49a6da2ac1bdba37203719110d0f816d03eb8f1014121709c7d2d03da0"
+        "approve OUSD → vault": "https://explore.testnet.tempo.xyz/tx/0xbb9b69e6ab40ba11fcbee8d545133455ad94974c69e3b1a51433ae04dbbde5e3",
+        "depositCollateral 1,000 OUSD": "https://explore.testnet.tempo.xyz/tx/0xe41f969e78ea0d29ab4d104f64dc5ca548619bf2f984aec7a77f496b6eae0355"
       },
       "notes": []
     },
     "J2": {
       "status": "pass",
       "txs": {
-        "mint 6,666.67 xMXN": "https://explore.testnet.tempo.xyz/tx/0xa45a7ff6bc619cd3c95ed838a6f94f58a5818ec13df777e82d12790424040d9e"
+        "mint 13,333.33 xMXN": "https://explore.testnet.tempo.xyz/tx/0x701df8a6761f0d23bb302e8992b305e3dfa182edb7eef60668da906dca3c57eb"
       },
       "notes": []
+    },
+    "J3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → desk": "https://explore.testnet.tempo.xyz/tx/0xd49c797d62816e2815b46c2ea20121385f1d6f2a2027b02c54a6499acfde8dda",
+        "swapOusdForXmxn 50 OUSD": "https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3",
+        "transfer 995 xMXN → Recipient": "https://explore.testnet.tempo.xyz/tx/0xc86a194befe0c1abc17923ee7b6e6fd8435e4a81f3bbdfe2a147a141c3cc396a"
+      },
+      "notes": []
+    },
+    "J4": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x15e9ad6a3e0cb2f974cab113a5d8744755463b3f662214081216db4f3e950bf1"
+      },
+      "notes": []
+    },
+    "J5": {
+      "status": "fail",
+      "txs": {
+        "MPP payment (pull)": "https://explore.testnet.tempo.xyz/tx/0x10ff16340ab60d9e4e68917f7734495f3cc4b4bd390078149889f6d2680fa00e"
+      },
+      "notes": [
+        "[pull] 402 challenge: Payment id=\"RrSNjNvZ7mvnKydbSBrnpuXOpf-9JAQ0KLF_TpkcvxA\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfM2MwZGJkODYtM2NhYy00Y2ZlLTg5NDAtMmRmNzk4Y2M0MTIwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:07:00.600Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4ZmZjM2E1YzgyM2ZiMGZmODRkYThmYWM3NDEyMWVkMTBhNTE3MGEwNTI5YzI4MzA0N2VkMzcxNGUwY2E0NTc4NSIsIm9yZGVySWQiOiJvcmRfM2MwZGJkODYtM2NhYy00Y2ZlLTg5NDAtMmRmNzk4Y2M0MTIwIiwicXVvdGVJZCI6InFfYjI2OTNkNjAtNGMyMy00MjEyLTg2NjUtMjU2MjI3MDY5NmFmIn0\"",
+        "[push] 402 challenge: Payment id=\"c4zNPlJh7mnbT5nVEwij7BMc4b4Kskr4n_yJhymZH50\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfYzdkZjgyMjUtZTdjYS00MGU0LWFkNzYtY2Q3YWFlY2Y4MDRiIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:07:09.232Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MDdjOGZkMzUxMzIzYmMwZTY2NTEzM2M1NGRkNjNiYzY3Njc2Y2U2ZGU1NDYyYzNlMTk2Y2FjZDdkNmI0NzM4YyIsIm9yZGVySWQiOiJvcmRfYzdkZjgyMjUtZTdjYS00MGU0LWFkNzYtY2Q3YWFlY2Y4MDRiIiwicXVvdGVJZCI6InFfNzlmZWVlNTEtMjBkNC00OTk0LThhMDgtYzlkY2E4YjIwZDFiIn0\""
+      ],
+      "error": "assertion failed: response carries a Payment-Receipt header"
+    },
+    "J6": {
+      "status": "pass",
+      "txs": {
+        "top-up 210 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0xe6c913dba3c638d170dab0e6ef1da35d676983765c95058cfbcc486b06946077",
+        "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0xd45d59f69ef4c243f44357eeabc698cd3c4b513322048841ab38b7483c32357f",
+        "repay 510 xMXN": "https://explore.testnet.tempo.xyz/tx/0x27c0f92d5b74a1fd1e7e3f0ba467bfa3e06e314b8fa68f15ec9b80e30dfc6ddb"
+      },
+      "notes": []
+    },
+    "J7": {
+      "status": "fail",
+      "txs": {},
+      "notes": [],
+      "error": "assertion failed: StressDemo output includes STRESS_BORROWER=0x… and STRESS_LIQUIDATOR=0x…"
     }
   }
 }
