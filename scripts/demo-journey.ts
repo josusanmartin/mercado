@@ -447,7 +447,10 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const maxAmount = BigInt(att.maxAmount)
       const liq = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'availableLiquidity' })
       log(`pool available liquidity ${fmt(liq)} xMXN`)
-      let amount = maxAmount < AMT.borrowCap ? maxAmount : AMT.borrowCap
+      // availableToBorrow = what the pool can lend this borrower right now (CreditPool.borrowCapacity, R-006)
+      const capacity = s.availableToBorrow !== undefined ? BigInt(s.availableToBorrow) : maxAmount
+      log(`credit line ${fmt(maxAmount)} xMXN, available to draw now ${fmt(capacity)} xMXN`)
+      let amount = [maxAmount, capacity, AMT.borrowCap].reduce((a, b) => (b < a ? b : a))
       if (amount > liq) throw new Error(`pool liquidity ${fmt(liq)} < borrow ${fmt(amount)}; LENDER must supply first`)
       const debtBefore = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
       const borrowArgs = [amount, maxAmount, BigInt(att.expiry), BigInt(att.nonce), att.dataHash, att.signature] as const
@@ -483,10 +486,16 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       // pull: client signs, server broadcasts (default for local keys / demo personas)
       // push: client broadcasts, then retries with the tx hash (what Tempo Wallet / passkey wallets do)
       requireDeployed(d, 'xMXN', 'merchant')
+      const need = parseUnits(String(AMT.billMxn * 3), 6)
+      const have = await bal(d.xMXN, account('DRIVER').address)
+      assert(have >= need, `driver holds ${fmt(have)} xMXN, needs ${fmt(need)} for 3 bill payments (run J4 first)`)
       for (const mode of ['pull', 'push'] as const) {
         log(`${C.b}— ${mode} mode —${C.x}`)
         await payBillVia(d, account('DRIVER'), mode)
       }
+      // provider failure path: phones ending 0000 make the mock provider reject → FAILED + paidButUnfulfilled
+      log(`${C.b}— provider failure (paid but unfulfilled) —${C.x}`)
+      await payBillVia(d, account('DRIVER'), 'pull', { phone: '5512340000', expect: 'FAILED' })
     },
   },
   {
@@ -579,10 +588,16 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
 ]
 
 /** One full MPP bill payment: quote → 402 → pay (mppx client, given mode) → verify on-chain → idempotent retry. */
-async function payBillVia(d: Deployments, driver: PrivateKeyAccount, mode: 'pull' | 'push') {
+async function payBillVia(
+  d: Deployments,
+  driver: PrivateKeyAccount,
+  mode: 'pull' | 'push',
+  opts: { phone?: string; expect?: 'FULFILLED_SIMULATED' | 'FAILED' } = {},
+) {
+  const expect = opts.expect ?? 'FULFILLED_SIMULATED'
   const quote = await api('/api/bills/quote', {
     method: 'POST',
-    body: JSON.stringify({ provider: 'telcel', phone: '5512345678', amountMxn: AMT.billMxn }),
+    body: JSON.stringify({ provider: 'telcel', phone: opts.phone ?? '5512345678', amountMxn: AMT.billMxn }),
   })
   assert(quote.res.ok, `POST /api/bills/quote → ${quote.res.status} ${JSON.stringify(quote.body).slice(0, 200)}`)
   assert(quote.body.simulated === true, 'quote is labeled simulated')
@@ -618,14 +633,19 @@ async function payBillVia(d: Deployments, driver: PrivateKeyAccount, mode: 'pull
   const paid = await mppx.fetch(`${API}/api/bills/pay`, post)
   const order = await paid.json().catch(() => ({}))
   assert(paid.ok, `paid /api/bills/pay → ${paid.status} ${JSON.stringify(order).slice(0, 300)}`)
-  assert(order.status === 'FULFILLED_SIMULATED', `order ${order.orderId} status ${order.status}`)
+  assert(order.status === expect, `order ${order.orderId} status ${order.status}, expected ${expect}`)
+  if (expect === 'FAILED') assert(order.paidButUnfulfilled === true, 'failed-after-payment order is flagged paidButUnfulfilled')
   assert(order.fulfillment?.simulated === true && /SIMULATED/.test(order.fulfillment?.label ?? ''), 'fulfillment labeled SIMULATED')
   assert(paid.headers.get('payment-receipt'), 'response carries a Payment-Receipt header')
   const txHash = order.receipt?.txHash as Hash
   assert(txHash, 'order carries receipt.txHash')
   evidence[current].txs[`MPP payment (${mode})`] = txUrl(txHash)
   ok(`order ${order.orderId}: ${order.status}, payment tx ${C.dim}${txUrl(txHash)}${C.x}`)
-  ok(`fulfillment ref ${order.fulfillment.reference}: "${order.fulfillment.label}"`)
+  ok(
+    expect === 'FAILED'
+      ? `provider rejected after payment → FAILED, paidButUnfulfilled=true (needs refund/manual retry), "${order.fulfillment.label}"`
+      : `fulfillment ref ${order.fulfillment.reference}: "${order.fulfillment.label}"`,
+  )
 
   // 3) the receipt must be a real on-chain transfer to the merchant for the quoted amount, from the driver
   const rcpt = await pub.getTransactionReceipt({ hash: txHash })
@@ -661,7 +681,7 @@ async function payBillVia(d: Deployments, driver: PrivateKeyAccount, mode: 'pull
   const hist = await api(`/api/bills/orders/${order.orderId}`)
   assert(hist.res.ok, `GET /api/bills/orders/${order.orderId} → ${hist.res.status}`)
   const states = (hist.body.history ?? hist.body.order?.history ?? []).map((h: any) => h.status)
-  assert(JSON.stringify(states) === JSON.stringify(['CREATED', 'PAYMENT_VERIFIED', 'FULFILLED_SIMULATED']), `order history ${JSON.stringify(states)}`)
+  assert(JSON.stringify(states) === JSON.stringify(['CREATED', 'PAYMENT_VERIFIED', expect]), `order history ${JSON.stringify(states)}`)
   ok(`order history: ${states.join(' → ')}`)
 }
 
@@ -725,7 +745,9 @@ async function main() {
   }
   const outDir = join(ROOT, 'scripts/evidence')
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(join(outDir, 'last-run.json'), JSON.stringify({ at: new Date().toISOString(), api: API, evidence }, null, 2))
+  const run = JSON.stringify({ at: new Date().toISOString(), api: API, steps: ONLY ? [...ONLY] : 'all', evidence }, null, 2)
+  writeFileSync(join(outDir, 'last-run.json'), run)
+  writeFileSync(join(outDir, `run-${new Date().toISOString().replace(/[:.]/g, '-')}.json`), run) // keep history for ACCEPTANCE links
   const summary = failed
     ? `${C.r}${failed} step(s) failed${C.x}${skipped ? `, ${skipped} skipped` : ''}`
     : skipped
