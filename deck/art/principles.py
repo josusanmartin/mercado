@@ -64,7 +64,7 @@ def apply(s):
         part = re.sub(r'<(h1|h2|p)((?: data-[a-z-]+="[^"]*")*) style="([^"]*)">(.*?)</\1>', _display, part, flags=re.S)
         # meta: top labels (top:128px) and footer row (bottom:64px)
         part = re.sub(r'<p style="(position:absolute;(?:left|right):\d+px;(?:top:128px|bottom:64px);[^"]*)">(.*?)</p>', _meta, part, flags=re.S)
-        part = part.replace(">Mercado · testnet prototype on Tempo Moderato</p>", ">Mercado · testnet · no real value · Tempo Moderato</p>")
+        part = part.replace(">Mercado · testnet prototype on Tempo Moderato</p>", ">Mercado · built on Tempo</p>")
         out.append(part)
     return "".join(out)
 
