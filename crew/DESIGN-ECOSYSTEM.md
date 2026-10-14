@@ -83,3 +83,15 @@ The ecosystem becomes **five products**: Mint · Remesas · Global · Crédito �
 - Live KPIs: cards issued, xMXN spent through Card, merchants.
 
 **Owners:** `contracts` builds MercadoCard.sol + tests + deploy (alongside v2, address under deployments.v2.card) + hooks in lib/contracts. `web` builds /card UI after DriverApp. `slides` adds Card to the ecosystem (5 products). `qa` adds a card journey step. `review` does an adversarial pass on the charge authorization.
+
+## 7. Mercado Invest (josu, 02:32): buy RWAs/T-bills and save. Sixth product, color gold `#F2B807` (ink text on gold)
+The ecosystem is now **six products**: Mint · Remesas · Global · Crédito · Card · **Invest**. Home: "Mercado: one currency, six products." The money map adds Invest (savings/RWA in, yield out).
+
+**Three ways to grow money: wire real, simulate only the asset's yield/price source:**
+1. **Ahorro en pesos (peso savings):** deposit xMXN into the **Crédito lending pool** (the real CreditPool v2 supply/withdraw). The yield is the **real realized fees** drivers paid, shown as historical and "variable, not guaranteed". Only idle cash is withdrawable (lent funds are locked, shown honestly).
+2. **Ahorro en dólares (dollar savings):** stake OUSD → **sOUSD** (the real ERC-4626 on-chain; accrual from the demo-funded yield reserve). Label: "demo yield source, admin-funded on testnet".
+3. **CETES-style T-bills (tTBILL):** buy/sell the demo tokenized T-bill through a new **InvestDesk** contract: real on-chain buy with OUSD (or xMXN, routed through the vAMM redeem first) and sell back, priced from the tTBILL admin feed with a small spread and finite inventory/caps. Label: "Demo tokenized T-bill: not a security, admin price feed". Holding tTBILL can then be used as **Mint collateral** (link to /mint), which shows the ecosystem loop.
+
+**UI (`/invest`, gold):** a consumer savings app inside the **Android phone frame** (Spanish-first): total balance, three product cards (Ahorro pesos · Ahorro dólares · T-bills) with rate/return (historical/indicative, never "guaranteed"), deposit/withdraw/buy/sell sheets, and an activity list (real events). Beside it, a "Portfolio" panel: positions, accrued yield since deposit (real on-chain math), and where the yield comes from for each product (honest source line).
+
+**Owners:** `contracts` builds InvestDesk.sol (+ tests: price/spread math, inventory caps, stale feed reverts, no free mint) + deploy under deployments.v2.investDesk + lib/contracts hooks, AFTER MercadoCard. `api` builds the /invest UI after the Crédito back office (reuse web's PhoneFrame + Brand v4). `slides` adds Invest (six products). `qa` adds an invest journey step + MOCKS entries. `review` checks InvestDesk pricing/inventory and the savings copy (no guaranteed-return language).
