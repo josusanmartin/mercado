@@ -675,15 +675,14 @@ export function Switch({ checked, onChange, disabled, label }: { checked: boolea
 
 /** Remembers the previous screen and says whether we moved forward or back in `order`. */
 export function useNavDirection<T extends string>(screen: T, order: readonly T[]): "fwd" | "back" {
-  const prev = useRef(screen);
-  const [dir, setDir] = useState<"fwd" | "back">("fwd");
-  useEffect(() => {
-    if (prev.current !== screen) {
-      setDir(order.indexOf(screen) >= order.indexOf(prev.current) ? "fwd" : "back");
-      prev.current = screen;
-    }
-  }, [screen, order]);
-  return order.indexOf(screen) >= order.indexOf(prev.current) ? "fwd" : dir;
+  // Decided during render (the new screen mounts with the right slide); stable across re-renders.
+  const [nav, setNav] = useState<{ screen: T; dir: "fwd" | "back" }>({ screen, dir: "fwd" });
+  if (nav.screen !== screen) {
+    const dir = order.indexOf(screen) >= order.indexOf(nav.screen) ? "fwd" : "back";
+    setNav({ screen, dir });
+    return dir;
+  }
+  return nav.dir;
 }
 
 /** Re-mounts its child with a short shared-axis slide whenever `id` changes. */
