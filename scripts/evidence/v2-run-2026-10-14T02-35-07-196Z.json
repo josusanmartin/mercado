@@ -1,0 +1,86 @@
+{
+  "at": "2026-10-14T02:35:07.196Z",
+  "protocol": "v2",
+  "steps": "all",
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V1": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xce89c4edb5ef64449430e65b13a347b50d6976d83e984a21b715ebdfe94340e0",
+        "stake 200 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x5c5d41b751160138c31bdf1afd5f06b7eae9937ebf3576e8033a41057cbc762f",
+        "approve sOUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x6a126ecc12a7aca6eeb3db06408d9259e8078ac80167bbd6a28999856e328455",
+        "depositCollateral 200 sOUSD": "https://explore.testnet.tempo.xyz/tx/0x9a6ec414d1712f82ed96896be44738509b435dc79faca08d941dfadb0d87d011",
+        "mint 1,469.97 xMXN v2 against sOUSD": "https://explore.testnet.tempo.xyz/tx/0xaef469ee31baca15a225d5b79d36efeeeefbe47ba3391c9f330e2d4b63df17be"
+      },
+      "notes": []
+    },
+    "V2": {
+      "status": "pass",
+      "txs": {
+        "tTBILL faucet 10 (demo, not a security)": "https://explore.testnet.tempo.xyz/tx/0xadfb6c854ab7eb333103a4296379daa6c6eb46571f1832c57a707757354989f3",
+        "approve tTBILL → vault": "https://explore.testnet.tempo.xyz/tx/0xfca9a9a5667d59745a7e5d78b8bcaf2fb2a698a798195996b7d091cd0a5286a0",
+        "depositCollateral 10 tTBILL": "https://explore.testnet.tempo.xyz/tx/0xf8e168588ac3334836e2524baf521c5eb310bf9eb272337bd0dfc0a5b239ed5f",
+        "mint 6,124.9 xMXN v2 against tTBILL": "https://explore.testnet.tempo.xyz/tx/0xbeeb2e928ac8238b14847c211eb4a04231759444dd25773bc6ff717cf78cb7b3"
+      },
+      "notes": []
+    },
+    "V3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vamm": "https://explore.testnet.tempo.xyz/tx/0x023d5f36239370ba09dd872e82dfd0eae5383bbe0dd876cea2129a04344e5cd2",
+        "swapOusdForXmxn 50 OUSD → Rosa": "https://explore.testnet.tempo.xyz/tx/0x7fcf30ba859c5fd3ff601315501b6bf0400ba33ea32e72fc0ae43fbb6353760b"
+      },
+      "notes": []
+    },
+    "V4": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → vamm": "https://explore.testnet.tempo.xyz/tx/0xfa5344ab1cd557fcc2319085a6995088d04674812443f91f22b26a6750ad66e4",
+        "swapXmxnForOusd 200 xMXN v2 (burn)": "https://explore.testnet.tempo.xyz/tx/0xde36f57469ca74e8ff35228a4e9a7f8bd4cebe1aa9e1039604402718302c9a8e"
+      },
+      "notes": []
+    },
+    "V5": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xbb9f6edeea5275c4997c6f052f50a26922dcdabd2e0b785178ba86557ab0cb33"
+      },
+      "notes": []
+    },
+    "V6": {
+      "status": "pass",
+      "txs": {
+        "MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0x625b5bc111d0ef59f4cb3d2e5b9c4ceecddd4a4074c539101bd99f876820f69e"
+      },
+      "notes": []
+    },
+    "V7": {
+      "status": "pass",
+      "txs": {
+        "top-up 110 xMXN v2 LP → Driver": "https://explore.testnet.tempo.xyz/tx/0xf07706ee168d48bbac6cae74751a6448765fc53bf97fef5a9785315ae2464b5d",
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0x256da0b61fd4f17240fd4c01c39ffee61a6c340e3da13dc1bfef1ff9a1be4b13",
+        "repay 510 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xcc9b79f6216e1782629429466288da208714d053792256178f2f71a6868de2b8"
+      },
+      "notes": []
+    },
+    "V8": {
+      "status": "pass",
+      "txs": {
+        "underwriter MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0x44074763e0a61e616a7704439412458e5141a6aecacb2c45fa4b5421299c485f"
+      },
+      "notes": []
+    },
+    "VS": {
+      "status": "pass",
+      "txs": {
+        "liquidation 0x59bAA2": "https://explore.testnet.tempo.xyz/tx/0xa0ca227ab323b30ed745379fb3038899b74f1954aa2e2191ee482eb52e61b6d0"
+      },
+      "notes": []
+    }
+  }
+}

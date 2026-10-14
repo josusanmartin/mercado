@@ -408,6 +408,43 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
   },
   {
     id: 'V8',
+    title: 'Spend: a third-party underwriter bot buys a report over MPP (HTTP 402 on the v2 app), paying xMXN v2',
+    async run() {
+      // the v2 app over real HTTP: lead's flipped :3100, or web's v2 preview (:3101) before the flip
+      const api = process.env.MERCADO_API_URL_V2 ?? 'http://localhost:3101'
+      const probe = await fetch(`${api}/api/driver/score?access=underwriter`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ borrower: process.env.DRIVER_ADDRESS, profile: 'steady' }),
+      }).catch(() => undefined)
+      if (!probe) throw new SkipStep(`no v2 app reachable at ${api} (set MERCADO_API_URL_V2)`)
+      const { Challenge } = await import('mppx')
+      const ch: any = Challenge.fromResponse(probe)
+      if (String(ch?.request?.currency ?? '').toLowerCase() !== A.xMXN.toLowerCase())
+        throw new SkipStep(`${api} charges ${ch?.request?.currency}, not xMXN v2: that server isn't running PROTOCOL=v2`)
+      ok(`${api} answers 402 in xMXN v2 → merchant ${ch.request.recipient}`)
+      const { spawnSync } = await import('node:child_process')
+      const r = spawnSync('npx', ['tsx', join(ROOT, 'scripts/underwriter-agent.ts')], {
+        cwd: ROOT,
+        env: { ...process.env, MERCADO_PROTOCOL: 'v2', MERCADO_API_URL: api },
+        encoding: 'utf8',
+        timeout: 300_000,
+      })
+      const out = (r.stdout ?? '').replace(/\x1b\[[0-9;]*m/g, '')
+      for (const line of out.split('\n').filter((l) => /^(mercado|tempo|agent)\s/.test(l)).slice(0, 8)) log(`${C.dim}${line.trim()}${C.x}`)
+      if (r.status !== 0) throw new Error(`underwriter-agent exited ${r.status}: ${(r.stderr || out).trim().split('\n').slice(-2).join(' | ')}`)
+      const tx = out.match(/PAYMENT_TX=(0x[0-9a-fA-F]{64})/)?.[1] as Hash | undefined
+      assert(tx, 'agent printed PAYMENT_TX=0x…')
+      const rcpt = await pub.getTransactionReceipt({ hash: tx })
+      const paid = transfersTo(rcpt, A.xMXN, A.merchant).reduce((a: bigint, e: any) => a + e.args.amount, 0n)
+      assert(paid === BigInt(ch.request.amount), `on-chain xMXN v2 to merchant ${paid} == 402 amount ${ch.request.amount}`)
+      assert(/no borrow attestation included/.test(out), 'paid report carried no borrow attestation')
+      evidence[current].txs['underwriter MPP payment (xMXN v2)'] = txUrl(tx)
+      ok(`bot paid ${fmt(paid)} xMXN v2 over 402 and got the report + Payment-Receipt  ${C.dim}${txUrl(tx)}${C.x}`)
+    },
+  },
+  {
+    id: 'VS',
     title: 'FX stress on v2 (runs last): liquidation enforceable, AMM coverage under appreciation, full restore',
     async run() {
       const script = join(ROOT, 'packages/contracts/script/StressDemoV2.s.sol')

@@ -32,7 +32,9 @@ const args = process.argv.slice(2)
 const PROFILE = args.includes('--profile') ? args[args.indexOf('--profile') + 1] : 'steady'
 const BORROWER = (process.env.DRIVER_ADDRESS ?? '0x871aF8b66406F96C6b5f8a156242d9B7a026cC63') as Address
 
-const d = JSON.parse(readFileSync(join(ROOT, 'packages/shared/src/deployments/42431.json'), 'utf8'))
+// addresses for the ACTIVE protocol (MERCADO_PROTOCOL=v1|v2), never mixed (crew/V2-SWITCH.md)
+const { activeAddresses } = await import('@mercado/shared')
+const d = activeAddresses() as { protocol: string; xMXN: Address; ousd: Address; merchant: Address; swapDesk?: Address; vamm?: Address }
 const erc20 = parseAbi([
   'function balanceOf(address) view returns (uint256)',
   'function approve(address,uint256) returns (bool)',
@@ -41,6 +43,10 @@ const erc20 = parseAbi([
 const deskAbi = parseAbi([
   'function quote(bool,uint256) view returns (uint256 amountOut, uint256 fee)',
   'function swapOusdForXmxn(uint256 amountIn, uint256 minOut) returns (uint256)',
+])
+const vammAbi = parseAbi([
+  'function quote(bool usdToMxn, uint256 amountIn) view returns (uint256 amountOut, uint256 fee, uint256 midPrice, uint256 impactBps)',
+  'function swapOusdForXmxn(uint256 amountIn, uint256 minOut, address to) returns (uint256)',
 ])
 
 const C = { dim: '\x1b[2m', b: '\x1b[1m', g: '\x1b[32m', y: '\x1b[33m', c: '\x1b[36m', m: '\x1b[35m', x: '\x1b[0m' }
@@ -63,7 +69,7 @@ async function write(req: Parameters<typeof wallet.writeContract>[0]) {
 }
 
 async function main() {
-  console.log(`${C.b}Underwriter agent → Mercado paid API (MPP over HTTP 402, Tempo Moderato)${C.x}`)
+  console.log(`${C.b}Underwriter agent → Mercado paid API (MPP over HTTP 402, Tempo Moderato, protocol ${d.protocol})${C.x}  ${C.dim}${API}${C.x}`)
   console.log(`${C.dim}testnet prototype · Demo Uber Data · illustrative score, not a credit model${C.x}\n`)
   say('agent', `I'm a third-party underwriting bot with wallet ${agent.address}. No API key, no signup.`)
 
@@ -76,10 +82,15 @@ async function main() {
       for (let i = 0; i < 30 && ((await bal(ALPHA_USD)) === 0n || (await bal(d.ousd)) === 0n); i++) await new Promise((r) => setTimeout(r, 1000))
     }
     const ousdIn = parseUnits('1', 6)
-    const [out] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'quote', args: [true, ousdIn] })
-    await write({ address: d.ousd, abi: erc20, functionName: 'approve', args: [d.swapDesk, ousdIn] } as any)
-    const h = await write({ address: d.swapDesk, abi: deskAbi, functionName: 'swapOusdForXmxn', args: [ousdIn, (out * 99n) / 100n] } as any)
-    say('agent', `swapped 1 OUSD → ${fmt(out)} xMXN on the Mercado desk to pay in pesos ${tx(h)}`)
+    // v2: the vault-integrated vAMM mints xMXN to the agent; v1: the capped swap desk sells inventory
+    const venue = (d.protocol === 'v2' ? d.vamm : d.swapDesk)!
+    const [out] = (await pub.readContract({ address: venue, abi: d.protocol === 'v2' ? vammAbi : deskAbi, functionName: 'quote', args: [true, ousdIn] } as any)) as bigint[]
+    await write({ address: d.ousd, abi: erc20, functionName: 'approve', args: [venue, ousdIn] } as any)
+    const h =
+      d.protocol === 'v2'
+        ? await write({ address: venue, abi: vammAbi, functionName: 'swapOusdForXmxn', args: [ousdIn, (out * 99n) / 100n, agent.address] } as any)
+        : await write({ address: venue, abi: deskAbi, functionName: 'swapOusdForXmxn', args: [ousdIn, (out * 99n) / 100n] } as any)
+    say('agent', `swapped 1 OUSD → ${fmt(out)} xMXN on Mercado ${d.protocol === 'v2' ? 'Global (vAMM mint)' : 'swap desk'} to pay in pesos ${tx(h)}`)
   }
 
   // 1) ask for the report with no payment → 402
@@ -140,6 +151,7 @@ async function main() {
   say('agent', `  score ${report.score} (floor ${report.scoreFloor}) · eligible ${report.eligible} · credit line ${fmt(BigInt(report.maxAmount))} xMXN · dataHash ${String(report.dataHash).slice(0, 14)}…`)
   for (const line of (report.explanation ?? []).slice(0, 4)) say('agent', `  ${C.dim}· ${line}${C.x}`)
   say('agent', `  no borrow attestation included (only the borrower's own session gets one) ✓`)
+  console.log(`PAYMENT_TX=${txHash}`)
   console.log(`\n${C.g}${C.b}Machine-to-machine payment complete:${C.x} 402 → 2 xMXN on Tempo → report + receipt. No API key, no account, no card.`)
 }
 
