@@ -51,6 +51,7 @@ const sousd = col("sOUSD")?.token;
 const sousdFeed = col("sOUSD")?.feed;
 const ousdFeed = col("OUSD")?.feed;
 const tbillFeed = col("tTBILL")?.feed;
+const midxFeed = col("mIDX")?.feed;
 
 const READS: Read[] = [
   ...R("fx.peek", V2.oracle, fxOracleAdapterAbi, "peek"),
@@ -85,6 +86,12 @@ const READS: Read[] = [
   ...R("tbill.supply", tbill, demoRwaAbi, "totalSupply"),
   ...R("tbill.faucetCap", tbill, demoRwaAbi, "faucetCap"),
   ...R("tbillLegacy.supply", tbillLegacy, demoRwaAbi, "totalSupply"),
+  ...R("midxFeed.peek", midxFeed, priceFeedAbi, "peek"),
+  ...R("deskIdx.reserves", V2.investDeskIdx, investDeskAbi, "reserves"),
+  ...R("deskIdx.paused", V2.investDeskIdx, investDeskAbi, "paused"),
+  ...R("sx.apr", V2.sxMXN, stakedOusdAbi, "aprBps"),
+  ...R("sx.assets", V2.sxMXN, stakedOusdAbi, "totalAssets"),
+  ...R("sx.reserve", V2.sxMXN, stakedOusdAbi, "yieldReserve"),
 ];
 
 function useLive() {
@@ -215,6 +222,8 @@ export function ContractsProof() {
   const cardS = L.get<readonly [bigint, bigint, bigint, bigint, bigint]>("card.stats");
   const deskR = L.get<readonly [bigint, bigint]>("desk.reserves");
   const tf = L.get<readonly [bigint, bigint, boolean]>("tbillFeed.peek");
+  const mf = L.get<readonly [bigint, bigint, boolean]>("midxFeed.peek");
+  const deskIdxR = L.get<readonly [bigint, bigint]>("deskIdx.reserves");
   const paused = (k: string) => (L.get<boolean>(k) === undefined ? "…" : L.get<boolean>(k) ? "PAUSED" : "running");
 
   const collateralState = (sym: string) => {
@@ -290,6 +299,14 @@ export function ContractsProof() {
           admin: `${OWNER} sets the price within the band (2% max move per update), can force-set it past the 2% limit (stress demos), and can pause it.`,
           state: tf ? `$${(Number(tf[0]) / 1e8).toFixed(2)} · updated ${now ? timeAgo(Number(tf[1]), now) : "…"} · ${tf[2] ? "valid" : "INVALID"}` : "…",
         },
+        {
+          name: "Price feed · mIDX",
+          address: midxFeed,
+          badge: "Demo price",
+          purpose: "Admin-set price for the demo equity index, with a sanity band (10–1,000), 10% max move and a 24h staleness limit.",
+          admin: `${OWNER} sets the price within the band (10% max move), can force-set it past that limit, and can pause it.`,
+          state: mf ? `$${(Number(mf[0]) / 1e8).toFixed(2)} · updated ${now ? timeAgo(Number(mf[1]), now) : "…"} · ${mf[2] ? "valid" : "INVALID"}` : "…",
+        },
       ],
     },
     {
@@ -357,7 +374,7 @@ export function ContractsProof() {
     {
       label: "Invest",
       title: "Invest · save and buy T-bills",
-      description: "Peso savings = the CreditPool above; dollar savings = sOUSD; T-bills = the InvestDesk.",
+      description: "Save in USD (sOUSD), MXN (sxMXN) or Stocks (mIDX via its desk). The T-bill desk remains for Mint collateral users.",
       items: [
         {
           name: "InvestDesk",
@@ -366,6 +383,25 @@ export function ContractsProof() {
           purpose: "Buy/sell demo tTBILL for OUSD or xMXN (via the exchange) from finite inventory at the admin feed price + spread; buys back only what each wallet bought.",
           admin: `${OWNER} can seed or withdraw inventory at any time (removing liquidity), set spread (≤ 2%) and the trade cap, and pause. The desk itself never mints tTBILL.`,
           state: deskR ? `${paused("desk.paused")} · inventory ${x(deskR[1], "tTBILL")} · ${x(deskR[0], "OUSD")} · spread ${fmtBps(L.get<bigint>("desk.spread"), 2)}` : "…",
+        },
+        {
+          name: "InvestDesk · Stocks (mIDX)",
+          address: V2.investDeskIdx,
+          badge: "Demo equity",
+          purpose: "Buy/sell the demo US equity index mIDX for OUSD or xMXN from finite inventory at the admin feed price + spread; buys back only what each wallet bought.",
+          admin: `${OWNER} can seed or withdraw inventory at any time, set spread (≤ 2%) and the trade cap, and pause. The desk never mints mIDX.`,
+          state: deskIdxR ? `${paused("deskIdx.paused")} · inventory ${x(deskIdxR[1], "mIDX")} · ${x(deskIdxR[0], "OUSD")}` : "…",
+        },
+        {
+          name: "sxMXN (peso savings)",
+          address: V2.sxMXN,
+          badge: "Configured APR",
+          purpose: "The sOUSD vault logic over xMXN: a configured APR paid from a funded xMXN reserve; balance never read (donation-proof).",
+          admin: `${OWNER} sets the APR (0–20%, so it can stop yield) and funds the yield reserve; no function moves deposits.`,
+          state:
+            L.get<bigint>("sx.apr") !== undefined
+              ? `APR ${fmtBps(L.get<bigint>("sx.apr"), 2)} (configured) · ${x(L.get<bigint>("sx.assets"))} saved · ${x(L.get<bigint>("sx.reserve"))} yield reserve left`
+              : "…",
         },
         {
           name: "sOUSD (staked OUSD)",
