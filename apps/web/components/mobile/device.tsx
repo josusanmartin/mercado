@@ -98,10 +98,13 @@ export function AndroidDevice({
   const [zoom, setZoom] = useState(1);
   useEffect(() => {
     const el = frame.current;
-    if (!el || small) return setZoom(1);
+    // Read the breakpoint directly: `small` is still false on a phone's first effect pass, and zooming the
+    // full-screen app to 0.7 for a frame was most of the 390px CLS (v6 gate).
+    if (!el || small || window.matchMedia("(max-width: 639px)").matches) return setZoom(1);
     const NATURAL = 790; // device body height at zoom 1 (766 screen + bezel + rim + bottom pad)
     const RESERVE = 48; // the sticky honesty footer + a little air
     const fit = () => {
+      if (window.matchMedia("(max-width: 639px)").matches) return setZoom(1);
       const top = el.getBoundingClientRect().top + window.scrollY;
       const room = window.innerHeight - top - RESERVE;
       setZoom(Math.min(1, Math.max(0.7, Math.floor((room / NATURAL) * 100) / 100)));

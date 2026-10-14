@@ -615,7 +615,8 @@ export function Banner({ tone = "info", icon, children, action }: { tone?: "info
 }
 
 export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
-  return <span aria-hidden className={cn("m-skeleton block rounded-[4px]", className)} style={style} />;
+  // data-loop: a shimmer runs only while its data loads (qa's motion gate exempts marked loops)
+  return <span aria-hidden data-loop="" className={cn("m-skeleton block rounded-[4px]", className)} style={style} />;
 }
 
 /** A list of skeleton rows while data loads. */

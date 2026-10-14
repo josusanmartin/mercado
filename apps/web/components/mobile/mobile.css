@@ -472,10 +472,22 @@
 /* Real-phone mode (<640px, set by AndroidDevice on <html>): the phone app is the page. Site chrome marked
    data-phone-hide (product hero, product tabs, hint bar) steps aside; the app pins its own bottom nav,
    keeps its TESTNET · SIN VALOR REAL label, and the explanation panel collapses below it (PhonePanel). */
-@media (max-width: 639px) {
+/* v6 CLS fix: the phone apps mount on the client, so the post-hydration html[data-phone-app] flag alone let the
+   site hero + tabs paint first and then vanish (CLS 0.8–3.8 at 390). The server-rendered shell already says
+   which product this is, so routes that are ALWAYS a phone app get the final layout on the first paint; a shell
+   [data-phone-route] marker covers routes where only some tabs are a phone (Crédito's driver tab).
+   Only with scripting on: without JS the phone never mounts, so the site hero must stay (no-JS P0). */
+@media (max-width: 639px) and (scripting: enabled) {
+  :is([data-product="remesas"], [data-product="card"], [data-product="invest"], [data-phone-route]) [data-phone-hide],
   html[data-phone-app] [data-phone-hide] {
     display: none !important;
   }
+  /* The phone mounts on the client (behind the account gate); until it exists, its panel stays out of the
+     flow, so the phone appearing never pushes visible content down. It then appears below the app. */
+  html:not(:has(.m-root)) .m-phone-panel {
+    display: none;
+  }
+  html:has(:is([data-product="remesas"], [data-product="card"], [data-product="invest"], [data-phone-route]) #main) #main,
   html[data-phone-app] #main {
     padding-top: 0;
     padding-bottom: 96px;

@@ -166,7 +166,7 @@ function Inicio({ s, openOnramp }: AppProps) {
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     color: "transparent",
-    animation: "m-papel 24s linear infinite",
+    animation: "m-papel 1.8s var(--m-ease-out) both", // plays once on arrival, then rests (only Home's pan loops)
   };
   return (
     <PullToRefresh className="pb-6" stretch={TERRACOTTA}>
