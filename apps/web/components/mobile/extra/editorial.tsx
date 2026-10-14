@@ -264,7 +264,7 @@ export function BankRow({
 }) {
   const body = (
     <>
-      <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full [&_svg]:size-[18px]">{leading}</span>
+      <span aria-hidden className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full [&_svg]:size-[18px]">{leading}</span>
       <span className="min-w-0 flex-1 text-left">
         <span className="block truncate text-[15px] leading-5 font-medium">{title}</span>
         {sub && <span className="block truncate text-[13px] leading-5 text-[var(--m-on-surface-variant)]">{sub}</span>}

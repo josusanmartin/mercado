@@ -2,12 +2,13 @@
 // Mercado Invest phone app (crew/DESIGN-ECOSYSTEM.md §7, restyled per crew/PRINCIPLES.md on the mobile.md v2
 // fintech structure; owned by mobile2, data + actions by api in use-invest.ts). Spanish only inside the phone;
 // the longer "where the yield comes from" explanations live in the desktop Portfolio panel (invest-screen.tsx).
-//   Inicio: one huge total (≈ US$, at the oracle rate), USD/MXN split, round actions, the three products as
-//   bank rows · Producto: position + facts + Depositar/Retirar (Comprar/Vender) · Actividad (real logs) · Perfil.
+//   Invest v2 (josu): save in USD, MXN or Stocks. Inicio: one huge total (≈ US$, at the oracle rate), round actions,
+//   three rows Dólares · Pesos · Acciones with each RETURN and a real-time interest counter (use-live-yield.ts:
+//   exact for sOUSD, projected for the pool) · Producto · Actividad (real logs) · Perfil. T-bills are gone.
 // Every action is a real on-chain transaction; guards (R-043/R-044) are kept exactly as api wrote them.
 import { useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
-import { ArrowDownLeft, ArrowUpRight, Coins, DollarSign, ExternalLink, Home, Landmark, Layers, List, User } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Coins, DollarSign, ExternalLink, Home, Layers, List, TrendingUp, User } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
 import { useBalances, useOracle } from "@/lib/contracts";
 import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
@@ -15,10 +16,13 @@ import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping } from "@/components/mobile";
+import { LiveMoney } from "./live-money";
+import { SXMXN, useLiveDollars, useLivePesos } from "./use-live-yield";
+import { STOCKS_DEPLOYED, useStocks, useStocksActions, useStocksQuote } from "./use-stocks";
+import { useVaultActions, useVaultPosition } from "./use-vault";
 import {
   ActionRow,
   BankRow,
-  BigMoney,
   DayGroups,
   Display,
   EdApp,
@@ -27,28 +31,35 @@ import {
   PillChip,
   RoundAction,
   SectionHead,
-  SplitStats,
   hora,
 } from "@/components/mobile/extra/editorial";
-import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, useTbillQuote, type InvestActivity } from "./use-invest";
+import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
 
 export const MAIZ = "#E5A823";
 
-type Product = "pesos" | "dolares" | "tbills";
+type Product = "dolares" | "pesos" | "acciones";
 type Mode = "in" | "out";
 type Tab = "inicio" | "actividad" | "perfil";
 type View = { tab: Tab; product?: Product };
 type Done = { product: Product; mode: Mode; amount: bigint; symbol: string; hash?: string; url?: string };
 
-const pct = (bps: bigint | undefined) => (bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`);
-const px = (px8: bigint | undefined) => (px8 === undefined ? "…" : `$${(Number(px8) / 1e8).toFixed(2)}`);
+const pct = (bps: bigint | number | undefined) => (bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`);
+const px = (px8: bigint | undefined) => (px8 === undefined ? "…" : `US$${(Number(px8) / 1e8).toFixed(2)}`);
+const signedPct = (x: number | undefined) => (x === undefined ? undefined : `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(2)}%`);
 const busyLabel = (status: string) => (status === "simulating" ? "Preparando…" : status === "signing" ? "Firmando…" : "Confirmando en Tempo…");
 
-const PRODUCT: Record<Product, { title: string; short: string; icon: typeof Coins; inLabel: string; outLabel: string; unit: string; digits: number }> = {
-  pesos: { title: "Ahorro en pesos", short: "Pesos", icon: Coins, inLabel: "Depositar", outLabel: "Retirar", unit: "xMXN", digits: 2 },
-  dolares: { title: "Ahorro en dólares", short: "Dólares", icon: DollarSign, inLabel: "Depositar", outLabel: "Retirar", unit: "OUSD", digits: 2 },
-  tbills: { title: "T-bills", short: "T-bills", icon: Landmark, inLabel: "Comprar", outLabel: "Vender", unit: "tTBILL", digits: 4 },
+/** Order = josu's: USD · MXN · Stocks. */
+const ORDER: Product[] = ["dolares", "pesos", "acciones"];
+const PRODUCT: Record<Product, { title: string; short: string; icon: typeof Coins; inLabel: string; outLabel: string; unit: string; currency: "USD" | "MXN" }> = {
+  dolares: { title: "Dólares", short: "Dólares", icon: DollarSign, inLabel: "Depositar", outLabel: "Retirar", unit: "OUSD", currency: "USD" },
+  pesos: { title: "Pesos", short: "Pesos", icon: Coins, inLabel: "Depositar", outLabel: "Retirar", unit: "xMXN", currency: "MXN" },
+  acciones: { title: "Acciones", short: "Acciones", icon: TrendingUp, inLabel: "Comprar", outLabel: "Vender", unit: "mIDX", currency: "USD" },
 };
+/** Stocks = mIDX "Mercado US Equity Index" (demo token, owner price feed) on the Stocks desk (use-stocks.ts). */
+const STOCKS_READY = STOCKS_DEPLOYED;
+/** Pesos = the sxMXN savings vault (lead 03:32); "Pronto" until its address is in deployments. */
+const PESOS_READY = !!SXMXN;
+const ready = (id: Product) => (id === "dolares" ? true : id === "pesos" ? PESOS_READY : STOCKS_READY);
 
 export function PhoneApp() {
   const [view, setView] = useState<View>({ tab: "inicio" });
@@ -101,24 +112,40 @@ function TopMeta({ title }: { title?: string }) {
 
 /* ─────────────────────────────── Inicio ─────────────────────────────── */
 
-/** Positions in OUSD-equivalent (6dp): pesos at the oracle rate, T-bills at the admin feed. */
+/** Return lines + live balances. Rates are the vaults' configured APRs, read on-chain; never "guaranteed". */
+function useReturns() {
+  const usd = useLiveDollars();
+  const mxn = useLivePesos();
+  const st = useStocks();
+  const ch = signedPct(st.change);
+  return {
+    usd,
+    mxn,
+    st,
+    line: {
+      dolares: usd.aprBps !== undefined ? `${pct(usd.aprBps)} anual` : "…",
+      pesos: !PESOS_READY ? "Pronto" : mxn.aprBps !== undefined ? `${pct(mxn.aprBps)} anual` : "…",
+      acciones: !STOCKS_READY ? "Pronto" : [px(st.px8), ch && `${ch} ${st.change24h ? "hoy" : "total"}`].filter(Boolean).join(" · "),
+    } as Record<Product, string>,
+  };
+}
+
+/** Total in US$ (6dp): pesos at the oracle rate. */
 function useTotals() {
   const p = useInvestPositions();
   const fx = useOracle();
-  const pesosUsd = p.pesos.balance !== undefined && fx.mxnPerUsd ? (p.pesos.balance * 100_000_000n) / fx.mxnPerUsd : undefined;
-  const usdSide = p.dollars?.value !== undefined && p.tbill?.value !== undefined ? p.dollars.value + p.tbill.value : undefined;
-  const total = pesosUsd !== undefined && usdSide !== undefined ? pesosUsd + usdSide : undefined;
-  return { p, fx, pesosUsd, usdSide, total };
+  const pesos = useVaultPosition(SXMXN, INVEST.xmxn);
+  const st = useStocks();
+  const mxn = PESOS_READY ? pesos.withdrawable : 0n;
+  const stocks = STOCKS_READY ? st.value : 0n;
+  const pesosUsd = mxn !== undefined && fx.mxnPerUsd ? (mxn * 100_000_000n) / fx.mxnPerUsd : undefined;
+  const total = pesosUsd !== undefined && p.dollars?.value !== undefined && stocks !== undefined ? pesosUsd + p.dollars.value + stocks : undefined;
+  return { p, fx, total };
 }
 
 function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Product, m: Mode) => void }) {
-  const { p, fx, usdSide, total } = useTotals();
-  const deskOpen = !!INVEST.desk && p.desk?.paused === false;
-  const rows: { id: Product; sub: string; value: string; unit: string }[] = [
-    { id: "pesos", sub: "Variable · financia choferes", value: `MX${fmtMoney(p.pesos.balance)}`, unit: "xMXN" },
-    { id: "dolares", sub: `APR demo ${pct(p.dollars?.aprBps)} · sOUSD`, value: `US${fmtMoney(p.dollars?.value)}`, unit: "OUSD" },
-    { id: "tbills", sub: `Precio ${px(p.tbill?.px8)} · feed admin`, value: p.tbill?.balance === undefined ? "—" : fmtAmount(p.tbill.balance, 4), unit: "tTBILL" },
-  ];
+  const { fx, total } = useTotals();
+  const r = useReturns();
   return (
     <div className="pb-6">
       <TopMeta />
@@ -129,40 +156,42 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
       </section>
       <div className="px-4 pt-7">
         <ActionRow>
-          <RoundAction primary icon={<ArrowDownLeft strokeWidth={1.75} />} label="Ahorrar" onClick={() => trade("pesos", "in")} />
-          <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Retirar" onClick={() => trade("pesos", "out")} />
-          <RoundAction icon={<Landmark strokeWidth={1.75} />} label="T-bills" onClick={() => trade("tbills", "in")} disabled={!deskOpen} />
+          <RoundAction primary icon={<ArrowDownLeft strokeWidth={1.75} />} label="Ahorrar" onClick={() => trade("dolares", "in")} />
+          <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Retirar" onClick={() => trade("dolares", "out")} />
+          <RoundAction icon={<TrendingUp strokeWidth={1.75} />} label="Acciones" onClick={() => trade("acciones", "in")} disabled={!STOCKS_READY} />
           <RoundAction icon={<Layers strokeWidth={1.75} />} label="Colateral" href="/mint" />
         </ActionRow>
       </div>
-      <div className="px-5 pt-7">
-        <SplitStats
-          items={[
-            { label: <><Flag code="us" /> Dólares</>, value: `US${fmtMoney(usdSide)}`, sub: "OUSD + T-bills" },
-            { label: <><Flag code="mx" /> Pesos</>, value: `MX${fmtMoney(p.pesos.balance)}`, sub: "xMXN en ahorro" },
-          ]}
-        />
-      </div>
-      <div className="px-5 pt-7">
-        <SectionHead>Tus productos</SectionHead>
-        {rows.map((r) => {
-          const P = PRODUCT[r.id];
+      <div className="px-5 pt-8">
+        <SectionHead>Tu dinero</SectionHead>
+        {ORDER.map((id) => {
+          const P = PRODUCT[id];
+          const ok = ready(id);
           return (
             <BankRow
-              key={r.id}
-              onClick={() => open(r.id)}
+              key={id}
+              onClick={ok ? () => open(id) : undefined}
               leading={
                 <span className="grid size-10 place-items-center rounded-full border border-[var(--m-on-surface)]">
-                  <P.icon strokeWidth={1.75} />
+                  {id === "dolares" ? <Flag code="us" className="h-[12px] w-[18px]" /> : id === "pesos" ? <Flag code="mx" className="h-[12px] w-[18px]" /> : <P.icon strokeWidth={1.75} />}
                 </span>
               }
               title={P.title}
-              sub={r.sub}
-              amount={r.value}
-              amountSub={r.unit}
+              sub={r.line[id]}
+              amount={
+                !ok ? (
+                  <span className="text-[var(--m-on-surface-variant)]">Pronto</span>
+                ) : id === "acciones" ? (
+                  `US${fmtMoney(r.st.value)}`
+                ) : (
+                  <LiveMoney live={id === "dolares" ? r.usd : r.mxn} currency={P.currency} />
+                )
+              }
+              amountSub={ok ? (id === "acciones" ? `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` : P.unit) : undefined}
             />
           );
         })}
+        <Meta className="mt-3">{"Ahorro: se acumula cada segundo en la cadena, de una reserva demo · Tasas configuradas, no garantizadas · Acciones: token demo, precio del administrador · Testnet"}</Meta>
       </div>
       <div className="px-5 pt-7">
         <SectionHead>Actividad</SectionHead>
@@ -176,43 +205,43 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
 
 function ProductScreen({ product, back, trade }: { product: Product; back: () => void; trade: (m: Mode) => void }) {
   const p = useInvestPositions();
+  const pesos = useVaultPosition(SXMXN, INVEST.xmxn);
+  const r = useReturns();
   const P = PRODUCT[product];
-  const deskClosed = product === "tbills" && (!INVEST.desk || p.desk?.paused !== false);
-  const sellable = p.tbill?.balance !== undefined && p.desk?.sellable !== undefined ? (p.tbill.balance < p.desk.sellable ? p.tbill.balance : p.desk.sellable) : undefined;
   const view = {
-    pesos: {
-      position: p.pesos.balance,
-      meta: ["xMXN", "Variable", "No garantizado", "No canjeable"],
-      facts: [
-        { k: "Retirable ahora", v: `${fmtMoney(p.pesos.withdrawable)} xMXN` },
-        { k: "Efectivo libre del pool", v: `${fmtMoney(p.pesos.poolCash, 0)} xMXN` },
-        { k: "Comisiones repartidas", v: `${fmtMoney(p.pesos.realizedFees)} xMXN` },
-        { k: "Fuente", v: "Comisiones de choferes" },
-      ],
-      note: ["Lo prestado no se retira hasta que lo paguen"],
-    },
     dolares: {
-      position: p.dollars?.value,
-      meta: ["OUSD", `APR demo ${pct(p.dollars?.aprBps)}`, "Fondeado por admin"],
+      live: r.usd,
+      meta: ["OUSD", r.line.dolares, "Fondeado por admin"],
       facts: [
-        { k: "Retirable ahora", v: `${fmtMoney(p.dollars?.value)} OUSD` },
-        { k: "Reserva de rendimiento", v: `${fmtMoney(p.dollars?.yieldReserve, 0)} OUSD` },
+        { k: "Retirable ahora", v: `US${fmtMoney(p.dollars?.value)}` },
+        { k: "Reserva de rendimiento", v: `US${fmtMoney(p.dollars?.yieldReserve, 0)}` },
         { k: "Fuente", v: "Reserva demo" },
       ],
-      note: ["Rendimiento demo de testnet"],
+      note: ["Se acumula cada segundo en la cadena", "Tasa configurada por el admin, no garantizada"],
     },
-    tbills: {
-      position: p.tbill?.balance,
-      meta: [`Precio ${px(p.tbill?.px8)}`, `Spread ${pct(p.desk?.spreadBps)}`],
+    pesos: {
+      live: r.mxn,
+      meta: ["xMXN", r.line.pesos, "Fondeado por admin", "No canjeable"],
       facts: [
-        { k: "Valor", v: `${fmtMoney(p.tbill?.value)} OUSD` },
-        { k: "Puedes vender", v: `${sellable === undefined ? "—" : fmtAmount(sellable, 4)} tTBILL` },
-        { k: "Inventario del desk", v: `${p.desk?.reserveTbill === undefined ? "—" : fmtAmount(p.desk.reserveTbill, 2)} tTBILL` },
-        { k: "Desk", v: p.desk?.paused === undefined ? "—" : p.desk.paused ? "En pausa" : "Abierto" },
+        { k: "Retirable ahora", v: `MX${fmtMoney(pesos.withdrawable)}` },
+        { k: "Reserva de rendimiento", v: `MX${fmtMoney(pesos.yieldReserve, 0)}` },
+        { k: "Fuente", v: "Reserva demo" },
       ],
-      note: ["Token demo, no es un valor", "Solo recompra lo que compraste aquí", "Sirve como colateral en Mint"],
+      note: ["Se acumula cada segundo en la cadena", "Tasa configurada por el admin, no garantizada"],
+    },
+    acciones: {
+      live: undefined,
+      meta: ["mIDX", r.line.acciones, "Token demo, no es un valor"],
+      facts: [
+        { k: "Tienes", v: `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` },
+        { k: "Puedes vender", v: `${r.st.sellable === undefined ? "—" : fmtAmount(r.st.sellable, 4)} mIDX` },
+        { k: "Spread", v: pct(r.st.spreadBps) },
+        { k: "Mesa", v: r.st.closed ? "En pausa" : "Abierta" },
+      ],
+      note: ["Mercado US Equity Index: token demo con precio del administrador", "Solo recompra lo que compraste aquí", "Sirve como colateral en Mint"],
     },
   }[product];
+  const ok = ready(product);
   return (
     <div className="flex flex-1 flex-col pb-6">
       <div className="flex items-center gap-2 px-2 pt-2">
@@ -222,34 +251,37 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
         <Meta mark={MAIZ} parts={["06", "Invest", P.short]} className="text-[var(--m-on-surface)]" />
       </div>
       <section className="px-5 pt-4">
-        <Display size={40}>{P.title}</Display>
+        <Display size={44} fit>
+          {P.title}
+        </Display>
         <div className="mt-6">
           <BalanceHead label="Tienes" />
         </div>
-        {product === "tbills" ? (
-          <BigMoney value={view.position} prefix="" digits={4} unit="tTBILL" size={46} className="mt-3" />
+        {view.live && ok ? (
+          <LiveMoney live={view.live} currency={P.currency} variant="hero" size={50} className="mt-3" />
         ) : (
-          <Money value={view.position} currency={product === "pesos" ? "MXN" : "USD"} size={50} className="mt-3" />
+          <Money value={product === "acciones" && ok ? r.st.value : undefined} currency="USD" size={50} className="mt-3" />
         )}
         <Meta className="mt-2" parts={view.meta} />
       </section>
       <div className="grid grid-cols-2 gap-3 px-5 pt-6">
-        <Pill accent onClick={() => trade("in")} disabled={deskClosed}>
+        <Pill accent onClick={() => trade("in")} disabled={!ok || (product === "acciones" && r.st.closed)}>
           {P.inLabel}
         </Pill>
-        <Pill variant="line" onClick={() => trade("out")} disabled={deskClosed}>
+        <Pill variant="line" onClick={() => trade("out")} disabled={!ok || (product === "acciones" && r.st.closed)}>
           {P.outLabel}
         </Pill>
       </div>
-      {deskClosed && <Meta className="px-5 pt-2">{"Desk en pausa · sin operaciones"}</Meta>}
-      <dl className="mx-5 mt-7 border-t border-[var(--m-on-surface)]">
-        {view.facts.map((f) => (
-          <div key={f.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
-            <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{f.k}</dt>
-            <dd className="m-num text-right text-[15px] font-semibold">{f.v}</dd>
-          </div>
-        ))}
-      </dl>
+      {view.facts.length > 0 && (
+        <dl className="mx-5 mt-7 border-t border-[var(--m-on-surface)]">
+          {view.facts.map((f) => (
+            <div key={f.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
+              <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{f.k}</dt>
+              <dd className="m-num text-right text-[15px] font-semibold">{f.v}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       {/* plain Meta (children) so long notes wrap; parts stay on one line each */}
       <Meta className="px-5 pt-3">{view.note.join(" · ")}</Meta>
       <div className="px-5 pt-7">
@@ -266,21 +298,26 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
   const p = useInvestPositions();
   const bal = useBalances();
   const act = useInvestActions();
+  const vact = useVaultActions(SXMXN, INVEST.xmxn, "xMXN");
+  const vpos = useVaultPosition(SXMXN, INVEST.xmxn);
+  const sact = useStocksActions();
+  const st = useStocks();
   const [amount, setAmount] = useState("");
-  const product = state?.product ?? "pesos";
+  const product = state?.product ?? "dolares";
   const mode = state?.mode ?? "in";
   const P = PRODUCT[product];
   const amt = toUnits(amount || "0");
-  useReportBusy(act.tx.isBusy);
-  const quote = useTbillQuote(mode === "in" ? "buy" : "sell", product === "tbills" ? amt : 0n);
-  const busy = act.tx.isBusy;
+  const tx = product === "pesos" ? vact.tx : product === "acciones" ? sact.tx : act.tx;
+  useReportBusy(act.tx.isBusy || vact.tx.isBusy || sact.tx.isBusy);
+  const quote = useStocksQuote(mode === "in" ? "buy" : "sell", product === "acciones" ? amt : 0n);
+  const busy = act.tx.isBusy || vact.tx.isBusy || sact.tx.isBusy;
 
   const cfg = {
     pesos: {
       sym: "xMXN",
-      wallet: bal.xmxn,
-      maxOut: p.pesos.withdrawable, // R-044: min(own claim, idle pool cash)
-      run: () => (mode === "in" ? act.depositPesos(amt) : act.withdrawPesos(amt)),
+      wallet: vpos.wallet,
+      maxOut: vpos.withdrawable, // sxMXN maxWithdraw
+      run: () => (mode === "in" ? vact.deposit(amt) : vact.withdraw(amt)),
     },
     dolares: {
       sym: "OUSD",
@@ -288,27 +325,26 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
       maxOut: p.dollars?.value,
       run: () => (mode === "in" ? act.depositDolares(amt) : act.withdrawDolares(amt)),
     },
-    tbills: {
-      sym: mode === "in" ? "OUSD" : "tTBILL",
+    acciones: {
+      sym: mode === "in" ? "OUSD" : "mIDX",
       wallet: bal.ousd,
       // Sellable = what you hold AND bought at this desk (buy-back is personal, non-transferable).
-      maxOut:
-        p.tbill?.balance !== undefined && p.desk?.sellable !== undefined ? (p.tbill.balance < p.desk.sellable ? p.tbill.balance : p.desk.sellable) : undefined,
-      run: () => (quote.out === undefined ? undefined : mode === "in" ? act.buyTbill(amt, quote.out) : act.sellTbill(amt, quote.out)),
+      maxOut: st.sellable,
+      run: () => (quote.out === undefined ? undefined : mode === "in" ? sact.buy(amt, quote.out) : sact.sell(amt, quote.out)),
     },
   }[product];
   const limit = mode === "in" ? cfg.wallet : cfg.maxOut;
   const over = limit !== undefined && amt > limit;
-  const needsQuote = product === "tbills";
-  // R-043: a paused desk still returns positive quotes, but trades revert; treat it (or unknown) as closed.
-  const deskClosed = product === "tbills" && (!INVEST.desk || p.desk?.paused !== false);
-  const disabled = amt === 0n || over || busy || (needsQuote && quote.out === undefined) || deskClosed;
-  const limitDigits = product === "tbills" && mode === "out" ? 4 : 2;
+  // R-043: a paused desk still quotes, but trades revert; treat it (or unknown) as closed.
+  const closed = !ready(product) || (product === "acciones" && st.closed);
+  const needsQuote = product === "acciones";
+  const disabled = amt === 0n || over || busy || closed || (needsQuote && quote.out === undefined);
+  const limitDigits = product === "acciones" && mode === "out" ? 4 : 2;
 
   const reset = (next: { product: Product; mode: Mode }) => {
     if (busy) return;
     setAmount("");
-    act.tx.reset();
+    tx.reset();
     setState(next);
   };
 
@@ -319,15 +355,15 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
       onClose={() => {
         if (busy) return;
         setAmount("");
-        act.tx.reset();
+        tx.reset();
         setState(undefined);
       }}
       dismissable={!busy}
     >
       <div className="grid gap-4 px-6 pb-2">
         <div className="flex gap-2">
-          {(Object.keys(PRODUCT) as Product[]).map((id) => (
-            <PillChip key={id} selected={product === id} disabled={busy} onClick={() => reset({ product: id, mode })}>
+          {ORDER.map((id) => (
+            <PillChip key={id} selected={product === id} disabled={busy || !ready(id)} onClick={() => reset({ product: id, mode })}>
               {PRODUCT[id].short}
             </PillChip>
           ))}
@@ -354,23 +390,23 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
           <p className={cn("m-meta mt-2", over && "!text-[var(--m-error)]")}>
             {over ? "Excede el máximo" : mode === "in" ? "Disponible" : "Máximo"} · {limit === undefined ? "—" : fmtAmount(limit, limitDigits)} {cfg.sym}
           </p>
-          {deskClosed && <p className="m-meta mt-1 !text-[var(--m-error)]">Desk en pausa · sin operaciones</p>}
-          {needsQuote && amt > 0n && !deskClosed && (
+          {closed && <p className="m-meta mt-1">{product === "acciones" && STOCKS_READY ? "Mesa en pausa · sin operaciones" : `${P.title}: pronto`}</p>}
+          {needsQuote && amt > 0n && !closed && (
             <p className="m-meta mt-1">
               {quote.out === undefined
                 ? quote.error
                   ? "Sin cotización · inventario o precio"
                   : "Cotizando…"
                 : mode === "in"
-                  ? `Recibes ≈ ${fmtAmount(quote.out, 4)} tTBILL · spread incl.`
+                  ? `Recibes ≈ ${fmtAmount(quote.out, 4)} mIDX · spread incl.`
                   : `Recibes ≈ ${fmtAmount(quote.out)} OUSD · spread incl.`}
             </p>
           )}
         </div>
         <NumericKeypad value={amount} onChange={setAmount} disabled={busy} />
-        {act.tx.status === "error" && act.tx.error && (
+        {tx.status === "error" && tx.error && (
           <p role="alert" className="text-[14px] font-medium text-[var(--m-error)]">
-            {act.tx.error}
+            {tx.error}
           </p>
         )}
         <Pill
@@ -381,14 +417,14 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
             const steps = await cfg.run();
             if (steps) {
               const last = steps.at(-1);
-              const shown = product === "tbills" && mode === "in" && quote.out !== undefined ? quote.out : amt;
-              onDone({ product, mode, amount: shown, symbol: product === "tbills" && mode === "in" ? "tTBILL" : cfg.sym, hash: last?.hash, url: last?.url });
+              const bought = product === "acciones" && mode === "in";
+              onDone({ product, mode, amount: bought && quote.out !== undefined ? quote.out : amt, symbol: bought ? "mIDX" : cfg.sym, hash: last?.hash, url: last?.url });
               setAmount("");
-              act.tx.reset();
+              tx.reset();
             }
           }}
         >
-          {busy ? busyLabel(act.tx.status) : mode === "in" ? P.inLabel : P.outLabel}
+          {busy ? busyLabel(tx.status) : mode === "in" ? P.inLabel : P.outLabel}
         </Pill>
         <Meta className="justify-center">{"Transacción real en Tempo testnet · Sin valor real"}</Meta>
       </div>
@@ -400,8 +436,8 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
 
 function Listo({ done, close }: { done: Done; close: () => void }) {
   const P = PRODUCT[done.product];
-  const verb = done.mode === "in" ? (done.product === "tbills" ? "Comprado." : "Depositado.") : done.product === "tbills" ? "Vendido." : "Retirado.";
-  const digits = done.symbol === "tTBILL" ? 4 : 2;
+  const verb = done.mode === "in" ? (done.product === "acciones" ? "Comprado." : "Depositado.") : done.product === "acciones" ? "Vendido." : "Retirado.";
+  const digits = done.symbol === "mIDX" ? 4 : 2;
   // kit SuccessScreen paints the amount in the accent; maize on white is 2.1:1, so it stays ink here.
   return (
     <div className="flex flex-1 flex-col [&>div]:flex-1">
@@ -409,7 +445,7 @@ function Listo({ done, close }: { done: Done; close: () => void }) {
         title={verb}
         amount={
           <span className="text-[var(--m-on-surface)]">
-            {done.symbol === "tTBILL" ? "≈ " : ""}
+            {done.product === "acciones" && done.mode === "in" ? "≈ " : ""}
             {fmtAmount(done.amount, digits)} <span className="font-[family-name:var(--font-phone)] text-[16px] font-semibold tracking-normal normal-case">{done.symbol}</span>
           </span>
         }
@@ -450,7 +486,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   const { address } = useConnection();
   const h = useInvestHistory();
   const now = useNow(60_000);
-  const rows = (h.data?.rows ?? []).filter((r) => !product || r.product === product).slice(0, limit ?? 30);
+  const rows = (h.data?.rows ?? []).filter((r) => r.product !== "tbills" && (!product || r.product === product)).slice(0, limit ?? 30);
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
   if (!h.data)
     return (
@@ -471,7 +507,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
       now={now}
       render={(r) => {
         const into = r.label.startsWith("Depósito") || r.label.startsWith("Compra");
-        const P = PRODUCT[r.product];
+        const P = PRODUCT[r.product === "tbills" ? "acciones" : r.product]; // tbills rows are filtered out above
         return (
           <BankRow
             key={`${r.txHash}-${r.logIndex}`}
@@ -501,7 +537,7 @@ function Actividad() {
       <TopMeta title="Actividad" />
       <div className="px-5 pt-6">
         <Display size={40}>Actividad</Display>
-        <Meta className="mt-2" parts={["Depósitos, retiros y T-bills", "On-chain · Tempo testnet"]} />
+        <Meta className="mt-2" parts={["Depósitos y retiros", "On-chain · Tempo testnet"]} />
         <div className="pt-3">
           <ActivityList />
         </div>
@@ -536,7 +572,7 @@ function Perfil() {
           ))}
         </dl>
         <Meta
-          className="mt-6">{"OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables · Rendimientos variables, no garantizados · tTBILL: token demo, no es un valor · Precios: feeds de administrador"}</Meta>
+          className="mt-6">{"OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables · Rendimientos variables, no garantizados · Dólares: APR configurado por el admin, reserva demo · Pesos: rendimiento histórico del pool"}</Meta>
       </div>
     </div>
   );
