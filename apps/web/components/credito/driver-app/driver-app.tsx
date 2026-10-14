@@ -64,6 +64,7 @@ function DriverAppInner() {
   const [sheet, setSheet] = useState<Sheet>();
   const [platform, setPlatform] = useState<Platform>();
   const [asking, setAsking] = useState<Platform>();
+  const [paid, setPaid] = useState<bigint>();
   const data = useDriverData(platform);
   const adv = useAdvance(address, platform);
   const debt = adv.pool.debt;
@@ -92,6 +93,8 @@ function DriverAppInner() {
     adv,
     ask: setAsking,
     open: setSheet,
+    paid,
+    setPaid,
     disconnect: () => {
       setPlatform(undefined);
       adv.score.reset();
@@ -152,9 +155,14 @@ type Props = {
   adv: ReturnType<typeof useAdvance>;
   ask: (p: Platform) => void;
   open: (s: Sheet) => void;
+  paid?: bigint;
+  setPaid: (v: bigint) => void;
   disconnect: () => void;
 };
 
+/** Spanish progress label for the in-phone button (the hook's step labels are English, for the desktop trail). */
+const busyLabel = (status: string, fallback: string) =>
+  status === "simulating" ? "Preparando…" : status === "signing" ? "Firmando…" : status === "pending" ? "Confirmando en Tempo…" : `${fallback}…`;
 const mmss = (s: number | undefined) => (s === undefined ? "…" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
 const firstName = (d: Props["data"]["data"]) => d?.driver.firstName;
 
@@ -245,7 +253,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
             <p className="m-meta">Debes</p>
             <BigMoney value={debt} unit="xMXN" size={54} className="mt-2" />
             <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
-              <div className="h-full bg-[var(--m-ink)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
+              <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
             </div>
             <Meta className="mt-2" parts={["Incluye comisión 2%", `${paidPct}% pagado`]} />
           </>
@@ -416,7 +424,7 @@ function Ganancias({ platform, data, adv }: Props) {
             <EarningsBars weeks={d.weeks} />
           </div>
           <div className="flex items-center gap-3 px-5 pt-6">
-            <span className="grid size-10 place-items-center rounded-full bg-[var(--m-ink)] text-[15px] font-semibold text-white">{d.driver.firstName[0]}</span>
+            <span className="grid size-10 place-items-center rounded-full bg-[var(--m-on-surface)] text-[15px] font-semibold text-white">{d.driver.firstName[0]}</span>
             <div className="min-w-0">
               <p className="text-[15px] font-semibold">
                 {d.driver.firstName} · {d.driver.city}
@@ -623,7 +631,7 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
             }
           }}
         >
-          {busy ? `${adv.tx.stepLabel ?? "Enviando"}…` : `Recibir ${fmtAmount(amount)} xMXN`}
+          {busy ? busyLabel(adv.tx.status, "Enviando") : `Recibir ${fmtAmount(amount)} xMXN`}
         </Pill>
         <Meta className="justify-center" parts={["Pagas cuando quieras", "Nada se descuenta de tus pagos"]} />
       </div>
@@ -631,7 +639,7 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
   );
 }
 
-function PagarSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
+function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
   const bal = useBalances();
   const debt = adv.pool.debt ?? 0n;
   const busy = adv.tx.isBusy;
@@ -662,12 +670,13 @@ function PagarSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: boo
           onClick={async () => {
             const steps = await adv.repay(amount);
             if (steps) {
+              setPaid(amount);
               close();
               setFlow("pagado");
             }
           }}
         >
-          {busy ? `${adv.tx.stepLabel ?? "Pagando"}…` : partial ? `Pagar ${fmtAmount(amount)} xMXN` : `Pagar todo · ${fmtAmount(amount)} xMXN`}
+          {busy ? busyLabel(adv.tx.status, "Pagando") : partial ? `Pagar ${fmtAmount(amount)} xMXN` : `Pagar todo · ${fmtAmount(amount)} xMXN`}
         </Pill>
       </div>
     </BottomSheet>
@@ -729,12 +738,12 @@ function Recibido({ adv, setFlow, setTab }: Props) {
   );
 }
 
-function Pagado({ adv, setFlow, setTab }: Props) {
+function Pagado({ adv, paid, setFlow, setTab }: Props) {
   return (
     <Receipt
       adv={adv}
       title={adv.pool.debt === 0n ? "Pagado. No debes nada." : "Pago recibido."}
-      amount={undefined}
+      amount={paid}
       rows={[{ k: "Debes ahora", v: fmtMoney(adv.pool.debt) }]}
       action={
         <Pill

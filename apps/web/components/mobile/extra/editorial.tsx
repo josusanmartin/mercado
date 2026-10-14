@@ -3,8 +3,7 @@
 //   <EdApp> canvas · <Meta> tiny uppercase line · <BigMoney> Archivo Black balance · <Display> titles
 //   <ActionRow>/<RoundAction> 56px round actions · <BankRow> + <DayGroups> bank-style lists
 //   <Pill> black pill button · <SplitStats> side-by-side figures on hairlines · <DotNav> bottom nav
-// Built for Crédito + Invest (mobile2); generic enough for mobile to promote into the kit.
-import { Archivo_Black, Inter_Tight } from "next/font/google";
+// Built for Crédito + Invest (mobile2) on the kit's paper theme; generic enough for mobile to promote into the kit.
 import type { CSSProperties, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,15 +11,12 @@ import { fmtMoney, haptic } from "../format";
 import { Pressable } from "../primitives";
 import "./editorial.css";
 
-const archivo = Archivo_Black({ weight: "400", subsets: ["latin"], variable: "--font-archivo-black", display: "swap" });
-const interTight = Inter_Tight({ weight: ["400", "500", "600"], subsets: ["latin"], variable: "--font-inter-tight", display: "swap" });
-
-/** Font variables + the editorial token scope. Use on the app root and on anything portaled out of it. */
-export const edClass = cn(archivo.variable, interTight.variable, "m-ed");
+/** Marker class for editorial app roots (fonts + tokens come from the kit's .m-root theme). */
+export const edClass = "m-ed";
 
 export function EdApp({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   return (
-    <div className={cn(edClass, "flex min-h-full flex-1 flex-col bg-white text-[#0a0a0a]", className)} style={style}>
+    <div className={cn(edClass, "flex min-h-full flex-1 flex-col bg-[var(--m-surface)] text-[var(--m-on-surface)]", className)} style={style}>
       {children}
     </div>
   );
@@ -84,7 +80,7 @@ export function BigMoney({
           </span>
           {dec && <span style={{ fontSize: size * 0.46 }}>.{dec}</span>}
           {unit && (
-            <span className="ml-2 font-[family-name:var(--font-inter-tight)] font-semibold tracking-normal normal-case" style={{ fontSize: Math.max(13, size * 0.28) }}>
+            <span className="ml-2 font-[family-name:var(--font-phone)] font-semibold tracking-normal normal-case" style={{ fontSize: Math.max(13, size * 0.28) }}>
               {unit}
             </span>
           )}
@@ -194,7 +190,8 @@ export function Pill({
         "inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold",
         variant === "solid" && (accent ? "bg-[var(--m-accent)] text-white" : "bg-[#0a0a0a] text-white"),
         variant === "line" && "border border-[#0a0a0a] text-[#0a0a0a]",
-        "disabled:border-transparent disabled:bg-[#ebebe8] disabled:text-[#8a8a85]",
+        // busy keeps its color (with a spinner); only a truly unavailable action greys out
+        loading ? "cursor-progress" : "disabled:border-transparent disabled:bg-[#ebebe8] disabled:text-[#8a8a85]",
         className,
       )}
     >
