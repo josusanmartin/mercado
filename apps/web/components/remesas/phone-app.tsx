@@ -376,6 +376,10 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
   );
 }
 
+/** Who paid the Tempo network fee (TxStep.feePaidBy from the receipt's feePayer). */
+const feeLine = (steps: { feePaidBy?: "sponsor" | "you" }[]) =>
+  steps.some((st) => st.feePaidBy === "you") ? "Pagada por ti" : steps.every((st) => st.feePaidBy === "sponsor") ? "Cubierta por Mercado" : "—";
+
 const statusEs = (st: string) => ({ CREATED: "pendiente", PAYMENT_VERIFIED: "pagado", FULFILLED_SIMULATED: "pagado", FAILED: "falló" })[st] ?? st;
 
 function PaperPlane() {
@@ -632,6 +636,7 @@ function Enviado({ s }: AppProps) {
             rows={[
               { label: "Enviaste", value: `US${fmtMoney(r.amountIn)}` },
               { label: "Tipo aplicado", value: `${fmtNumber(Number(r.delivered) / Number(r.amountIn), 4)} MXN` },
+              { label: "Comisión de red", value: feeLine(r.steps) },
               {
                 label: "Comprobante",
                 value: (
