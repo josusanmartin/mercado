@@ -96,12 +96,12 @@ export function ProductHero({
           )}
         </div>
         {kpis && kpis.length > 0 && (
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-8">
+          <dl className="grid grid-cols-3 gap-3 sm:gap-8">
             {kpis.slice(0, 3).map((k) => (
               <div key={k.label} className="min-w-0">
-                <dt className="text-xs text-[#f5efe4]/65">{k.label}</dt>
-                <dd className="mt-0.5 text-3xl font-semibold tracking-tight tabular sm:text-4xl">{k.value}</dd>
-                {k.sub && <dd className="text-xs text-[#f5efe4]/60">{k.sub}</dd>}
+                <dt className="truncate text-[11px] text-[#f5efe4]/65 sm:text-xs">{k.label}</dt>
+                <dd className="mt-0.5 truncate text-xl font-semibold tracking-tight tabular sm:text-4xl">{k.value}</dd>
+                {k.sub && <dd className="hidden text-xs text-[#f5efe4]/60 sm:block">{k.sub}</dd>}
               </div>
             ))}
           </dl>

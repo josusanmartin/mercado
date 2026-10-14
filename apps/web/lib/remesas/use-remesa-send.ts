@@ -1,0 +1,94 @@
+"use client";
+// Send money home: USD (testnet OUSD) in, pesos (xMXN) delivered to the family's wallet.
+// v1: SwapDesk swap, then a (memo) transfer. v2: MoveAMM mints straight to the recipient in one tx
+// (or mint-to-self then transferWithMemo when there's a note). One active tx state for whichever
+// path runs (R-034); every input is validated before the first write (R-017/R-032); the delivered
+// amount is frozen from the confirmed transfer log, never a balance diff (R-020).
+import { useCallback, useState } from "react";
+import { isAddress, zeroAddress, type Address } from "viem";
+import {
+  ADDR,
+  deliveredFromReceipt,
+  MEMO_MAX_BYTES,
+  memoByteLength,
+  readableError,
+  useMercado,
+  useOracle,
+  useSwapQuote,
+  withSlippage,
+  type TxStep,
+} from "@/lib/contracts";
+import { USE_V2, V2 } from "@/lib/v2/addresses";
+import { useMercadoV2 } from "@/lib/v2/actions";
+import { useMoveQuote } from "@/lib/v2/reads";
+import { useReportBusy } from "@/lib/busy";
+
+export const SLIPPAGE_BPS = 50n;
+
+export type SendReceipt = { to: Address; amountIn: bigint; delivered: bigint; memo?: string; steps: TxStep[]; at: number };
+
+export function useRemesaSend(amountIn: bigint) {
+  const m1 = useMercado();
+  const m2 = useMercadoV2();
+  const tx = USE_V2 ? m2.tx : m1.tx;
+  useReportBusy(m1.tx.isBusy || m2.tx.isBusy);
+  const fx = useOracle();
+
+  const q1 = useSwapQuote(true, !USE_V2 && amountIn > 0n ? amountIn : undefined);
+  const q2 = useMoveQuote(true, USE_V2 && amountIn > 0n ? amountIn : undefined);
+  const amountOut = USE_V2 ? q2.amountOut : q1.amountOut;
+  const fee = USE_V2 ? q2.fee : q1.fee;
+  const quoteError = (USE_V2 ? q2.error : q1.error) ? readableError(USE_V2 ? q2.error : q1.error) : undefined;
+  const quote = {
+    amountOut,
+    fee,
+    minOut: amountOut !== undefined ? withSlippage(amountOut, SLIPPAGE_BPS) : undefined,
+    /** Oracle mid, 8dp (MXN per USD). */
+    mid: USE_V2 ? q2.mid : fx.mxnPerUsd,
+    impactBps: USE_V2 ? q2.impactBps : undefined,
+    loading: USE_V2 ? q2.isLoading : q1.isLoading,
+    error: quoteError,
+    venue: USE_V2 ? ("Mercado exchange (vAMM)" as const) : ("Swap desk" as const),
+  };
+
+  const [receipt, setReceipt] = useState<SendReceipt>();
+
+  const send = useCallback(
+    async (to: Address, memo?: string) => {
+      setReceipt(undefined);
+      if (!isAddress(to) || to === zeroAddress) throw new Error("That recipient address isn't valid.");
+      if (memo && memoByteLength(memo) > MEMO_MAX_BYTES) throw new Error("The note is longer than 32 bytes.");
+      if (!amountOut) throw new Error("No quote yet.");
+      const steps = USE_V2
+        ? memo
+          ? await m2.sendUsdToMxnWithMemo(amountIn, amountOut, to, memo, SLIPPAGE_BPS)
+          : await m2.sendUsdToMxn(amountIn, amountOut, to, SLIPPAGE_BPS)
+        : await m1.swapAndSend(amountIn, amountOut, to, memo, SLIPPAGE_BPS);
+      const last = steps?.at(-1);
+      if (!last) return undefined;
+      const xmxn = (USE_V2 ? V2.xmxn : ADDR.xmxn) ?? ADDR.xmxn;
+      const r: SendReceipt = { to, amountIn, delivered: deliveredFromReceipt(last, xmxn, to).amount, memo, steps: steps!, at: Date.now() };
+      setReceipt(r);
+      return r;
+    },
+    [amountIn, amountOut, m1, m2],
+  );
+
+  /**
+   * Turn dollars into pesos in your own wallet (to pay a bill in xMXN). Spends just enough OUSD at the
+   * oracle mid plus a 2% cushion for fees; the min-received check still protects the swap.
+   */
+  const convert = useCallback(
+    async (neededXmxn: bigint, self: Address) => {
+      const mid = fx.mxnPerUsd; // the shared FX oracle (same feed in v1 and v2)
+      if (!mid) throw new Error("No exchange rate yet.");
+      const raw = (neededXmxn * 10n ** 8n * 102n) / (mid * 100n);
+      const amountUsd = ((raw + 9_999n) / 10_000n) * 10_000n; // round up to the cent
+      const estOut = (amountUsd * mid * 98n) / (10n ** 8n * 100n); // conservative expected output
+      return USE_V2 ? m2.sendUsdToMxn(amountUsd, estOut, self, SLIPPAGE_BPS) : m1.swap(true, amountUsd, estOut, SLIPPAGE_BPS);
+    },
+    [fx.mxnPerUsd, m1, m2],
+  );
+
+  return { tx, quote, send, convert, receipt, reset: () => (setReceipt(undefined), tx.reset()) };
+}

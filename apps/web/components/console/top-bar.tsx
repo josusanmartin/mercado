@@ -37,7 +37,7 @@ export function TopBar() {
         </button>
       </label>
       <WalletDialog>
-        <button type="button" disabled={busy} className="bg-ink text-page flex h-9 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold disabled:opacity-60">
+        <button type="button" disabled={busy} className="bg-ink text-page flex h-9 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60">
           <Wallet className="size-4" aria-hidden />
           {isConnected ? (
             <span className="tabular">

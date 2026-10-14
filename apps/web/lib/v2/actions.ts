@@ -1,7 +1,7 @@
 "use client";
 // v2 writes composed on contracts' useTx (simulate → sign → confirm, readable errors, pinned account).
 import { useCallback } from "react";
-import type { Abi, Address } from "viem";
+import { isAddress, zeroAddress, type Abi, type Address } from "viem";
 import { useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 import { ADDR, CHAIN_ID, deliveredFromReceipt, memoToBytes32, tokenAbi, useTx, withSlippage, type TxApi } from "@/lib/contracts";
@@ -48,17 +48,20 @@ export function useMercadoV2() {
     /** Move: OUSD in mints xMXN straight to `to` (one tx for a remittance). */
     sendUsdToMxn: (amountIn: bigint, quotedOut: bigint, to: Address, slippageBps = 50n) =>
       tx.run(async (t) => {
+        if (!isAddress(to) || to === zeroAddress) throw new Error("That recipient address isn't valid.");
         await approveIfNeeded(t, ADDR.ousd, need(V2.amm, "MoveAMM"), amountIn, "OUSD");
         await t.write(amm("swapOusdForXmxn", [amountIn, withSlippage(quotedOut, slippageBps), to]), "Mint and deliver xMXN");
       }),
     /** Move with a note: mint to yourself, then transferWithMemo exactly what was minted (two txs). */
     sendUsdToMxnWithMemo: (amountIn: bigint, quotedOut: bigint, to: Address, memo: string, slippageBps = 50n) =>
       tx.run(async (t) => {
-        const memo32 = memoToBytes32(memo); // validate before any write (R-017)
+        // Validate everything before the first write (R-017, R-032).
+        const memo32 = memoToBytes32(memo);
+        if (!isAddress(to) || to === zeroAddress) throw new Error("That recipient address isn't valid.");
         await approveIfNeeded(t, ADDR.ousd, need(V2.amm, "MoveAMM"), amountIn, "OUSD");
         const minted = await t.write(amm("swapOusdForXmxn", [amountIn, withSlippage(quotedOut, slippageBps), t.account]), "Mint xMXN");
         const out = deliveredFromReceipt(minted, need(V2.xmxn, "xMXN"), t.account).amount;
-        if (out === 0n) throw new Error("The mint went through but its amount couldn't be read. Send it with 'xMXN I hold'.");
+        if (out === undefined || out === 0n) throw new Error("The mint went through but its amount couldn't be read. Send it with 'xMXN I hold'.");
         await t.write(
           { address: need(V2.xmxn, "xMXN"), abi: tokenAbi as Abi, functionName: "transferWithMemo", args: [to, out, memo32] },
           "Send xMXN",
