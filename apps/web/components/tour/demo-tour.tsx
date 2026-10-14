@@ -304,7 +304,7 @@ export function TourPanel() {
       <button
         type="button"
         onClick={() => setMin(false)}
-        className="bg-card fixed right-4 bottom-[7.2rem] z-40 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-[0_8px_30px_rgb(0_0_0/0.18)] lg:bottom-14"
+        className="meta bg-foreground text-background fixed right-4 bottom-[7.2rem] z-40 flex items-center gap-2 rounded-full px-4 py-2 lg:bottom-14"
       >
         <span className="size-2.5 rounded-full" style={{ background: product.color }} />
         Tour {index + 1}/{TOUR.length} · {product.short}
@@ -316,7 +316,7 @@ export function TourPanel() {
     <aside
       aria-label="Demo Tour"
       data-product={step.product}
-      className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[70dvh] overflow-y-auto rounded-[20px] p-5 shadow-[0_12px_40px_rgb(0_0_0/0.2)] duration-150 sm:right-6 sm:left-auto sm:w-[26rem] lg:bottom-14"
+      className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[70dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[26rem] lg:bottom-14"
     >
       <div className="flex items-center gap-2">
         <ol className="flex gap-1" aria-label="Tour progress">
@@ -330,7 +330,7 @@ export function TourPanel() {
                   aria-current={i === index ? "step" : undefined}
                   disabled={going || busy}
                   onClick={() => go(i)}
-                  className={cn("block h-2 w-7 rounded-full transition-opacity", i === index ? "opacity-100" : i < index ? "opacity-60" : "opacity-20")}
+                  className={cn("block h-1.5 w-7 transition-opacity", i === index ? "opacity-100" : i < index ? "opacity-60" : "opacity-20")}
                   style={{ background: pr.color }}
                 />
               </li>
@@ -345,21 +345,22 @@ export function TourPanel() {
         </button>
       </div>
 
-      <p className="text-product mt-3 text-sm font-semibold">
-        Step {index + 1} of {TOUR.length} · {product.name}
+      <p className="meta text-muted-foreground mt-3">
+        <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: product.color }} />
+        Paso {index + 1} de {TOUR.length} · {product.name}
       </p>
-      <h2 className="mt-0.5 text-xl font-semibold tracking-tight">{step.title}</h2>
+      <h2 className="display mt-2 text-[1.9rem]">{step.title}</h2>
       <p className="mt-1 text-[15px] text-pretty">{step.doThis}</p>
 
-      <div className="bg-well mt-4 grid gap-2 rounded-[14px] p-3">
-        <p className="text-muted-foreground text-[13px]">
-          Demo account · <span className="text-foreground font-medium">{p.name}</span> <span className="font-mono">{shortAddr(p.address)}</span>
+      <div className="mt-4 grid gap-2 border-t pt-3">
+        <p className="meta text-muted-foreground">
+          Cuenta demo · <span className="text-foreground">{p.name}</span> · {shortAddr(p.address)}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <BalanceCell label="xMXN" now={bal.xmxn} d={delta(bal.xmxn, snap?.xmxn)} />
           <BalanceCell label="OUSD" now={bal.ousd} d={delta(bal.ousd, snap?.ousd)} />
         </div>
-        <p className="text-muted-foreground text-[13px]">On-chain since this step started</p>
+        <p className="meta text-muted-foreground">On-chain since this step started</p>
         <TraceList rows={snap ? trace.data : []} empty="No transfers yet. Each one will appear here with its explorer link." />
       </div>
 
@@ -393,8 +394,8 @@ export function TourPanel() {
 function BalanceCell({ label, now, d }: { label: string; now?: bigint; d?: bigint }) {
   return (
     <div>
-      <p className="text-muted-foreground text-[13px]">{label}</p>
-      <p className="text-lg leading-tight font-semibold tabular">{now === undefined ? "—" : fmtAmount(now)}</p>
+      <p className="meta text-muted-foreground">{label}</p>
+      <p className="display text-[1.5rem] tabular">{now === undefined ? "—" : fmtAmount(now)}</p>
       {d !== undefined && d !== 0n && (
         <p className={cn("text-[13px] font-medium tabular", d > 0n ? "text-success" : "text-muted-foreground")}>
           {d > 0n ? "+" : "−"}
@@ -411,12 +412,12 @@ function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: (
   return (
     <aside
       aria-label="Demo Tour summary"
-      className="bg-card animate-in fade-in-0 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[75dvh] overflow-y-auto rounded-[20px] p-5 shadow-[0_12px_40px_rgb(0_0_0/0.2)] duration-150 sm:right-6 sm:left-auto sm:w-[28rem] lg:bottom-14"
+      className="bg-card animate-in fade-in-0 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[75dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[28rem] lg:bottom-14"
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-muted-foreground text-sm">Demo Tour · the whole trail</p>
-          <h2 className="text-xl font-semibold tracking-tight">One currency, six products</h2>
+          <p className="meta text-muted-foreground">Demo Tour · the whole trail</p>
+          <h2 className="display mt-1 text-[1.9rem]">Una moneda, seis productos</h2>
         </div>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground rounded-full p-1" aria-label="Close tour">
           <X className="size-4" />
