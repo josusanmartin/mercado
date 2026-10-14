@@ -44,7 +44,7 @@ const MESSAGES: Record<string, (args: readonly unknown[]) => string> = {
   RedeemCapExceeded: ([, cap]) => `Redemptions are rate-limited (${amt(cap)} OUSD at once, refilling over 24h). Try a smaller amount or later.`,
   LiabilityCeiling: () => "The exchange has reached its issuance ceiling.",
   // Mercado Card (Spanish first, for the phone + POS)
-  CardIsFrozen: () => "Tarjeta congelada · Card is frozen. Unfreeze it on the phone to pay.",
+  CardIsFrozen: () => "Tarjeta congelada. Descongélala para pagar.", // Spanish only (lead 07:12): phone + POS
   OverDailyLimit: ([after, limit]) => `Supera tu límite diario · Over the daily limit (${amt(after)} of ${amt(limit)} xMXN; resets at midnight CDMX).`,
   TapExpired: () => "Autorización vencida · The tap expired. Tap again to approve.",
   TapReplayed: () => "Autorización ya usada · This tap was already used. Tap again.",
