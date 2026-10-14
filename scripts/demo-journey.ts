@@ -7,7 +7,7 @@
  *   npx tsx scripts/demo-journey.ts --steps J0      # pre-demo health check only (auto-heals; --no-heal to just report)
  *
  * Needs: root .env.local (testnet keys), packages/shared/src/deployments/42431.json,
- * and the app running at MERCADO_API_URL (default http://localhost:3000) for J4/J5.
+ * and the app running at MERCADO_API_URL (default http://localhost:3100) for J4/J5.
  * Coded against INTERFACES.md. ABIs are inlined as human-readable fragments, so the
  * script doesn't depend on the generated ABI exports.
  */
@@ -44,7 +44,7 @@ function loadEnv(file: string) {
 }
 loadEnv(join(ROOT, '.env.local'))
 
-const API = process.env.MERCADO_API_URL ?? 'http://localhost:3000'
+const API = process.env.MERCADO_API_URL ?? 'http://localhost:3100'
 const RPC = process.env.TEMPO_RPC_URL ?? tempoModerato.rpcUrls.default.http[0]
 const EXPLORER = tempoModerato.blockExplorers.default.url
 // Fee token for every tx: AlphaUSD by default (matches shared FEE_TOKEN) (faucet-funded). Override with FEE_TOKEN.
@@ -113,6 +113,7 @@ const erc20 = parseAbi([
   'function mint(address,uint256)',
   'function totalSupply() view returns (uint256)',
   'event Transfer(address indexed from, address indexed to, uint256 amount)',
+  'error Unauthorized()',
 ])
 const oracleAbi = parseAbi([
   'function price() view returns (uint256 mxnPerUsd, uint256 updatedAt)',
@@ -130,6 +131,7 @@ const vaultAbi = parseAbi([
   'function getPosition(address) view returns ((uint256 collateral, uint256 debt))',
   'function collateralRatio(address) view returns (uint256)',
   'function maxMintable(address) view returns (uint256)',
+  'error RatioTooLow(uint256 ratioBps, uint256 requiredBps)',
 ])
 const deskAbi = parseAbi([
   'function quote(bool ousdToXmxn, uint256 amountIn) view returns (uint256 amountOut, uint256 fee)',
@@ -336,9 +338,9 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
 
       // negative check (simulation only, no gas): minting past 150% must revert
       const over = (await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'maxMintable', args: [lp.address] })) + 1_000_000n
-      await expectRevert('mint above the 150% limit', { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp })
+      await expectRevert('mint above the 150% limit', { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp }, ['RatioTooLow'])
       // only the vault may mint xMXN: a direct TIP-20 mint from the LP must revert
-      await expectRevert('direct xMXN.mint by a non-vault account', { address: d.xMXN, abi: erc20, functionName: 'mint', args: [lp.address, 1_000_000n], account: lp })
+      await expectRevert('direct xMXN.mint by a non-vault account', { address: d.xMXN, abi: erc20, functionName: 'mint', args: [lp.address, 1_000_000n], account: lp }, ['Unauthorized'])
     },
   },
   {
@@ -530,13 +532,20 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
 ]
 
 /** Negative check via simulation (no gas). Passes only on a genuine contract revert, not on RPC/network errors. */
-async function expectRevert(what: string, req: { address: Address; abi: any; functionName: string; args?: readonly unknown[]; account: PrivateKeyAccount }) {
+/** `expected` lists acceptable custom error names; a revert for any other reason (e.g. stale oracle) fails. */
+async function expectRevert(
+  what: string,
+  req: { address: Address; abi: any; functionName: string; args?: readonly unknown[]; account: PrivateKeyAccount },
+  expected?: string[],
+) {
   try {
     await pub.simulateContract(req as any)
   } catch (e) {
-    const revert = e instanceof BaseError ? e.walk((x) => x instanceof ContractFunctionRevertedError) : null
+    const revert = e instanceof BaseError ? (e.walk((x) => x instanceof ContractFunctionRevertedError) as ContractFunctionRevertedError | null) : null
     if (!revert) throw new Error(`${what}: expected a contract revert, got: ${short(e)}`)
-    ok(`${what} reverts (${short(revert)})`)
+    const name = revert.data?.errorName ?? revert.signature ?? revert.reason ?? 'unknown'
+    if (expected && !expected.includes(name)) throw new Error(`${what}: reverted with ${name}, expected ${expected.join(' | ')}`)
+    ok(`${what} reverts with ${name}`)
     return
   }
   throw new Error(`${what} did NOT revert`)

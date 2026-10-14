@@ -6,7 +6,7 @@ The spine of the demo is **one xMXN flow**: the lender funds the pool, the drive
 
 ## Before recording
 
-- [ ] Dev server up at http://localhost:3000. Moderato RPC reachable.
+- [ ] Dev server up at http://localhost:3100. Moderato RPC reachable.
 - [ ] Oracle is fresh (updated within the last hour). If it's stale, refresh it with the `contracts` admin `setPrice` script.
 - [ ] Pool has liquidity and the driver has no open debt. Check with `npx tsx scripts/demo-journey.ts --steps J0`.
 - [ ] Explorer tab open: https://explore.testnet.tempo.xyz

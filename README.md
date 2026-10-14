@@ -89,7 +89,7 @@ cp .env.example .env.local       # fill in testnet throwaway keys
 # contracts
 cd packages/contracts && forge test && cd -
 
-# app (http://localhost:3000)
+# app (http://localhost:3100)
 npm run dev
 
 # end-to-end journey on Moderato (needs the app running)
