@@ -94,12 +94,16 @@ export function Display({
     if (!fit || !el) return;
     const measure = () => {
       el.style.fontSize = `${size}px`;
-      el.style.whiteSpace = "nowrap";
+      el.style.whiteSpace = el.style.flexWrap = "nowrap";
       const avail = el.clientWidth;
       const need = el.scrollWidth;
       const next = need > avail && avail > 0 ? Math.max(14, Math.floor((size * avail) / need)) : size;
       el.style.fontSize = `${next}px`;
-      if (el.scrollWidth > el.clientWidth) el.style.whiteSpace = "normal"; // still too wide: wrap, never clip
+      // Still too wide at the smallest size: wrap (flex balances too), never clip.
+      if (el.scrollWidth > el.clientWidth) {
+        el.style.whiteSpace = "normal";
+        el.style.flexWrap = "wrap";
+      }
       setPx(next);
     };
     measure();
@@ -113,7 +117,7 @@ export function Display({
     };
   }, [fit, size]);
   return (
-    <Tag ref={ref as never} className={cn("m-display", fit && "flex-wrap break-words whitespace-nowrap", className)} style={{ fontSize: fit ? px : size, ...style }}>
+    <Tag ref={ref as never} className={cn("m-display", fit && "break-words whitespace-nowrap", className)} style={{ fontSize: fit ? px : size, ...style }}>
       {children}
     </Tag>
   );
