@@ -92,8 +92,8 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   await expect(sheet).toBeVisible({ timeout: 30_000 })
   await pause(1500)
   await sheet.getByRole('button', { name: /Aprobar/ }).click()
-  await expect(page.getByText(/Pagado · Paid/)).toBeVisible({ timeout: 120_000 })
-  await expect(pos.getByText(/Cobrado · Charged/)).toBeVisible({ timeout: 60_000 })
+  // the paid sheet auto-closes after 2.5s, so gate on the POS's persistent receipt
+  await expect(pos.getByText(/Cobrado · Charged/)).toBeVisible({ timeout: 120_000 })
   // wait for the live reads to reflect the charge before the final still: left-today drops by 150 and the
   // charge shows up in Card activity (CardCharged event)
   await expect(page.getByText(/No charges on this card yet/)).toBeHidden({ timeout: 60_000 })
