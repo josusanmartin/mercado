@@ -41,7 +41,7 @@ import { personaById, type PersonaId } from "@/components/wallet/personas";
 import { usePersona } from "@/components/wallet/use-persona";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { useDemoMode } from "@/components/console/demo-mode";
-import { TickerText } from "@/lib/motion";
+import { SuccessCheck, TickerText } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ADDR,
@@ -227,6 +227,19 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
   );
 }
 
+/** The one signature success moment (PRINCIPLES v5): a self-drawing check + the settled amounts. */
+function Settled({ label, line }: { label: string; line: string }) {
+  return (
+    <div className="mt-5 flex items-center gap-3" role="status">
+      <SuccessCheck size={40} label={label} className="text-success shrink-0" />
+      <p className="text-[15px]">
+        <span className="font-semibold">{label}.</span>{" "}
+        <span className="tabular">{line}</span>
+      </p>
+    </div>
+  );
+}
+
 /** Pay a supplier, money first (review V5-TASTE #5): You pay → Supplier receives → recipient → Pay. */
 function PaySupplier() {
   const { isConnected, chainId } = useConnection();
@@ -237,6 +250,7 @@ function PaySupplier() {
   const [to, setTo] = useState("");
   const [memo, setMemo] = useState("");
   const [withRef, setWithRef] = useState(false);
+  const [paid, setPaid] = useState<{ in: bigint; out: bigint }>();
   const quote = useMoveQuote("usd_to_mxn", amount);
   const q = quote.data;
   const secondsLeft = useSecondsLeft(q?.expiresAt);
@@ -419,15 +433,16 @@ function PaySupplier() {
             className="h-auto min-h-12 max-w-full py-2 whitespace-normal"
             pending={m.tx.isBusy}
             disabled={!canPay}
-            onClick={() =>
-              q &&
+            onClick={() => {
+              if (!q) return;
+              setPaid({ in: amountIn, out: BigInt(q.amountOut) });
               m.exchangeUsdToMxn(
                 amountIn,
                 BigInt(q.amountOut),
                 to as Address,
                 memo || undefined,
-              )
-            }
+              );
+            }}
           >
             {m.tx.isBusy
               ? "Paying…"
@@ -436,6 +451,12 @@ function PaySupplier() {
                 : "Pay supplier"}
           </Button>
         </PanelActions>
+        {m.tx.status === "success" && paid && (
+          <Settled
+            label="Paid"
+            line={`${fmtAmount(paid.in)} OUSD → ${fmtAmount(paid.out)} xMXN`}
+          />
+        )}
         <TxProgress
           tx={m.tx}
           className="mt-4"
@@ -481,6 +502,7 @@ function Redeem() {
   const ex = useExchangeState();
   const m = useMercado();
   const [amount, setAmount] = useState("500");
+  const [done, setDone] = useState<{ in: bigint; out: bigint }>();
   const quote = useMoveQuote("mxn_to_usd", amount);
   const q = quote.data;
   const secondsLeft = useSecondsLeft(q?.expiresAt);
@@ -517,11 +539,14 @@ function Redeem() {
           <PanelActions>
             <Button
               size="lg"
+              className="h-auto min-h-12 max-w-full py-2 whitespace-normal"
               pending={m.tx.isBusy}
               disabled={!canRedeem}
-              onClick={() =>
-                q && m.exchangeMxnToUsd(amountIn, BigInt(q.amountOut))
-              }
+              onClick={() => {
+                if (!q) return;
+                setDone({ in: amountIn, out: BigInt(q.amountOut) });
+                m.exchangeMxnToUsd(amountIn, BigInt(q.amountOut));
+              }}
             >
               {m.tx.isBusy
                 ? "Redeeming…"
@@ -534,6 +559,12 @@ function Redeem() {
             <p className="text-destructive pt-2 text-[13px]">
               The business account holds {fmtAmount(bal.xmxn)} xMXN.
             </p>
+          )}
+          {m.tx.status === "success" && done && (
+            <Settled
+              label="Redeemed"
+              line={`${fmtAmount(done.in)} xMXN → ${fmtAmount(done.out)} OUSD`}
+            />
           )}
           <TxProgress
             tx={m.tx}
