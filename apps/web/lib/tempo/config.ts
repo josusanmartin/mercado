@@ -1,7 +1,9 @@
-// wagmi config for Tempo Moderato. Connectors, in the order the connect menu shows them:
-// Tempo Wallet → Passkey → (Demo personas, connected on demand in components/wallet) → injected.
+// wagmi config for Tempo Moderato. Only the injected connector lives in the config. Tempo Wallet,
+// Passkey and the demo personas are all `accounts`-provider connectors that share one session store;
+// kept idle in the config they hijack each other's sessions (a persona's address reappears under
+// Tempo Wallet a few seconds after connecting, and its writes open the tempo.xyz dialog). So they're
+// created on demand when chosen (components/wallet), and personas reconnect from a remembered id.
 import { createConfig, createStorage, injected } from "wagmi";
-import { tempoWallet, webAuthn } from "wagmi/tempo";
 import { tempoModerato } from "@mercado/shared";
 import { directTransport, sponsoredTransport } from "@/lib/contracts/sponsor";
 
@@ -17,7 +19,7 @@ const sponsor = process.env.NEXT_PUBLIC_FEE_SPONSOR !== "0";
 
 export const wagmiConfig = createConfig({
   chains: [tempoModerato],
-  connectors: [tempoWallet(NO_MPP_POLYFILL), webAuthn(NO_MPP_POLYFILL), injected({ shimDisconnect: true })],
+  connectors: [injected({ shimDisconnect: true })],
   transports: { [tempoModerato.id]: sponsor ? sponsoredTransport() : directTransport() },
   storage: createStorage({ storage: typeof window !== "undefined" ? window.localStorage : undefined, key: "mercado" }),
   ssr: true,

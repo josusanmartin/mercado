@@ -26,6 +26,7 @@ export function usePersona() {
       if (!p.privateKey) throw new Error(`Demo key for ${p.role} is missing (NEXT_PUBLIC_DEMO_* in apps/web/.env.local).`);
       if (active?.id === id) return;
       await disconnect(config).catch(() => {});
+      rememberPersona(id);
       await connect(config, {
         connector: dangerous_secp256k1({ privateKey: p.privateKey, name: `Demo · ${p.name}`, ...NO_MPP_POLYFILL }),
         chainId: CHAIN_ID,
@@ -37,14 +38,38 @@ export function usePersona() {
   return { active, stale, switchTo };
 }
 
-/** Mounted once in the shell: silently re-attach a restored persona session to its local demo key. */
+const KEY = "mercado.persona";
+
+/** Remember the chosen demo persona so a reload reconnects it with its key (null = forget). */
+export function rememberPersona(id: PersonaId | null) {
+  try {
+    if (id) localStorage.setItem(KEY, id);
+    else localStorage.removeItem(KEY);
+  } catch {}
+}
+
+function rememberedPersona(): PersonaId | undefined {
+  try {
+    return (localStorage.getItem(KEY) as PersonaId | null) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Mounted once in the shell. On load, reconnect the remembered persona with its local key; and if a
+ * persona's address ever shows up under another connector, re-attach it to the key.
+ */
 export function PersonaRestore() {
+  const { isConnected, status } = useConnection();
   const { stale, switchTo } = usePersona();
   const tried = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!stale || tried.current === stale.id) return;
-    tried.current = stale.id;
-    void switchTo(stale.id).catch(() => {});
-  }, [stale, switchTo]);
+    if (status === "connecting" || status === "reconnecting") return;
+    const target = stale?.id ?? (!isConnected ? rememberedPersona() : undefined);
+    if (!target || tried.current === target) return;
+    tried.current = target;
+    void switchTo(target).catch(() => {});
+  }, [stale, isConnected, status, switchTo]);
   return null;
 }

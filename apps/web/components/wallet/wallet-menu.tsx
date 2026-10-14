@@ -10,7 +10,9 @@ import { useAnyBusy } from "@/lib/busy";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PERSONAS, type PersonaId } from "./personas";
-import { usePersona } from "./use-persona";
+import { rememberPersona, usePersona } from "./use-persona";
+import { tempoWallet, webAuthn } from "wagmi/tempo";
+import { NO_MPP_POLYFILL } from "@/lib/tempo/config";
 
 export function WalletMenu() {
   const [open, setOpen] = useState(false);
@@ -66,26 +68,31 @@ export function WalletDialog({ children }: { children: React.ReactNode }) {
 export function WalletChooser({ onDone }: { onDone: () => void }) {
   const { isConnected, address } = useConnection();
   const connectors = useConnectors();
-  const { mutateAsync: connect, isPending, variables } = useConnect();
+  const { mutateAsync: connect, isPending } = useConnect();
   const { mutate: disconnect } = useDisconnect();
   const { active, switchTo } = usePersona();
   const [personaPending, setPersonaPending] = useState<PersonaId>();
   // Never switch accounts while a transaction flow is in flight (R-012).
   const busy = useAnyBusy();
 
-  const byType = (t: string) => connectors.find((c) => c.type === t || c.id === t);
-  const tempo = byType("tempoWallet") ?? connectors.find((c) => /tempo/i.test(c.name));
-  const passkey = byType("webAuthn");
-  const injected = byType("injected");
+  const injected = connectors.find((c) => c.type === "injected");
+  // Tempo Wallet and Passkey connectors are created on demand (see lib/tempo/config.ts).
+  const tempo = () => tempoWallet(NO_MPP_POLYFILL);
+  const passkey = () => webAuthn(NO_MPP_POLYFILL);
 
-  async function use(c: (typeof connectors)[number] | undefined) {
+  const [kind, setKind] = useState<string>();
+  async function use(c: (typeof connectors)[number] | ReturnType<typeof tempoWallet> | undefined, k: string) {
     if (!c) return;
+    setKind(k);
     try {
       if (isConnected) disconnect();
+      rememberPersona(null);
       await connect({ connector: c, chainId: TEMPO_MODERATO_CHAIN_ID });
       onDone();
     } catch (e) {
       toast.error(e instanceof Error ? e.message.split("\n")[0] : "Could not connect");
+    } finally {
+      setKind(undefined);
     }
   }
 
@@ -101,7 +108,7 @@ export function WalletChooser({ onDone }: { onDone: () => void }) {
     }
   }
 
-  const pendingId = isPending ? (variables?.connector as { id?: string } | undefined)?.id : undefined;
+  const pendingId = isPending ? kind : undefined;
 
   return (
     <>
@@ -120,17 +127,17 @@ export function WalletChooser({ onDone }: { onDone: () => void }) {
           icon={<Globe />}
           title="Tempo Wallet"
           detail="Sign in at tempo.xyz, no extension needed"
-          pending={pendingId === tempo?.id}
-          disabled={busy || !tempo}
-          onClick={() => use(tempo)}
+          pending={pendingId === "tempoWallet"}
+          disabled={busy}
+          onClick={() => use(tempo(), "tempoWallet")}
         />
         <WalletOption
           icon={<Fingerprint />}
           title="Passkey"
           detail="A new account secured by Face ID or your fingerprint, no seed phrase"
-          pending={pendingId === passkey?.id}
-          disabled={busy || !passkey}
-          onClick={() => use(passkey)}
+          pending={pendingId === "webAuthn"}
+          disabled={busy}
+          onClick={() => use(passkey(), "webAuthn")}
         />
       </div>
 
@@ -172,9 +179,9 @@ export function WalletChooser({ onDone }: { onDone: () => void }) {
         icon={<Wallet />}
         title="Browser wallet"
         detail="MetaMask or another injected wallet"
-        pending={pendingId === injected?.id}
+        pending={pendingId === "injected"}
         disabled={busy || !injected}
-        onClick={() => use(injected)}
+        onClick={() => use(injected, "injected")}
       />
 
       {isConnected && (
@@ -183,6 +190,7 @@ export function WalletChooser({ onDone }: { onDone: () => void }) {
           disabled={busy}
           className="justify-self-start"
           onClick={() => {
+            rememberPersona(null);
             disconnect();
             onDone();
           }}

@@ -125,7 +125,11 @@ export function SendScreen() {
         <Panel
           key="send"
           title="Send money"
-          description="Turn dollars into pesos on the swap desk and send them to any wallet on Tempo in one step. On-chain delivery only: no cash-out to a Mexican bank (SPEI) in this prototype."
+          description={
+            USE_V2
+              ? "Dollars sent in are minted into pesos at the Mercado exchange and delivered to any wallet on Tempo in one step. On-chain delivery only: no cash-out to a Mexican bank (SPEI) in this prototype."
+              : "Turn dollars into pesos on the swap desk and send them to any wallet on Tempo in one step. On-chain delivery only: no cash-out to a Mexican bank (SPEI) in this prototype."
+          }
         >
           <ConnectGate persona="sender" why="Connect a wallet with testnet OUSD or xMXN to send money.">
             <div className="grid gap-5 pt-2">
