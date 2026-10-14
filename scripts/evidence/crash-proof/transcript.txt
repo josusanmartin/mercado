@@ -1,0 +1,27 @@
+Bills crash/restart proof: real bills service, real Moderato settlement, SIGKILL mid-settle
+   topped up driver with 20 xMXN from LP
+
+[A] crash AFTER the payment is broadcast, BEFORE PAYMENT_VERIFIED is recorded
+   ✓ server process SIGKILLed right after broadcasting https://explore.testnet.tempo.xyz/tx/0x88501f18e3ca060b1f0de8b1fef215bc83b3be182f4112c1f4e827317f1eda70
+   ✓ at kill time: order CREATED, 2 pending attempt persisted (no PAYMENT_VERIFIED yet)
+   ✓ the transfer landed on-chain: merchant +20 xMXN while the server was dead
+   … restarting the service (new process, same state files + secret)
+   ✓ plain retry (same idempotency key, no credential) → ok FULFILLED_SIMULATED (no new 402)
+   ✓ recovered receipt = the tx broadcast before the crash
+   ✓ history: CREATED → PAYMENT_VERIFIED → FULFILLED_SIMULATED ("PAYMENT_VERIFIED: Recovered: payment found on-chain for an interrupted attempt: …")
+   ✓ second retry → same order, same fulfillment reference
+   ✓ fulfilled exactly once
+   ✓ merchant received exactly ONE payment (20 xMXN) across crash + 2 retries
+
+[B] crash AFTER the attempt is persisted, BEFORE the payment is broadcast
+   ✓ server SIGKILLed just before broadcast: order CREATED, 2 pending attempt persisted
+   … restarting the service
+   ✓ immediate retry → 409 SETTLEMENT_PENDING (no fulfillment, no fresh challenge while the attempt is unresolved)
+   ✓ nothing was charged
+   … waiting 65s for the unresolved-attempt hold to lapse (the signed pull tx expires after ≤25s and can no longer land)
+   ✓ after the hold: chain scan finds nothing → fresh 402 challenge
+   ✓ paying the fresh challenge → FULFILLED_SIMULATED https://explore.testnet.tempo.xyz/tx/0x98a2c0e64b915a7d5401c558437338e160836e8894daabaac8ef62abc8c1ccad
+   ✓ fulfilled exactly once
+   ✓ merchant received exactly ONE payment (20 xMXN)
+
+PASS: no double charge and no double fulfillment across crashes; unresolved attempts block new challenges.
