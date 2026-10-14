@@ -17,7 +17,7 @@
 
 ## Stage flow (CR-03, lead-approved): 6 beats + one 45 s spending proof, ≤230 spoken words
 
-Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (synced with the deck's speaker notes at 04:37; the deck wins if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
+Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (synced verbatim from the deck's speaker notes, commit 596a32b; the deck wins if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
 
 ### 1 · 0:00 Cover (10 s)
 
@@ -25,7 +25,7 @@ Follows the deck's main flow: cover → problem → system map → **spending pr
 
 ### 2 · 0:10 Problem (25 s)
 
-- *"In Mexico, money arrives in dollars, credit goes to people with a file, and savings sit in cash. Each step is a different company, and each one takes a cut."*
+- *"Javier gets paid on Friday. Doña Mary's shop wants payment today. Sending money home, borrowing against what you've earned and saving often mean separate services, and waiting."*
 
 ### 3 · 0:35 System map: all six products (30 s)
 
@@ -40,7 +40,7 @@ Play `deck/assets/hero-spend-final.mp4` (41 s, all real txs). Live alternative: 
 ### 5 · 1:50 Why it compounds, and the risk (30 s)
 
 Optional live: **/mint** → **Risk** tab (or the deck's `panel-mint-risk`).
-- *"An advance becomes a shop receipt; a remittance can become peso savings. On Mint, eligible assets support separate collateralized debt. We show what peso appreciation does to backing; credit, liquidity and admin-control risks remain."*
+- *"First the loop: an advance becomes a shop receipt; a remittance can become peso savings. On Mint, eligible assets support separate collateralized debt. (Pause.) Then the risk: we show what peso appreciation does to backing; credit, liquidity and admin-control risks remain."*
 
 ### 6 · 2:20 Close: one corridor, one driver platform, one merchant pilot (25 s)
 
