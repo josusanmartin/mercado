@@ -1,8 +1,9 @@
 // Pay-once for one-shot MPP products (signed partner quote, underwriting report): the paid intent is persisted
 // the moment payment is verified, BEFORE any post-payment work (chain reads, scoring, signing). If that work
 // fails, the caller gets an error that carries the Payment-Receipt, and a retry with the SAME credential
-// recovers it: it is recognised from the store (keyed by the HMAC-verified challenge id) and produces the
-// result again without a new charge. Stored in <repo>/.data/paid-results.json (gitignored).
+// recovers it (recognised from the store, keyed by the HMAC-verified challenge id) without a new charge.
+// Once fulfilled, the exact response is stored and REPLAYED unchanged: a paid credential buys one result,
+// never a stream of fresh ones. Stored in <repo>/.data/paid-results.json (gitignored).
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Address, Hex } from "viem";
@@ -21,8 +22,10 @@ export interface PaidRecord {
   payer?: Address;
   receiptHeader: string;
   paidAt: string;
-  /** Set once the paid work succeeded (served again as-is on a retry). */
+  /** Set once the paid work succeeded. */
   fulfilledAt?: string;
+  /** The exact successful response, replayed unchanged on any later retry with the same credential. */
+  response?: { status: number; headers: Record<string, string>; body: string };
 }
 
 const file = () => process.env.MERCADO_PAID_RESULTS_FILE ?? path.join(repoRoot(), ".data", "paid-results.json");
@@ -49,6 +52,9 @@ export interface PaidOnceOptions<T> {
   protocol: "v1" | "v2";
   /** Ledger summary before the result exists (written at payment time). */
   summary: string;
+  /** Checks that must pass BEFORE issuing a 402 (never run for an already-paid credential). Return a
+   *  Response to refuse (nothing is charged). */
+  preflight?: () => Promise<Response | void>;
   /** The paid work. Runs after the paid intent is persisted; may run again on a recovery retry. */
   produce: () => Promise<T>;
   /** Builds the 200 response from the result (the original Payment-Receipt is passed back on recovery too). */
@@ -67,7 +73,13 @@ export async function paidOnce<T>(request: Request, o: PaidOnceOptions<T>): Prom
   if (paid && paid.externalId !== o.charge.externalId)
     return jsonError(409, "This payment was for a different request; retry with the original parameters.", "PAYMENT_REQUEST_MISMATCH");
 
+  // a fulfilled credential gets its original response back, byte for byte (no new work, no new quote)
+  if (paid?.response)
+    return new Response(paid.response.body, { status: paid.response.status, headers: paid.response.headers });
+
   if (!paid) {
+    const refused = await o.preflight?.();
+    if (refused) return refused;
     const outcome = await charge(request, o.charge);
     if (!outcome.paid) return outcome.challenge;
     paid = {
@@ -108,6 +120,12 @@ export async function paidOnce<T>(request: Request, o: PaidOnceOptions<T>): Prom
     res.headers.set("Payment-Receipt", paid.receiptHeader);
     return res;
   }
-  if (!paid.fulfilledAt) await put({ ...paid, fulfilledAt: new Date().toISOString() });
-  return o.respond(result, payment);
+  const res = await o.respond(result, payment);
+  if (res.ok) {
+    const body = await res.clone().text();
+    const headers: Record<string, string> = {};
+    res.headers.forEach((v, k) => (headers[k] = v));
+    await put({ ...paid, fulfilledAt: new Date().toISOString(), response: { status: res.status, headers, body } });
+  }
+  return res;
 }

@@ -93,6 +93,35 @@ describe("CR-06 paid partner quote", () => {
     expect(paidCalls("move-quote").calls.filter((c) => c.txHash === TX)).toHaveLength(1); // still one row
   });
 
+  it("review's paid-once probe: failed → recovered → retried again REPLAYS the same response (no fresh quote)", async () => {
+    failOnCall = 2;
+    expect((await call("300", "Payment cred:chal-Q3")).status).toBe(502);
+    failOnCall = null;
+    const second = await call("300", "Payment cred:chal-Q3");
+    expect(second.status).toBe(200);
+    const body2 = await second.text();
+    const callsAfterRecovery = quoteCalls;
+
+    const third = await call("300", "Payment cred:chal-Q3");
+    expect(third.status).toBe(200);
+    expect(await third.text()).toBe(body2); // byte-identical replay, same signature
+    expect(third.headers.get("Payment-Receipt")).toBe(`receipt-${TX}`);
+    expect(quoteCalls).toBe(callsAfterRecovery); // produce did NOT run again
+    expect(chargeStub).toHaveBeenCalledTimes(1);
+  });
+
+  it("paid recovery runs ahead of the preflight: a failing price check can't block a paid retry", async () => {
+    failOnCall = 2; // paid, then the post-payment quote fails
+    expect((await call("400", "Payment cred:chal-Q4")).status).toBe(502);
+    process.env.ATTESTATION_SIGNER_PRIVATE_KEY = `0x${"11".repeat(32)}`;
+    failOnCall = null;
+    const before = quoteCalls;
+    const retry = await call("400", "Payment cred:chal-Q4");
+    expect(retry.status).toBe(200);
+    expect(quoteCalls - before).toBe(1); // only the paid work ran; no preflight price check
+    expect(chargeStub).toHaveBeenCalledTimes(1);
+  });
+
   it("a paid credential can't be reused for a different request", async () => {
     await call("250", "Payment cred:chal-Q2");
     const other = await call("999", "Payment cred:chal-Q2");

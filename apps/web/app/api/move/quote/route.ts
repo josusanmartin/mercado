@@ -29,13 +29,16 @@ export async function GET(request: Request) {
   try {
     if (!partner) return Response.json(await quoteMove(side, amount), { headers: { "Cache-Control": "no-store" } });
 
-    // Fail closed BEFORE the 402: a partner must never pay for a quote we can't sign or price.
     const key = env("ATTESTATION_SIGNER_PRIVATE_KEY") as Hex | undefined;
-    if (!key) return jsonError(503, "The quote signing key isn't configured.", "SIGNER_UNAVAILABLE");
-    const signer = privateKeyToAccount(key);
-    await quoteMove(side, amount);
+    const signer = key ? privateKeyToAccount(key) : undefined;
     const token = billPaymentToken();
     return await paidOnce(request, {
+      // Fail closed BEFORE the 402 (skipped for an already-paid credential, which recovers instead):
+      // a partner must never pay for a quote we can't sign or price.
+      preflight: async () => {
+        if (!signer) return jsonError(503, "The quote signing key isn't configured.", "SIGNER_UNAVAILABLE");
+        await quoteMove(side, amount);
+      },
       product: "move-quote",
       charge: {
         amount: PARTNER_FEE,
@@ -53,11 +56,12 @@ export async function GET(request: Request) {
       // post-payment work: a fresh quote (30s expiry) signed by Mercado's quote key; re-run on a recovery retry
       produce: async () => {
         const quote = await quoteMove(side, amount);
+        if (!signer) throw new Error("quote signing key missing");
         return { quote, signature: await signer.signMessage({ message: canonicalJson(quote) }) };
       },
       respond: ({ quote, signature }, p) =>
         Response.json(
-          { ...quote, signature, signer: signer.address, payment: { txHash: p.txHash, payer: p.payer, tokenSymbol: token.symbol } },
+          { ...quote, signature, signer: signer!.address, payment: { txHash: p.txHash, payer: p.payer, tokenSymbol: token.symbol } },
           { headers: { "Payment-Receipt": p.receiptHeader, "Cache-Control": "private, no-store" } },
         ),
     });
