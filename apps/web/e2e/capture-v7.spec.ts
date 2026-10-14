@@ -67,6 +67,19 @@ async function hideChrome(page: Page) {
     }
   })
 }
+/** Screenshot the union of several elements' boxes (+pad), with the sticky chrome hidden. */
+async function shootUnion(page: Page, locs: Locator[], name: string, pad = 16) {
+  await hideChrome(page)
+  await locs[0].scrollIntoViewIfNeeded()
+  await page.waitForTimeout(400)
+  const boxes = (await Promise.all(locs.map((l) => l.boundingBox()))).filter((b): b is NonNullable<typeof b> => !!b)
+  expect(boxes.length, `all ${name} parts visible`).toBe(locs.length)
+  const x = Math.min(...boxes.map((b) => b.x)) - pad
+  const y = Math.min(...boxes.map((b) => b.y)) - pad
+  const r = Math.max(...boxes.map((b) => b.x + b.width)) + pad
+  const btm = Math.max(...boxes.map((b) => b.y + b.height)) + pad
+  await page.screenshot({ path: join(OUT, `${name}.png`), clip: { x: Math.max(0, x), y: Math.max(0, y), width: r - Math.max(0, x), height: btm - Math.max(0, y) } })
+}
 async function shootPanel(loc: Locator, name: string) {
   await hideChrome(loc.page())
   await loc.scrollIntoViewIfNeeded()
@@ -150,7 +163,12 @@ test('panels: Mint Risk numbers, Crédito loan book, 402 trace, verified contrac
   await go(page, '/mint')
   await page.getByRole('tab', { name: /^(Risk|Riesgo)/i }).or(page.getByRole('button', { name: /^(Risk|Riesgo)/i })).first().click()
   await page.waitForTimeout(2500)
-  await shootPanel(panel(page, [/01 · Respaldo del intercambio/i, /02 · Respaldo del sistema/i]), 'panel-mint-risk')
+  // v6 (contracts 10:17): English labels + the FX gauge under them; clip the two big numbers through the gauge's caption
+  await shootUnion(
+    page,
+    [page.getByText(/01 · Exchange coverage/i).first(), page.getByText(/02 · System backing/i).first(), page.locator('figure[aria-label^="USD/MXN today"]').first()],
+    'panel-mint-risk',
+  )
 
   await go(page, '/credito?tab=backoffice')
   await shootPanel(sectionOf(page, /^Loan book/i), 'panel-credito-loanbook')
@@ -158,19 +176,11 @@ test('panels: Mint Risk numbers, Crédito loan book, 402 trace, verified contrac
   await go(page, '/developers')
   await shootPanel(sectionOf(page, /^The 402 challenge/i), 'panel-developers-402')
 
-  // /contracts: just two verified rows (factory + vault), clipped, so it reads as a "verified" list not a wall
+  // /contracts v6 (contracts 10:17): the permissions graph + the 'Verified ✓ N of M' tally under it. The 'how xMXN is
+  // minted' dots play ~1.2 s on arrival, so wait for the still frame.
   await go(page, '/contracts')
-  await hideChrome(page)
-  const r1 = page.getByText('MercadoFactoryV2', { exact: true }).first()
-  const r2 = page.getByText('MultiCollateralVault', { exact: true }).first()
-  await r1.scrollIntoViewIfNeeded()
-  await page.waitForTimeout(400)
-  const b1 = (await r1.boundingBox())!
-  void r2
-  // bottom edge = just above the next row's title ("Collateral · OUSD"), so the vault row is included whole
-  const next = (await page.getByText(/Collateral\s*·\s*OUSD/).first().boundingBox())!
-  const left = 272 // content column (sidebar excluded)
-  await page.screenshot({ path: join(OUT, 'panel-contracts-verified.png'), clip: { x: left, y: b1.y - 16, width: 1440 - left - 32, height: next.y - 14 - (b1.y - 16) } })
+  await page.waitForTimeout(1800)
+  await shootUnion(page, [page.locator('figure[aria-label^="Contract architecture"]').first(), page.getByRole('link', { name: /Verified ✓ \d+ of \d+/ }).first()], 'panel-contracts-verified')
 })
 
 // lead 04:24: the deck's Global example is US$1,000 (quote only, nothing is sent)
