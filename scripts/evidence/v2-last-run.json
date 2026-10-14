@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-14T02:04:15.058Z",
+  "protocol": "v2",
+  "steps": [
+    "V5",
+    "V6",
+    "V7"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V5": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xff722d0c3b2c94509ce2174bdc7f494a31cf0604c09c9063159eeb2811c35703"
+      },
+      "notes": []
+    },
+    "V6": {
+      "status": "pass",
+      "txs": {
+        "MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0xb956c7998e1bd7e4ca20af26fa5bcfcabca069ac122209746480a5de5fed8077"
+      },
+      "notes": []
+    },
+    "V7": {
+      "status": "pass",
+      "txs": {
+        "top-up 90 xMXN v2 LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x4a0b1cd1383e6aa3d87b9581760d59ba4025afdea86a5d36bdc2e41d858b5107",
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0x3f59d64e031174acd49b1a647c20a7d8f525e58165f9934d04d18def8f68937d",
+        "repay 510 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0xcca5832d15f85f026ec7307c5911177488d840943118e470338a127e3308711b"
+      },
+      "notes": []
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-14T02:06:28.287Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J1",
+    "J2",
+    "J3",
+    "J4",
+    "J5",
+    "J6"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J1": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x82d443f7ed57a4ade20efc7abfe5af25d9af4c5bcaa35ece25cc55be22d95f9a",
+        "depositCollateral 1,000 OUSD": "https://explore.testnet.tempo.xyz/tx/0xc361a5f981207a6123308b8491f2b8b1120d9097585230138767b9ed544ec52f"
+      },
+      "notes": []
+    },
+    "J2": {
+      "status": "pass",
+      "txs": {
+        "mint 6,733.33 xMXN": "https://explore.testnet.tempo.xyz/tx/0x917a0bb801ae2b1a0e44bef4c6e8374e0f554e4c0fddcb0f94633dfc8198b8ba"
+      },
+      "notes": []
+    },
+    "J3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → desk": "https://explore.testnet.tempo.xyz/tx/0x45461d805c41281daebf2a693c8d88310585ebb0f46a4484c9c34345a6c652a1",
+        "swapOusdForXmxn 50 OUSD": "https://explore.testnet.tempo.xyz/tx/0x11cc7498b0600361dab40e53fdad33bd8796aeaabdc84f5fd57f720eca231382",
+        "transfer 995 xMXN → Recipient": "https://explore.testnet.tempo.xyz/tx/0x22a0f7dbacb447c922becc87bc9fe9e5075f282c61abdb33f3514a14c42effab"
+      },
+      "notes": []
+    },
+    "J4": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x990a3f0f32e56d0560383bff7a2f79bc731d0c3f1d9c7ba774383f85215362f1"
+      },
+      "notes": []
+    },
+    "J5": {
+      "status": "fail",
+      "txs": {},
+      "notes": [
+        "[pull] 402 challenge: Payment id=\"xdmwOG3acIdnEfZKPM-LLdpm0k7SVBueq57dchnDXrI\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfYzY1Y2NjMmMtODE0Ny00ZGVhLTk0NTYtMzBkMTEwY2VlOWZkIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T02:15:55.081Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4ZWVlZjAxMDA1NWIyZmE3MjBjZmM3NGVkMDMwOWIyZDEzNGU1ZmYwODVhM2RkMTk3NTJjNDMzYTE5MmJlMDEzZCIsIm9yZGVySWQiOiJvcmRfYzY1Y2NjMmMtODE0Ny00ZGVhLTk0NTYtMzBkMTEwY2VlOWZkIiwicXVvdGVJZCI6InFfYzNkNzgwMTktNzk5NC00OTIyLTgwMTQtYTJhOThlZWE1YzRlIn0\""
+      ],
+      "error": "Response.clone: Body has already been consumed."
+    },
+    "J6": {
+      "status": "pass",
+      "txs": {
+        "top-up 216 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x1227a48ddf8605616e449da3cf31d3c0e662d139d625c52403486078ffdf8b96",
+        "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0x51ecad046e4c8993a822922b3f5168ddb424a6ac0c087120834ce4505cf981a0",
+        "repay 816 xMXN": "https://explore.testnet.tempo.xyz/tx/0x010b8c43861f72fa4d2bacf528cdde78ec787933d84481add14229e540f7ef62"
+      },
+      "notes": []
+    }
+  }
+}

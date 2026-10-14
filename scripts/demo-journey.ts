@@ -4,6 +4,7 @@
  *   npx tsx scripts/demo-journey.ts                 # run everything
  *   npx tsx scripts/demo-journey.ts --steps J4,J5   # run a subset
  *   npx tsx scripts/demo-journey.ts --keep-going    # don't stop at the first failure
+ *   PROTOCOL=v2 npx tsx scripts/demo-journey.ts     # v2 journey (scripts/demo-journey-v2.ts, steps V0–V7)
  *   npx tsx scripts/demo-journey.ts --steps J0      # pre-demo health check only (auto-heals; --no-heal to just report)
  *
  * Needs: root .env.local (testnet keys), packages/shared/src/deployments/42431.json,
@@ -33,6 +34,12 @@ import { type PrivateKeyAccount, privateKeyToAccount } from 'viem/accounts'
 import { tempoModerato } from 'viem/chains'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+// PROTOCOL=v2 (or MERCADO_PROTOCOL=v2) runs the v2 journey (Create · Move · Lend · Spend) instead; v1 stays the default
+if ((process.env.PROTOCOL ?? process.env.MERCADO_PROTOCOL) === 'v2') {
+  await import('./demo-journey-v2.ts')
+  process.exit(0) // not reached: the v2 runner exits with its own status
+}
 
 // ---------- env / config ----------
 

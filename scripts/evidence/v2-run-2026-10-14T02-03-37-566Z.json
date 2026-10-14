@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-14T02:03:37.565Z",
+  "protocol": "v2",
+  "steps": [
+    "V1",
+    "V2",
+    "V3",
+    "V4"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V1": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xb49607609caeb5321bafaef094a70bbcd32afa4e4c061434e477866ba0f0d0e1",
+        "stake 200 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xd64599b71806f40156bfc3c1626392a0ea48107c3678078cd6737b9ba88f55bc",
+        "approve sOUSD → vault": "https://explore.testnet.tempo.xyz/tx/0xc5dda4c2e7bf50b800e0d7fec5582e0ba861d0ce6602dfed5d4a5c3a54f201f9",
+        "depositCollateral 200 sOUSD": "https://explore.testnet.tempo.xyz/tx/0x7a3015b3917a08e1777897cd4ee50a4b61c1e6bdd69d99a078e6df1c9921f0bb",
+        "mint 8,600 xMXN v2 against sOUSD": "https://explore.testnet.tempo.xyz/tx/0x38c8f545a41d9083e3580854fab635ce07e8a66aeefdfb53ff75cf95b3a37935"
+      },
+      "notes": []
+    },
+    "V2": {
+      "status": "pass",
+      "txs": {
+        "tTBILL faucet 10 (demo, not a security)": "https://explore.testnet.tempo.xyz/tx/0xa0ed52d453831b64810c38c1d7ef1e55da8a43505db39191eba2b860e27ac64d",
+        "approve tTBILL → vault": "https://explore.testnet.tempo.xyz/tx/0x0f694234bc4aa212f76b89d768491eaf7605d0e36fedd77072842c5df88d3ee1",
+        "depositCollateral 10 tTBILL": "https://explore.testnet.tempo.xyz/tx/0x39e1b76818660ff049daec6a1e9092902e796083adfb13f4466e997777c9a412",
+        "mint 173,333.33 xMXN v2 against tTBILL": "https://explore.testnet.tempo.xyz/tx/0x2deb7284b2a176eca8b49cf2b4585fb2fe4643b613520429cfea7aa9dac8d480"
+      },
+      "notes": []
+    },
+    "V3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vamm": "https://explore.testnet.tempo.xyz/tx/0x196ca48c51e1f905b4f585b4530f9bc6ca7d901a0cb7b77d6cd00d5ef3949bad",
+        "swapOusdForXmxn 50 OUSD → Rosa": "https://explore.testnet.tempo.xyz/tx/0x88234960716451e0fdb4837dd5242b153fb9b10fbb0e1ba141916c77bc0419da"
+      },
+      "notes": []
+    },
+    "V4": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → vamm": "https://explore.testnet.tempo.xyz/tx/0xc4a5345d82f3f6402fa7b61064f88c05e8d3f5973f0bcdb5f302374bd28a79be",
+        "swapXmxnForOusd 200 xMXN v2 (burn)": "https://explore.testnet.tempo.xyz/tx/0x4b1af6f4bbdd9c95646f6908caaf7f77ef26fc3d7e6721c5058d8c1bf2cdc7de"
+      },
+      "notes": []
+    }
+  }
+}

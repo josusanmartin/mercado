@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T02:07:43.211Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J4",
+    "J5"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J4": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x209a9d0369148be70447b418651ee4a6b20e1c62119fc6b7464988cb6cbe7143"
+      },
+      "notes": []
+    },
+    "J5": {
+      "status": "fail",
+      "txs": {
+        "MPP payment (pull)": "https://explore.testnet.tempo.xyz/tx/0xae120a04b84e44c297b59e61406588a7bceaa1ce367868bcd2b6dcaa4c4c7440"
+      },
+      "notes": [
+        "[pull] 402 challenge: Payment id=\"ksXN553IOD-KsZqWVmy8N2jpS634YLJxq3rMAYGyUT4\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfMjMwYTA2ODEtNzFmOC00NDE4LTk4NmEtZTYyZjhiMWU0MmMzIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T02:17:22.635Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4NWYyNDQyOTE0ZGNjZDI1YTkwY2RmN2UyODdhNWIwOGViYzIxN2ZlZTdjYjg1ZmU1OGNmNGFlOWYyMGZkMmI5OCIsIm9yZGVySWQiOiJvcmRfMjMwYTA2ODEtNzFmOC00NDE4LTk4NmEtZTYyZjhiMWU0MmMzIiwicXVvdGVJZCI6InFfMzIxYWU1MjItOTEyYy00OWE5LWExNDctMjllOTI3NmIzOGJlIn0\"",
+        "[push] 402 challenge: Payment id=\"URJa3--SmKCeGhc1RERkvL808FSZSJhDupIKLl_IjeM\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfNjA4NTUxMTktNzBlNS00MDY1LTgwY2UtNzFiMmRjMjUwOWE3IiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T02:17:40.876Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MDczNGY1NmJhOTAwYzk2YzNjMWFiOTFkODg5YzY0NWFjMGNmMWZkZGU3Njg4YWI3ODVhNGY1ZGYxOGU0ZDUwMyIsIm9yZGVySWQiOiJvcmRfNjA4NTUxMTktNzBlNS00MDY1LTgwY2UtNzFiMmRjMjUwOWE3IiwicXVvdGVJZCI6InFfYzQ3MDNiYzAtOGYzNC00MTZiLWJhYzMtMzg1ZjI1YzFlN2I0In0\""
+      ],
+      "error": "Response.clone: Body has already been consumed."
+    }
+  }
+}

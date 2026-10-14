@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-14T01:52:53.880Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J6"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J6": {
+      "status": "pass",
+      "txs": {
+        "top-up 382 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x701b06b0629c22dfdbf4d21eab35b5edd601a98c50e339950446bd190c438e23",
+        "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0x233fe2d02005d59dbb4999a08db0a0ffce5d59e35fe3f00298ffffef1e3f4b75",
+        "repay 1,122 xMXN": "https://explore.testnet.tempo.xyz/tx/0x41d6ed843d5c310dfa1faac0199153e75ef5f7ad6c2744dc88dc7c6db5bcdb9f"
+      },
+      "notes": []
+    }
+  }
+}
