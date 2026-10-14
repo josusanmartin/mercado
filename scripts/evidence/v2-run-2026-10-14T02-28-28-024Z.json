@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-14T02:28:28.024Z",
+  "protocol": "v2",
+  "steps": [
+    "V8"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V8": {
+      "status": "pass",
+      "txs": {
+        "liquidation 0x4bB994": "https://explore.testnet.tempo.xyz/tx/0xaa8990e75cd76d548061660a14f8d84792e4315af2a09d04ceea6abe5b3ec4f7"
+      },
+      "notes": []
+    }
+  }
+}

@@ -406,6 +406,47 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       ok(`debt ${fmt(debt)} → 0; realized fees ${fmt(st0[3])} → ${fmt(st1[3])} xMXN v2`)
     },
   },
+  {
+    id: 'V8',
+    title: 'FX stress on v2 (runs last): liquidation enforceable, AMM coverage under appreciation, full restore',
+    async run() {
+      const script = join(ROOT, 'packages/contracts/script/StressDemoV2.s.sol')
+      if (!existsSync(script)) throw new SkipStep('StressDemoV2.s.sol not there yet (pending @contracts)')
+      const [pxBefore] = await read(A.oracle, fxOracleAdapterAbi, 'peek')
+      const fromBlock = await pub.getBlockNumber()
+      const forge = process.env.FORGE_BIN ?? join(process.env.HOME ?? '', '.foundry/bin/forge')
+      log(`running StressDemoV2 (pause AMM+desk → 160% v2 position → forceSet −30% → liquidate → restore → unpause)`)
+      const { spawnSync } = await import('node:child_process')
+      const r = spawnSync(forge, ['script', 'script/StressDemoV2.s.sol', '--rpc-url', RPC, '--broadcast'], {
+        cwd: join(ROOT, 'packages/contracts'),
+        env: process.env,
+        encoding: 'utf8',
+        timeout: 400_000,
+      })
+      if (r.status !== 0) throw new Error(`StressDemoV2.s.sol exited ${r.status}: ${(r.stderr || r.stdout || '').trim().split('\n').slice(-3).join(' | ')}`)
+      const out = r.stdout ?? ''
+      const borrower = out.match(/STRESS_BORROWER=\s*(0x[0-9a-fA-F]{40})/)?.[1]
+      const liquidator = out.match(/STRESS_LIQUIDATOR=\s*(0x[0-9a-fA-F]{40})/)?.[1]
+      assert(borrower && liquidator, 'StressDemoV2 prints STRESS_BORROWER=0x… and STRESS_LIQUIDATOR=0x…')
+      for (const line of out.split('\n').filter((l) => /coverage|forceSet|stress px|restor/i.test(l)).slice(0, 6)) log(`${C.dim}${line.trim()}${C.x}`)
+      const logs = await pub.getContractEvents({ address: A.vault, abi: multiCollateralVaultAbi, eventName: 'Liquidated', fromBlock } as any)
+      const mine = (logs as any[]).filter((l) => l.args.user?.toLowerCase() === borrower.toLowerCase() && l.args.liquidator?.toLowerCase() === liquidator.toLowerCase())
+      assert(mine.length > 0, `Liquidated(user=${borrower}, liquidator=${liquidator}) on the v2 vault`)
+      for (const l of mine) {
+        evidence[current].txs[`liquidation ${borrower.slice(0, 8)}`] = txUrl(l.transactionHash)
+        ok(`liquidated ${borrower}: covered ${fmt(l.args.debtCovered)} xMXN v2, seized ${fmt(l.args.collateralSeized)} ${A.collaterals.find((c: any) => c.token.toLowerCase() === String(l.args.token).toLowerCase())?.symbol ?? ''}  ${C.dim}${txUrl(l.transactionHash)}${C.x}`)
+      }
+      const [pxAfter] = await read(A.oracle, fxOracleAdapterAbi, 'peek')
+      assert(pxAfter === pxBefore, `oracle restored to ${fmt(pxBefore, 8)} (now ${fmt(pxAfter, 8)})`)
+      assert(!(await read(A.vamm!, moveAmmAbi, 'paused')), 'MoveAMM unpaused after the stress run')
+      const v1 = activeAddresses('v1')
+      if (v1.swapDesk) assert(!(await read(v1.swapDesk, [{ type: 'function', name: 'paused', stateMutability: 'view', inputs: [], outputs: [{ type: 'bool' }] }], 'paused')), 'v1 SwapDesk unpaused')
+      const st = await ammState()
+      ok(`oracle back at ${fmt(pxAfter, 8)} MXN/USD; AMM + desk unpaused; AMM coverage ${pct(st.coverageBps)}`)
+      assert((await supplyIdentity()).ok, 'supply identity holds after liquidation (burned debt)')
+      ok('supply identity still holds')
+    },
+  },
 ]
 
 async function main() {
