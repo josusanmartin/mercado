@@ -143,9 +143,15 @@ const deskAbi = parseAbi([
   'function swapOusdForXmxn(uint256 amountIn, uint256 minOut) returns (uint256)',
   'function reserves() view returns (uint256 ousd, uint256 xmxn)',
   'function seed(uint256 ousd, uint256 xmxn)',
+  'function remainingDailyCap(address) view returns (uint256)',
+  'error Slippage(uint256 amountOut, uint256 minOut)',
+  'error SwapTooLarge(uint256 xmxnEquivalent, uint256 max)',
+  'error DailyCapExceeded(uint256 usedAfter, uint256 cap)',
+  'error InsufficientReserves(uint256 available, uint256 needed)',
 ])
 const poolAbi = parseAbi([
   'function supply(uint256)',
+  'function withdrawAvailable(uint256)',
   'function borrow(uint256 amount, uint256 maxAmount, uint256 expiry, uint256 nonce, bytes32 dataHash, bytes signature)',
   'function repay(uint256)',
   'function getDebt(address) view returns (uint256)',
@@ -413,6 +419,11 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const minOut = out - (out * AMT.slippageBps) / 10_000n
       log(`quote: ${fmt(AMT.senderSwapIn)} OUSD → ${fmt(out)} xMXN (fee ${fmt(fee)}), minOut ${fmt(minOut)}`)
       await approveIfNeeded(sender, d.ousd, d.swapDesk, AMT.senderSwapIn, 'OUSD → desk')
+      // negative checks (simulation): slippage guard and per-swap size cap
+      const swap = { address: d.swapDesk, abi: deskAbi, functionName: 'swapOusdForXmxn', account: sender } as const
+      await expectRevert('swap with minOut above the quote', { ...swap, args: [AMT.senderSwapIn, out + 1n] }, ['Slippage'])
+      await expectRevert('swap above the 10,000 xMXN per-swap max', { ...swap, args: [parseUnits('600', 6), 0n] }, ['SwapTooLarge'])
+      log(`sender's remaining 24h desk cap: ${fmt(await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'remainingDailyCap', args: [sender.address] }))} OUSD`)
       const xBefore = await bal(d.xMXN, sender.address)
       await send(`swapOusdForXmxn ${fmt(AMT.senderSwapIn)} OUSD`, sender, {
         address: d.swapDesk,
@@ -481,6 +492,14 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       ok(`driver debt ${fmt(debtBefore)} → ${fmt(debt)} xMXN (expected +${fmt(amount + expectedFee)} incl. ${Number(feeBps) / 100}% fee)`)
       assert(debt - debtBefore === amount + expectedFee, `debt delta ${debt - debtBefore} == amount+fee ${amount + expectedFee}`)
       ctx.driverBorrowed = amount
+
+      // lenders can't pull xMXN that is lent out: withdrawing more than idle cash must revert
+      const cashNow = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'availableLiquidity' })
+      await expectRevert(
+        `lender withdrawAvailable(${fmt(cashNow + 1_000_000n)}) > idle cash ${fmt(cashNow)}`,
+        { address: d.creditPool, abi: poolAbi, functionName: 'withdrawAvailable', args: [cashNow + 1_000_000n], account: account('LENDER') },
+        ['InsufficientLiquidity'],
+      )
 
       // negative check: replaying the same attestation must revert
       const used = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'nonceUsed', args: [driver.address, BigInt(att.nonce)] })

@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-14T01:05:44.935Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J3",
+    "J4",
+    "J6"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → desk": "https://explore.testnet.tempo.xyz/tx/0x3b7ff2f4affd5e77a84a03f70b38691a588f029c6a7da409a6e1b3ebe5bf1742",
+        "swapOusdForXmxn 50 OUSD": "https://explore.testnet.tempo.xyz/tx/0x7dcf5ac092f7986dd670ddaa527c97acca877517caa10d7109e5212b05e4c399",
+        "transfer 995 xMXN → Recipient": "https://explore.testnet.tempo.xyz/tx/0x75c950caa7ce74369251f19ac0ab23adf8f43243da3ae66e6d8c6720172f6683"
+      },
+      "notes": []
+    },
+    "J4": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x924e34619c8904e42b9598b8db89ccaab11df559902248115544fcff0e96079a"
+      },
+      "notes": []
+    },
+    "J6": {
+      "status": "pass",
+      "txs": {
+        "top-up 10 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x7b9c4cf56475f8ef50f6851e3d5578ec494764c649591ebf420a8b5bf460ac3d",
+        "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0xcec865f83ece94357192108c93728fb03c25c7c15abfeb2be4f2e015d8e722d5",
+        "repay 510 xMXN": "https://explore.testnet.tempo.xyz/tx/0x61898c53c4be46495147be41bbf6a101ccab4599c85849c04e75fa1765616210"
+      },
+      "notes": []
+    }
+  }
+}
