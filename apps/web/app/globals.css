@@ -1,26 +1,102 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+/*
+  Mercado palette — taken from Mexican banknote printing rather than a SaaS kit:
+  papel (cool security paper), tinta (green-black intaglio ink), jade (the 200-peso
+  green, primary actions), rosa mexicano (brand mark + guilloche, used sparingly),
+  maíz (amber: mock/simulated labels and warnings), grana (cochineal red: danger).
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --papel: #f2f4f0;
+  --tinta: #10241c;
+  --jade: #0d6a4e;
+  --rosa: #c8175f;
+  --maiz: #b7791f;
+  --grana: #b4232a;
+
+  --background: var(--papel);
+  --foreground: var(--tinta);
+  --card: #fbfcfa;
+  --card-foreground: var(--tinta);
+  --popover: #fbfcfa;
+  --popover-foreground: var(--tinta);
+  --primary: var(--jade);
+  --primary-foreground: #f4fbf7;
+  --secondary: #e4ebe5;
+  --secondary-foreground: var(--tinta);
+  --muted: #e6ebe6;
+  --muted-foreground: #56685f;
+  --accent: #e3ece6;
+  --accent-foreground: var(--tinta);
+  --destructive: var(--grana);
+  --border: #d5ddd6;
+  --input: #c9d3cb;
+  --ring: var(--jade);
+  --radius: 0.625rem;
+
+  --brand: var(--rosa);
+  --brand-foreground: #fff6fa;
+  --warning: var(--maiz);
+  --warning-ink: #7a4f0e;
+  --success: #12805c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-success: var(--success);
+  --color-tinta: var(--tinta);
+  --color-papel: var(--papel);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), ui-sans-serif, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "ss01", "cv11";
+  }
+  /* Money is always tabular so columns of amounts line up. */
+  .tabular,
+  [data-amount] {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
