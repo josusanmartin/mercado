@@ -137,6 +137,11 @@ test('panels: Mint Risk numbers, Global quote, Crédito loan book, 402 trace, ve
   await shootPanel(panel(page, [/01 · Respaldo del intercambio/i, /02 · Respaldo del sistema/i]), 'panel-mint-risk')
 
   await go(page, '/global')
+  // match the deck copy: a US$10,000 supplier payment (quote only, nothing is sent)
+  const pay = page.getByLabel(/You pay/i).or(page.getByRole('textbox').first()).first()
+  await pay.fill('10000')
+  await page.waitForTimeout(3000) // quote refresh
+  await expect(sectionOf(page, /^Indicative quote/i).getByText(/1\d\d,\d{3}\.\d\d/).first()).toBeVisible({ timeout: 20_000 })
   await shootPanel(sectionOf(page, /^Indicative quote/i), 'panel-global-quote')
 
   await go(page, '/credito?tab=backoffice')
