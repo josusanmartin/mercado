@@ -6,11 +6,10 @@
 //   bank rows · Producto: position + facts + Depositar/Retirar (Comprar/Vender) · Actividad (real logs) · Perfil.
 // Every action is a real on-chain transaction; guards (R-043/R-044) are kept exactly as api wrote them.
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useConnection, usePublicClient } from "wagmi";
+import { useConnection } from "wagmi";
 import { ArrowDownLeft, ArrowUpRight, Coins, DollarSign, ExternalLink, Home, Landmark, Layers, List, User } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
-import { CHAIN_ID, useBalances, useOracle } from "@/lib/contracts";
+import { useBalances, useOracle } from "@/lib/contracts";
 import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
@@ -439,31 +438,6 @@ function Listo({ done, close }: { done: Done; close: () => void }) {
 
 /* ─────────────────────────────── Actividad ─────────────────────────────── */
 
-/** Block timestamps for the rows on screen (use-invest's history carries block numbers only). */
-function useBlockTimes(blocks: bigint[]) {
-  const client = usePublicClient({ chainId: CHAIN_ID });
-  const uniq = [...new Set(blocks.map(String))];
-  const q = useQuery({
-    queryKey: ["block-times", ...uniq],
-    enabled: !!client && uniq.length > 0,
-    staleTime: Infinity,
-    queryFn: async () => {
-      const out: Record<string, number> = {};
-      await Promise.all(
-        uniq.map(async (b) => {
-          const blk = await client!.getBlock({ blockNumber: BigInt(b) });
-          out[b] = Number(blk.timestamp);
-        }),
-      );
-      return out;
-    },
-  });
-  return q.data;
-}
-
-/** The log's own timestamp when use-invest carries it, else the fetched block time. */
-const stamp = (r: InvestActivity, times?: Record<string, number>) => (r as InvestActivity & { timestamp?: number }).timestamp ?? times?.[String(r.block)];
-
 const ROW_LABEL: Record<string, string> = {
   "Depósito · ahorro en pesos": "Depósito en pesos",
   "Retiro · ahorro en pesos": "Retiro de pesos",
@@ -478,7 +452,6 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   const h = useInvestHistory();
   const now = useNow(60_000);
   const rows = (h.data?.rows ?? []).filter((r) => !product || r.product === product).slice(0, limit ?? 30);
-  const times = useBlockTimes(rows.filter((r) => (r as { timestamp?: number }).timestamp === undefined).map((r) => r.block));
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
   if (!h.data)
     return (
@@ -495,7 +468,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   return (
     <DayGroups
       items={rows}
-      ts={(r: InvestActivity) => stamp(r, times)}
+      ts={(r: InvestActivity) => r.timestamp}
       now={now}
       render={(r) => {
         const into = r.label.startsWith("Depósito") || r.label.startsWith("Compra");
@@ -513,7 +486,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
               </span>
             }
             title={ROW_LABEL[r.label] ?? r.label}
-            sub={[hora(stamp(r, times)), "On-chain"].filter(Boolean).join(" · ")}
+            sub={[hora(r.timestamp), "On-chain"].filter(Boolean).join(" · ")}
             amount={`${into ? "+" : "−"}${fmtAmount(r.amount, r.symbol === "tTBILL" ? 4 : 2)}`}
             amountSub={r.symbol}
           />

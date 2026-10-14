@@ -178,7 +178,13 @@ function Conectar({ ask }: Props) {
         <br />
         lo que ya
         <br />
-        <span style={{ color: ROSA }}>ganaste.</span>
+        {/* image-in-type: our own generated route texture (public/photos/ruta.webp, art/make_ruta.py) */}
+        <span
+          className="bg-clip-text text-transparent"
+          style={{ backgroundColor: ROSA, backgroundImage: "url(/photos/ruta.webp)", backgroundSize: "auto 170%", backgroundPosition: "12% 80%", WebkitBackgroundClip: "text" }}
+        >
+          ganaste.
+        </span>
       </Display>
       <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
       <div className="mt-auto grid gap-3 pt-10">
@@ -620,7 +626,6 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
           </p>
         )}
         <Pill
-          accent
           loading={busy}
           disabled={busy || amount === 0n || !adv.att || adv.expired}
           onClick={async () => {

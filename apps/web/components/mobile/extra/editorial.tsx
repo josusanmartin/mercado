@@ -8,7 +8,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtMoney, haptic } from "../format";
-import { Pressable } from "../primitives";
+import { Display as KitDisplay, Pressable } from "../primitives";
 import "./editorial.css";
 
 /** Marker class for editorial app roots (fonts + tokens come from the kit's .m-root theme). */
@@ -76,10 +76,11 @@ export function BigMoney({
   const neg = s.startsWith("-");
   const body = s.replace(/^-?\$/, "");
   const [int, dec] = body.split(".");
+  // Kit <Display fit>: shrinks to the column; decimals and unit are em-relative so they shrink with it.
   return (
-    <p className={cn("m-display m-tick flex items-baseline whitespace-nowrap", className)} style={{ fontSize: size }} key={s}>
+    <KitDisplay fit size={size} className={cn("m-tick flex items-baseline", className)} key={s}>
       {s === "—" ? (
-        <span className="text-[#c9c9c4]">—</span>
+        <span className="text-[var(--m-surface-3)]">—</span>
       ) : (
         <>
           <span>
@@ -87,15 +88,13 @@ export function BigMoney({
             {prefix}
             {int}
           </span>
-          {dec && <span style={{ fontSize: size * 0.46 }}>.{dec}</span>}
+          {dec && <span className="text-[0.46em]">.{dec}</span>}
           {unit && (
-            <span className="ml-2 font-[family-name:var(--font-phone)] font-semibold tracking-normal normal-case" style={{ fontSize: Math.max(13, size * 0.28) }}>
-              {unit}
-            </span>
+            <span className="ml-2 font-[family-name:var(--font-phone)] text-[max(13px,0.28em)] font-semibold tracking-normal normal-case">{unit}</span>
           )}
         </>
       )}
-    </p>
+    </KitDisplay>
   );
 }
 
