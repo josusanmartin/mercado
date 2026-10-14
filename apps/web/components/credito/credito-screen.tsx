@@ -12,6 +12,7 @@ import { usePool } from "@/lib/contracts";
 import { fmtAmount } from "@/lib/format";
 import { CreditScreen } from "@/components/credit/credit-screen";
 import { EarnScreen } from "@/components/earn/earn-screen";
+import { CreditActivity } from "./credit-activity";
 import { UnderwritingApi } from "./underwriting-api";
 
 const TABS = [
@@ -88,8 +89,24 @@ export function CreditoScreen() {
         />
       }
     >
-      {tab === "drivers" && <CreditScreen />}
-      {tab === "lenders" && <EarnScreen embedded />}
+      {tab === "drivers" && (
+        <div className="grid gap-6">
+          <CreditScreen />
+          <CreditActivity
+            title="Advances on-chain"
+            description="Every advance drawn and repaid in the credit pool, read live from the chain."
+          />
+        </div>
+      )}
+      {tab === "lenders" && (
+        <div className="grid gap-6">
+          <EarnScreen embedded />
+          <CreditActivity
+            title="Pool activity"
+            description="Lender supplies and withdrawals, advances and repayments, read live from the chain."
+          />
+        </div>
+      )}
       {tab === "api" && <UnderwritingApi />}
     </SettingsLayout>
   );

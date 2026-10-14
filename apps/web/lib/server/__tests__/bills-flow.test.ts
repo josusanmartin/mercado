@@ -1,10 +1,6 @@
 // Order state machine, idempotency and concurrency with the mppx charge stubbed out (no testnet transfers).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../fx", () => ({
-  getFx: async () => ({ mxnPerUsd: "2000000000", rate: 20, updatedAt: 0, source: "config-fallback", isMock: true, stale: true, label: "test" }),
-}));
-
 /** Stub: "Authorization: Payment <txHash>[:<externalId>]" counts as a verified payment of that tx. */
 const settled: string[] = [];
 const chargeStub = vi.fn(async (request: Request, opts: { externalId: string }) => {

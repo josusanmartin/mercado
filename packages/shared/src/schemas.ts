@@ -14,7 +14,7 @@ export const SIMULATED_FULFILLMENT_LABEL = "SIMULATED fulfillment, no real top-u
 
 // ---------- /api/fx ----------
 
-export const FxSourceSchema = z.enum(["mock-admin-oracle", "config-fallback"]);
+export const FxSourceSchema = z.enum(["admin-relay", "mock-admin-oracle"]);
 
 export const FxResponseSchema = z.object({
   /** 8-decimal integer string: 20.00 MXN/USD = "2000000000". */
@@ -27,9 +27,20 @@ export const FxResponseSchema = z.object({
   isMock: z.boolean(),
   /** Oracle contract address when read on-chain. */
   oracle: AddressSchema.optional(),
-  /** True when the oracle reverted or isn't deployed yet and we fell back to config. */
+  /** True when the on-chain feed is stale or paused (peek().valid == false). */
   stale: z.boolean().optional(),
   label: z.string(),
+  /** Provenance of the admin relay that pushed the current on-chain value (absent if it doesn't match). */
+  relay: z
+    .object({
+      source: z.string(),
+      sourceKind: z.enum(["intraday", "daily"]),
+      sourceTime: z.string(),
+      fetchedAt: z.string(),
+      onchainAt: z.string(),
+      txHash: HexSchema,
+    })
+    .optional(),
 });
 
 // ---------- /api/driver/demo ----------

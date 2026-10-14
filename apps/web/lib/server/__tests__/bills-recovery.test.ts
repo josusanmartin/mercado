@@ -2,10 +2,6 @@
 // mppx charge, credential parsing and the on-chain log scan are stubbed (no testnet transfers).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../fx", () => ({
-  getFx: async () => ({ mxnPerUsd: "2000000000", rate: 20, updatedAt: 0, source: "config-fallback", isMock: true, stale: true, label: "test" }),
-}));
-
 type Outcome = { paid: false } | { paid: true; txHash: string } | { throws: string };
 let nextOutcome: Outcome = { paid: false };
 const chargeStub = vi.fn(async () => {

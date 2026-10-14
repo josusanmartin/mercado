@@ -1,10 +1,6 @@
 // Uses the REAL mppx server: an unpaid request must get an HTTP 402 Payment challenge bound to the order.
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../fx", () => ({
-  getFx: async () => ({ mxnPerUsd: "2000000000", rate: 20, updatedAt: 0, source: "config-fallback", isMock: true, stale: true, label: "test" }),
-}));
-
 const findSettled = vi.fn(async (_p: { attempts: { challengeId: string; kind: string }[] }): Promise<unknown> => null);
 vi.mock("../../mpp/reconcile", () => ({
   findSettledAttempt: (p: { attempts: { challengeId: string; kind: string }[] }) => findSettled(p),
