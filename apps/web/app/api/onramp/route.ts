@@ -13,12 +13,11 @@
 // closed if the float can't cover the amount. File store .data/onramp.json (lib/remesas/onramp-ledger):
 // a corrupt/unreadable ledger fails closed (503 LEDGER_UNAVAILABLE), and an O_EXCL lock file makes it
 // single-writer across processes, inside the in-process mutex.
-import path from "node:path";
 import { z } from "zod";
 import { createWalletClient, encodeFunctionData, erc20Abi, http, isAddress, keccak256, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { explorerTx, TEMPO_ADDRESSES, TEMPO_RPC_URL, tempoModerato } from "@mercado/shared";
-import { env, repoRoot } from "@/lib/server/env";
+import { dataFile, env } from "@/lib/server/env";
 import { jsonError, parseJson } from "@/lib/server/http";
 import { publicClient } from "@/lib/server/chain";
 import { withKeyLock } from "@/lib/server/bills/lock";
@@ -44,7 +43,7 @@ const Body = z.object({
 type Intent = OnrampIntent;
 type Ledger = OnrampLedger;
 
-const file = () => process.env.MERCADO_ONRAMP_FILE ?? path.join(repoRoot(), ".data", "onramp.json");
+const file = () => process.env.MERCADO_ONRAMP_FILE ?? dataFile("onramp.json");
 
 const load = () => loadLedger(file());
 const save = (l: Ledger) => saveLedger(file(), l);

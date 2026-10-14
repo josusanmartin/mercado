@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,7 +10,13 @@ const nextConfig: NextConfig = {
   // mppx has an optional @modelcontextprotocol/sdk import that Turbopack cannot bundle.
   serverExternalPackages: ["mppx"],
   // Let josu open the dev server over Tailscale (private tailnet only; port 3100 is not public).
-  allowedDevOrigins: ["tailnet-host.ts.net", "tailnet-ip", "*.trycloudflare.com", "*.ts.net"],
+  allowedDevOrigins: ["*.trycloudflare.com", "*.ts.net"],
+  // npm-workspaces monorepo: trace server files from the repo root, and ship the files server code reads at
+  // runtime (repoRoot() finds the root package.json; driver fixtures; the FX relay record, when present).
+  outputFileTracingRoot: path.join(__dirname, "..", ".."),
+  outputFileTracingIncludes: {
+    "/**": ["../../package.json", "../../fixtures/**/*.json", "../../packages/contracts/cache/fx-relay.json"],
+  },
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,

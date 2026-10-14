@@ -10,15 +10,19 @@ import type { Address, Hex } from "viem";
 import { requireAddress, serverAddresses } from "../server/protocol";
 import { rpcClient } from "../server/chain";
 import { fileStore } from "./store";
-import { env, repoRoot } from "../server/env";
+import { dataFile, env } from "../server/env";
 
 export const MPP_REALM = "mercado-demo";
 
-/** MPP_SECRET_KEY from env, else a random key persisted in <repo>/.data/mpp-secret (gitignored). */
+/**
+ * MPP_SECRET (or the older MPP_SECRET_KEY) from env; every serverless instance must share it, so set it on
+ * Vercel. Locally falls back to a random key persisted in the data dir (<repo>/.data/mpp-secret, gitignored).
+ */
 function secretKey(): string {
-  const fromEnv = env("MPP_SECRET_KEY");
+  const fromEnv = env("MPP_SECRET") ?? env("MPP_SECRET_KEY");
   if (fromEnv) return fromEnv;
-  const file = path.join(repoRoot(), ".data", "mpp-secret");
+  if (process.env.VERCEL) console.warn("[mpp] MPP_SECRET is not set: this instance signs 402 challenges with its own key");
+  const file = dataFile("mpp-secret");
   if (existsSync(file)) return readFileSync(file, "utf8").trim();
   mkdirSync(path.dirname(file), { recursive: true });
   const key = randomBytes(32).toString("hex");

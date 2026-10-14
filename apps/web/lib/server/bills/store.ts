@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { BillOrder, BillProviderId, OrderStatus } from "@mercado/shared";
-import { repoRoot } from "../env";
+import { dataFile } from "../env";
 import type { PendingAttempt } from "../../mpp/reconcile";
 
 export interface StoredQuote {
@@ -41,7 +41,7 @@ export interface StoreData {
 const empty = (): StoreData => ({ version: 1, quotes: {}, orders: {}, idempotency: {}, payments: {} });
 
 export function storeFile(): string {
-  return process.env.MERCADO_ORDERS_FILE ?? path.join(repoRoot(), ".data", "orders.json");
+  return process.env.MERCADO_ORDERS_FILE ?? dataFile("orders.json");
 }
 
 function read(): StoreData {

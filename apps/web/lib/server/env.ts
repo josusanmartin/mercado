@@ -18,9 +18,20 @@ export function repoRoot(): string {
   return process.cwd();
 }
 
+/**
+ * Writable server state (stores, ledgers, the local MPP secret): MERCADO_DATA_DIR, else /tmp/mercado on Vercel
+ * (its FS is read-only except /tmp, which is per instance), else <repo>/.data (gitignored).
+ */
+export function dataFile(name: string): string {
+  const dir = process.env.MERCADO_DATA_DIR || (process.env.VERCEL ? "/tmp/mercado" : path.join(repoRoot(), ".data"));
+  return path.join(dir, name);
+}
+
 function loadRootEnv() {
   if (loaded) return;
   loaded = true;
+  // On Vercel the platform injects process.env; never read a repo-root .env.local there.
+  if (process.env.VERCEL) return;
   const file = path.join(repoRoot(), ".env.local");
   if (!existsSync(file)) return;
   for (const raw of readFileSync(file, "utf8").split("\n")) {
@@ -43,6 +54,6 @@ export function env(name: string): string | undefined {
 
 export function requireEnv(name: string): string {
   const v = env(name);
-  if (!v) throw new Error(`Missing env ${name} (expected in repo-root .env.local)`);
+  if (!v) throw new Error(`Missing env ${name} (expected in repo-root .env.local or the deployment env)`);
   return v;
 }

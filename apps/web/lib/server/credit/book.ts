@@ -17,7 +17,7 @@ import {
   type DriverPlatform,
   type DriverProfileId,
 } from "@mercado/shared";
-import { repoRoot } from "../env";
+import { dataFile } from "../env";
 import { publicClient } from "../chain";
 import { serverAddresses } from "../protocol";
 import { withKeyLock } from "../bills/lock";
@@ -38,7 +38,7 @@ export interface AttestationRecord {
 
 const ledgerFile = () =>
   process.env.MERCADO_ATTESTATIONS_FILE ??
-  path.join(repoRoot(), ".data", "attestations.json");
+  dataFile("attestations.json");
 
 function loadLedger(): AttestationRecord[] {
   const f = ledgerFile();

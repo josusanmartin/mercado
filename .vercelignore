@@ -1,0 +1,15 @@
+# Vercel CLI upload filter (repo-root deploys). Keeps keys, local server state, crew chat and bulky
+# review/deck evidence out of the upload; the build only needs apps/, packages/, fixtures/ and the root manifests.
+.env
+.env.*
+!.env.example
+.data/
+.irc/
+.npm.lock
+review/
+deck/
+v5/
+crew/
+packages/contracts/lib/
+packages/contracts/out/
+packages/contracts/broadcast/

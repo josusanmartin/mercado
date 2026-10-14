@@ -3,7 +3,7 @@
 // Stored in <repo>/.data/api-calls.json (gitignored); deduped by settlement tx.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { repoRoot } from "../server/env";
+import { dataFile } from "../server/env";
 import { withKeyLock } from "../server/bills/lock";
 
 export type PaidProduct = "underwriting" | "move-quote";
@@ -21,7 +21,7 @@ export interface PaidCall {
   at: string;
 }
 
-const file = () => process.env.MERCADO_API_CALLS_FILE ?? path.join(repoRoot(), ".data", "api-calls.json");
+const file = () => process.env.MERCADO_API_CALLS_FILE ?? dataFile("api-calls.json");
 
 function load(): PaidCall[] {
   const f = file();

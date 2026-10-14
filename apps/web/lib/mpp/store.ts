@@ -4,14 +4,14 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Store } from "mppx/server";
-import { repoRoot } from "../server/env";
+import { dataFile } from "../server/env";
 
 const replacer = (_: string, v: unknown) => (typeof v === "bigint" ? { __bigint: v.toString() } : v);
 const reviver = (_: string, v: unknown) =>
   v && typeof v === "object" && "__bigint" in v ? BigInt((v as { __bigint: string }).__bigint) : v;
 
 export function fileStore(
-  file = process.env.MERCADO_MPPX_STORE_FILE ?? path.join(repoRoot(), ".data", "mppx-store.json"),
+  file = process.env.MERCADO_MPPX_STORE_FILE ?? dataFile("mppx-store.json"),
 ) {
   const load = (): Record<string, string> => (existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {});
   const save = (data: Record<string, string>) => {

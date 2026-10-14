@@ -7,7 +7,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Address, Hex } from "viem";
-import { repoRoot } from "../server/env";
+import { dataFile } from "../server/env";
 import { withKeyLock } from "../server/bills/lock";
 import { jsonError } from "../server/http";
 import { charge, ownCredential, type ChargeOptions } from "./server";
@@ -28,7 +28,7 @@ export interface PaidRecord {
   response?: { status: number; headers: Record<string, string>; body: string };
 }
 
-const file = () => process.env.MERCADO_PAID_RESULTS_FILE ?? path.join(repoRoot(), ".data", "paid-results.json");
+const file = () => process.env.MERCADO_PAID_RESULTS_FILE ?? dataFile("paid-results.json");
 const load = (): Record<string, PaidRecord> => (existsSync(file()) ? JSON.parse(readFileSync(file(), "utf8")) : {});
 function save(all: Record<string, PaidRecord>) {
   mkdirSync(path.dirname(file()), { recursive: true });

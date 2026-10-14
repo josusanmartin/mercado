@@ -7,7 +7,7 @@ import { createClient, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Relay } from "viem/tempo";
 import { FEE_TOKEN, tempoModerato } from "@mercado/shared";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { env, repoRoot } from "@/lib/server/env";
 import { gatedTransport } from "./upstream";
@@ -47,13 +47,15 @@ const PERSONA_VARS = [
 function rootVar(name: string): string | undefined {
   const v = env(name);
   if (v) return v;
-  const m = readFileSync(path.join(repoRoot(), ".env.local"), "utf8").match(new RegExp(`^${name}=(\\S+)$`, "m"));
+  const file = path.join(repoRoot(), ".env.local");
+  if (process.env.VERCEL || !existsSync(file)) return undefined; // deployments inject process.env, no file
+  const m = readFileSync(file, "utf8").match(new RegExp(`^${name}=(\\S+)$`, "m"));
   return m?.[1];
 }
 
 function sponsorKey(): `0x${string}` {
   const key = rootVar("SPONSOR_PRIVATE_KEY");
-  if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) throw new Error("Missing SPONSOR_PRIVATE_KEY (expected in repo-root .env.local)");
+  if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) throw new Error("Missing SPONSOR_PRIVATE_KEY (expected in repo-root .env.local or the deployment env)");
   return key as `0x${string}`;
 }
 
