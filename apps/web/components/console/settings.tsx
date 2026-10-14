@@ -96,7 +96,7 @@ export function ProductHero({
         {meta ? <Meta>{meta}</Meta> : <LiveMeta />}
       </div>
       <div className="grid gap-4">
-        <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,8rem)] break-words" style={p.id === "home" ? { color: "var(--ink)" } : undefined}>
+        <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,8rem)] break-words" style={p.id === "home" || p.id === "invest" ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1, so Invest's statement is ink */}>
           {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
         </h1>
         <div className="flex flex-wrap items-end justify-between gap-4">

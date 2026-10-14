@@ -125,7 +125,11 @@ function ProductIndex({ live }: { live: Live }) {
             >
               <span className="meta text-muted-foreground tabular">{p.index}</span>
               <span className="min-w-0">
-                <span className="display block text-[clamp(2.4rem,6vw,5rem)] transition-colors duration-150 group-hover:text-[var(--hover)] group-focus-visible:text-[var(--hover)]" style={{ ["--hover" as string]: p.color }}>
+                <span
+                  className="display block text-[clamp(2.4rem,6vw,5rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] transition-colors duration-150 group-hover:text-[var(--hover)] group-hover:underline group-focus-visible:text-[var(--hover)] group-focus-visible:underline"
+                  // R-050: maize text on white is 2.1:1, so Invest hovers in ink with a maize underline.
+                  style={{ ["--hover" as string]: p.id === "invest" ? "var(--ink)" : p.color, ["--mark" as string]: p.color }}
+                >
                   {p.short}
                 </span>
                 <span className="text-muted-foreground mt-1 block text-lg">— {p.line}</span>
@@ -227,7 +231,9 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
                 top: `${((n.y + 16) / H) * 100}%`,
               }}
             >
-              <span className="text-base font-semibold" style={{ color: p.color }}>
+              {/* R-050: 16px labels in ink; the product color is the marker, not the text. */}
+              <span className={cn("flex items-center gap-1.5 text-base font-semibold", center ? "justify-center" : right && "justify-end")}>
+                <span className="inline-block size-2.5" style={{ background: p.color }} aria-hidden />
                 {p.short}
               </span>
               <span className="display text-[2rem] tabular">{live[f.product].value}</span>
@@ -243,7 +249,8 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
           return (
             <li key={f.product} className="flex items-center justify-between gap-3 py-3">
               <div>
-                <p className="font-semibold" style={{ color: p.color }}>
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <span className="inline-block size-2.5" style={{ background: p.color }} aria-hidden />
                   {p.short}
                 </p>
                 <p className="text-muted-foreground text-[13px]">{f.label}</p>
