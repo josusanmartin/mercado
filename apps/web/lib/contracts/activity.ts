@@ -13,13 +13,14 @@
 //   mpp    xMXN Transfer → merchant wallet: MERCHANT INFLOWS. MPP payments settle here, but a transfer alone is
 //          not proof of a verified MPP order (review R-038); verified orders live in the bills API.
 //   card   v2 MercadoCard: CardIssued / CardCharged (holder → merchant) / CardRefunded / CardFrozen
+//   invest v2 savings + desks: sOUSD / sxMXN Deposit & Withdraw (ERC-4626), InvestDesk Bought / Sold (T-bill + Stocks)
 // Logs are scanned from the protocol's deployment block and cached incrementally in memory.
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import { getAddress, parseAbi, type Address, type Hash, type Log, type PublicClient } from "viem";
 import { activeAddresses, explorerTx } from "@mercado/shared";
 
-export type ActivityKind = "mint" | "move" | "credit" | "mpp" | "card";
+export type ActivityKind = "mint" | "move" | "credit" | "mpp" | "card" | "invest";
 
 export type ActivityRow = {
   kind: ActivityKind;
@@ -37,7 +38,7 @@ export type ActivityRow = {
   account: Address;
   from?: Address;
   to?: Address;
-  /** Collateral symbol for vault rows (v2: per collateral). */
+  /** Collateral symbol for vault rows (v2: per collateral); for invest rows the product: usd | mxn | stocks | tbill */
   collateral?: string;
   fee?: bigint;
   /** card rows */
@@ -88,6 +89,25 @@ const CARD = parseAbi([
   "event CardFrozen(uint256 indexed cardId, bool frozen)",
 ]);
 const NO_CARD = !A.card || /^0x0{40}$/.test(A.card);
+const VAULT4626 = parseAbi([
+  "event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)",
+  "event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)",
+]);
+const DESK_EVENTS = parseAbi([
+  "event Bought(address indexed user, bool withXmxn, uint256 payIn, uint256 ousdUsed, uint256 tbillOut, uint256 fee, uint256 px)",
+  "event Sold(address indexed user, bool forXmxn, uint256 tbillIn, uint256 ousdOut, uint256 received, uint256 fee, uint256 px)",
+]);
+const SOUSD_ADDR = A.collaterals.find((c) => c.symbol === "sOUSD")?.token;
+const INVEST_ADDRS = [SOUSD_ADDR, A.sxMXN, A.investDesk, A.investDeskIdx].filter(
+  (a): a is Address => !!a && !/^0x0{40}$/.test(a),
+);
+const investWhat = (addr?: string) => {
+  const a = addr?.toLowerCase();
+  if (a && a === SOUSD_ADDR?.toLowerCase()) return { product: "usd", token: "OUSD", share: "sOUSD" };
+  if (a && a === A.sxMXN?.toLowerCase()) return { product: "mxn", token: "xMXN", share: "sxMXN" };
+  if (a && a === A.investDeskIdx?.toLowerCase()) return { product: "stocks", token: "mIDX", share: "mIDX" };
+  return { product: "tbill", token: "tTBILL", share: "tTBILL" };
+};
 
 type AnyLog = Log & { eventName: string; args: Record<string, unknown>; blockTimestamp?: string | bigint | number };
 
@@ -101,6 +121,8 @@ function source(kind: ActivityKind) {
       return { address: A.creditPool, events: POOL };
     case "card":
       return { address: A.card!, events: CARD };
+    case "invest":
+      return { address: INVEST_ADDRS, events: [...VAULT4626, ...DESK_EVENTS] };
     case "mpp":
       // single event + indexed arg → filtered by topic on the node, not client-side
       return { address: A.xMXN, event: TRANSFER[0], args: { to: A.merchant } };
@@ -164,6 +186,39 @@ function toRow(kind: ActivityKind, l: AnyLog): ActivityRow {
       l.eventName === "Supplied" ? "Lender supplied" : l.eventName === "Withdrawn" ? "Lender withdrew" : l.eventName === "Borrowed" ? "Advance drawn" : "Advance repaid";
     return { ...base, label, amount: a.amount, token: "xMXN", account: who, fee: l.eventName === "Borrowed" ? a.fee : undefined };
   }
+  if (kind === "invest") {
+    const w = investWhat(l.address);
+    switch (l.eventName) {
+      case "Deposit":
+        return { ...base, label: `Saved in ${w.share}`, amount: a.assets, token: w.token, amountOut: a.shares, tokenOut: w.share, account: a.owner, collateral: w.product };
+      case "Withdraw":
+        return { ...base, label: `Withdrew from ${w.share}`, amount: a.assets, token: w.token, amountOut: a.shares, tokenOut: w.share, account: a.owner, collateral: w.product };
+      case "Bought":
+        return {
+          ...base,
+          label: `Bought ${w.token}`,
+          amount: a.payIn,
+          token: a.withXmxn ? "xMXN" : "OUSD",
+          amountOut: a.tbillOut,
+          tokenOut: w.token,
+          account: a.user,
+          fee: a.fee,
+          collateral: w.product,
+        };
+      default:
+        return {
+          ...base,
+          label: `Sold ${w.token}`,
+          amount: a.tbillIn,
+          token: w.token,
+          amountOut: a.received,
+          tokenOut: a.forXmxn ? "xMXN" : "OUSD",
+          account: a.user,
+          fee: a.fee,
+          collateral: w.product,
+        };
+    }
+  }
   if (kind === "card") {
     switch (l.eventName) {
       case "CardIssued":
@@ -184,7 +239,27 @@ function toRow(kind: ActivityKind, l: AnyLog): ActivityRow {
 type Cache = { rows: ActivityRow[]; toBlock: bigint };
 const cache = new Map<string, Cache>();
 const inflight = new Map<string, Promise<ActivityRow[]>>();
-const CHUNK = 50_000n;
+const CHUNK = 20_000n;
+
+// RPC hygiene (lead 03:44: zero red 429s in devtools): every getLogs in this tab goes through ONE serial queue,
+// and rate-limit / "exceeds defined limit" errors back off exponentially (250ms → 4s, 6 tries) instead of failing.
+let queue: Promise<unknown> = Promise.resolve();
+function serial<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => undefined);
+  return run;
+}
+const isRateLimit = (e: unknown) => /429|rate limit|exceeds defined limit|too many requests/i.test(String((e as Error)?.message ?? e));
+async function getLogsWithBackoff(client: PublicClient, args: Record<string, unknown>): Promise<AnyLog[]> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return (await serial(() => client.getLogs(args as never))) as unknown as AnyLog[];
+    } catch (e) {
+      if (!isRateLimit(e) || attempt >= 5) throw e;
+      await new Promise((r) => setTimeout(r, 250 * 2 ** attempt));
+    }
+  }
+}
 
 /** All rows of a kind for the active protocol, newest first. Usable outside React (pass any viem client). */
 export async function fetchActivity(client: PublicClient, kind: ActivityKind): Promise<ActivityRow[]> {
@@ -192,6 +267,7 @@ export async function fetchActivity(client: PublicClient, kind: ActivityKind): P
   const running = inflight.get(key);
   if (running) return running;
   if (kind === "card" && NO_CARD) return [];
+  if (kind === "invest" && INVEST_ADDRS.length === 0) return [];
   const p = (async () => {
     const latest = await client.getBlockNumber();
     const c = cache.get(key) ?? { rows: [], toBlock: BigInt(A.startBlock) - 1n };
@@ -199,7 +275,7 @@ export async function fetchActivity(client: PublicClient, kind: ActivityKind): P
     const fresh: ActivityRow[] = [];
     for (let from = c.toBlock + 1n; from <= latest; from += CHUNK) {
       const to = from + CHUNK - 1n < latest ? from + CHUNK - 1n : latest;
-      const logs = (await client.getLogs({ ...s, fromBlock: from, toBlock: to, strict: true } as never)) as unknown as AnyLog[];
+      const logs = await getLogsWithBackoff(client, { ...s, fromBlock: from, toBlock: to, strict: true });
       for (const l of logs) fresh.push(toRow(kind, l));
     }
     const rows = [...c.rows, ...fresh].sort((x, y) => (x.blockNumber === y.blockNumber ? y.logIndex - x.logIndex : x.blockNumber > y.blockNumber ? -1 : 1));
@@ -248,7 +324,7 @@ export type FlowTotals = {
   /** Mercado Card (v2): xMXN spent at merchants and refunded */
   cardSpent: bigint;
   cardRefunded: bigint;
-  counts: Record<ActivityKind, number>;
+  counts: Record<Exclude<ActivityKind, "invest">, number>;
 };
 
 /** All-time flow sums for the active protocol, from the same logs. */
