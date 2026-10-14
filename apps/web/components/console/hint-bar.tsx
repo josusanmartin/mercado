@@ -10,7 +10,7 @@ export function HintBar() {
           <span className="bg-success mr-1.5 inline-block size-1.5 align-middle" />
           Tempo Moderato {TEMPO_MODERATO_CHAIN_ID}
         </span>{" "}
-        · Testnet prototype · sin valor real · OUSD has no real value · xMXN is not redeemable for pesos
+        · Testnet prototype · no real value · OUSD has no real value · xMXN is not redeemable for pesos
       </p>
     </footer>
   );

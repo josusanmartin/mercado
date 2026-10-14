@@ -74,7 +74,7 @@ function Sidebar({ active, path }: { active: string; path: string }) {
             >
               <span className="meta w-5 tabular">{p.index}</span>
               <span className={cn("display flex-1 text-[1.05rem]", on && "underline decoration-2 underline-offset-[6px]")} style={on ? { textDecorationColor: p.id === "home" ? "var(--ink)" : p.color } : undefined}>
-                {p.id === "home" ? "Inicio" : p.short}
+                {p.id === "home" ? "Home" : p.short}
               </span>
               <span className="size-2 shrink-0 self-center" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
             </Link>
@@ -122,7 +122,7 @@ function MobileTabs({ active }: { active: string }) {
         return (
           <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("meta flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2", on ? "text-foreground" : "text-muted-foreground")}>
             <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
-            {p.id === "home" ? "Inicio" : p.short}
+            {p.id === "home" ? "Home" : p.short}
           </Link>
         );
       })}

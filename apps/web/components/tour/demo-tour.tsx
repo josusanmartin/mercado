@@ -425,14 +425,14 @@ export function TourPanel() {
 
       <p className="meta text-muted-foreground mt-3">
         <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: product.color }} />
-        Paso {index + 1} de {TOUR.length} · {product.name}
+        Step {index + 1} of {TOUR.length} · {product.name}
       </p>
       <h2 className="display mt-2 text-[1.9rem]">{step.title}</h2>
       <p className="mt-1 text-[15px] text-pretty">{step.doThis}</p>
 
       <div className="mt-4 grid gap-2 border-t pt-3">
         <p className="meta text-muted-foreground">
-          Cuenta demo · <span className="text-foreground">{p.name}</span> · {shortAddr(p.address)}
+          Demo account · <span className="text-foreground">{p.name}</span> · {shortAddr(p.address)}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <BalanceCell label="xMXN" now={bal.xmxn} d={trace.delta.xmxn} />
@@ -495,7 +495,7 @@ function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: (
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="meta text-muted-foreground">Demo Tour · the whole trail</p>
-          <h2 className="display mt-1 text-[1.9rem]">Una moneda, seis productos</h2>
+          <h2 className="display mt-1 text-[1.9rem]">One currency, six products</h2>
         </div>
         <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground rounded-full p-1" aria-label="Close tour">
           <X className="size-4" />

@@ -1,6 +1,7 @@
 "use client";
-// Mercado home (Brand v4): one currency, four products. A row of four big solid product tiles, each
-// with one live number (arrow keys + Enter, cyan focus ring), then the money map drawn flat.
+// Mercado home: a peso economy on Tempo. One currency, six products: an editorial numbered index with
+// one live number each (arrow keys + Enter), the "Built on Tempo" primitives with live proofs, then the
+// money map drawn flat. English (josu 03:20); the phone apps stay Spanish.
 // Every number is read live from chain (josu's wiring rule: no fixtures, no hardcoded numbers).
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { LiveMeta, Meta, PRODUCTS, type ProductId } from "@/components/console";
 import { useTour } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
+import { BuiltOnTempo } from "./built-on-tempo";
 
 const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0));
 
@@ -47,27 +49,27 @@ export function EcosystemHome() {
   return (
     <div className="grid min-w-0 gap-14 pt-1">
       {/* The hero is a size container so the display lines fit the content column (not the viewport,
-          which includes the sidebar). Measured in Archivo Black: "SEIS PRODUCTOS." is 9.82em and "PRODUCTOS." 7.05em,
-          so from sm up each line fits whole at 9.6cqw; on phones words wrap and the longest fits at 13.5cqw. */}
+          which includes the sidebar). Measured in Archivo Black: "ONE CURRENCY." is 8.86em and "PRODUCTS." 6.27em,
+          so from sm up each line fits whole at 10.9cqw; on phones words wrap and the longest fits at 15cqw. */}
       <section className="grid min-w-0 gap-6 [container-type:inline-size]">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
-          <Meta>■ 00 · Mercado · un sistema financiero paralelo</Meta>
+          <Meta>■ 00 · Mercado · a peso economy on Tempo</Meta>
           <LiveMeta />
         </div>
         {/* Principle 3: image inside type, once, on the hero. Our own generated sarape texture. */}
         <h1
-          className="display image-type text-[clamp(2.2rem,13.5cqw,12rem)] sm:text-[clamp(2.2rem,min(9.6cqw,20svh),12rem)]"
+          className="display image-type text-[clamp(2.2rem,15cqw,12rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)]"
           style={{ backgroundImage: "url(/photos/sarape.webp)" }}
-          aria-label="Una moneda. Seis productos."
+          aria-label="One currency. Six products."
         >
-          Una moneda.
+          One currency.
           <br />
-          Seis productos.
+          Six products.
         </h1>
         <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <p className="max-w-2xl text-xl leading-snug text-pretty">
-            A parallel financial system for emerging markets, on Tempo. Institutions mint xMXN, families and businesses move it across the border,
-            drivers borrow it, shops take it, savers grow it.
+            A peso economy on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, shops take
+            it and savers grow it. Every step is a stablecoin payment on Tempo.
           </p>
           <Button size="lg" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
             <Route strokeWidth={1.75} />
@@ -76,12 +78,14 @@ export function EcosystemHome() {
         </div>
       </section>
 
+      <BuiltOnTempo />
+
       <ProductIndex live={live} />
 
       <section aria-labelledby="flow-h" className="grid gap-4 border-t pt-4">
         <Meta>Live on Tempo Moderato · updates as transactions land</Meta>
         <h2 id="flow-h" className="display text-[clamp(2.2rem,5vw,4rem)]">
-          Así se mueve el dinero
+          How the money moves
         </h2>
         <FlowMap live={live} supply={b.xmxnSupply} />
       </section>
@@ -104,7 +108,7 @@ function ProductIndex({ live }: { live: Live }) {
   }
   return (
     <section aria-label="Products" className="grid gap-3">
-      <Meta>Índice · six products, one currency</Meta>
+      <Meta>Index · six products, one currency</Meta>
       <ol onKeyDown={onKey} className="border-t">
         {products.map((p, i) => (
           <li key={p.id} className="border-b">

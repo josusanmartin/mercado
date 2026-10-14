@@ -103,7 +103,7 @@ export function ProductHero({
           {(purpose ?? p.purpose) && <p className="max-w-2xl text-lg leading-snug text-pretty sm:text-xl">{purpose ?? p.purpose}</p>}
           {persona && (
             <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className="meta text-muted-foreground hover:text-foreground" title="Testnet demo key, no real value">
-              Cuenta demo · <span className="text-foreground">{persona.name}</span>
+              Demo account · <span className="text-foreground">{persona.name}</span>
               {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
             </a>
           )}
