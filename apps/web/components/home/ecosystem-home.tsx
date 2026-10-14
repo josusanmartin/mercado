@@ -45,15 +45,18 @@ export function EcosystemHome() {
   const { b, live } = useLive();
   const tour = useTour();
   return (
-    <div className="grid gap-14 pt-1">
-      <section className="grid gap-6">
+    <div className="grid min-w-0 gap-14 pt-1">
+      {/* The hero is a size container so the display lines fit the content column (not the viewport,
+          which includes the sidebar). Measured in Archivo Black: "SEIS PRODUCTOS." is 9.82em and "PRODUCTOS." 7.05em,
+          so from sm up each line fits whole at 9.6cqw; on phones words wrap and the longest fits at 13.5cqw. */}
+      <section className="grid min-w-0 gap-6 [container-type:inline-size]">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
           <Meta>■ 00 · Mercado · un sistema financiero paralelo</Meta>
           <LiveMeta />
         </div>
         {/* Principle 3: image inside type, once, on the hero. Our own generated sarape texture. */}
         <h1
-          className="display image-type text-[clamp(3.6rem,12.5vw,12rem)]"
+          className="display image-type text-[clamp(2.2rem,13.5cqw,12rem)] sm:text-[clamp(2.2rem,min(9.6cqw,20svh),12rem)]"
           style={{ backgroundImage: "url(/photos/sarape.webp)" }}
           aria-label="Una moneda. Seis productos."
         >
@@ -61,7 +64,7 @@ export function EcosystemHome() {
           <br />
           Seis productos.
         </h1>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <p className="max-w-2xl text-xl leading-snug text-pretty">
             A parallel financial system for emerging markets, on Tempo. Institutions mint xMXN, families and businesses move it across the border,
             drivers borrow it, shops take it, savers grow it.

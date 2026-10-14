@@ -74,7 +74,7 @@ export function RemesasScreen() {
       title="Send money home"
       purpose="Dollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app."
     >
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
         <div className="-mx-4 sm:mx-0">
           <ConnectGate persona="sender" why="Mercado Remesas runs on the sender's wallet. Use the demo account or connect your own.">
             <PhoneFrame accent="#E2603F" onAccent="#0a0a0a" label="Mercado Remesas, Android phone preview">
@@ -90,7 +90,7 @@ export function RemesasScreen() {
 
 function WhatHappened({ s }: { s: RemesasState }) {
   return (
-    <div className="grid content-start gap-6">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">
       {s.last === "bill" ? <BillTrace s={s} /> : <SendFlow s={s} />}
       <BillHistory />
       <Honesty />

@@ -85,7 +85,9 @@ export function ProductHero({
   const persona = useDemoAccount(demo);
   const { address } = useConnection();
   return (
-    <section className="grid gap-6">
+    // Size container: the statement is fit to the content column, not the viewport (which includes the
+    // sidebar). 12.5cqw keeps an 11-letter word ("VERIFICADO.", ~7.7em in Archivo Black) whole.
+    <section className="grid min-w-0 gap-6 [container-type:inline-size]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
         <Meta>
           <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
@@ -94,7 +96,7 @@ export function ProductHero({
         {meta ? <Meta>{meta}</Meta> : <LiveMeta />}
       </div>
       <div className="grid gap-4">
-        <h1 className="display text-product text-[clamp(3.2rem,9vw,8rem)] break-words" style={p.id === "home" ? { color: "var(--ink)" } : undefined}>
+        <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,8rem)] break-words" style={p.id === "home" ? { color: "var(--ink)" } : undefined}>
           {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
         </h1>
         <div className="flex flex-wrap items-end justify-between gap-4">
