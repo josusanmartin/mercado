@@ -32,7 +32,14 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | 8 | Lenders can't withdraw xMXN that's currently lent out; repayment updates debt correctly | contracts | ✅ | Live J4: with 500 lent out, LENDER `withdrawAvailable(idle cash + 1)` → `InsufficientLiquidity`. Live J4/J6: debt 0 → 510 → 0, outstanding returns to 0, fees realized |
 | 9 | MPP endpoint returns a real 402 when unpaid, verifies payment and records one receipt per order; retries can't fulfill twice | api / qa | ✅ | Live J5 (pull + push + failure): `WWW-Authenticate: Payment` 402 bound to order, on-chain transfer from driver to merchant equals the quote, one receipt per order, retry returns the same order/reference with no second debit; history checked. Concurrency/recovery (R-005/R-009/R-011) covered by api vitest (37) + review probes |
 | 10 | Demo data and simulated fulfillment are labeled in both API responses and the frontend | api / web / qa | 🟡 API ✅ | API: `demo:true` + "Demo Uber Data" (driver/score), `simulated:true` + "SIMULATED fulfillment, no real top-up" (quote/pay), fx `isMock`. Frontend: Playwright smoke pending UI |
-| 11 | README discloses: testnet prototype, not a real credit product or a redeemable fiat stablecoin | qa | 🟡 | `README.md` § Disclosures |
+| 11 | README discloses: testnet prototype, not a real credit product or a redeemable fiat stablecoin | qa | ✅ | `README.md` § Disclosures, reviewed and passed by `review` at 78e353f |
+
+## A2. Extras (beyond SPEC §0)
+
+| # | Item | Owner | Status | Evidence |
+|---|---|---|---|---|
+| X1 | Machine-to-machine MPP: a fresh third-party agent wallet buys an underwriting report from the paid `/api/driver/score?access=underwriter` (402 → 2 xMXN → report + Payment-Receipt; no attestation leaked) | api / qa | ✅ | `scripts/underwriter-agent.ts`, transcript `scripts/evidence/underwriter-agent.txt`, [payment tx](https://explore.testnet.tempo.xyz/tx/0xbae8c938a550c95c5295203d7bfed526fd5a010768fb7f8c29b01f5d6f46683a) |
+| X2 | Fee sponsorship: a wallet with zero fee tokens transacts via `/api/sponsor` | contracts | ✅ | [approve paid by sponsor](https://explore.testnet.tempo.xyz/tx/0xb2be0921e163201457a9a86286785e38f93fdb3b60c06e4714203bf6116a67b7) |
 
 ## C. Pass D robustness (UI / ops)
 

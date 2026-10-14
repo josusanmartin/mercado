@@ -1,0 +1,21 @@
+Underwriter agent → Mercado paid API (MPP over HTTP 402, Tempo Moderato)
+testnet prototype · Demo Uber Data · illustrative score, not a credit model
+
+agent   I'm a third-party underwriting bot with wallet 0x71E8662099CE0bad68F6Bb56C945f2D0975C459e. No API key, no signup.
+tempo   funding the fresh agent wallet from the Moderato faucet (tempo_fundAddress)…
+agent   swapped 1 OUSD → 19.9 xMXN on the Mercado desk to pay in pesos https://explore.testnet.tempo.xyz/tx/0xe4b7ea985787f4a935f3fd360dd337779f3fde5d98ba9da4fae803ccb5051efe
+agent   POST /api/driver/score?access=underwriter  { borrower: 0x871aF8b6…, profile: "steady" }
+mercado 402 Payment Required: 2 of xMXN → 0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3, method tempo/charge, expires 2026-10-14T01:13:25.217Z
+agent   signed a TIP-20 xMXN transfer bound to that challenge (memo = challenge id), retrying with the credential…
+tempo   settled on-chain https://explore.testnet.tempo.xyz/tx/0xbae8c938a550c95c5295203d7bfed526fd5a010768fb7f8c29b01f5d6f46683a
+mercado 200 OK + Payment-Receipt { status: success, method: tempo, reference: 0xbae8c938a550c95c… }
+agent   verified: 2 xMXN agent → merchant in block 39486124
+agent   report: Demo Uber Data: illustrative score, not a validated credit model
+agent     score 96.5 (floor 50) · eligible true · credit line 1,500 xMXN · dataHash 0x2129faf12aff…
+agent     · Median weekly net earnings: 10,077.31 MXN over 12 weeks (35/35 pts).
+agent     · Earnings volatility (CV) 0.05: very steady income (27.7/30 pts).
+agent     · Active in 12 of 12 weeks (20/20 pts).
+agent     · Trip-count consistency (CV 0.04, median 114.5 trips/week) (13.8/15 pts).
+agent     no borrow attestation included (only the borrower's own session gets one) ✓
+
+Machine-to-machine payment complete: 402 → 2 xMXN on Tempo → report + receipt. No API key, no account, no card.
