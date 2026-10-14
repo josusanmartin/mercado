@@ -1,6 +1,7 @@
 {
   "label": "Demo Uber Data",
   "demo": true,
+  "platform": "uber",
   "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.",
   "profile": "new-driver",
   "driver": {

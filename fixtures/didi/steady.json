@@ -1,0 +1,225 @@
+{
+  "label": "Demo DiDi Data",
+  "demo": true,
+  "platform": "didi",
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real DiDi data and not obtained from DiDi.",
+  "profile": "steady",
+  "driver": {
+    "driverId": "demo-didi-steady-001",
+    "firstName": "Andrés",
+    "city": "Ciudad de México",
+    "vehicle": "Toyota Yaris 2020",
+    "rating": 4.91,
+    "activatedAt": "2023-11-06",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-07-20",
+      "weekEnd": "2026-07-26",
+      "trips": 101,
+      "activeHours": 44.43,
+      "grossMxn": 11243.73,
+      "serviceFeeMxn": 2473.62,
+      "netMxn": 8770.11
+    },
+    {
+      "weekStart": "2026-07-27",
+      "weekEnd": "2026-08-02",
+      "trips": 103,
+      "activeHours": 41.78,
+      "grossMxn": 11763.45,
+      "serviceFeeMxn": 2587.96,
+      "netMxn": 9175.49
+    },
+    {
+      "weekStart": "2026-08-03",
+      "weekEnd": "2026-08-09",
+      "trips": 111,
+      "activeHours": 48.48,
+      "grossMxn": 12023.59,
+      "serviceFeeMxn": 2645.19,
+      "netMxn": 9378.4
+    },
+    {
+      "weekStart": "2026-08-10",
+      "weekEnd": "2026-08-16",
+      "trips": 103,
+      "activeHours": 44.93,
+      "grossMxn": 11677.91,
+      "serviceFeeMxn": 2569.14,
+      "netMxn": 9108.77
+    },
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 101,
+      "activeHours": 40.59,
+      "grossMxn": 10767.55,
+      "serviceFeeMxn": 2368.86,
+      "netMxn": 8398.69
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 107,
+      "activeHours": 46.18,
+      "grossMxn": 11596.09,
+      "serviceFeeMxn": 2551.14,
+      "netMxn": 9044.95
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 106,
+      "activeHours": 43.51,
+      "grossMxn": 11527.16,
+      "serviceFeeMxn": 2535.98,
+      "netMxn": 8991.18
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 103,
+      "activeHours": 43.16,
+      "grossMxn": 11067.42,
+      "serviceFeeMxn": 2434.83,
+      "netMxn": 8632.59
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 111,
+      "activeHours": 46.67,
+      "grossMxn": 12914.8,
+      "serviceFeeMxn": 2841.26,
+      "netMxn": 10073.54
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 98,
+      "activeHours": 41.02,
+      "grossMxn": 10699.68,
+      "serviceFeeMxn": 2353.93,
+      "netMxn": 8345.75
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 108,
+      "activeHours": 46.1,
+      "grossMxn": 12325.23,
+      "serviceFeeMxn": 2711.55,
+      "netMxn": 9613.68
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 107,
+      "activeHours": 46.31,
+      "grossMxn": 11535.78,
+      "serviceFeeMxn": 2537.87,
+      "netMxn": 8997.91
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-didi-steady-01",
+      "type": "weekly_payout",
+      "paidAt": "2026-07-28T15:00:00Z",
+      "amountMxn": 8770.11,
+      "currency": "MXN",
+      "weekStart": "2026-07-20"
+    },
+    {
+      "paymentId": "demo-didi-steady-02",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-04T15:00:00Z",
+      "amountMxn": 9175.49,
+      "currency": "MXN",
+      "weekStart": "2026-07-27"
+    },
+    {
+      "paymentId": "demo-didi-steady-03",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-11T15:00:00Z",
+      "amountMxn": 9378.4,
+      "currency": "MXN",
+      "weekStart": "2026-08-03"
+    },
+    {
+      "paymentId": "demo-didi-steady-04",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-18T15:00:00Z",
+      "amountMxn": 9108.77,
+      "currency": "MXN",
+      "weekStart": "2026-08-10"
+    },
+    {
+      "paymentId": "demo-didi-steady-05",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-25T15:00:00Z",
+      "amountMxn": 8398.69,
+      "currency": "MXN",
+      "weekStart": "2026-08-17"
+    },
+    {
+      "paymentId": "demo-didi-steady-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-01T15:00:00Z",
+      "amountMxn": 9044.95,
+      "currency": "MXN",
+      "weekStart": "2026-08-24"
+    },
+    {
+      "paymentId": "demo-didi-steady-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-08T15:00:00Z",
+      "amountMxn": 8991.18,
+      "currency": "MXN",
+      "weekStart": "2026-08-31"
+    },
+    {
+      "paymentId": "demo-didi-steady-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-15T15:00:00Z",
+      "amountMxn": 8632.59,
+      "currency": "MXN",
+      "weekStart": "2026-09-07"
+    },
+    {
+      "paymentId": "demo-didi-steady-09",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-22T15:00:00Z",
+      "amountMxn": 10073.54,
+      "currency": "MXN",
+      "weekStart": "2026-09-14"
+    },
+    {
+      "paymentId": "demo-didi-steady-10",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 8345.75,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-didi-steady-11",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 9613.68,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-didi-steady-12",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 8997.91,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

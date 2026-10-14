@@ -9,6 +9,7 @@ export type FxSource = z.infer<typeof S.FxSourceSchema>;
 export type FxResponse = z.infer<typeof S.FxResponseSchema>;
 
 export type DriverProfileId = z.infer<typeof S.DriverProfileIdSchema>;
+export type DriverPlatform = z.infer<typeof S.DriverPlatformSchema>;
 export type DriverProfile = z.infer<typeof S.DriverProfileSchema>;
 export type WeeklyEarnings = z.infer<typeof S.WeeklyEarningsSchema>;
 export type PaymentRecord = z.infer<typeof S.PaymentRecordSchema>;

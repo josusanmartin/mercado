@@ -1,0 +1,117 @@
+{
+  "label": "Demo DiDi Data",
+  "demo": true,
+  "platform": "didi",
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real DiDi data and not obtained from DiDi.",
+  "profile": "new-driver",
+  "driver": {
+    "driverId": "demo-didi-new-003",
+    "firstName": "Iván",
+    "city": "Querétaro",
+    "vehicle": "Nissan March 2021",
+    "rating": 4.88,
+    "activatedAt": "2026-09-21",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 60,
+      "activeHours": 26.92,
+      "grossMxn": 6673.07,
+      "serviceFeeMxn": 1468.08,
+      "netMxn": 5204.99
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 61,
+      "activeHours": 27.12,
+      "grossMxn": 6275.26,
+      "serviceFeeMxn": 1380.56,
+      "netMxn": 4894.7
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 56,
+      "activeHours": 23.57,
+      "grossMxn": 6345.24,
+      "serviceFeeMxn": 1395.95,
+      "netMxn": 4949.29
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-didi-new-driver-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 5204.99,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-didi-new-driver-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 4894.7,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-didi-new-driver-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 4949.29,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

@@ -10,6 +10,17 @@ export const Bytes32Schema = z.string().regex(/^0x[0-9a-fA-F]{64}$/, "expected 0
 export const UintStringSchema = z.string().regex(/^\d+$/, "expected unsigned integer string");
 
 export const DEMO_UBER_LABEL = "Demo Uber Data" as const;
+
+// ---------- gig platforms (Crédito v2) ----------
+
+export const DriverPlatformSchema = z.enum(["uber", "didi", "rappi"]);
+/** The label every demo earnings payload carries (synthetic fixtures; no platform data is used). */
+export const DEMO_PLATFORM_LABELS = {
+  uber: "Demo Uber Data",
+  didi: "Demo DiDi Data",
+  rappi: "Demo Rappi Data",
+} as const;
+export const DemoPlatformLabelSchema = z.enum(["Demo Uber Data", "Demo DiDi Data", "Demo Rappi Data"]);
 export const SIMULATED_FULFILLMENT_LABEL = "SIMULATED fulfillment, no real top-up" as const;
 
 // ---------- /api/fx ----------
@@ -81,8 +92,9 @@ export const PaymentRecordSchema = z.object({
 
 /** Shape of fixtures/uber/*.json. */
 export const EarningsFixtureSchema = z.object({
-  label: z.literal(DEMO_UBER_LABEL),
+  label: DemoPlatformLabelSchema,
   demo: z.literal(true),
+  platform: DriverPlatformSchema,
   disclaimer: z.string(),
   profile: DriverProfileIdSchema,
   driver: DriverProfileSchema,
@@ -92,11 +104,13 @@ export const EarningsFixtureSchema = z.object({
 
 export const DriverDemoQuerySchema = z.object({
   profile: DriverProfileIdSchema.default("steady"),
+  platform: DriverPlatformSchema.default("uber"),
 });
 
 export const DriverDemoResponseSchema = z.object({
   demo: z.literal(true),
-  label: z.literal(DEMO_UBER_LABEL),
+  platform: DriverPlatformSchema,
+  label: DemoPlatformLabelSchema,
   disclaimer: z.string(),
   profile: DriverProfileIdSchema,
   driver: DriverProfileSchema,
@@ -109,6 +123,8 @@ export const DriverDemoResponseSchema = z.object({
 export const DriverScoreRequestSchema = z.object({
   borrower: AddressSchema,
   profile: DriverProfileIdSchema,
+  /** Which (demo) gig platform the earnings come from; carried into the attestation dataHash. */
+  platform: DriverPlatformSchema.default("uber"),
 });
 
 export const ScoreFeaturesSchema = z.object({
@@ -145,6 +161,7 @@ export const EligibilityAttestationSchema = z.object({
 export const DriverScoreResponseSchema = z.object({
   demo: z.literal(true),
   label: z.string(),
+  platform: DriverPlatformSchema,
   profile: DriverProfileIdSchema,
   eligible: z.boolean(),
   /** 0–100, deterministic for a given fixture. Illustrative only, not a validated credit model. */

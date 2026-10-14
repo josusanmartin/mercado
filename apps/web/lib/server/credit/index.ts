@@ -1,11 +1,11 @@
 // Credit service: demo earnings → deterministic score → signed, expiring EIP-712 eligibility attestation.
 import { formatUnits, parseAbi, parseUnits, type Address, type Hex } from "viem";
-import { DEMO_UBER_LABEL } from "@mercado/shared";
-import type { DriverProfileId, DriverScoreResponse } from "@mercado/shared";
+import { DEMO_PLATFORM_LABELS } from "@mercado/shared";
+import type { DriverPlatform, DriverProfileId, DriverScoreResponse } from "@mercado/shared";
 import { requireAddress, serverAddresses } from "../protocol";
 import { env } from "../env";
 import { publicClient } from "../chain";
-import { DemoEarningsProvider, type EarningsProvider } from "./provider";
+import { demoProvider, type EarningsProvider } from "./provider";
 import { SCORE_FLOOR, SCORE_VERSION, scoreDriver } from "./score";
 import { privateKeyToAccount } from "viem/accounts";
 import { ATTESTATION_TTL_SECONDS, randomNonce, reportDataHash, signEligibility } from "./attest";
@@ -30,6 +30,8 @@ export async function readBorrowCapacity(pool: Address, borrower: Address, maxAm
 }
 
 export interface AssessOptions {
+  /** Which demo platform's earnings to use (default uber). Ignored when `provider` is given. */
+  platform?: DriverPlatform;
   provider?: EarningsProvider;
   /** Override CreditPool.borrowCapacity in whole xMXN (tests). `null` = skip the on-chain read. */
   borrowCapacityMxn?: number | null;
@@ -46,7 +48,8 @@ export async function assessDriver(
   profile: DriverProfileId,
   opts: AssessOptions = {},
 ): Promise<DriverScoreResponse> {
-  const provider = opts.provider ?? new DemoEarningsProvider();
+  const provider = opts.provider ?? demoProvider(opts.platform ?? "uber");
+  const platform = provider.platform;
   const [driver, weeks, payments] = await Promise.all([
     provider.getDriverProfile(profile),
     provider.getTrips(profile),
@@ -61,7 +64,8 @@ export async function assessDriver(
   // The income report is kept off-chain; only its hash goes into the attestation.
   const report = {
     schema: "mercado.income-report.v1",
-    label: DEMO_UBER_LABEL,
+    label: DEMO_PLATFORM_LABELS[platform],
+    platform,
     source: provider.id,
     profile,
     borrower: borrower.toLowerCase(),
@@ -75,13 +79,14 @@ export async function assessDriver(
   const dataHash = reportDataHash(report);
 
   console.info(
-    `[credit] borrower=${borrower} profile=${profile} score=${result.score} eligible=${result.eligible} cap=${result.capMxn} reason=${result.capReason} dataHash=${dataHash}`,
+    `[credit] borrower=${borrower} platform=${platform} profile=${profile} score=${result.score} eligible=${result.eligible} cap=${result.capMxn} reason=${result.capReason} dataHash=${dataHash}`,
     JSON.stringify(result.features),
   );
 
   const response: DriverScoreResponse = {
     demo: true,
-    label: `${DEMO_UBER_LABEL}: illustrative score, not a validated credit model`,
+    label: `${DEMO_PLATFORM_LABELS[platform]}: illustrative score, not a validated credit model`,
+    platform,
     profile,
     eligible: result.eligible,
     score: result.score,

@@ -90,6 +90,27 @@ describe("credit score", () => {
   });
 });
 
+describe("gig platforms (Demo Uber / DiDi / Rappi data)", () => {
+  it.each(["uber", "didi", "rappi"] as const)("%s: steady and irregular are eligible, new-driver isn't", async (platform) => {
+    const steady = await assessDriver(BORROWER, "steady", { ...base, platform });
+    const irregular = await assessDriver(BORROWER, "irregular", { ...base, platform });
+    const fresh = await assessDriver(BORROWER, "new-driver", { ...base, platform });
+    expect(steady.platform).toBe(platform);
+    expect(steady.label).toMatch(/^Demo (Uber|DiDi|Rappi) Data/);
+    expect(steady.eligible).toBe(true);
+    expect(irregular.eligible).toBe(true);
+    expect(BigInt(irregular.maxAmount)).toBeLessThan(BigInt(steady.maxAmount) + 1n);
+    expect(fresh.eligible).toBe(false);
+  });
+
+  it("carries the platform into the attestation dataHash", async () => {
+    const uber = await assessDriver(BORROWER, "steady", { ...base, platform: "uber" });
+    const didi = await assessDriver(BORROWER, "steady", { ...base, platform: "didi" });
+    expect(uber.dataHash).not.toBe(didi.dataHash);
+    expect(didi.attestation?.dataHash).toBe(didi.dataHash);
+  });
+});
+
 describe("eligibility attestation", () => {
   it("withholds the attestation if this server's key isn't the signer the pool trusts", async () => {
     const other = privateKeyToAccount(generatePrivateKey()).address;

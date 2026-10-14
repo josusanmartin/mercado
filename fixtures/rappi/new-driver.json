@@ -1,0 +1,117 @@
+{
+  "label": "Demo Rappi Data",
+  "demo": true,
+  "platform": "rappi",
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Rappi data and not obtained from Rappi.",
+  "profile": "new-driver",
+  "driver": {
+    "driverId": "demo-rappi-new-003",
+    "firstName": "Sofía",
+    "city": "Mérida",
+    "vehicle": "Motocicleta Honda Navi",
+    "rating": 4.9,
+    "activatedAt": "2026-09-21",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 85,
+      "activeHours": 24.01,
+      "grossMxn": 4406.54,
+      "serviceFeeMxn": 793.18,
+      "netMxn": 3613.36
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 78,
+      "activeHours": 22.32,
+      "grossMxn": 3967.05,
+      "serviceFeeMxn": 714.07,
+      "netMxn": 3252.98
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 82,
+      "activeHours": 24.72,
+      "grossMxn": 4143.77,
+      "serviceFeeMxn": 745.88,
+      "netMxn": 3397.89
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-rappi-new-driver-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 3613.36,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-rappi-new-driver-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 3252.98,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-rappi-new-driver-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 3397.89,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

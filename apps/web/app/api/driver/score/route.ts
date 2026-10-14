@@ -2,7 +2,10 @@ import { DriverScoreRequestSchema } from "@mercado/shared";
 import { parseUnits, type Address } from "viem";
 import { assessDriver } from "@/lib/server/credit";
 import { jsonError, parseJson } from "@/lib/server/http";
-import { ProtocolUnavailableError, activeProtocolName } from "@/lib/server/protocol";
+import {
+  ProtocolUnavailableError,
+  activeProtocolName,
+} from "@/lib/server/protocol";
 import { recordPaidCall } from "@/lib/mpp/ledger";
 import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
 
@@ -14,24 +17,36 @@ const UNDERWRITER_FEE = "2";
 //   ?access=underwriter (MPP) → 402 until paid; then the score report WITHOUT a borrow attestation
 //                               (only the borrower's own app session gets one), plus the payment receipt.
 export async function POST(request: Request) {
-  const [body, err] = await parseJson(request.clone(), DriverScoreRequestSchema);
+  const [body, err] = await parseJson(
+    request.clone(),
+    DriverScoreRequestSchema,
+  );
   if (err) return err;
-  const underwriter = new URL(request.url).searchParams.get("access") === "underwriter";
+  const underwriter =
+    new URL(request.url).searchParams.get("access") === "underwriter";
   try {
-    if (!underwriter) return Response.json(await assessDriver(body.borrower as Address, body.profile));
+    if (!underwriter)
+      return Response.json(
+        await assessDriver(body.borrower as Address, body.profile, {
+          platform: body.platform,
+        }),
+      );
 
     const token = billPaymentToken();
     const outcome = await charge(request, {
       amount: UNDERWRITER_FEE,
       currency: token.address,
       recipient: merchantAddress(),
-      externalId: `score:${body.borrower.toLowerCase()}:${body.profile}`,
+      externalId: `score:${body.borrower.toLowerCase()}:${body.platform}:${body.profile}`,
       description: `Mercado demo underwriting report (${body.profile}), illustrative only`,
       meta: { product: "underwriting-report" },
       expiresMinutes: 5,
     });
     if (!outcome.paid) return outcome.challenge;
-    const report = await assessDriver(body.borrower as Address, body.profile, { borrowCapacityMxn: null });
+    const report = await assessDriver(body.borrower as Address, body.profile, {
+      borrowCapacityMxn: null,
+      platform: body.platform,
+    });
     await recordPaidCall({
       product: "underwriting",
       txHash: outcome.txHash,
@@ -39,7 +54,7 @@ export async function POST(request: Request) {
       amount: parseUnits(UNDERWRITER_FEE, 6).toString(),
       token: token.address,
       protocol: activeProtocolName(),
-      summary: `${body.profile} · score ${report.score}`,
+      summary: `${body.platform} · ${body.profile} · score ${report.score}`,
       at: new Date().toISOString(),
     });
     const { attestation, attestationWithheld, ...rest } = report;
@@ -49,12 +64,23 @@ export async function POST(request: Request) {
       {
         ...rest,
         access: "underwriter",
-        payment: { txHash: outcome.txHash, payer: outcome.payer, token: token.address, tokenSymbol: token.symbol },
+        payment: {
+          txHash: outcome.txHash,
+          payer: outcome.payer,
+          token: token.address,
+          tokenSymbol: token.symbol,
+        },
       },
-      { headers: { "Payment-Receipt": outcome.receiptHeader, "Cache-Control": "private, no-store" } },
+      {
+        headers: {
+          "Payment-Receipt": outcome.receiptHeader,
+          "Cache-Control": "private, no-store",
+        },
+      },
     );
   } catch (e) {
-    if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
+    if (e instanceof ProtocolUnavailableError)
+      return jsonError(503, e.message, e.code);
     console.error("[api/driver/score]", e);
     return jsonError(500, "Scoring failed", "SCORE_FAILED");
   }

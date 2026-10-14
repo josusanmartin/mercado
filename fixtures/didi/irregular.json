@@ -1,0 +1,191 @@
+{
+  "label": "Demo DiDi Data",
+  "demo": true,
+  "platform": "didi",
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real DiDi data and not obtained from DiDi.",
+  "profile": "irregular",
+  "driver": {
+    "driverId": "demo-didi-irregular-002",
+    "firstName": "Karla",
+    "city": "Puebla",
+    "vehicle": "Hyundai Grand i10 2019",
+    "rating": 4.84,
+    "activatedAt": "2025-02-10",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-03",
+      "weekEnd": "2026-08-09",
+      "trips": 61,
+      "activeHours": 21.87,
+      "grossMxn": 6484.16,
+      "serviceFeeMxn": 1426.52,
+      "netMxn": 5057.64
+    },
+    {
+      "weekStart": "2026-08-10",
+      "weekEnd": "2026-08-16",
+      "trips": 85,
+      "activeHours": 30.25,
+      "grossMxn": 9185.48,
+      "serviceFeeMxn": 2020.81,
+      "netMxn": 7164.67
+    },
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 51,
+      "activeHours": 19.93,
+      "grossMxn": 5225.07,
+      "serviceFeeMxn": 1149.52,
+      "netMxn": 4075.55
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 52,
+      "activeHours": 18.61,
+      "grossMxn": 5273.73,
+      "serviceFeeMxn": 1160.22,
+      "netMxn": 4113.51
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 91,
+      "activeHours": 34.83,
+      "grossMxn": 9588.61,
+      "serviceFeeMxn": 2109.49,
+      "netMxn": 7479.12
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 57,
+      "activeHours": 20.07,
+      "grossMxn": 5748.45,
+      "serviceFeeMxn": 1264.66,
+      "netMxn": 4483.79
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 54,
+      "activeHours": 20.37,
+      "grossMxn": 5924.86,
+      "serviceFeeMxn": 1303.47,
+      "netMxn": 4621.39
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 55,
+      "activeHours": 20.1,
+      "grossMxn": 5618.14,
+      "serviceFeeMxn": 1235.99,
+      "netMxn": 4382.15
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 61,
+      "activeHours": 23.01,
+      "grossMxn": 6265.61,
+      "serviceFeeMxn": 1378.43,
+      "netMxn": 4887.18
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 61,
+      "activeHours": 23.64,
+      "grossMxn": 6767.63,
+      "serviceFeeMxn": 1488.88,
+      "netMxn": 5278.75
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-didi-irregular-01",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-11T15:00:00Z",
+      "amountMxn": 5057.64,
+      "currency": "MXN",
+      "weekStart": "2026-08-03"
+    },
+    {
+      "paymentId": "demo-didi-irregular-02",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-18T15:00:00Z",
+      "amountMxn": 7164.67,
+      "currency": "MXN",
+      "weekStart": "2026-08-10"
+    },
+    {
+      "paymentId": "demo-didi-irregular-03",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-25T15:00:00Z",
+      "amountMxn": 4075.55,
+      "currency": "MXN",
+      "weekStart": "2026-08-17"
+    },
+    {
+      "paymentId": "demo-didi-irregular-04",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-01T15:00:00Z",
+      "amountMxn": 4113.51,
+      "currency": "MXN",
+      "weekStart": "2026-08-24"
+    },
+    {
+      "paymentId": "demo-didi-irregular-05",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-08T15:00:00Z",
+      "amountMxn": 7479.12,
+      "currency": "MXN",
+      "weekStart": "2026-08-31"
+    },
+    {
+      "paymentId": "demo-didi-irregular-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-15T15:00:00Z",
+      "amountMxn": 4483.79,
+      "currency": "MXN",
+      "weekStart": "2026-09-07"
+    },
+    {
+      "paymentId": "demo-didi-irregular-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-22T15:00:00Z",
+      "amountMxn": 4621.39,
+      "currency": "MXN",
+      "weekStart": "2026-09-14"
+    },
+    {
+      "paymentId": "demo-didi-irregular-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 4382.15,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-didi-irregular-09",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 4887.18,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-didi-irregular-10",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 5278.75,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "label": "Demo Rappi Data",
+  "demo": true,
+  "platform": "rappi",
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Rappi data and not obtained from Rappi.",
+  "profile": "irregular",
+  "driver": {
+    "driverId": "demo-rappi-irregular-002",
+    "firstName": "Jorge",
+    "city": "Monterrey",
+    "vehicle": "Bicicleta",
+    "rating": 4.79,
+    "activatedAt": "2025-04-14",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-03",
+      "weekEnd": "2026-08-09",
+      "trips": 89,
+      "activeHours": 23.55,
+      "grossMxn": 4493.82,
+      "serviceFeeMxn": 808.89,
+      "netMxn": 3684.93
+    },
+    {
+      "weekStart": "2026-08-10",
+      "weekEnd": "2026-08-16",
+      "trips": 103,
+      "activeHours": 27.85,
+      "grossMxn": 5068.32,
+      "serviceFeeMxn": 912.3,
+      "netMxn": 4156.02
+    },
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 79,
+      "activeHours": 21.36,
+      "grossMxn": 4060.84,
+      "serviceFeeMxn": 730.95,
+      "netMxn": 3329.89
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 119,
+      "activeHours": 31.28,
+      "grossMxn": 5914.47,
+      "serviceFeeMxn": 1064.6,
+      "netMxn": 4849.87
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 111,
+      "activeHours": 29.3,
+      "grossMxn": 5617.86,
+      "serviceFeeMxn": 1011.21,
+      "netMxn": 4606.65
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 118,
+      "activeHours": 30.72,
+      "grossMxn": 5799.45,
+      "serviceFeeMxn": 1043.9,
+      "netMxn": 4755.55
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 129,
+      "activeHours": 34.29,
+      "grossMxn": 6468.69,
+      "serviceFeeMxn": 1164.36,
+      "netMxn": 5304.33
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 95,
+      "activeHours": 24.87,
+      "grossMxn": 4588.44,
+      "serviceFeeMxn": 825.92,
+      "netMxn": 3762.52
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 71,
+      "activeHours": 18.74,
+      "grossMxn": 3504.27,
+      "serviceFeeMxn": 630.77,
+      "netMxn": 2873.5
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 130,
+      "activeHours": 34.2,
+      "grossMxn": 6793.66,
+      "serviceFeeMxn": 1222.86,
+      "netMxn": 5570.8
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-rappi-irregular-01",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-11T15:00:00Z",
+      "amountMxn": 3684.93,
+      "currency": "MXN",
+      "weekStart": "2026-08-03"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-02",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-18T15:00:00Z",
+      "amountMxn": 4156.02,
+      "currency": "MXN",
+      "weekStart": "2026-08-10"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-03",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-25T15:00:00Z",
+      "amountMxn": 3329.89,
+      "currency": "MXN",
+      "weekStart": "2026-08-17"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-04",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-01T15:00:00Z",
+      "amountMxn": 4849.87,
+      "currency": "MXN",
+      "weekStart": "2026-08-24"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-05",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-08T15:00:00Z",
+      "amountMxn": 4606.65,
+      "currency": "MXN",
+      "weekStart": "2026-08-31"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-15T15:00:00Z",
+      "amountMxn": 4755.55,
+      "currency": "MXN",
+      "weekStart": "2026-09-07"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-22T15:00:00Z",
+      "amountMxn": 5304.33,
+      "currency": "MXN",
+      "weekStart": "2026-09-14"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 3762.52,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-09",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 2873.5,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-rappi-irregular-10",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 5570.8,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

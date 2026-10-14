@@ -2,9 +2,10 @@
 // Data hooks for "Get an advance": demo earnings → signed eligibility. Draw/repay use useMercado().
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { Address } from "viem";
+import type { Address, Hex } from "viem";
 import type {
   DriverDemoResponse,
+  DriverPlatform,
   DriverProfileId,
   DriverScoreResponse,
 } from "@mercado/shared";
@@ -34,32 +35,37 @@ async function json<T>(res: Response): Promise<T> {
   return body as T;
 }
 
-export function useDriverDemo(profile: DriverProfileId | undefined) {
+export function useDriverDemo(
+  profile: DriverProfileId | undefined,
+  platform: DriverPlatform = "uber",
+) {
   return useQuery({
-    queryKey: ["driver-demo", profile],
+    queryKey: ["driver-demo", platform, profile],
     enabled: !!profile,
     staleTime: Infinity,
     queryFn: () =>
-      fetch(`/api/driver/demo?profile=${profile}`).then((r) =>
-        json<DriverDemoResponse>(r),
+      fetch(`/api/driver/demo?platform=${platform}&profile=${profile}`).then(
+        (r) => json<DriverDemoResponse>(r),
       ),
   });
 }
 
-/** Requests the score + signed attestation for (borrower, profile). Re-request when it expires. */
+/** Requests the score + signed attestation for (borrower, profile, platform). Re-request when it expires. */
 export function useEligibility() {
   return useMutation({
     mutationFn: ({
       borrower,
       profile,
+      platform = "uber",
     }: {
       borrower: Address;
       profile: DriverProfileId;
+      platform?: DriverPlatform;
     }) =>
       fetch("/api/driver/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ borrower, profile }),
+        body: JSON.stringify({ borrower, profile, platform }),
       }).then((r) => json<DriverScoreResponse>(r)),
   });
 }
@@ -83,3 +89,8 @@ export const bpsToPct = (bps: bigint | undefined) =>
   bps === undefined
     ? undefined
     : `${(Number(bps) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;
+
+/** The API's attestation (string fields) as the typed input useMercado().borrow expects. */
+export function toAttestation(att: NonNullable<DriverScoreResponse["attestation"]>) {
+  return { ...att, dataHash: att.dataHash as Hex, signature: att.signature as Hex };
+}
