@@ -102,6 +102,12 @@ describe("R-009 interrupted settlement recovery", () => {
     });
     const fresh = await pay({ quoteId, idempotencyKey: k });
     expect(fresh.status).toBe(402);
+    // still scanned (non-blocking) until its challenge expires, then dropped after a clean scan
+    expect(await withStore((db) => db.orders[orderId].pendingAttempts?.length)).toBe(1);
+    await withStore((db) => {
+      for (const a of db.orders[orderId].pendingAttempts ?? []) a.keepUntil = 0;
+    });
+    expect((await pay({ quoteId, idempotencyKey: k })).status).toBe(402);
     expect(await withStore((db) => db.orders[orderId].pendingAttempts)).toEqual([]);
   });
 

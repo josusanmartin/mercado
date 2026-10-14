@@ -6,6 +6,7 @@ import { formatUnits, parseUnits, type Address } from "viem";
 import { SIMULATED_FULFILLMENT_LABEL, TEMPO_MODERATO_CHAIN_ID, explorerTx } from "@mercado/shared";
 import type { BillPayRequest, BillPayResponse, BillQuoteRequest, BillQuoteResponse } from "@mercado/shared";
 import { billPaymentToken, charge, credentialKind, merchantAddress, ownCredential } from "../../mpp/server";
+import { Challenge } from "mppx";
 import { currentBlock, findSettledAttempt, type FoundPayment } from "../../mpp/reconcile";
 import { getFx } from "../fx";
 import { getBillProvider } from "./providers";
@@ -181,7 +182,7 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
   // once no earlier attempt is unresolved (recovery above ran first and throws while it can't decide).
   // A request that already carries a credential is still verified (its challenge has its own expiry).
   const quote = await readStore((db) => db.quotes[order.quoteId]);
-  const unresolved = await readStore((db) => db.orders[orderId].pendingAttempts?.length ?? 0);
+  const unresolved = await readStore((db) => (db.orders[orderId].pendingAttempts ?? []).filter((a) => a.kind !== "issued" || a.keepUntil > Date.now()).length);
   if (!request.headers.get("Authorization") && quote && quote.expiresAt < Date.now() / 1000) {
     if (unresolved) throw settlementPending();
     await withStore((db) => transition(db.orders[orderId], "FAILED", "Quote expired before payment; no payment was received."));
@@ -205,6 +206,7 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
         fromBlock: (fromBlock > 0n ? fromBlock : 0n).toString(),
         at: new Date().toISOString(),
         holdUntil: Date.now() + PENDING_HOLD_MS,
+        keepUntil: Math.max(Date.now() + PENDING_HOLD_MS, keepUntilFor(cred.expires)),
       });
       return o;
     });
@@ -227,6 +229,7 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
       if (late) return late;
       throw settlementPending(await outcome.challenge.clone().text().catch(() => ""));
     }
+    await recordIssuedChallenge(orderId, outcome.challenge);
     const headers = new Headers(outcome.challenge.headers);
     headers.set("X-Mercado-Order-Id", order.orderId);
     const response = new Response(outcome.challenge.body, { status: 402, headers });
@@ -245,6 +248,36 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
 
 /** How long a failed/interrupted attempt blocks new charges. Pull-mode txs expire ≤25s after signing. */
 const PENDING_HOLD_MS = 60_000;
+
+const keepUntilFor = (expires?: string) => (expires ? Date.parse(expires) : Date.now() + 10 * 60_000) + PENDING_HOLD_MS;
+
+/** R-011: remember every challenge handed out for the order so a push payment whose credential never
+ *  reached us is still found on-chain before we charge again. */
+async function recordIssuedChallenge(orderId: string, challengeResponse: Response) {
+  const www = challengeResponse.headers.get("WWW-Authenticate");
+  if (!www) return;
+  let challengeId: string;
+  let expires: string | undefined;
+  try {
+    const c = Challenge.deserialize(www);
+    challengeId = c.id;
+    expires = c.expires;
+  } catch {
+    return;
+  }
+  const fromBlock = (await currentBlock().catch(() => 0n)) - 5n;
+  await withStore((db) => {
+    const o = db.orders[orderId];
+    (o.pendingAttempts ??= []).push({
+      challengeId,
+      kind: "issued",
+      fromBlock: (fromBlock > 0n ? fromBlock : 0n).toString(),
+      at: new Date().toISOString(),
+      holdUntil: 0,
+      keepUntil: keepUntilFor(expires),
+    });
+  });
+}
 
 function holdActive(order: StoredOrder, exceptChallengeId?: string) {
   return (order.pendingAttempts ?? []).some((a) => a.holdUntil > Date.now() && a.challengeId !== exceptChallengeId);
@@ -275,13 +308,12 @@ async function recoverAttempts(order: StoredOrder): Promise<PayResult | null> {
     throw settlementPending("could not check the chain for an earlier payment attempt");
   }
   if (!found) {
-    // A successful scan with nothing found: attempts past their hold can't settle any more (pull txs
-    // carry validBefore ≤ 25s; push txs were already mined when presented), so drop them.
-    if (!holdActive(order))
-      await withStore((db) => {
-        const o = db.orders[order.orderId];
-        o.pendingAttempts = (o.pendingAttempts ?? []).filter((a) => a.holdUntil > Date.now());
-      });
+    // A successful scan with nothing found: attempts past their challenge expiry (+ margin) can't settle
+    // any more (pull txs carry validBefore ≤ 25s; push credentials are rejected once expired), so drop them.
+    await withStore((db) => {
+      const o = db.orders[order.orderId];
+      o.pendingAttempts = (o.pendingAttempts ?? []).filter((a) => (a.keepUntil ?? a.holdUntil) > Date.now());
+    });
     return null;
   }
   let o = await recordPayment(order.orderId, { txHash: found.txHash, payer: found.payer }, "Recovered: payment found on-chain for an interrupted attempt");

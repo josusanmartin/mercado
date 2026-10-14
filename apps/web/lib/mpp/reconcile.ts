@@ -23,12 +23,16 @@ export function memoBoundTo(memo: Hex, challengeId: string, realm = MPP_REALM): 
 
 export interface PendingAttempt {
   challengeId: string;
-  kind: "hash" | "transaction" | "proof";
+  /** "issued": a challenge we handed out (no credential seen yet). A push wallet may have paid it even if
+   *  its credential never reached us (R-011), so it is scanned too, but it never blocks new charges. */
+  kind: "hash" | "transaction" | "proof" | "issued";
   txHash?: Hex;
   fromBlock: string; // bigint as string
   at: string;
-  /** Unix ms until which no new charge is issued while this attempt is unresolved. */
+  /** Unix ms until which no new charge is issued while this attempt is unresolved (0 for "issued"). */
   holdUntil: number;
+  /** Unix ms until which the attempt is still scanned for (challenge expiry + margin). */
+  keepUntil: number;
 }
 
 export interface FoundPayment {

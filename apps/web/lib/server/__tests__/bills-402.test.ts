@@ -5,6 +5,12 @@ vi.mock("../fx", () => ({
   getFx: async () => ({ mxnPerUsd: "2000000000", rate: 20, updatedAt: 0, source: "config-fallback", isMock: true, stale: true, label: "test" }),
 }));
 
+const findSettled = vi.fn(async (_p: { attempts: { challengeId: string; kind: string }[] }): Promise<unknown> => null);
+vi.mock("../../mpp/reconcile", () => ({
+  findSettledAttempt: (p: { attempts: { challengeId: string; kind: string }[] }) => findSettled(p),
+  currentBlock: async () => 1000n,
+}));
+
 import { Challenge } from "mppx";
 import { order, pay, quote } from "./helpers";
 
@@ -49,5 +55,25 @@ describe("POST /api/bills/pay (real mppx)", () => {
     expect(res.status).toBe(402);
     const o = await order("idem-402-test-0002");
     expect(o.body.status).toBe("CREATED");
+  });
+
+  it("R-011: a push payment whose credential never arrived is found via the issued challenge, not charged again", async () => {
+    const q = await quote({ provider: "telcel", phone: "5512345678", amountMxn: 30 });
+    const k = "idem-402-test-0003";
+    const first = await pay({ quoteId: q.body.quoteId, idempotencyKey: k });
+    expect(first.status).toBe(402);
+    const issued = Challenge.deserialize(first.headers.get("WWW-Authenticate")!).id;
+    // the wallet paid that challenge on-chain, but its credential POST was lost
+    findSettled.mockImplementation(async (p) =>
+      p.attempts.some((a) => a.challengeId === issued && a.kind === "issued")
+        ? { txHash: `0x${"cd".repeat(32)}`, payer: "0x4444444444444444444444444444444444444444", challengeId: issued }
+        : null,
+    );
+    const retry = await pay({ quoteId: q.body.quoteId, idempotencyKey: k });
+    expect(retry.status).toBe(200);
+    const body = await retry.json();
+    expect(body.status).toBe("FULFILLED_SIMULATED");
+    expect(body.receipt.txHash).toBe(`0x${"cd".repeat(32)}`);
+    findSettled.mockReset();
   });
 });
