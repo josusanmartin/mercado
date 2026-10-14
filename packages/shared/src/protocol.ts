@@ -39,6 +39,8 @@ export type ProtocolAddresses = {
   /** v2 only: MoveAMM (vault-integrated vAMM). */
   vamm?: Address;
   collaterals: CollateralInfo[];
+  /** First block of this protocol's deployment (indexers scan logs from here). */
+  startBlock: number;
 };
 
 const d = moderatoDeployment as typeof moderatoDeployment & { v2?: Record<string, unknown> };
@@ -56,13 +58,14 @@ const V1: ProtocolAddresses = {
   merchant: d.merchant as Address,
   swapDesk: d.swapDesk as Address,
   collaterals: [{ symbol: "OUSD", token: d.ousd as Address, demo: false, label: "Testnet OUSD (Tempo faucet, no real value)" }],
+  startBlock: (d as { startBlock?: number }).startBlock ?? 0,
 };
 
 function v2(): ProtocolAddresses {
   const v = d.v2 as unknown as
     | {
         xMXN: Address; factory: Address; vault: Address; vamm: Address; creditPool: Address; fxOracle: Address;
-        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address;
+        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number;
       }
     | undefined;
   // fail closed: never fall back to v1 when v2 is requested
@@ -83,6 +86,7 @@ function v2(): ProtocolAddresses {
     merchant: v.merchant,
     vamm: v.vamm,
     collaterals: v.collaterals,
+    startBlock: v.startBlock ?? 0,
   };
 }
 

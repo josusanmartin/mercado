@@ -6,3 +6,4 @@ export * from "./reads";
 export * from "./tx";
 export * from "./actions";
 export * from "./sponsor";
+export * from "./activity";

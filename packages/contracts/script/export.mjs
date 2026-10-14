@@ -45,6 +45,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
   const bdir = join(root, "broadcast", "Deploy.s.sol", chainId);
   const txs = {};
   let deployedAt;
+  let startBlock;
   const stages = ["core", "smoke", "swap", "credit", "stress"];
   for (const stage of stages) {
     const f =
@@ -53,7 +54,10 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
         : join(bdir, `${stage}-latest.json`);
     if (!existsSync(f)) continue;
     const run = JSON.parse(readFileSync(f, "utf8"));
-    if (stage === "core") deployedAt = new Date(run.timestamp).toISOString();
+    if (stage === "core") {
+      deployedAt = new Date(run.timestamp).toISOString();
+      startBlock = Number(BigInt(run.receipts[0].blockNumber));
+    }
     const seen = {};
     for (const tx of run.transactions) {
       const what = tx.transactionType === "CREATE" ? `deploy${tx.contractName}` : tx.function.split("(")[0];
@@ -63,18 +67,22 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
       txs[label] = tx.hash;
     }
   }
-  const out = { ...addrs, chainId: Number(chainId), deployedAt, txs };
+  const out = { ...addrs, chainId: Number(chainId), deployedAt, startBlock, txs };
   // v2 lives alongside v1 under "v2" (crew/V2-DESIGN.md §5b)
   const v2file = join(root, "deployments", `${chainId}.v2.json`);
   if (existsSync(v2file)) {
     const a = JSON.parse(readFileSync(v2file, "utf8"));
     const v2txs = {};
     let v2At;
+    let v2Start;
     for (const stage of ["core", "seed", "credit"]) {
       const f = join(root, "broadcast", "DeployV2.s.sol", chainId, `${stage}-latest.json`);
       if (!existsSync(f)) continue;
       const run = JSON.parse(readFileSync(f, "utf8"));
-      if (stage === "core") v2At = new Date(run.timestamp).toISOString();
+      if (stage === "core") {
+        v2At = new Date(run.timestamp).toISOString();
+        v2Start = Number(BigInt(run.receipts[0].blockNumber));
+      }
       const seen = {};
       for (const tx of run.transactions) {
         const what = tx.transactionType === "CREATE" ? `deploy${tx.contractName}` : tx.function.split("(")[0];
@@ -92,7 +100,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
         { symbol: "tTBILL", token: a.tTBILL, feed: a.tTBILLFeed, demo: true, label: "Demo tokenized T-bill (testnet, not a security)" },
       ],
       attestationSigner: addrs.attestationSigner, merchant: addrs.merchant,
-      deployedAt: v2At, txs: v2txs,
+      deployedAt: v2At, startBlock: v2Start, txs: v2txs,
     };
   }
   mkdirSync(join(shared, "deployments"), { recursive: true });
