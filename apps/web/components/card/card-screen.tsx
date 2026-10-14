@@ -30,6 +30,7 @@ import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Panel, PhoneFrame, PhoneKeypad, Row, Rows, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
+import { BottomSheet, Button as MButton } from "@/components/mobile";
 import { personaById } from "@/components/wallet/personas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,7 @@ function CardDemo({ holderId }: { holderId: HolderId }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
       <div className="-mx-4 sm:mx-0">
-        <PhoneFrame label="Cardholder phone, Android preview">
+        <PhoneFrame label="Cardholder phone, Android preview" accent={VIOLET}>
           <HolderApp holderId={holderId} holder={address} pending={pending} onApprove={approve} onDecline={() => setPending((p) => p && { ...p, status: "declined" })} />
         </PhoneFrame>
       </div>
@@ -276,7 +277,7 @@ function HolderApp({
         </>
       )}
 
-      {pending && pending.tap.holder.toLowerCase() === holder?.toLowerCase() && <TapPrompt pending={pending} onApprove={onApprove} onDecline={onDecline} />}
+      {pending && pending.tap.holder.toLowerCase() === holder?.toLowerCase() && <TapPrompt key={pending.tap.merchantRef} pending={pending} onApprove={onApprove} onDecline={onDecline} />}
     </div>
   );
 }
@@ -306,42 +307,62 @@ function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; na
 
 function TapPrompt({ pending, onApprove, onDecline }: { pending: Pending; onApprove: () => void; onDecline: () => void }) {
   const { tap, status } = pending;
+  const key = tap.merchantRef;
+  const [closed, setClosed] = useState<string>();
+  const inFlight = status === "signing" || status === "charging";
+  // A settled prompt never blocks the card controls: Cerrar / swipe-down / scrim in every non-in-flight
+  // state, and a paid one closes itself (qa P1: a frozen-card error used to pin it for 2 minutes).
+  useEffect(() => {
+    if (status !== "done") return;
+    const t = setTimeout(() => setClosed(key), 2500);
+    return () => clearTimeout(t);
+  }, [status, key]);
+  const close = () => {
+    if (status === "asking") onDecline();
+    setClosed(key);
+  };
   return (
-    <div className="absolute inset-x-0 bottom-0 z-10 grid gap-3 rounded-t-[24px] bg-white p-5 shadow-[0_-12px_40px_-10px_rgb(17_20_24/0.35)]" role="dialog" aria-label="Approve card payment">
-      <p className="text-[13px] text-[#5b6270]">Tienda Doña Mary · CDMX te cobra</p>
-      <p className="text-[2.2rem] leading-none font-semibold tabular">{fmtAmount(tap.amount)} xMXN</p>
-      {status === "asking" && (
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={onDecline} className="h-12 rounded-[12px] bg-[#f4f5f7] text-[16px] font-semibold">
-            Rechazar
-          </button>
-          <button type="button" onClick={onApprove} className="h-12 rounded-[12px] text-[16px] font-semibold text-white" style={{ background: VIOLET }}>
-            Aprobar · Pay
-          </button>
+    <BottomSheet open={closed !== key} onClose={close} dismissable={!inFlight}>
+      <div className="grid gap-4 px-6" role="group" aria-label="Approve card payment">
+        <div>
+          <p className="text-[14px] text-[var(--m-on-surface-variant)]">Tienda Doña Mary · CDMX te cobra</p>
+          <p className="m-num mt-1 text-[40px] leading-none font-medium">{fmtAmount(tap.amount)} xMXN</p>
         </div>
-      )}
-      {(status === "signing" || status === "charging") && (
-        <p className="flex items-center gap-2 text-[15px]">
-          <Loader2 className="size-4 animate-spin" />
-          {status === "signing" ? "Firmando con tu tarjeta · signing the tap" : "La tienda está cobrando · the shop is charging"}…
+        {status === "asking" && (
+          <div className="grid grid-cols-2 gap-2">
+            <MButton variant="tonal" onClick={onDecline}>
+              Rechazar
+            </MButton>
+            <MButton onClick={onApprove}>Aprobar</MButton>
+          </div>
+        )}
+        {inFlight && (
+          <MButton loading disabled>
+            {status === "signing" ? "Firmando…" : "La tienda está cobrando…"}
+          </MButton>
+        )}
+        {status === "done" && (
+          <p className="flex items-center gap-2 text-[16px] font-medium">
+            <Check className="size-5" style={{ color: VIOLET }} /> Pagado
+            {pending.hash && (
+              <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="ml-auto text-[14px] font-normal text-[var(--m-on-surface-variant)] hover:underline">
+                Ver recibo
+              </a>
+            )}
+          </p>
+        )}
+        {status === "declined" && <p className="text-[15px] text-[var(--m-on-surface-variant)]">Rechazado. No se cobró nada.</p>}
+        {status === "error" && <p className="text-[15px] text-[var(--m-error)]">{pending.error}</p>}
+        {!inFlight && status !== "asking" && (
+          <MButton variant="dark" onClick={close}>
+            Cerrar
+          </MButton>
+        )}
+        <p className="flex items-center gap-1.5 text-[13px] text-[var(--m-on-surface-variant)]">
+          <Lock className="size-3.5" /> Tu firma cubre solo este monto, esta tienda y este ticket; vence en 2 min.
         </p>
-      )}
-      {status === "done" && (
-        <p className="flex items-center gap-2 text-[15px] font-semibold">
-          <Check className="size-5" style={{ color: VIOLET }} /> Pagado · Paid
-          {pending.hash && (
-            <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="ml-auto text-[13px] font-normal text-[#5b6270] hover:underline">
-              Ver recibo
-            </a>
-          )}
-        </p>
-      )}
-      {status === "declined" && <p className="text-[15px] text-[#5b6270]">Rechazado · Declined. Nothing was charged.</p>}
-      {status === "error" && <p className="text-[13px] text-[#d92d20]">{pending.error}</p>}
-      <p className="flex items-center gap-1.5 text-[13px] text-[#5b6270]">
-        <Lock className="size-3.5" /> Your signature covers only this amount, this shop and this ticket; it expires in 2 minutes.
-      </p>
-    </div>
+      </div>
+    </BottomSheet>
   );
 }
 
