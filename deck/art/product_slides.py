@@ -38,7 +38,7 @@ P = [
           ("1,000", "pesos daily limit, resets at midnight CDMX; freeze any time", None, None)],
   video=("hero-spend-final.mp4", "hero-spend-final-paid.png"),
   status=None,
-  notes="The same driver approves the shop and amount, and the payment moves pesos already in that wallet. A frozen card rejects the charge; this is a Mercado merchant payment flow, not an issued Visa or Mastercard."),
+  notes="The same driver approves the shop and amount, and the payment moves pesos already in that wallet. A frozen card rejects the charge; this is a Mercado merchant payment flow, not an issued Visa or Mastercard. The approve screenshot is a separate 450-peso charge at the same shop; the recorded video shows the 150-peso charge."),
  dict(id="p-invest", num="09", name="Mercado Invest", tint="#F2B807", base="#F2B807", art="product-invest-v4.webp",
   purpose="Save in pesos, dollars or T-bills.", who="Savers in Mexico, and institutions holding xMXN or dollars that should be working.",
   proofs=[("0.0998", "demo T-bill bought for 10 OUSD on the InvestDesk", "T-bill buy tx", TX+"0x3b5ec7b7f73be6a4558139904f797ebce34b3f0bf6c344e979f294c46ac54879"),
