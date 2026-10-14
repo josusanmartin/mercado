@@ -76,7 +76,7 @@ export function useOracle() {
     valid: peek?.[2],
     maxAge: maxAge !== undefined ? Number(maxAge) : undefined,
     paused: ok<boolean>(q.data?.[2]),
-    /** Always true on testnet: label it "mock admin oracle". */
+    /** Always true on testnet: an admin-relayed rate (see /api/fx for provenance), not a decentralized oracle. */
     isMock: true as const,
   };
 }

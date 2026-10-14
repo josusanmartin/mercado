@@ -59,6 +59,7 @@ export const deployment42431 = {
     "vamm": "0x9ecD19ebd398E73C2E1C196b8f7845CDD9872b7F",
     "creditPool": "0xaB32daeF142B442d24589D2161967a843720C6D7",
     "fxOracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+    "card": "0x7Fb945ee8BC4A80A37F0c5d95BbEC26976a36A70",
     "collaterals": [
       {
         "symbol": "OUSD",
@@ -121,7 +122,13 @@ export const deployment42431 = {
       "credit.depositCollateral": "0x5328cbf0b8ac9d86f4a2e76e5c2be2054fbec61d553a612d7db3dd986d881062",
       "credit.mint": "0x69ce736cb8a5bd207cbb0d5254e8df0377dbaea30554021be7db68339abe6236",
       "credit.approve#2": "0xb802995540a70b776f265b7f0e4c8f2452d1176feb478881cd618dfc78b70420",
-      "credit.supply": "0x79d7abae1a7352276083c07fa5c560e4d6cf5b234a34e1452ccb93a8829aff14"
+      "credit.supply": "0x79d7abae1a7352276083c07fa5c560e4d6cf5b234a34e1452ccb93a8829aff14",
+      "cardStage.deployMercadoCard": "0x5d71e59edb26552c50387891febd03a99abb503d25c5839b7e682390236976fb",
+      "cardStage.setMerchant": "0x23452474a7d0dfdb494688a33e3f83bd0e74371e04ef75ef65d63842f2f19900",
+      "cardStage.transfer": "0x9ac6c4e5395a98d3ec8e782868c28a9cfcc9333986f73b71a4f17b97bbcdffb6",
+      "cardStage.approve": "0x93378319ac4ac26b93c160265cc5de0502b46e9a30a49ec79ffffe8bbddce07f",
+      "cardStage.issueCard": "0x8eeb5203cae0d8d5c4c458ba964e892ab2fbe56c9bf15caf6469394495c9a162",
+      "cardStage.charge": "0xe6150c1adf26ae563bfa67f57b8d06e959f3b3f0e9eee151b973333b13e9ad93"
     }
   }
 } as const;

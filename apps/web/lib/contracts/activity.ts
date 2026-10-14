@@ -12,13 +12,14 @@
 //   credit CreditPool: Supplied / Withdrawn (lenders) · Borrowed / Repaid (drivers)
 //   mpp    xMXN Transfer → merchant wallet: MERCHANT INFLOWS. MPP payments settle here, but a transfer alone is
 //          not proof of a verified MPP order (review R-038); verified orders live in the bills API.
+//   card   v2 MercadoCard: CardIssued / CardCharged (holder → merchant) / CardRefunded / CardFrozen
 // Logs are scanned from the protocol's deployment block and cached incrementally in memory.
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import { getAddress, parseAbi, type Address, type Hash, type Log, type PublicClient } from "viem";
 import { activeAddresses, explorerTx } from "@mercado/shared";
 
-export type ActivityKind = "mint" | "move" | "credit" | "mpp";
+export type ActivityKind = "mint" | "move" | "credit" | "mpp" | "card";
 
 export type ActivityRow = {
   kind: ActivityKind;
@@ -39,6 +40,10 @@ export type ActivityRow = {
   /** Collateral symbol for vault rows (v2: per collateral). */
   collateral?: string;
   fee?: bigint;
+  /** card rows */
+  cardId?: bigint;
+  chargeId?: bigint;
+  merchantRef?: Hash;
   txHash: Hash;
   url: string;
   blockNumber: bigint;
@@ -76,6 +81,13 @@ const POOL = parseAbi([
   "event Repaid(address indexed borrower, uint256 amount, uint256 remainingDebt)",
 ]);
 const TRANSFER = parseAbi(["event Transfer(address indexed from, address indexed to, uint256 amount)"]);
+const CARD = parseAbi([
+  "event CardIssued(uint256 indexed cardId, address indexed holder, uint256 dailyLimit)",
+  "event CardCharged(uint256 indexed chargeId, uint256 indexed cardId, address indexed merchant, address holder, uint256 amount, bytes32 merchantRef)",
+  "event CardRefunded(uint256 indexed chargeId, uint256 indexed cardId, address indexed merchant, address holder, uint256 amount)",
+  "event CardFrozen(uint256 indexed cardId, bool frozen)",
+]);
+const NO_CARD = !A.card || /^0x0{40}$/.test(A.card);
 
 type AnyLog = Log & { eventName: string; args: Record<string, unknown>; blockTimestamp?: string | bigint | number };
 
@@ -87,6 +99,8 @@ function source(kind: ActivityKind) {
       return V2 ? { address: A.vamm!, events: AMM } : { address: A.swapDesk!, events: DESK };
     case "credit":
       return { address: A.creditPool, events: POOL };
+    case "card":
+      return { address: A.card!, events: CARD };
     case "mpp":
       // single event + indexed arg → filtered by topic on the node, not client-side
       return { address: A.xMXN, event: TRANSFER[0], args: { to: A.merchant } };
@@ -150,6 +164,18 @@ function toRow(kind: ActivityKind, l: AnyLog): ActivityRow {
       l.eventName === "Supplied" ? "Lender supplied" : l.eventName === "Withdrawn" ? "Lender withdrew" : l.eventName === "Borrowed" ? "Advance drawn" : "Advance repaid";
     return { ...base, label, amount: a.amount, token: "xMXN", account: who, fee: l.eventName === "Borrowed" ? a.fee : undefined };
   }
+  if (kind === "card") {
+    switch (l.eventName) {
+      case "CardIssued":
+        return { ...base, label: "Card issued", amount: a.dailyLimit, token: "xMXN/day", account: a.holder, cardId: a.cardId };
+      case "CardCharged":
+        return { ...base, label: "Card payment", amount: a.amount, token: "xMXN", account: a.holder, from: a.holder, to: a.merchant, cardId: a.cardId, chargeId: a.chargeId, merchantRef: a.merchantRef };
+      case "CardRefunded":
+        return { ...base, label: "Card refund", amount: a.amount, token: "xMXN", account: a.holder, from: a.merchant, to: a.holder, cardId: a.cardId, chargeId: a.chargeId };
+      default:
+        return { ...base, label: a.frozen ? "Card frozen" : "Card unfrozen", amount: 0n, token: "", account: "0x0000000000000000000000000000000000000000", cardId: a.cardId };
+    }
+  }
   return { ...base, label: "Transfer to merchant", amount: a.amount, token: "xMXN", account: a.from, from: a.from, to: a.to };
 }
 
@@ -165,6 +191,7 @@ export async function fetchActivity(client: PublicClient, kind: ActivityKind): P
   const key = `${A.protocol}:${kind}`;
   const running = inflight.get(key);
   if (running) return running;
+  if (kind === "card" && NO_CARD) return [];
   const p = (async () => {
     const latest = await client.getBlockNumber();
     const c = cache.get(key) ?? { rows: [], toBlock: BigInt(A.startBlock) - 1n };
@@ -218,6 +245,9 @@ export type FlowTotals = {
   repaid: bigint;
   /** xMXN received by the merchant wallet (where MPP payments settle; not each is a verified order) */
   merchantInflows: bigint;
+  /** Mercado Card (v2): xMXN spent at merchants and refunded */
+  cardSpent: bigint;
+  cardRefunded: bigint;
   counts: Record<ActivityKind, number>;
 };
 
@@ -230,8 +260,8 @@ export function useFlowTotals() {
     refetchInterval: REFRESH_MS,
     queryFn: async (): Promise<FlowTotals> => {
       const c = client as PublicClient;
-      const [mint, move, credit, mpp] = await Promise.all(
-        (["mint", "move", "credit", "mpp"] as const).map((k) => fetchActivity(c, k)),
+      const [mint, move, credit, mpp, card] = await Promise.all(
+        (["mint", "move", "credit", "mpp", "card"] as const).map((k) => fetchActivity(c, k)),
       );
       const sum = (rows: ActivityRow[], f: (r: ActivityRow) => bigint) => rows.reduce((t, r) => t + f(r), 0n);
       const ammMint = V2 ? sum(move, (r) => (r.token === "OUSD" ? (r.amountOut ?? 0n) : 0n)) : 0n;
@@ -245,7 +275,9 @@ export function useFlowTotals() {
         lent: sum(credit, (r) => (r.event === "Borrowed" ? r.amount : 0n)),
         repaid: sum(credit, (r) => (r.event === "Repaid" ? r.amount : 0n)),
         merchantInflows: sum(mpp, (r) => r.amount),
-        counts: { mint: mint.length, move: move.length, credit: credit.length, mpp: mpp.length },
+        cardSpent: sum(card, (r) => (r.event === "CardCharged" ? r.amount : 0n)),
+        cardRefunded: sum(card, (r) => (r.event === "CardRefunded" ? r.amount : 0n)),
+        counts: { mint: mint.length, move: move.length, credit: credit.length, mpp: mpp.length, card: card.length },
       };
     },
   });

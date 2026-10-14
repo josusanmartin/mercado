@@ -18,6 +18,8 @@ export const ADDR = {
   vault: A.vault,
   swapDesk: (A.swapDesk ?? zeroAddress) as Address,
   vamm: (A.vamm ?? zeroAddress) as Address,
+  /** v2 only (zero address in v1) */
+  card: (A.card ?? zeroAddress) as Address,
   creditPool: A.creditPool,
   factory: A.factory,
   merchant: A.merchant,

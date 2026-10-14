@@ -38,6 +38,8 @@ export type ProtocolAddresses = {
   swapDesk?: Address;
   /** v2 only: MoveAMM (vault-integrated vAMM). */
   vamm?: Address;
+  /** v2 only: Mercado Card (virtual card spending; only the card network/PAN is simulated). */
+  card?: Address;
   collaterals: CollateralInfo[];
   /** First block of this protocol's deployment (indexers scan logs from here). */
   startBlock: number;
@@ -65,7 +67,7 @@ function v2(): ProtocolAddresses {
   const v = d.v2 as unknown as
     | {
         xMXN: Address; factory: Address; vault: Address; vamm: Address; creditPool: Address; fxOracle: Address;
-        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number;
+        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number; card?: Address;
       }
     | undefined;
   // fail closed: never fall back to v1 when v2 is requested
@@ -85,6 +87,7 @@ function v2(): ProtocolAddresses {
     attestationSigner: v.attestationSigner,
     merchant: v.merchant,
     vamm: v.vamm,
+    card: v.card,
     collaterals: v.collaterals,
     startBlock: v.startBlock ?? 0,
   };

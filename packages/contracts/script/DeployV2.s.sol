@@ -14,6 +14,7 @@ import {DemoRWA} from "../src/v2/DemoRWA.sol";
 import {MultiCollateralVault} from "../src/v2/MultiCollateralVault.sol";
 import {MoveAMM} from "../src/v2/MoveAMM.sol";
 import {MercadoFactoryV2} from "../src/v2/MercadoFactoryV2.sol";
+import {MercadoCard} from "../src/v2/MercadoCard.sol";
 
 /// @notice v2 deployment ALONGSIDE v1 (v1 untouched). Writes deployments/<chainId>.v2.json; export.mjs merges it
 ///         into packages/shared under the "v2" key.
@@ -36,6 +37,7 @@ contract DeployV2 is Script {
     address sousdFeed;
     address tbill;
     address tbillFeed;
+    address card;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -55,6 +57,7 @@ contract DeployV2 is Script {
             sousdFeed = _a(j, ".sOUSDFeed");
             tbill = _a(j, ".tTBILL");
             tbillFeed = _a(j, ".tTBILLFeed");
+            card = _a(j, ".card");
         }
     }
 
@@ -139,6 +142,41 @@ contract DeployV2 is Script {
         _save();
     }
 
+    /// Mercado Card: deploy, allowlist the demo merchant terminal (MERCHANT), issue a card to RECIPIENT (the family
+    /// in MX) with xMXN v2 from LP, and run one real tap-authorized charge.
+    function cardStage() external {
+        uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        uint256 lpPk = vm.envUint("LP_PRIVATE_KEY");
+        uint256 holderPk = vm.envUint("RECIPIENT_PRIVATE_KEY");
+        uint256 shopPk = vm.envUint("MERCHANT_PRIVATE_KEY");
+        address holder = vm.addr(holderPk);
+        address shop = vm.addr(shopPk);
+
+        vm.startBroadcast(deployerPk);
+        MercadoCard c = new MercadoCard(vm.addr(deployerPk), IERC20(xmxn));
+        card = address(c);
+        c.setMerchant(shop, true, "Tienda Dona Mary - CDMX (demo merchant)");
+        vm.stopBroadcast();
+
+        vm.startBroadcast(lpPk);
+        IERC20(xmxn).transfer(holder, 1_000e6);
+        vm.stopBroadcast();
+
+        vm.startBroadcast(holderPk);
+        IERC20(xmxn).approve(card, 2_000e6);
+        uint256 cardId = c.issueCard(1_000e6);
+        vm.stopBroadcast();
+
+        uint256 deadline = block.timestamp + 300;
+        bytes32 ref = bytes32("demo-ticket-0001");
+        bytes32 digest = c.tapDigest(cardId, holder, shop, 45e6, ref, 1, deadline);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(holderPk, digest);
+        vm.startBroadcast(shopPk);
+        c.charge(cardId, 45e6, ref, 1, deadline, abi.encodePacked(r, s, v));
+        vm.stopBroadcast();
+        _save();
+    }
+
     function _save() internal {
         string memory k = "v2";
         vm.serializeAddress(k, "factory", factory);
@@ -152,6 +190,7 @@ contract DeployV2 is Script {
         vm.serializeAddress(k, "sOUSD", sousd);
         vm.serializeAddress(k, "sOUSDFeed", sousdFeed);
         vm.serializeAddress(k, "tTBILL", tbill);
+        vm.serializeAddress(k, "card", card);
         string memory out = vm.serializeAddress(k, "tTBILLFeed", tbillFeed);
         vm.writeJson(out, path);
         console.log("wrote", path);

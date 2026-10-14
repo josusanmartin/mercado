@@ -13,9 +13,9 @@ const MESSAGES: Record<string, (args: readonly unknown[]) => string> = {
   RepayExceedsDebt: ([debt]) => `That's more than your debt (${amt(debt)} xMXN).`,
   PositionHealthy: ([r]) => `This position is healthy (${pct(r)}); it can only be liquidated below 135%.`,
   ZeroAmount: () => "Enter an amount greater than zero.",
-  // oracle (mock admin feed)
-  StalePrice: () => "The FX feed (mock admin oracle) is stale, so minting, withdrawing against debt and swaps are paused until it updates.",
-  OraclePaused: () => "The FX feed (mock admin oracle) is paused.",
+  // oracle (admin-relayed USD/MXN rate)
+  StalePrice: () => "The exchange rate (admin-relayed) is stale, so minting, withdrawing against debt and swaps are paused until it updates.",
+  OraclePaused: () => "The exchange rate feed (admin-relayed) is paused.",
   InvalidPrice: () => "The FX feed has no valid price.",
   PriceOutOfBand: ([p]) => `The FX price ${fx(p)} is outside the 5–50 MXN/USD sanity band.`,
   // swap desk
