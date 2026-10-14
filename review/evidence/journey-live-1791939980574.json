@@ -1,0 +1,892 @@
+{
+  "at": "2026-10-14T01:06:14.050Z",
+  "mode": "read-only RPC/HTTP plus replay eth_call; no broadcasts",
+  "inputPath": "scripts/evidence/run-2026-10-14T01-04-00-769Z.json",
+  "qaInputSha256": "8fa1b26d45d772dafb7dfbf0444881886f742489bd54f4e109c1ca9f6345fd83",
+  "qaSnapshot": {
+    "at": "2026-10-14T01:04:00.768Z",
+    "api": "http://localhost:3100",
+    "steps": "all",
+    "evidence": {
+      "J0": {
+        "status": "pass",
+        "txs": {},
+        "notes": [
+          "mxnPerUsd=2000000000 isMock=true"
+        ]
+      },
+      "J1": {
+        "status": "pass",
+        "txs": {
+          "approve OUSD → vault": "https://explore.testnet.tempo.xyz/tx/0xbabf076af09e710eb54811460d4a1fa02f94203f8ef6a916b8983caa1d2cb689",
+          "depositCollateral 1,000 OUSD": "https://explore.testnet.tempo.xyz/tx/0x45bf0f0a03e7dde5fe0b07ba23c830776c7f2d198838d2c94c7a5b037c54a553"
+        },
+        "notes": []
+      },
+      "J2": {
+        "status": "pass",
+        "txs": {
+          "mint 6,666.67 xMXN": "https://explore.testnet.tempo.xyz/tx/0x357ae7642791d92f5cc3d73e72bfe3c007d66d2da242cbeef66e74a408e1303d"
+        },
+        "notes": []
+      },
+      "J3": {
+        "status": "pass",
+        "txs": {
+          "approve OUSD → desk": "https://explore.testnet.tempo.xyz/tx/0xd93d77f671cc52b86418b1cc292689f9bdd90959d8156c6f38dd47dda8c31496",
+          "swapOusdForXmxn 50 OUSD": "https://explore.testnet.tempo.xyz/tx/0x637d4e118d370af3ae544847cf574bc06fece9c46620bd459f027a05c8d791c0",
+          "transfer 995 xMXN → Recipient": "https://explore.testnet.tempo.xyz/tx/0x36bca3d2f137f5dd3af0a20f19403c163e3814152f3654189c6a1e2260ff1771"
+        },
+        "notes": []
+      },
+      "J4": {
+        "status": "pass",
+        "txs": {
+          "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x463b9b1e323fd6a2a7d33b7782bb646c80da5b78dff158f1011647ed80851005"
+        },
+        "notes": []
+      },
+      "J5": {
+        "status": "pass",
+        "txs": {
+          "MPP payment (pull)": "https://explore.testnet.tempo.xyz/tx/0x870fa89d344b4836984e138253dab8364c8d2d4e5b6037c54ee9f30e242f760d",
+          "MPP payment (push)": "https://explore.testnet.tempo.xyz/tx/0x97f7f7318e0015d8beb59b743e4eec243fa1ee50970f5d4528a57c7089ea1544"
+        },
+        "notes": [
+          "[pull] 402 challenge: Payment id=\"qLms1qyl4zjbLqZkW75WUwr-bkezjZlyyhTbvaMleoM\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfNDk5YTRkNTktMGM0NC00ZDA1LTg4Y2YtN2YwMzBmYWY2NzM0IiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:12:16.248Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4YzljYjI3NTc3MGVlYjMwZDg2Njk4ZmY2OTc1ZmRmOGIwYTkyYzJjYWJiNDU1ZGJmYWMxMTBmOGY3ZjhmNGY0MCIsIm9yZGVySWQiOiJvcmRfNDk5YTRkNTktMGM0NC00ZDA1LTg4Y2YtN2YwMzBmYWY2NzM0IiwicXVvdGVJZCI6InFfYzNiM2E4MGYtMmQyNS00MWU2LWIyZWQtNjQyOGIyNmE4ZjVkIn0\"",
+          "[push] 402 challenge: Payment id=\"vY_7NYaUUXBtVrvHDFQa0JkxwJ-NhdzIQiTsSdxr4rc\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfZGVmNDc5YzMtZmY4NC00YThlLWIxYjAtOGM2NWE5YjgwNjFhIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:12:22.478Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MDQzMzc4YTI0NTI4NWNlMzc4NzlkMDFlNTU0NGQ5NzU0NDI3Y2U3N2JkOTQ1MjJmNzJkNWQzYjlkNGZjNDVmMiIsIm9yZGVySWQiOiJvcmRfZGVmNDc5YzMtZmY4NC00YThlLWIxYjAtOGM2NWE5YjgwNjFhIiwicXVvdGVJZCI6InFfZmY1ZTAxNGMtMzA3ZC00YjhlLWIwZjMtYmNmMTcxODhmOTJhIn0\"",
+          "[pull] 402 challenge: Payment id=\"ic2GE-siKFy0vHip5nzcwNhIwX5o8ClnWOmdBEzlBns\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfNjNmZTY4OGUtNDdkZi00ZjBjLTk5MTMtODBlZDM5OTRhMWEwIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****0000\", expires=\"2026-10-14T01:12:26.786Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4OGEwMjEwNmIwYjJjMDQwOWJjOGZkZGY5Mzc3OTVhNDAyNDU4ZTdhMGFlNTYxZmZkNDZkYTYxZGNlYTkzZDY2NSIsIm9yZGVySWQiOiJvcmRfNjNmZTY4OGUtNDdkZi00ZjBjLTk5MTMtODBlZDM5OTRhMWEwIiwicXVvdGVJZCI6InFfYTc4ZmM0NmItYmQwNy00OTYxLWE0ZGItYTk5N2ExZTc1MDhhIn0\""
+        ]
+      },
+      "J6": {
+        "status": "pass",
+        "txs": {
+          "top-up 310 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0xa3d04eed6b76bd6ed08ab4bd30cb263dbdb2877258b6b93e7265a8d7535cf0a4",
+          "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0xbbd978dc2e753a8dbee61c94fb7ad5c8e1a8bc8578642b56682b142860c377f4",
+          "repay 510 xMXN": "https://explore.testnet.tempo.xyz/tx/0x02e1f20ac2478e9279cdc300d38ba9c4ea61a1c940e305eba18f405f019128cf"
+        },
+        "notes": []
+      },
+      "J7": {
+        "status": "pass",
+        "txs": {
+          "liquidation 0x930546": "https://explore.testnet.tempo.xyz/tx/0xd46716f1e4facd69d1bec3ce83a21445796992f8beb5f038ed30b23763be82e4"
+        },
+        "notes": []
+      }
+    }
+  },
+  "deployment": {
+    "attestationSigner": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+    "chainId": 42431,
+    "creditPool": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4",
+    "factory": "0x0F11AbDFa4e0cA43AC9CE075d700FbF33B6B5591",
+    "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "oracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+    "ousd": "0x20c0000000000000000000006a37DA5C996874BE",
+    "swapDesk": "0x038296fdE32fD87EB89A6113339aD426484abec5",
+    "vault": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+    "xMXN": "0x20C0000000000000000000002486D8487268a6dd",
+    "deployedAt": "2026-10-14T00:52:45.592Z",
+    "txs": {
+      "core.deployFXOracleAdapter": "0x028c6fb773296dfbb48e6b718318836ce8e7541990f8a78bce99d70ff2c432dd",
+      "core.deployLocalStableFactory": "0xc3a48882db435f90629c0c1cb99f07eee673298149dba212735c12be5363d4cc",
+      "core.createMarket": "0xe79eec15014d0f1817be2b4ccb870fe43788b5291b5c8c01c90c27a78b833a97",
+      "smoke.approve": "0x69441318c2ba9d804060ba3d526f6bd8bcc94ef5f89925d0a7b63a83540c6afe",
+      "smoke.depositCollateral": "0x7463ddaa8fac32980da32f6e5b2f681eb7a9c7282f084cf08933fb6b7a02a6f4",
+      "smoke.mint": "0x8312a0c7221b392b83ef4c56bb2b06e73fefd9d01cf4f0b491fc8d9aff1bbc7a",
+      "smoke.approve#2": "0xa6e7a5a4ac82518bf2ad9d9a318b6969a86fcf92bce84278889de4740a6b9f30",
+      "smoke.repayAndBurn": "0x2e8c0197f4f5302d68745faf5dd552d7ae62cec5501a41782ebfef65f7b7de0d",
+      "smoke.withdrawCollateral": "0x86dc4003aff119081ca17f82dd448bd04af442ae74785b0e7fc3cb4b072c7f74",
+      "swap.deploySwapDesk": "0x7c2ffaa02610dc7b6782270e4cd5f1a0e98877a366653f99e3412940f405f87b",
+      "swap.approve": "0x5779057598d621b720ed801b99944ecad8de7b4987f309a4b913d09b644972ef",
+      "swap.depositCollateral": "0x25fe55e50b75d8b4e531c90d724c2cd7c8db839d098fd256f01722e1e2f5ac0e",
+      "swap.mint": "0x3c9ae8963d499a218124f1f15edd84768b780b88812933130411f88fa027e4f2",
+      "swap.approve#2": "0x87a14286d5d608b18a21f51285e45ba0e815b14b7dc274c16d367cf61f3903bb",
+      "swap.approve#3": "0xe12d10e8be0b4f7ce5b87fac5124e1fa01c1af9b75b4f5304dbe61133f745346",
+      "swap.seed": "0xd39776b627569d09db6bad4056d928be0d05c1b8548b7c75d62ea30dfc5750d3",
+      "credit.deployCreditPool": "0x143e894a2327e35ee1408dc03cb72f1d5d11331fb6340297f56d538839f709d2",
+      "credit.approve": "0xb0d5b2a17598e271f89b37410f98b32accda44264080f451a02d17fe6b424338",
+      "credit.depositCollateral": "0xa286807b251fbf9e4b197da167b86b319cd63b1d56579ebb21e6abbed13341e9",
+      "credit.mint": "0x0602b775980a7eaef5655910327bf2f5ab7200b975fcf029c72ded3c270a8741",
+      "credit.approve#2": "0x98d05499a247be45f7002be65ab39fcdac99d6a7088da600e5fe41396ba30329",
+      "credit.supply": "0x886accd09436c49d907ba657d8c86ee105fedfa286d1852b37dca7dc0c9f29e7",
+      "stress.forceSet": "0xba9fb9af637816734e6dddf7475dfddba372342290a4567242d4543c8e6d0bf0",
+      "stress.pause": "0xfd356d106274c748e10e9b03dafdcf4670adfb30a0c0dcf7cdabcd4d4bae106d",
+      "stress.transfer": "0xeedf84ea8de3f584887f22a0858356397eefb13f3f3fb2edd11e4e50e30087ad",
+      "stress.transfer#2": "0x7afe67bf50e96c92c52c90a19989af11142cf49643dede38fcfceb327d9f0712",
+      "stress.transfer#3": "0x4741d8ed2019dd09956f30bd8b21ef26089621916d849be2f6721fea3557ef71",
+      "stress.approve": "0x8f3d6a9ed33a9fc594b348d1ac7611a10e7e7c034985e0564ecec1bef4df4608",
+      "stress.depositCollateral": "0x754ad006edfbe256d6d6aeb901c84b5522407cd6ae2ca8d6601873e28ab13c12",
+      "stress.mint": "0x948a8741acccb91380a8ab021309401481d5a9a660073e7306d277a9b53a9ff4",
+      "stress.approve#2": "0x9234c6079ac05b0b7e073e0a053027d0a009e7a5f708c530aa182263bdfb4e1c",
+      "stress.depositCollateral#2": "0x49a3ae01d0794152e06d701dfe72f53152d41dc7cacf0aece0b66135d13d6ca5",
+      "stress.mint#2": "0x19284de2762fe8aef4f1524b4fb8affa392cd570df38a7d92251e0794fa6c56d",
+      "stress.forceSet#2": "0x3ed2129b364a71fba111998b82eb72d90572b6361e55c8ce3fb96fe33c946d67",
+      "stress.approve#3": "0x472d944e60a19b42fd6a1ec662d9ed55b791d3f758b5052d2a7b85ca78cf0fe4",
+      "stress.liquidate": "0x6ecd13b888a88503d08cd286514d233258d85ae5f051f982a923986b339e993b",
+      "stress.forceSet#3": "0x8065b826b5ce8f2acec1e06d821b9f75d40542fd977d30177aff03c3d878a47d",
+      "stress.unpause": "0xcac4e03dca237222a4ac8f99394fd28a395116c558f6d92dc800482289d1ab86"
+    }
+  },
+  "checks": [
+    {
+      "name": "J1.approve OUSD → vault",
+      "ok": true,
+      "result": {
+        "hash": "0xbabf076af09e710eb54811460d4a1fa02f94203f8ef6a916b8983caa1d2cb689",
+        "status": "success",
+        "blockNumber": "39485486",
+        "from": "0x819c254bfb3584707d37e34eac0f58995702b4d4",
+        "to": "0x20c0000000000000000000006a37da5c996874be",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "167"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J1.depositCollateral 1,000 OUSD",
+      "ok": true,
+      "result": {
+        "hash": "0x45bf0f0a03e7dde5fe0b07ba23c830776c7f2d198838d2c94c7a5b037c54a553",
+        "status": "success",
+        "blockNumber": "39485489",
+        "from": "0x819c254bfb3584707d37e34eac0f58995702b4d4",
+        "to": "0xdb8df7a0a8cdeb2a125717b4a3f7d292f8241ca2",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000006a37da5c996874be",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+              "value": "1000000000"
+            }
+          },
+          {
+            "address": "0xdb8df7a0a8cdeb2a125717b4a3f7d292f8241ca2",
+            "eventName": "Deposited",
+            "args": {
+              "user": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "amount": "1000000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "41"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J2.mint 6,666.67 xMXN",
+      "ok": true,
+      "result": {
+        "hash": "0x357ae7642791d92f5cc3d73e72bfe3c007d66d2da242cbeef66e74a408e1303d",
+        "status": "success",
+        "blockNumber": "39485495",
+        "from": "0x819c254bfb3584707d37e34eac0f58995702b4d4",
+        "to": "0xdb8df7a0a8cdeb2a125717b4a3f7d292f8241ca2",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x0000000000000000000000000000000000000000",
+              "to": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "value": "6666666667"
+            }
+          },
+          {
+            "address": "0xdb8df7a0a8cdeb2a125717b4a3f7d292f8241ca2",
+            "eventName": "Minted",
+            "args": {
+              "user": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "amount": "6666666667"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "49"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J3.approve OUSD → desk",
+      "ok": true,
+      "result": {
+        "hash": "0xd93d77f671cc52b86418b1cc292689f9bdd90959d8156c6f38dd47dda8c31496",
+        "status": "success",
+        "blockNumber": "39485502",
+        "from": "0x21b096f15a4d15d8a5f5104612732a50ec99e245",
+        "to": "0x20c0000000000000000000006a37da5c996874be",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "167"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J3.swapOusdForXmxn 50 OUSD",
+      "ok": true,
+      "result": {
+        "hash": "0x637d4e118d370af3ae544847cf574bc06fece9c46620bd459f027a05c8d791c0",
+        "status": "success",
+        "blockNumber": "39485505",
+        "from": "0x21b096f15a4d15d8a5f5104612732a50ec99e245",
+        "to": "0x038296fde32fd87eb89a6113339ad426484abec5",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000006a37da5c996874be",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "to": "0x038296fdE32fD87EB89A6113339aD426484abec5",
+              "value": "50000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x038296fdE32fD87EB89A6113339aD426484abec5",
+              "to": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "value": "995000000"
+            }
+          },
+          {
+            "address": "0x038296fde32fd87eb89a6113339ad426484abec5",
+            "eventName": "Swapped",
+            "args": {
+              "user": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "ousdToXmxn": true,
+              "amountIn": "50000000",
+              "amountOut": "995000000",
+              "fee": "5000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "76"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J3.transfer 995 xMXN → Recipient",
+      "ok": true,
+      "result": {
+        "hash": "0x36bca3d2f137f5dd3af0a20f19403c163e3814152f3654189c6a1e2260ff1771",
+        "status": "success",
+        "blockNumber": "39485509",
+        "from": "0x21b096f15a4d15d8a5f5104612732a50ec99e245",
+        "to": "0x20c0000000000000000000002486d8487268a6dd",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "to": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+              "value": "995000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "27"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J4.borrow 500 xMXN",
+      "ok": true,
+      "result": {
+        "hash": "0x463b9b1e323fd6a2a7d33b7782bb646c80da5b78dff158f1011647ed80851005",
+        "status": "success",
+        "blockNumber": "39485516",
+        "from": "0x871af8b66406f96c6b5f8a156242d9b7a026cc63",
+        "to": "0xbda927135f23a96aa0fd8411617f01ffa9f063a4",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4",
+              "to": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "value": "500000000"
+            }
+          },
+          {
+            "address": "0xbda927135f23a96aa0fd8411617f01ffa9f063a4",
+            "eventName": "Borrowed",
+            "args": {
+              "borrower": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "amount": "500000000",
+              "fee": "10000000",
+              "nonce": "62725570132720482852038456559331864168837121819082155027572726291885590468972",
+              "dataHash": "0x2129faf12aff69193af95ca22694732da314c8ab751d3a06793b8bbb009fb31d"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "362"
+            }
+          }
+        ],
+        "debtAfter": "510000000",
+        "statsAfter": [
+          "10010000000",
+          "1000000000",
+          "500000000",
+          "10000000"
+        ],
+        "replayRevert": "NonceAlreadyUsed"
+      }
+    },
+    {
+      "name": "J5.MPP payment (pull)",
+      "ok": true,
+      "result": {
+        "hash": "0x870fa89d344b4836984e138253dab8364c8d2d4e5b6037c54ee9f30e242f760d",
+        "status": "success",
+        "blockNumber": "39485543",
+        "from": "0x871af8b66406f96c6b5f8a156242d9b7a026cc63",
+        "to": "0x20c0000000000000000000002486d8487268a6dd",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "TransferWithMemo",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "memo": "0xef1ed71201ae7bcbaa30b5fc226365000000000000000000009633fee6dc0585",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "34"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J5.MPP payment (push)",
+      "ok": true,
+      "result": {
+        "hash": "0x97f7f7318e0015d8beb59b743e4eec243fa1ee50970f5d4528a57c7089ea1544",
+        "status": "success",
+        "blockNumber": "39485533",
+        "from": "0x871af8b66406f96c6b5f8a156242d9b7a026cc63",
+        "to": "0x20c0000000000000000000002486d8487268a6dd",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "TransferWithMemo",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "memo": "0xef1ed71201ae7bcbaa30b5fc22636500000000000000000000422adab30cbf6d",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "34"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J6.top-up 310 xMXN LP → Driver",
+      "ok": true,
+      "result": {
+        "hash": "0xa3d04eed6b76bd6ed08ab4bd30cb263dbdb2877258b6b93e7265a8d7535cf0a4",
+        "status": "success",
+        "blockNumber": "39485548",
+        "from": "0x819c254bfb3584707d37e34eac0f58995702b4d4",
+        "to": "0x20c0000000000000000000002486d8487268a6dd",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "value": "310000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J6.approve xMXN → pool",
+      "ok": true,
+      "result": {
+        "hash": "0xbbd978dc2e753a8dbee61c94fb7ad5c8e1a8bc8578642b56682b142860c377f4",
+        "status": "success",
+        "blockNumber": "39485551",
+        "from": "0x871af8b66406f96c6b5f8a156242d9b7a026cc63",
+        "to": "0x20c0000000000000000000002486d8487268a6dd",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "20"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "J6.repay 510 xMXN",
+      "ok": true,
+      "result": {
+        "hash": "0x02e1f20ac2478e9279cdc300d38ba9c4ea61a1c940e305eba18f405f019128cf",
+        "status": "success",
+        "blockNumber": "39485554",
+        "from": "0x871af8b66406f96c6b5f8a156242d9b7a026cc63",
+        "to": "0xbda927135f23a96aa0fd8411617f01ffa9f063a4",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4",
+              "value": "510000000"
+            }
+          },
+          {
+            "address": "0xbda927135f23a96aa0fd8411617f01ffa9f063a4",
+            "eventName": "Repaid",
+            "args": {
+              "borrower": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "amount": "510000000",
+              "remainingDebt": "0"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "54"
+            }
+          }
+        ],
+        "debtAfter": "0",
+        "statsAfter": [
+          "10020000000",
+          "1000000000",
+          "0",
+          "20000000"
+        ]
+      }
+    },
+    {
+      "name": "J7.liquidation 0x930546",
+      "ok": true,
+      "result": {
+        "hash": "0xd46716f1e4facd69d1bec3ce83a21445796992f8beb5f038ed30b23763be82e4",
+        "status": "success",
+        "blockNumber": "39485677",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0xdb8df7a0a8cdeb2a125717b4a3f7d292f8241ca2",
+        "events": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+              "value": "1250000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+              "to": "0x0000000000000000000000000000000000000000",
+              "value": "1250000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000006a37da5c996874be",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+              "to": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "79"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "order.ord_499a4d59-0c44-4d05-88cf-7f030faf6734",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "order": {
+          "orderId": "ord_499a4d59-0c44-4d05-88cf-7f030faf6734",
+          "idempotencyKey": "journey-pull-1791939736238",
+          "quoteId": "q_c3b3a80f-2d25-41e6-b2ed-6428b26a8f5d",
+          "provider": "telcel",
+          "description": "Telcel airtime 100 MXN → 55****5678",
+          "amountMxn": 100,
+          "amount": "100000000",
+          "token": "0x20C0000000000000000000002486D8487268a6dd",
+          "status": "FULFILLED_SIMULATED",
+          "paidButUnfulfilled": false,
+          "history": [
+            {
+              "status": "CREATED",
+              "at": "2026-10-14T01:02:16.246Z"
+            },
+            {
+              "status": "PAYMENT_VERIFIED",
+              "at": "2026-10-14T01:02:21.810Z",
+              "note": "MPP payment verified on-chain: 0x17dd0edd81d2314f62898f4f7f9a6f5000f1bcb0102d94bff30eba7951106a7a"
+            },
+            {
+              "status": "FULFILLED_SIMULATED",
+              "at": "2026-10-14T01:02:21.811Z",
+              "note": "Telcel (mock) ref TLC-20261014-55425010"
+            }
+          ],
+          "createdAt": "2026-10-14T01:02:16.246Z",
+          "updatedAt": "2026-10-14T01:02:21.811Z",
+          "simulated": true,
+          "receipt": {
+            "txHash": "0x17dd0edd81d2314f62898f4f7f9a6f5000f1bcb0102d94bff30eba7951106a7a",
+            "amount": "100000000",
+            "token": "0x20C0000000000000000000002486D8487268a6dd",
+            "payer": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+            "recipient": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "chainId": 42431,
+            "mppReceipt": "eyJmdW5kaW5nQ3VycmVuY3kiOiIweDIwQzAwMDAwMDAwMDAwMDAwMDAwMDAwMDI0ODZEODQ4NzI2OGE2ZGQiLCJtZXRob2QiOiJ0ZW1wbyIsInN0YXR1cyI6InN1Y2Nlc3MiLCJ0aW1lc3RhbXAiOiIyMDI2LTEwLTE0VDAxOjAyOjIxLjgwOVoiLCJyZWZlcmVuY2UiOiIweDE3ZGQwZWRkODFkMjMxNGY2Mjg5OGY0ZjdmOWE2ZjUwMDBmMWJjYjAxMDJkOTRiZmYzMGViYTc5NTExMDZhN2EifQ",
+            "verifiedAt": "2026-10-14T01:02:21.810Z",
+            "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x17dd0edd81d2314f62898f4f7f9a6f5000f1bcb0102d94bff30eba7951106a7a"
+          },
+          "fulfillment": {
+            "reference": "TLC-20261014-55425010",
+            "simulated": true,
+            "label": "SIMULATED fulfillment, no real top-up",
+            "provider": "telcel",
+            "providerName": "Telcel (mock)",
+            "status": "SUCCESS",
+            "completedAt": "2026-10-14T01:02:21.811Z",
+            "message": "Simulated: Telcel airtime 100 MXN → 55****5678. No real airtime was sent."
+          }
+        },
+        "chainStatus": "success",
+        "paymentEvents": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "TransferWithMemo",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "memo": "0xef1ed71201ae7bcbaa30b5fc226365000000000000000000001affade984c1e4",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "34"
+            }
+          }
+        ],
+        "matchingTransfers": 1
+      }
+    },
+    {
+      "name": "order.ord_def479c3-ff84-4a8e-b1b0-8c65a9b8061a",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "order": {
+          "orderId": "ord_def479c3-ff84-4a8e-b1b0-8c65a9b8061a",
+          "idempotencyKey": "journey-push-1791939742465",
+          "quoteId": "q_ff5e014c-307d-4b8e-b0f3-bcf17188f92a",
+          "provider": "telcel",
+          "description": "Telcel airtime 100 MXN → 55****5678",
+          "amountMxn": 100,
+          "amount": "100000000",
+          "token": "0x20C0000000000000000000002486D8487268a6dd",
+          "status": "FULFILLED_SIMULATED",
+          "paidButUnfulfilled": false,
+          "history": [
+            {
+              "status": "CREATED",
+              "at": "2026-10-14T01:02:22.477Z"
+            },
+            {
+              "status": "PAYMENT_VERIFIED",
+              "at": "2026-10-14T01:02:26.189Z",
+              "note": "MPP payment verified on-chain: 0x97f7f7318e0015d8beb59b743e4eec243fa1ee50970f5d4528a57c7089ea1544"
+            },
+            {
+              "status": "FULFILLED_SIMULATED",
+              "at": "2026-10-14T01:02:26.189Z",
+              "note": "Telcel (mock) ref TLC-20261014-98546679"
+            }
+          ],
+          "createdAt": "2026-10-14T01:02:22.477Z",
+          "updatedAt": "2026-10-14T01:02:26.189Z",
+          "simulated": true,
+          "receipt": {
+            "txHash": "0x97f7f7318e0015d8beb59b743e4eec243fa1ee50970f5d4528a57c7089ea1544",
+            "amount": "100000000",
+            "token": "0x20C0000000000000000000002486D8487268a6dd",
+            "payer": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+            "recipient": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "chainId": 42431,
+            "mppReceipt": "eyJmdW5kaW5nQ3VycmVuY3kiOiIweDIwQzAwMDAwMDAwMDAwMDAwMDAwMDAwMDI0ODZEODQ4NzI2OGE2ZGQiLCJtZXRob2QiOiJ0ZW1wbyIsInN0YXR1cyI6InN1Y2Nlc3MiLCJ0aW1lc3RhbXAiOiIyMDI2LTEwLTE0VDAxOjAyOjI2LjE4N1oiLCJyZWZlcmVuY2UiOiIweDk3ZjdmNzMxOGUwMDE1ZDhiZWI1OWI3NDNlNGVlYzI0M2ZhMWVlNTA5NzBmNWQ0NTI4YTU3YzcwODllYTE1NDQifQ",
+            "verifiedAt": "2026-10-14T01:02:26.189Z",
+            "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x97f7f7318e0015d8beb59b743e4eec243fa1ee50970f5d4528a57c7089ea1544"
+          },
+          "fulfillment": {
+            "reference": "TLC-20261014-98546679",
+            "simulated": true,
+            "label": "SIMULATED fulfillment, no real top-up",
+            "provider": "telcel",
+            "providerName": "Telcel (mock)",
+            "status": "SUCCESS",
+            "completedAt": "2026-10-14T01:02:26.189Z",
+            "message": "Simulated: Telcel airtime 100 MXN → 55****5678. No real airtime was sent."
+          }
+        },
+        "chainStatus": "success",
+        "paymentEvents": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "TransferWithMemo",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "memo": "0xef1ed71201ae7bcbaa30b5fc22636500000000000000000000422adab30cbf6d",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "34"
+            }
+          }
+        ],
+        "matchingTransfers": 1
+      }
+    },
+    {
+      "name": "order.ord_63fe688e-47df-4f0c-9913-80ed3994a1a0",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "order": {
+          "orderId": "ord_63fe688e-47df-4f0c-9913-80ed3994a1a0",
+          "idempotencyKey": "journey-pull-1791939746776",
+          "quoteId": "q_a78fc46b-bd07-4961-a4db-a997a1e7508a",
+          "provider": "telcel",
+          "description": "Telcel airtime 100 MXN → 55****0000",
+          "amountMxn": 100,
+          "amount": "100000000",
+          "token": "0x20C0000000000000000000002486D8487268a6dd",
+          "status": "FAILED",
+          "paidButUnfulfilled": true,
+          "history": [
+            {
+              "status": "CREATED",
+              "at": "2026-10-14T01:02:26.784Z"
+            },
+            {
+              "status": "PAYMENT_VERIFIED",
+              "at": "2026-10-14T01:02:30.702Z",
+              "note": "MPP payment verified on-chain: 0x870fa89d344b4836984e138253dab8364c8d2d4e5b6037c54ee9f30e242f760d"
+            },
+            {
+              "status": "FAILED",
+              "at": "2026-10-14T01:02:30.703Z",
+              "note": "Paid but unfulfilled: Simulated provider rejection (demo accounts ending in 0000 always fail).. Needs refund/manual retry."
+            }
+          ],
+          "createdAt": "2026-10-14T01:02:26.784Z",
+          "updatedAt": "2026-10-14T01:02:30.703Z",
+          "simulated": true,
+          "receipt": {
+            "txHash": "0x870fa89d344b4836984e138253dab8364c8d2d4e5b6037c54ee9f30e242f760d",
+            "amount": "100000000",
+            "token": "0x20C0000000000000000000002486D8487268a6dd",
+            "payer": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+            "recipient": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "chainId": 42431,
+            "mppReceipt": "eyJmdW5kaW5nQ3VycmVuY3kiOiIweDIwQzAwMDAwMDAwMDAwMDAwMDAwMDAwMDI0ODZEODQ4NzI2OGE2ZGQiLCJtZXRob2QiOiJ0ZW1wbyIsInN0YXR1cyI6InN1Y2Nlc3MiLCJ0aW1lc3RhbXAiOiIyMDI2LTEwLTE0VDAxOjAyOjMwLjcwMVoiLCJyZWZlcmVuY2UiOiIweDg3MGZhODlkMzQ0YjQ4MzY5ODRlMTM4MjUzZGFiODM2NGM4ZDJkNGU1YjYwMzdjNTRlZTlmMzBlMjQyZjc2MGQifQ",
+            "verifiedAt": "2026-10-14T01:02:30.702Z",
+            "explorerUrl": "https://explore.testnet.tempo.xyz/tx/0x870fa89d344b4836984e138253dab8364c8d2d4e5b6037c54ee9f30e242f760d"
+          },
+          "fulfillment": {
+            "reference": "TLC-20261014-26475218",
+            "simulated": true,
+            "label": "SIMULATED fulfillment, no real top-up",
+            "provider": "telcel",
+            "providerName": "Telcel (mock)",
+            "status": "FAILED",
+            "completedAt": "2026-10-14T01:02:30.703Z",
+            "message": "Simulated provider rejection (demo accounts ending in 0000 always fail)."
+          }
+        },
+        "chainStatus": "success",
+        "paymentEvents": [
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000002486d8487268a6dd",
+            "eventName": "TransferWithMemo",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+              "memo": "0xef1ed71201ae7bcbaa30b5fc226365000000000000000000009633fee6dc0585",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000001",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "34"
+            }
+          }
+        ],
+        "matchingTransfers": 1
+      }
+    }
+  ]
+}

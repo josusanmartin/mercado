@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated 2026-10-14 through 00:55 UTC. Lead approved ideas 1–3 at 00:39 and refined the actual-position stress preview at 00:45. Implementation belongs to the assigned crew owners. Mercado's local server is http://localhost:3100.
+Updated 2026-10-14 through 01:03 UTC. Lead approved ideas 1–3 at 00:39, refined the actual-position stress preview at 00:45, and approved the driver-first deck critique at 00:55. Implementation belongs to the assigned crew owners. Mercado's local server is http://localhost:3100.
 
 Mercado's strongest demonstration is a driver receiving a small, explainable xMXN advance from a separately funded lender pool, spending it through an actual HTTP 402 payment, and repaying it manually. Show the settled payment and remaining debt together. Keep the simulated airtime outcome visibly distinct from the token settlement.
 
@@ -54,7 +54,7 @@ These are suggested judging priorities inferred from the build's Tempo/MPP scope
 
 ## Current story gaps
 
-Independent live review now verifies the provisional core deployment and all nine deployment/smoke receipts, including deposit/mint/burn/withdraw accounting. Current contract source has 67 passing local tests. The shared manifest still has no desk/pool, the app currently returns 500 from an mppx bundling error, and payment recovery has open findings. The full story remains a target; these core receipts do not establish swap, credit, MPP, wallet or stress completion.
+Independent live review now verifies the new core/desk/pool deployment, all 38 manifest receipts, the stress liquidation and oracle/desk restoration, plus a real unpaid MPP 402 and an API attestation accepted by the pool in simulation. Current contract source has 67 passing local tests. QA has broadcast the swap/send, borrow/repay and payment journeys; receipt-by-receipt reviewer checks are being preserved separately. At the last browser check the home page was still the Next scaffold and all five dashboard tabs returned 404, so backend receipts do not establish a usable wallet demo. Payment restart recovery and multi-step wallet switching retain explicit evidence limits.
 
 Lead changed collateral at 00:39 to **Testnet OUSD (Tempo faucet, no real value)** with deployment key `ousd`. Replace remaining descriptions of an independently deployed dOUSD token consistently, including the spec, diagrams, README, API deployment readers, UI and scripts. Never infer issuer backing or redemption from the faucet token's OpenUSD name.
 
@@ -77,3 +77,5 @@ Concrete corrections requested:
 - Change the formula speaker note from “up to 150% collateralization” to “at least 150%.” Keep the 250% demo position and actual-position stress preview.
 - Remove unsourced market-stat placeholders before presenting. A concrete driver scenario can carry the problem slide without invented remittance fees or exclusion statistics.
 - Keep the existing labels: testnet faucet OUSD/no real value/not issuer-backed/not redeemable; Demo Uber Data; mock oracle; SIMULATED top-up; manual repayment from separately disclosed funds.
+
+These narrative/copy changes were accepted and incorporated. At 00:56 the user added a stronger visual constraint: less text, preferably screenshots, video and animations. The current deck uses short captions and schematic animations while the real app screens are being built. Keep animated/example states identifiable; replace them with actual screen captures once the browser journey works, and retain the payment/fulfillment distinction in both.

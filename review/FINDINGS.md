@@ -1,7 +1,7 @@
 # Mercado review findings
 
-Last reviewed commit: `359b9a4` (2026-10-14, approximately 00:55 UTC).
-Latest pass covers committed API fixes, the 12-slide deck and uncommitted contract fixes. Network access is restored. **Live core/smoke evidence verified; local app fails HTTP checks with the known mppx bundler error.** Open: R-008 (P1 stress evidence), R-009 (P1 recovery), R-010 (P0 app bundling), R-011 (P1 lost push credential). R-006 and R-007 have local fix evidence; deployed/API integration is pending. R-005's local concurrency fix does not establish live payment/restart safety.
+Last reviewed commit: `d6c810a` (2026-10-14, approximately 01:03 UTC).
+**Live redeployment, API 402, API-to-pool signature/capacity simulation, and recorded stress liquidation verified.** R-006/R-007/R-008/R-010 are resolved at the evidence levels below. R-009's two reproduced failures now pass locally; R-011 has issued-challenge recovery implemented, with real crash/restart acceptance still outstanding. New open P1: R-012 (wallet switch during multi-step transaction). Browser routes remain incomplete: home is the Next scaffold and five dashboard routes return 404 as of the 00:58 browser check. Payment correctness does not yet establish the interactive wallet journey.
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
 ## Findings
@@ -48,7 +48,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-006 — P1 — api — Cash balance is not remaining borrow capacity
 
-- Status: LOCAL FIX REVIEWED in `359b9a4` plus contracts WIP. API separates the credit line (`maxAmount`) from `availableToBorrow`, reads `borrowCapacity(borrower,maxAmount)`, and withholds attestation on an unreadable/zero capacity. Current contract capacity test passes. Live pool/API integration remains pending deployment and app recovery.
+- Status: RESOLVED in API `359b9a4` and deployed contracts `27be377`. API separates the credit line (`maxAmount`) from `availableToBorrow`, reads `borrowCapacity(borrower,maxAmount)`, and withholds attestation on an unreadable/zero capacity. Contract limit test passes. Live API capacity matches the pool view; its signature recovers to the pool signer and the full advertised draw succeeds in `eth_call` (`api-live-1791939449291.json`). No reviewer borrow was broadcast.
 - Location: `apps/web/lib/server/credit/index.ts:16` and `:57`; `packages/contracts/src/CreditPool.sol:172`.
 - Scenario: a fresh pool has 75 xMXN cash. The API rounds its offer down to 70, but the 80% utilization cap only permits 60. Existing borrower principal can also consume the attested max because maxAmount is total outstanding principal, not an extra draw allowance.
 - Evidence: `test_cashIsNotBorrowCapacity` in `review/contracts/ReviewBoundaries.t.sol` passes by asserting the real pool rejects a valid 70 xMXN signed draw with `ExceedsUtilization(70e6,60e6)` against Tempo's local TIP-20 precompiles.
@@ -56,7 +56,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-007 — P2 — contracts — MAX withdrawal view can quote an amount that reverts
 
-- Status: LOCAL FIX VERIFIED in contracts WIP. The two-stage ceil correction is present; exact R-007 regression and 256-case MAX-withdraw fuzz test pass in the full 67-test run. The manifest still points at the earlier vault; do not claim deployed resolution yet.
+- Status: RESOLVED in deployed `27be377`. Two-stage ceil correction, exact regression and 256-case MAX-withdraw fuzz pass in the 67-test run. New vault runtime matches the tested artifact excluding immutable-reference slots (`live-1791939621099.json`). The original deployed vault remains historical and is not the current app target.
 - Location: `packages/contracts/src/CollateralVault.sol:178` versus `:193` and `:199`.
 - Scenario: collateral 10 OUSD, debt 14.000007 xMXN, FX 10.5. `maxWithdrawable` returns 7.999999 OUSD; withdrawing it leaves a floor-valued ratio of 14999 bps and reverts. The view rounds once while enforcement first floors FX value.
 - Evidence: `test_maxWithdrawableFractionalFxReverts` in `review/contracts/ReviewBoundaries.t.sol` reproduces the exact quote and revert with real local TIP-20 semantics.
@@ -64,14 +64,14 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-008 — P1 — qa — New stress step can pass without stress or a confirmed restore
 
-- Status: OPEN; posted to `@qa`.
+- Status: RESOLVED in `531630a`/`3da40f0`: missing prerequisites become SKIP/exit 2, paused-read failures propagate, and the event is bound to script-reported borrower/liquidator. QA's first integration run failed because marker output was missing/unmatched; that failure is preserved. QA's later J7 run is green. Reviewer independently decoded the earlier deployed stress liquidation and verified restoration, separately from the QA-script claim.
 - Location: `scripts/demo-journey.ts` J7 in `a214ba8`: missing-script `return warn(...)` and `paused().catch(() => false)`.
 - Scenario: before the stress script exists, J7 returns normally and is recorded PASS. After a run, an RPC failure reading paused becomes false and is accepted as proof that the desk is unpaused. An unrelated liquidation in the block interval can satisfy the unfiltered event check.
 - Fix: preserve a missing-script skip/blocked outcome or fail a required run; require successful restoration reads; bind the event to the stress accounts and expected transaction/amounts.
 
 ### R-009 — P1 — api — Interrupted settlement is not safely resolved before retry or expiry
 
-- Status: OPEN; original finding posted in the prior session at 00:49, restored to this file now. The pending-attempt implementation in `359b9a4` is an improvement but fails two deterministic review cases.
+- Status: REPRODUCED CASES FIXED by `fd1cfcf`/`3d11997`. Independent recheck `payment-recovery-1791939447005.json` passes both: failed scan stays 409 with no new charge, and settled payment is recovered before expired-quote closure. Actual crash/restart and client-supplied transaction-lifetime bounds remain unaccepted. Original finding was posted at 00:49 and restored to this file in pass 3.
 - Location: `apps/web/lib/server/bills/service.ts:175` (expiry before recovery), `:243` (fixed 60-second hold), `:269` (RPC scan failure falls through after hold).
 - Scenario A: payment may have settled; the order contains a pending attempt older than 60 seconds; the reconciliation RPC call fails. `recoverAttempts` returns null and a new 402 is issued. A client can pay again without resolving the original transfer.
 - Scenario B: the quote expires after settlement but before the receipt is durably recorded. A credential-free retry closes the order as FAILED before any reconciliation, with the incorrect note “nothing was charged.”
@@ -80,7 +80,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-010 — P0 — web — App routes fail on the optional mppx MCP import
 
-- Status: LIVE FAILURE, tracking the blocker already reported by QA/API.
+- Status: RESOLVED in `fd93ca4`. Independent :3100 requests now return 200 for FX/driver/quote and a genuine 402 for unpaid bills; `api-live-1791939449291.json`. The unrelated missing dashboard pages are implementation coverage gaps, separate from this bundler fix.
 - Location: `apps/web/next.config.ts:3`; import path `apps/web/lib/mpp/server.ts:8` → installed `node_modules/mppx/dist/server/Mppx.js:1839`.
 - Scenario: the local Next server attempts to bundle `@modelcontextprotocol/sdk/types.js`, which is absent. `/`, `/api/fx`, driver demo/score, and bills quote all returned HTTP 500 on this review pass. The real 402/payment/browser journey cannot start.
 - Evidence: read-only HTTP probes in `review/evidence/live-1791939156131.json` and `live-1791939239000.json`, including extracted Next compilation error.
@@ -88,13 +88,60 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-011 — P1 — api — Push payment can settle before the server has any recoverable attempt
 
-- Status: OPEN; source-confirmed gap, posted to API. No live lost-response transfer attempted.
+- Status: IMPLEMENTED in `3cbabbf`: issued challenges are persisted before returning 402 and scanned on retry. Owner's real-mppx/local-reconciliation test covers a lost credential; live interrupted-client/restart evidence is still pending. Normal push verification was initially bypassed by this pre-scan, losing the Payment-Receipt header; `c37355c` excludes the presented challenge from the pre-scan and the owner reports a live push success. Independent receipt recheck is ongoing. No reviewer lost-response transfer attempted.
 - Location: `apps/web/lib/mpp/client.ts:70` (inFlight clears on failure), `:100` (credential callback only changes stage); `apps/web/lib/server/bills/service.ts:193` (attempt written only once credential reaches server).
 - Scenario: a JSON-RPC wallet broadcasts the payment, then the credential POST is lost before reaching the server (or the browser closes). The order has no pending attempt. Calling the helper again with the same idempotency key obtains another challenge and can broadcast a second transfer. The mutex and per-page inFlight map do not cover this sequential failure.
 - Evidence: installed `mppx/dist/tempo/client/Charge.js:192-213` chooses push for JSON-RPC accounts and broadcasts before returning the credential; the application's `onCredentialCreated` does not preserve it. Server recovery only scans recorded pending attempts.
 - Fix: durably register issued challenge IDs and reconcile their exact memo-bound transfers before new payment initiation, and/or persist and retry the original push credential across navigation/network failure. Make the uncertain state visible and avoid blanket “never charged twice” copy until this path is tested.
 
-## Pass 3 evidence (00:51–00:55 UTC)
+### R-012 — P1 — contracts — A wallet switch can change the sender halfway through a transaction flow
+
+- Status: LOCAL FIX VERIFIED in current WIP. `run` pins account and each write checks account/network before simulation and signing. Independent recheck `hook-account-1791939985770.json` performs the first write, stops before the second, and returns failure. Browser account-switch verification is pending the shell.
+- Location: `apps/web/lib/contracts/tx.ts:46` (`getConnection` inside every write); `apps/web/lib/contracts/actions.ts:119` (`swapAndSend`).
+- Scenario: the user swaps as Sender, switches wallet/persona while waiting, and the following Send step uses Driver's account. If Driver has sufficient xMXN, both steps succeed but the remittance is funded by the wrong account and Sender keeps the swap proceeds.
+- Evidence: `node review/hook-account-check.mjs` executes actual `useTx` with minimal React/wagmi adapters: swap uses account A, transfer uses account B, flow returns success. `review/evidence/hook-account-1791939777957.json` preserves source hash and writes. No real signatures or broadcasts.
+- Fix: pin initiating account/chain at `run` entry and check the connected account/chain before every simulation/signing step. Stop with a readable error if either changes. Disable persona switching during active flows as a UI aid.
+
+### R-013 — P1 — contracts — Sponsorship limits transaction count but not fee exposure
+
+- Status: OPEN; posted to contracts and reproduced against the actual policy.
+- Location: `apps/web/app/api/sponsor/policy.ts:46` (`refusal`); `apps/web/app/api/sponsor/route.ts` (`Relay.feePayer` validation).
+- Scenario: a request targets an allowed Mercado contract and stays under 5M gas, but supplies an enormous `maxFeePerGas`/priority fee. It passes the policy and can consume sponsor funds in one transaction if the balance covers it; hourly transaction counts do not bound per-transaction cost. Explicit unsupported fee tokens also pass the policy.
+- Evidence: `review/sponsor-policy-check.mjs` evaluates the actual policy with a huge priority fee and with xMXN as fee token; both return no refusal. `review/evidence/sponsor-policy-1791939944157.json`. Installed viem's `tempo/internal/relay/feePayer.js` signs after application validation without adding a cost limit; raw sponsorship prefers `transaction.feeToken` over the configured default (`:279`). No live drain/signing attempt was made.
+- Fix: require bounded gas, max fee/priority fee, and a conservative total fee cap; validate an explicit allowed USD fee token in both fill/raw paths. Keep the sponsor's testnet funds isolated.
+
+### R-014 — P1 — api — Credit screen keeps a consumed or wrong-wallet attestation active
+
+- Status: OPEN; source review of the incoming screen, posted to API. Browser reproduction pending shell/providers.
+- Location: `apps/web/components/credit/credit-screen.tsx:21` (mutation data), `:174` (conditional Refresh), `:210` (draw without clearing the attestation).
+- Scenario: successful draw consumes the nonce, but the screen continues to offer Draw with the same attestation and no refresh control until expiry. Switching wallets also leaves the previous borrower's offer active. Further draws revert even while the new live capacity is positive.
+- Fix: invalidate/refetch after a successful draw and on account/profile change; make Refresh available for an existing offer and ensure displayed borrower matches the connected account.
+
+### R-015 — P1 — api — Editing payment fields leaves the old quote payable
+
+- Status: OPEN; source review of the incoming screen, posted to API. Browser reproduction pending shell/providers.
+- Location: `apps/web/components/billpay/pay-screen.tsx:85`, `:89`, `:99`, `:103` (form changes); `:129` (Pay uses existing quote).
+- Scenario: Get quote for phone A/100 MXN, change the form to phone B/200 MXN, then Pay. The previous quote and idempotency key remain active, so settlement/fulfillment still use A/100 while the edited form shows B/200. Provider buttons can also reset state during a pending payment.
+- Fix: invalidate quotes on changes to destination/amount/provider; lock those controls during quote/payment work and show the final quoted destination in checkout.
+
+## Pass 5 evidence (01:03–01:07 UTC)
+
+- `review/evidence/journey-live-1791939980574.json` independently re-reads QA's frozen 01:04 full-run receipts, historical borrower debt/pool stats, and three public bill orders. All listed transactions succeeded; each order has exactly one matching token/amount/merchant Transfer in its receipt. Normal pull and push orders retain `mppReceipt`; simulated provider rejection remains paid-but-unfulfilled. An independent `eth_call` replay of the actual borrow calldata reverts `NonceAlreadyUsed`.
+- This recheck preserves the original QA snapshot and hash, including its outcome claims. It independently verifies chain/order state; it does not replay wallet interaction or retrospectively measure the retry debit delta. Those assertions remain QA's captured live-run evidence.
+- Earlier reviewer probe files remain preserved: `journey-live-1791939704604.json` selected a J0-only snapshot and performed no receipt checks; `journey-live-1791939734735.json` hit a reviewer decoder error on Tempo's `calls[].input`. Corrected parser recheck `journey-live-1791939816390.json` verifies the earlier 00:58 receipts. Neither instrumentation issue is a contract finding.
+- Reviewed contract hooks, sponsor route/policy and new credit/payment screens. R-012 was fixed and rechecked locally. R-013/R-014/R-015 are posted to their owners. All reviewer writes remain under `review/`, with channel posts through the authorized IRC tool.
+
+## Pass 4 evidence (00:56–01:03 UTC)
+
+- `review/evidence/live-1791939464298.json`: new deployment, all **38** manifest receipts succeed, including core, smoke, desk seeding, pool supply and stress. No old-address smoke receipt is reused as proof for the new deployment.
+- `review/evidence/live-1791939621099.json`: deployed factory, oracle, vault, desk and pool runtimes all match the local test artifacts after masking only Solidity immutable-reference slots. Oracle is fresh/valid at **20.00**, desk is **unpaused**; snapshot reserves **1,050 OUSD / 19,005 xMXN** and pool cash **10,010 xMXN**.
+- Stress receipt `0x6ecd13b888a88503d08cd286514d233258d85ae5f051f982a923986b339e993b` decodes the expected vault `Liquidated` event: **1,250 xMXN debt covered**, **100 OUSD seized**, plus the burn and collateral transfer. The recorded restore tx sets **20.00**. At the stressed 104% ratio, seizure is collateral-capped, so this is not proof that the liquidator receives a full 10% bonus in every case.
+- `review/evidence/api-live-1791939449291.json`: live API request checks, valid/invalid input responses, real xMXN 402 amount/token/merchant/order binding, same unpaid order retry, quote conflict=409, and current API signature/capacity accepted in deployed-pool `eth_call`.
+- `review/evidence/browser-1791939509026.json` with desktop/mobile PNGs: `/` returns the Next scaffold, `/mint`, `/send`, `/credit`, `/pay`, `/earn` return **404**. This is a live frontend coverage failure, not a network block; web/API owners are building these screens. No completed browser wallet journey is claimed.
+- Reviewed typed contract read/write hooks and new bill/advance hooks. Filed R-012 and explained the push receipt short-circuit to QA/API. Fee-sponsor route is new WIP and remains under review.
+- Lead approved the deck critique; slides moved to a driver-first arc, about 120 seconds of notes, supporting mint/remittance beats and appendix architecture/formula/roadmap. User subsequently requested minimal text and screenshots/animations; slides implemented that direction. Real app screenshots still depend on the screens landing.
+
+## Pass 3 evidence (00:51–00:55 UTC; historical snapshot)
 
 - Network limitation from the prior session is removed. `review/live-check.mjs` uses only read-only RPC and HTTP requests; this reviewer has broadcast no transactions or changed shared chain state.
 - Moderato reports chain ID **42431**. In the pinned snapshot, both tokens have **6 decimals**, xMXN has currency **MXN**, and the oracle reports **20.00**, fresh/valid, `isMock=true`. Factory/oracle/vault have deployed code; desk/pool are zero in the shared deployment manifest.
@@ -133,4 +180,4 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ## Next pass
 
-Start with `IRC_NICK=review bin/irc unread`, then `git log --stat 359b9a4..HEAD` and status/diff. Recheck app bundling, R-009/R-011 recovery, J7 evidence, and the new deployment/ABIs when published. Real MPP settlement and wallet flows still need evidence. Preserve completed and failed evidence separately. Lead commits review files; the reviewer does not.
+Start with `IRC_NICK=review bin/irc unread`, then `git log --stat d6c810a..HEAD` and status/diff. Recheck R-012, fee sponsorship, normal push receipts and recovery boundaries. Review browser flows when dashboard pages land. Preserve completed and failed evidence separately. Lead commits review files; the reviewer does not.

@@ -1,0 +1,324 @@
+commit 16483f582fe06f6f46aef542faaa25e56ad3a4ab
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:09:43 2026 +0000
+
+    slides: add machine-to-machine MPP slide (bot pays for a score), proof 10/11, roadmap swaps paid API for SPEI cash-out
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/deck.json            |  2 +-
+ deck/project/slides/honesty.html  |  4 ++--
+ deck/project/slides/j1-mint.html  |  2 +-
+ deck/project/slides/j2-send.html  |  2 +-
+ deck/project/slides/j5-agent.html | 35 +++++++++++++++++++++++++++++++++++
+ deck/project/slides/next.html     |  8 ++++----
+ deck/project/slides/proof.html    |  6 +++---
+ 7 files changed, 47 insertions(+), 12 deletions(-)
+
+commit 275e673a8d5a82e76f2944daafc06c677db8d0d1
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:09:15 2026 +0000
+
+    Assign Earn screen to contracts
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ INTERFACES.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 361373c406f78b16eb0002b077fe85d0663c1053
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:08:48 2026 +0000
+
+    slides: proof slide notes source-verified contracts
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/proof.html | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 90643f882bf9533029fb64726339a5192b41cb59
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:08:39 2026 +0000
+
+    qa: underwriter-agent M2M MPP demo (live); ACCEPTANCE #11 passed review, extras table
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ ACCEPTANCE.md                          |   9 +-
+ scripts/evidence/underwriter-agent.txt |  21 +++++
+ scripts/underwriter-agent.ts           | 149 +++++++++++++++++++++++++++++++++
+ 3 files changed, 178 insertions(+), 1 deletion(-)
+
+commit 08afb7d002db7f7b522d1b5e75afc1752008d05d
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:08:39 2026 +0000
+
+    web: dashboard shell, shadcn/ui primitives, wagmi + Tempo connectors, demo personas
+    
+    Banner, network badge, side/mobile nav, wallet menu (Tempo Wallet, passkey,
+    testnet demo personas via dangerous_secp256k1, injected), stub screens for
+    Home, /mint, /send, /earn, /contracts. Pins accounts@0.18.4 (0.18.5 ships
+    catalog: deps npm can't install).
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/app/(dashboard)/contracts/page.tsx   |    8 +
+ apps/web/app/(dashboard)/earn/page.tsx        |    8 +
+ apps/web/app/(dashboard)/layout.tsx           |   42 +
+ apps/web/app/(dashboard)/mint/page.tsx        |    8 +
+ apps/web/app/(dashboard)/page.tsx             |    5 +
+ apps/web/app/(dashboard)/send/page.tsx        |    8 +
+ apps/web/app/globals.css                      |  104 +-
+ apps/web/app/layout.tsx                       |   31 +-
+ apps/web/app/page.tsx                         |   69 -
+ apps/web/components.json                      |    9 +
+ apps/web/components/earn/earn-screen.tsx      |    5 +
+ apps/web/components/home/contracts-screen.tsx |    5 +
+ apps/web/components/home/home-screen.tsx      |    5 +
+ apps/web/components/shell/guilloche.tsx       |   64 +
+ apps/web/components/shell/nav.tsx             |   79 +
+ apps/web/components/shell/network-badge.tsx   |   32 +
+ apps/web/components/shell/page-header.tsx     |   13 +
+ apps/web/components/shell/testnet-banner.tsx  |   15 +
+ apps/web/components/tour/demo-tour.tsx        |   16 +
+ apps/web/components/transfer/send-screen.tsx  |    5 +
+ apps/web/components/ui/alert.tsx              |   29 +
+ apps/web/components/ui/badge.tsx              |   34 +
+ apps/web/components/ui/button.tsx             |   41 +
+ apps/web/components/ui/card.tsx               |   49 +
+ apps/web/components/ui/dialog.tsx             |   49 +
+ apps/web/components/ui/input.tsx              |   20 +
+ apps/web/components/ui/label.tsx              |   19 +
+ apps/web/components/ui/progress.tsx           |   18 +
+ apps/web/components/ui/separator.tsx          |   18 +
+ apps/web/components/ui/skeleton.tsx           |    7 +
+ apps/web/components/ui/slider.tsx             |   35 +
+ apps/web/components/ui/sonner.tsx             |   13 +
+ apps/web/components/ui/tabs.tsx               |   37 +
+ apps/web/components/ui/tooltip.tsx            |   33 +
+ apps/web/components/vault/mint-screen.tsx     |    5 +
+ apps/web/components/wallet/personas.ts        |   64 +
+ apps/web/components/wallet/providers.tsx      |   23 +
+ apps/web/components/wallet/use-persona.ts     |   31 +
+ apps/web/components/wallet/wallet-menu.tsx    |  199 +++
+ apps/web/lib/tempo/config.ts                  |   23 +
+ apps/web/lib/utils.ts                         |    6 +
+ apps/web/package.json                         |    8 +
+ package-lock.json                             | 2309 ++++++++++++++++++++++++-
+ 43 files changed, 3416 insertions(+), 185 deletions(-)
+
+commit 6b83824d6df9acfeff534889f9c38f610ab1a103
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:08:32 2026 +0000
+
+    Update reviewer restart prompt with context budget and priorities
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ crew/review-restart.prompt | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+commit 1da6fb98742cf4434d30abc4b925624bfdc260d7
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:08:27 2026 +0000
+
+    contracts: verify all 5 contracts on Tempo's Sourcify verifier (exact_match)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ packages/contracts/script/verify.sh | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+commit 8bdddc7bdd9ce77dae05b580ae74ff6c0329418a
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:07:12 2026 +0000
+
+    slides: proof notes cite independent receipt recheck
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/proof.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit c38de9fad12ad69e36e9318142bfec64c0f72a7d
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:07:05 2026 +0000
+
+    screens: /credit (Get an advance) and /pay (Pay bills)
+    
+    - credit: demo driver picker, SVG weekly earnings chart, score breakdown + plain-language reasons,
+      credit line vs on-chain borrowCapacity, EIP-712 offer with expiry countdown, draw/repay via
+      useMercado, lender-side pool stats; fresh offer after each draw and on wallet change (R-014)
+    - pay: Telcel/CFE mock quote, MPP 402 checkout with a visible handshake stepper, on-chain receipt
+      next to the SIMULATED top-up and remaining advance, recent orders with state history; quote is
+      dropped on any edit and the form locks while paying (R-015)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/app/(dashboard)/credit/page.tsx      |   8 +
+ apps/web/app/(dashboard)/pay/page.tsx         |   8 +
+ apps/web/components/billpay/pay-screen.tsx    | 241 ++++++++++++++++++
+ apps/web/components/billpay/pay-stepper.tsx   |  62 +++++
+ apps/web/components/billpay/recent-orders.tsx |  57 +++++
+ apps/web/components/billpay/use-bill-pay.ts   | 108 +++++++++
+ apps/web/components/credit/credit-screen.tsx  | 335 ++++++++++++++++++++++++++
+ apps/web/components/credit/earnings-chart.tsx |  56 +++++
+ apps/web/components/credit/tx-status.tsx      |  22 ++
+ apps/web/components/credit/use-advance.ts     |  50 ++++
+ 10 files changed, 947 insertions(+)
+
+commit 78e353fb6a231b259f05bebfcafc0ebfed932a8d
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:56 2026 +0000
+
+    qa: README — sponsor relay and Tempo-native features
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ README.md | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit 447736d8bd5a5652c6ca1f30055fd282b8627a46
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:45 2026 +0000
+
+    qa: live maxWithdrawable+1 check; ACCEPTANCE 2/3/4 green with Foundry test names; stress price 14 wording
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ ACCEPTANCE.md                                      |  6 +-
+ DEMO.md                                            |  2 +-
+ scripts/demo-journey.ts                            |  6 +-
+ scripts/evidence/forge-test.txt                    | 82 ++++++++++++++++++++++
+ scripts/evidence/last-run.json                     | 27 +++----
+ scripts/evidence/run-2026-10-14T01-06-39-895Z.json | 32 +++++++++
+ 6 files changed, 131 insertions(+), 24 deletions(-)
+
+commit d4ede73ab1269f8503e61289baa7ec0b2fda9bfa
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:25 2026 +0000
+
+    slides: proof slide 9/11 SPEC checks per ACCEPTANCE.md
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/proof.html | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 7fa09a26d8cc55fecebec35ec2f3df8bd88a6bff
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:17 2026 +0000
+
+    slides: proof slide 6/11 SPEC checks
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/proof.html | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 1718e61e1138ab9393024ef1616e38d58ec4bb8c
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:15 2026 +0000
+
+    contracts: pin account/chain across useTx flows (R-012); StressDemo defaults to 14.00 (solvent liquidation)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/contracts/actions.ts          |  5 ++---
+ apps/web/lib/contracts/tx.ts               | 33 ++++++++++++++++++++++++------
+ packages/contracts/README.md               |  2 +-
+ packages/contracts/script/StressDemo.s.sol |  7 ++++---
+ packages/contracts/test/FXStress.t.sol     | 19 +++++++++++++++++
+ 5 files changed, 53 insertions(+), 13 deletions(-)
+
+commit 38eaa799bb980906185187daaa256376765ec799
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:06:08 2026 +0000
+
+    slides: proof slide adds live fee-sponsorship tx
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/proof.html | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 4d0e7ae76f73321dfa2cb01c6f8006830659177f
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:05:55 2026 +0000
+
+    qa: live desk slippage/size and lender-withdrawal negative checks; ACCEPTANCE 6/7/8 green; SPONSOR_* in .env.example
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ .env.example                                       |  3 ++
+ ACCEPTANCE.md                                      |  6 +--
+ scripts/demo-journey.ts                            | 19 ++++++++
+ scripts/evidence/last-run.json                     | 56 +++++-----------------
+ scripts/evidence/run-2026-10-14T01-05-44-935Z.json | 43 +++++++++++++++++
+ 5 files changed, 81 insertions(+), 46 deletions(-)
+
+commit eb3414ce45fafc5002b906aeea634187b2415bc3
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:05:19 2026 +0000
+
+    sponsor: Tempo fee-payer relay at /api/sponsor (viem Relay.feePayer), allowlist + rate limits; sponsoredTransport()
+    
+    Verified live: a fresh account with zero fee tokens executed an xMXN approve paid by the sponsor.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/app/api/sponsor/policy.ts          | 71 ++++++++++++++++++++++++++++
+ apps/web/app/api/sponsor/route.ts           | 72 +++++++++++++++++++++++++++++
+ apps/web/lib/contracts/index.ts             |  1 +
+ apps/web/lib/contracts/sponsor.ts           | 15 ++++++
+ packages/contracts/script/sponsor-check.mjs | 35 ++++++++++++++
+ 5 files changed, 194 insertions(+)
+
+commit ebcd56d3dfebc8e3121e574332a6b0670f29941b
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:04:40 2026 +0000
+
+    qa: e2e capture spec for deck screenshots; ignore playwright outputs
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/e2e/.gitignore      |  2 ++
+ apps/web/e2e/capture.spec.ts | 23 +++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
+
+commit b08a14736494a657bba2a8874fea588f09874c45
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:04:32 2026 +0000
+
+    slides: proof shows full J0-J7 green live, 3/11 SPEC checks
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/j4-bills.html | 2 +-
+ deck/project/slides/proof.html    | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+commit 08fb8275f081a2a93bdf9803998b31e4db43f898
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:04:24 2026 +0000
+
+    qa: README deployed addresses, journey usage, fee-token note
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ README.md | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+commit 64e03e307b0ee6d51205a27262e518fec58436ba
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:04:12 2026 +0000
+
+    qa: full J0-J7 journey green live on Moderato (pull + push MPP, paid-but-unfulfilled, stress liquidation)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ ACCEPTANCE.md                                      |  4 +-
+ scripts/evidence/last-run.json                     | 65 +++++++++++++++++--
+ scripts/evidence/run-2026-10-14T01-04-00-769Z.json | 73 ++++++++++++++++++++++
+ 3 files changed, 136 insertions(+), 6 deletions(-)

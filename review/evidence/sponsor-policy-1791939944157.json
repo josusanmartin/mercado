@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-14T01:05:44.156Z",
+  "mode": "local pure policy; no keys, signing, RPC or broadcast",
+  "sourceSha256": "96f9671032aac9ae11ccfeb93497fc0e55e8f8d7d9067611aef07070363e9702",
+  "results": [
+    {
+      "name": "enormous-priority-fee",
+      "refusal": null,
+      "request": {
+        "from": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+        "chainId": 42431,
+        "calls": [
+          {
+            "to": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2"
+          }
+        ],
+        "gas": "5000000",
+        "feeToken": "0x20C0000000000000000000000000000000000001",
+        "maxFeePerGas": "1000000000000000000000000",
+        "maxPriorityFeePerGas": "1000000000000000000000000"
+      }
+    },
+    {
+      "name": "MXN-as-fee-token",
+      "refusal": null,
+      "request": {
+        "from": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+        "chainId": 42431,
+        "calls": [
+          {
+            "to": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2"
+          }
+        ],
+        "gas": "5000000",
+        "feeToken": "0x20C0000000000000000000002486D8487268a6dd",
+        "maxFeePerGas": "1",
+        "maxPriorityFeePerGas": "1"
+      }
+    }
+  ]
+}

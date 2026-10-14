@@ -1,0 +1,14 @@
+ apps/web/app/(dashboard)/credit/page.tsx           |   2 +-
+ apps/web/app/(dashboard)/pay/page.tsx              |   2 +-
+ apps/web/app/api/sponsor/policy.ts                 |  28 +-
+ apps/web/app/api/sponsor/route.ts                  |  19 +-
+ apps/web/components/billpay/pay-screen.tsx         |  29 +-
+ apps/web/components/credit/credit-screen.tsx       |  25 +-
+ apps/web/components/credit/use-advance.ts          |   9 +-
+ apps/web/components/wallet/wallet-menu.tsx         |  17 +-
+ apps/web/lib/contracts/tx.ts                       |  12 +-
+ .../StressDemo.s.sol/42431/run-latest.json         | 820 ++++++++++-----------
+ packages/contracts/script/sponsor-check.mjs        |  34 +-
+ review/FINDINGS.md                                 |  67 +-
+ review/PRODUCT.md                                  |   6 +-
+ 13 files changed, 595 insertions(+), 475 deletions(-)

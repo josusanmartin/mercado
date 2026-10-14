@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T01:06:25.769Z",
+  "mode": "local actual hook with fake React/wagmi adapters; no real signatures",
+  "sourceSha256": "971d8def44ac0f8606a245c30a83d4fd25bdfbae7ce73e214bf1da502b3dcdc1",
+  "writes": [
+    {
+      "account": "0x1111111111111111111111111111111111111111",
+      "functionName": "swapOusdForXmxn"
+    }
+  ],
+  "flowReturnedSuccess": false,
+  "pass": true
+}
