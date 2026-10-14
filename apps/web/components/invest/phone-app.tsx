@@ -6,7 +6,7 @@
 //   three rows Dólares · Pesos · Acciones with each RETURN and a real-time interest counter (use-live-yield.ts:
 //   exact for sOUSD, projected for the pool) · Producto · Actividad (real logs) · Perfil. T-bills are gone.
 // Every action is a real on-chain transaction; guards (R-043/R-044) are kept exactly as api wrote them.
-import { useState, type ReactNode } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { useConnection } from "wagmi";
 import { ArrowDownLeft, ArrowUpRight, Coins, DollarSign, ExternalLink, Home, Layers, List, TrendingUp, User } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
@@ -284,8 +284,9 @@ function ContributionChart({ product }: { product: Product }) {
   let v = 0;
   const pts = rows.map((x) => {
     const into = x.label.startsWith("Depósito") || x.label.startsWith("Compra");
-    v += (into ? 1 : -1) * (Number(x.amount) / 1e6);
-    return { t: x.timestamp!, v };
+    const d = (into ? 1 : -1) * (Number(x.amount) / 1e6);
+    v += d;
+    return { t: x.timestamp!, v, d };
   });
   const n = pts.length;
   const vals = pts.map((x) => x.v);
@@ -301,6 +302,38 @@ function ContributionChart({ product }: { product: Product }) {
       : n === 1
         ? `Historial corto · un movimiento (${first})`
         : undefined;
+
+  // Point inspection (review v6 #5): arrows / Home / End step through the REAL events, a tap or hover picks the
+  // nearest one; the readout replaces the bottom line (same 16px, nothing moves). Never an interpolated value.
+  const [sel, setSel] = useState<number>();
+  const pick = sel !== undefined && sel < n ? pts[sel] : undefined;
+  const t0 = series[0]?.t ?? 0;
+  const t1 = series.at(-1)?.t ?? 1;
+  const [lo, hi] = [Math.min(min, 0), Math.max(max, 0)];
+  const xPct = (t: number) => (t1 > t0 ? ((t - t0) / (t1 - t0)) * 100 : 0);
+  const yPx = (val: number) => (hi > lo ? 2 + (1 - (val - lo) / (hi - lo)) * 40 : 22); // Sparkline's scale at height 44
+  const nearest = (clientX: number, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    const t = t0 + ((clientX - r.left) / Math.max(1, r.width)) * (t1 - t0);
+    let best = 0;
+    pts.forEach((x, i) => {
+      if (Math.abs(x.t - t) < Math.abs(pts[best].t - t)) best = i;
+    });
+    return best;
+  };
+  const onKey = (e: ReactKeyboardEvent) => {
+    const last = n - 1;
+    const cur = sel ?? last;
+    const next = e.key === "ArrowRight" ? Math.min(last, cur + 1) : e.key === "ArrowLeft" ? Math.max(0, cur - 1) : e.key === "Home" ? 0 : e.key === "End" ? last : undefined;
+    if (e.key === "Escape") setSel(undefined);
+    else if (next !== undefined) {
+      e.preventDefault();
+      setSel(next);
+    }
+  };
+  const readout = pick
+    ? `${dayLabel(pick.t, now)} ${hora(pick.t)} · ${pick.d >= 0 ? "+" : "−"}${fmt(Math.abs(pick.d))} → ${fmt(pick.v)} ${unit}`
+    : undefined;
   return (
     <figure className="mt-5 grid h-[104px] grid-rows-[32px_1fr_16px] gap-1">
       {/* two fixed lines: what is plotted, then its range */}
@@ -308,7 +341,22 @@ function ContributionChart({ product }: { product: Product }) {
         <span className="truncate">{title}</span>
         <span>{n >= 2 ? `máx ${fmt(max)} · mín ${fmt(min)}` : " "}</span>
       </figcaption>
-      <div className="relative min-h-0">
+      <div
+        className="relative min-h-0 touch-pan-y rounded-[4px] outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--m-on-accent,#E5A823)]"
+        tabIndex={series.length ? 0 : undefined}
+        role={series.length ? "group" : undefined}
+        aria-label={series.length ? `${title}: usa las flechas para recorrer los ${n} movimientos` : undefined}
+        aria-describedby={series.length ? `${product}-readout` : undefined}
+        onKeyDown={series.length ? onKey : undefined}
+        onFocus={() => series.length && sel === undefined && setSel(n - 1)}
+        onPointerDown={(e) => series.length && setSel(nearest(e.clientX, e.currentTarget))}
+        onPointerMove={(e) => series.length && (e.pointerType === "mouse" || e.buttons) && setSel(nearest(e.clientX, e.currentTarget))}
+      >
+        {pick && (
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 w-px bg-[rgba(10,10,10,.45)]" style={{ left: `${xPct(pick.t)}%` }}>
+            <span className="absolute left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0a0a0a]" style={{ top: yPx(pick.v) }} />
+          </span>
+        )}
         {series.length ? (
           <Sparkline
             points={series}
@@ -323,9 +371,11 @@ function ContributionChart({ product }: { product: Product }) {
           <span aria-hidden className="absolute inset-x-0 top-1/2 border-t border-dashed border-[rgba(10,10,10,.35)]" />
         )}
       </div>
-      <p className="m-meta flex justify-between gap-2" role={status ? "status" : undefined}>
+      <p id={`${product}-readout`} className="m-meta flex justify-between gap-2" role={status ? "status" : undefined} aria-live={series.length ? "polite" : undefined}>
         {status ? (
           <span>{status}</span>
+        ) : readout ? (
+          <span className="truncate">{readout}</span>
         ) : (
           <>
             <span>{first}</span>
