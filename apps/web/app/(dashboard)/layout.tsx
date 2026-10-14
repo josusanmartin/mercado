@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
       <header className="border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-2" aria-label="Mercado home">
-            <GuillocheRosette size={30} className="text-brand" />
+            <GuillocheRosette size={30} layers={2} strokeWidth={0.9} className="text-brand" />
             <span className="font-display text-xl font-bold tracking-tight">Mercado</span>
           </Link>
           <NetworkBadge className="ml-1 hidden sm:inline-flex" />

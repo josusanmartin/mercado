@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep the dev "N" badge out of demo recordings and screenshots.
+  devIndicators: false,
   transpilePackages: ["@mercado/shared"],
   // mppx has an optional @modelcontextprotocol/sdk import that Turbopack cannot bundle.
   serverExternalPackages: ["mppx"],
