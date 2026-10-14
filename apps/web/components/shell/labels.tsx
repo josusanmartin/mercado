@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 
 /** Honesty labels from SPEC: always visible next to the thing they qualify. */
 export function MockOracleBadge() {
-  return <Badge variant="mock">Mock admin oracle</Badge>;
+  return <Badge variant="mock">Admin-relayed rate</Badge>;
 }
 
 export function TestnetOusdLabel({ className }: { className?: string }) {

@@ -88,7 +88,7 @@ export function PesoStress({
             <RatioMeter bps={bpsAt} compareBps={bpsNow} lines={lines} />
             <p className="text-sm text-pretty">
               {Math.abs(move) < 0.0005 ? (
-                <>This is today&apos;s mock rate.</>
+                <>This is today&apos;s on-chain rate.</>
               ) : move < 0 ? (
                 <>
                   Here the dollar has fallen <strong className="tabular">{fmtNumber(-move * 100, 1)}%</strong> against the peso.

@@ -17,7 +17,7 @@ type Entry = { name: string; what: string; address?: string; verified?: boolean;
 const ENTRIES: Entry[] = [
   { name: "CollateralVault", what: "Holds OUSD collateral, tracks each position; the only minter and burner of xMXN", address: a("vault"), verified: true },
   { name: "xMXN", what: "Mercado Synthetic Peso (testnet), a TIP-20 from Tempo's TIP20Factory, 6 decimals", address: a("xMXN") },
-  { name: "FXOracleAdapter", what: "MXN-per-USD price with staleness and sanity checks", address: a("oracle"), verified: true, note: "Mock admin feed" },
+  { name: "FXOracleAdapter", what: "USD/MXN price relayed by an admin key, with staleness, band and max-jump checks", address: a("oracle"), verified: true, note: "Admin-relayed rate" },
   { name: "SwapDesk", what: "Separately funded OUSD/xMXN inventory with spread and caps", address: a("swapDesk"), verified: true },
   { name: "CreditPool", what: "Lender-funded xMXN pool; advances need a signed, expiring attestation", address: a("creditPool"), verified: true },
   { name: "LocalStableFactory", what: "Created the xMXN market and gave the vault its issuer role", address: a("factory"), verified: true },

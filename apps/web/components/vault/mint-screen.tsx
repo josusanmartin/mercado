@@ -14,7 +14,8 @@ import { BigNumber, ListPane, Panel, PanelActions, Row, Rows, SettingsLayout } f
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { TokenInput } from "@/components/shell/token-input";
 import { TxProgress } from "@/components/shell/tx-progress";
-import { MockOracleBadge } from "@/components/shell/labels";
+import { useFxLabel } from "@/lib/use-fx-label";
+import { Badge } from "@/components/ui/badge";
 import { useTourPrefill } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 import { PesoStress } from "./peso-slider";
@@ -38,6 +39,7 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const tx = USE_V2 ? m2.tx : m1.tx;
   const prefill = useTourPrefill("/mint");
   const now = useNow(5_000);
+  const fxLabel = useFxLabel();
   const [section, setSection] = useState<Section>("mint");
   const collaterals = useCollaterals();
   const [collateralId, setCollateralId] = useState<string>();
@@ -278,10 +280,10 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
       )}
 
       {section === "fx" && (
-        <Panel key="fx" title="Exchange rate" description="Used for minting limits and swap quotes." aside={<MockOracleBadge />}>
+        <Panel key="fx" title="Exchange rate" description="Used for minting limits and swap quotes." aside={<Badge variant="mock">Admin relay</Badge>}>
           <BigNumber value={fx.rate === undefined ? "—" : fmtNumber(fx.rate, 4)} unit="MXN per USD" className="mt-2" />
           <Rows className="mt-4">
-            <Row label="Source" sub="An admin sets it on testnet. Not a market price." value="Mock admin oracle" />
+            <Row label="Source" sub={fxLabel.full ?? "A real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle."} value="Admin relay" />
             <Row label="Last updated" value={fx.updatedAt !== undefined && now !== undefined ? timeAgo(fx.updatedAt, now) : "—"} />
             <Row label="Max age" sub="Older than this and minting, withdrawals and swaps stop" value={fx.maxAge !== undefined ? `${Math.round(fx.maxAge / 60)} min` : "—"} />
             <Row
