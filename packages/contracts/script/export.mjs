@@ -62,6 +62,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
     }
     const seen = {};
     for (const tx of run.transactions) {
+      if (!tx.hash) continue; // never broadcast (aborted run)
       const what = tx.transactionType === "CREATE" ? `deploy${tx.contractName}` : tx.function.split("(")[0];
       let label = `${stage}.${what}`;
       seen[label] = (seen[label] ?? 0) + 1;
@@ -87,6 +88,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
       }
       const seen = {};
       for (const tx of run.transactions) {
+        if (!tx.hash) continue; // never broadcast (aborted run)
         const what = tx.transactionType === "CREATE" ? `deploy${tx.contractName}` : tx.function.split("(")[0];
         let label = `${stage}.${what}`;
         seen[label] = (seen[label] ?? 0) + 1;

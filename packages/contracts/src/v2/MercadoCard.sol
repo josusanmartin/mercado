@@ -18,8 +18,9 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 ///           (binds card, merchant, amount, merchant reference, single-use nonce, deadline)
 ///         - xMXN moves holder → merchant via transferFrom (the holder's approve to this contract is a second cap)
 ///         - merchants can refund up to what they charged
-/// @dev Daily limit = strict leaky bucket per card: spent drains at dailyLimit per 24h, so there's no window-boundary
-///      doubling. Refunds return funds but don't restore limit headroom (conservative).
+/// @dev Daily limit = CALENDAR DAY in Mexico City (fixed UTC−6, no DST), the way a "límite diario" works:
+///      spentToday is the actual spend since 00:00 CDMX and resets at that midnight. A charge is blocked once
+///      today's spend + amount > dailyLimit. A refund reduces spentToday only for a charge made the same day.
 ///      EIP-712 domain: name "MercadoCard", version "1", chainId, verifyingContract = this.
 ///      Tap(uint256 cardId,address holder,address merchant,uint256 amount,bytes32 merchantRef,uint256 nonce,uint256 deadline)
 ///      The tap signature is MANDATORY: an allowlisted merchant alone can never pull funds.
@@ -28,15 +29,16 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
 
     bytes32 public constant TAP_TYPEHASH =
         keccak256("Tap(uint256 cardId,address holder,address merchant,uint256 amount,bytes32 merchantRef,uint256 nonce,uint256 deadline)");
-    uint256 public constant MAX_DAILY_LIMIT = 100_000e6; // xMXN per card per 24h
+    uint256 public constant MAX_DAILY_LIMIT = 100_000e6; // xMXN per card per calendar day
+    int256 public constant TZ_OFFSET = -6 hours; // America/Mexico_City, fixed UTC−6 (no DST since 2022)
 
     struct Card {
         address holder;
         uint64 issuedAt;
         bool frozen;
         uint256 dailyLimit;
-        uint256 spent; // bucket level
-        uint256 spentAt; // last bucket update
+        uint256 spent; // actual spend on `day`
+        uint256 day; // CDMX calendar day index of `spent`
     }
 
     struct Charge {
@@ -45,6 +47,7 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         uint256 amount;
         uint256 refunded;
         bytes32 merchantRef;
+        uint256 day; // CDMX calendar day of the charge
     }
 
     struct Merchant {
@@ -96,7 +99,7 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
     function issueCard(uint256 dailyLimit) external whenNotPaused returns (uint256 cardId) {
         if (dailyLimit == 0 || dailyLimit > MAX_DAILY_LIMIT) revert InvalidLimit();
         cardId = ++cardCount;
-        _cards[cardId] = Card(msg.sender, uint64(block.timestamp), false, dailyLimit, 0, block.timestamp);
+        _cards[cardId] = Card(msg.sender, uint64(block.timestamp), false, dailyLimit, 0, today());
         _cardsOf[msg.sender].push(cardId);
         emit CardIssued(cardId, msg.sender, dailyLimit);
     }
@@ -104,8 +107,6 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
     function setDailyLimit(uint256 cardId, uint256 dailyLimit) external {
         Card storage c = _holderCard(cardId);
         if (dailyLimit == 0 || dailyLimit > MAX_DAILY_LIMIT) revert InvalidLimit();
-        c.spent = _spentNow(c); // settle the bucket under the old rate first
-        c.spentAt = block.timestamp;
         c.dailyLimit = dailyLimit;
         emit CardLimitUpdated(cardId, dailyLimit);
     }
@@ -126,7 +127,7 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
     {
         address holder = _authorize(cardId, amount, merchantRef, nonce, deadline, tapSig);
         chargeId = ++chargeCount;
-        charges[chargeId] = Charge(cardId, msg.sender, amount, 0, merchantRef);
+        charges[chargeId] = Charge(cardId, msg.sender, amount, 0, merchantRef, today());
         totalSpent += amount;
         xmxn.safeTransferFrom(holder, msg.sender, amount);
         emit CardCharged(chargeId, cardId, msg.sender, holder, amount, merchantRef);
@@ -146,11 +147,12 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         if (block.timestamp > deadline) revert TapExpired(deadline);
         if (nonceUsed[cardId][nonce]) revert TapReplayed(nonce);
         _checkTap(tapDigest(cardId, holder, msg.sender, amount, merchantRef, nonce, deadline), tapSig, holder);
-        uint256 spentAfter = _spentNow(c) + amount;
+        uint256 d = today();
+        uint256 spentAfter = (c.day == d ? c.spent : 0) + amount;
         if (spentAfter > c.dailyLimit) revert OverDailyLimit(spentAfter, c.dailyLimit);
         nonceUsed[cardId][nonce] = true;
         c.spent = spentAfter;
-        c.spentAt = block.timestamp;
+        c.day = d;
     }
 
     function _checkTap(bytes32 digest, bytes calldata tapSig, address holder) internal pure {
@@ -167,7 +169,10 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         if (amount > refundable) revert RefundTooLarge(refundable, amount);
         ch.refunded += amount;
         totalRefunded += amount;
-        address holder = _cards[ch.cardId].holder;
+        Card storage c = _cards[ch.cardId];
+        // same-day refund gives the limit back; older refunds return funds only
+        if (ch.day == today() && c.day == ch.day) c.spent = c.spent > amount ? c.spent - amount : 0;
+        address holder = c.holder;
         xmxn.safeTransferFrom(msg.sender, holder, amount);
         emit CardRefunded(chargeId, ch.cardId, msg.sender, holder, amount);
     }
@@ -214,9 +219,10 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         uint64 issuedAt;
         bool frozen;
         uint256 dailyLimit;
-        uint256 spentToday; // current bucket level
+        uint256 spentToday; // actual spend since 00:00 CDMX
         uint256 availableToday;
         uint16 last4; // DEMO number tail, not a PAN
+        uint256 resetsAt; // next 00:00 CDMX (unix seconds)
     }
 
     function getCard(uint256 cardId) external view returns (CardView memory v) {
@@ -225,7 +231,9 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         v.issuedAt = c.issuedAt;
         v.frozen = c.frozen;
         v.dailyLimit = c.dailyLimit;
-        v.spentToday = _spentNow(c);
+        uint256 d = today();
+        v.spentToday = c.day == d ? c.spent : 0;
+        v.resetsAt = dayStart(d + 1);
         v.availableToday = c.dailyLimit > v.spentToday ? c.dailyLimit - v.spentToday : 0;
         v.last4 = demoLast4(cardId);
     }
@@ -255,9 +263,14 @@ contract MercadoCard is Ownable2Step, ReentrancyGuard, Pausable, EIP712 {
         if (c.holder != msg.sender) revert NotHolder();
     }
 
-    /// @dev bucket level now: spent minus what drained at dailyLimit per 24h since the last update
-    function _spentNow(Card storage c) internal view returns (uint256) {
-        uint256 drained = Math.mulDiv(c.dailyLimit, block.timestamp - c.spentAt, 1 days);
-        return c.spent > drained ? c.spent - drained : 0;
+    /// @notice Current calendar-day index in Mexico City (UTC−6).
+    function today() public view returns (uint256) {
+        return uint256(int256(block.timestamp) + TZ_OFFSET) / 1 days;
     }
+
+    /// @notice Unix time of 00:00 CDMX on day index `d`.
+    function dayStart(uint256 d) public pure returns (uint256) {
+        return uint256(int256(d * 1 days) - TZ_OFFSET);
+    }
+
 }

@@ -34,6 +34,8 @@ export type CardView = {
   availableToday: bigint;
   /** DEMO number tail (not a PAN): show as "5x•• •••• •••• 1234" with CARD_LABEL */
   last4: number;
+  /** next 00:00 America/Mexico_City (unix s): "Límite diario · Daily limit: resets at midnight CDMX" */
+  resetsAt: number;
 };
 
 export type Tap = {
@@ -98,8 +100,8 @@ export function useCards(holder?: Address) {
     query: { enabled: CARD_ENABLED && !!who, ...REFRESH },
   });
   const cards: CardView[] = list.flatMap((id, i) => {
-    const v = ok<Omit<CardView, "cardId" | "issuedAt" | "last4"> & { issuedAt: bigint; last4: number }>(views.data?.[i]);
-    return v ? [{ ...v, cardId: id, issuedAt: Number(v.issuedAt), last4: Number(v.last4) }] : [];
+    const v = ok<Omit<CardView, "cardId" | "issuedAt" | "last4" | "resetsAt"> & { issuedAt: bigint; last4: number; resetsAt: bigint }>(views.data?.[i]);
+    return v ? [{ ...v, cardId: id, issuedAt: Number(v.issuedAt), last4: Number(v.last4), resetsAt: Number(v.resetsAt) }] : [];
   });
   return { ...views, isLoading: ids.isLoading || views.isLoading, cards, ids: list, allowance: allowance.data as bigint | undefined };
 }

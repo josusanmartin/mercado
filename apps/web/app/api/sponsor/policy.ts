@@ -16,6 +16,7 @@ import {
   creditPoolAbi,
   demoRwaAbi,
   mercadoCardAbi,
+  investDeskAbi,
   moveAmmAbi,
   multiCollateralVaultAbi,
   stakedOusdAbi,
@@ -77,13 +78,14 @@ export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
           ...(SOUSD ? [[SOUSD, [...sel(stakedOusdAbi as Abi, "deposit", "redeem", "withdraw"), APPROVE]] as const] : []),
           ...(TTBILL ? [[TTBILL, [...sel(demoRwaAbi as Abi, "faucet"), APPROVE]] as const] : []),
           ...(A.card ? [[A.card, sel(mercadoCardAbi as Abi, "issueCard", "setDailyLimit", "setFrozen", "charge", "refund")] as const] : []),
+          ...(A.investDesk ? [[A.investDesk, sel(investDeskAbi as Abi, "buy", "sell", "buyWithXmxn", "sellForXmxn")] as const] : []),
         ]) as ReadonlyArray<readonly [string, readonly string[]]>
   ).map(([a, s]) => [getAddress(a), new Set<string>(s)]),
 );
 export const ALLOWED_TARGETS: ReadonlySet<string> = new Set(ALLOWED_CALLS.keys());
 /** Approvals are sponsored only toward the active protocol's own contracts. */
 const APPROVE_SPENDERS = new Set(
-  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
+  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card, A.investDesk].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
 );
 
 // ---------------------------------------------------------------- state (single process)

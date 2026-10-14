@@ -44,6 +44,19 @@ export const mercadoCardAbi = [
   },
   {
     "type": "function",
+    "name": "TZ_OFFSET",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "acceptOwnership",
     "inputs": [],
     "outputs": [],
@@ -173,9 +186,33 @@ export const mercadoCardAbi = [
         "name": "merchantRef",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "day",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "dayStart",
+    "inputs": [
+      {
+        "name": "d",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -302,6 +339,11 @@ export const mercadoCardAbi = [
             "name": "last4",
             "type": "uint16",
             "internalType": "uint16"
+          },
+          {
+            "name": "resetsAt",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       }
@@ -596,6 +638,19 @@ export const mercadoCardAbi = [
         "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "today",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"

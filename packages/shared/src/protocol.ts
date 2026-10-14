@@ -40,6 +40,8 @@ export type ProtocolAddresses = {
   vamm?: Address;
   /** v2 only: Mercado Card (virtual card spending; only the card network/PAN is simulated). */
   card?: Address;
+  /** v2 only: InvestDesk (demo tTBILL buy/sell vs OUSD/xMXN). */
+  investDesk?: Address;
   collaterals: CollateralInfo[];
   /** First block of this protocol's deployment (indexers scan logs from here). */
   startBlock: number;
@@ -67,7 +69,7 @@ function v2(): ProtocolAddresses {
   const v = d.v2 as unknown as
     | {
         xMXN: Address; factory: Address; vault: Address; vamm: Address; creditPool: Address; fxOracle: Address;
-        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number; card?: Address;
+        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number; card?: Address; investDesk?: Address;
       }
     | undefined;
   // fail closed: never fall back to v1 when v2 is requested
@@ -88,6 +90,7 @@ function v2(): ProtocolAddresses {
     merchant: v.merchant,
     vamm: v.vamm,
     card: v.card,
+    investDesk: v.investDesk,
     collaterals: v.collaterals,
     startBlock: v.startBlock ?? 0,
   };

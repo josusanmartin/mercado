@@ -58,7 +58,7 @@ contract MercadoCardTest is BaseV2 {
         uint256 id = _charge(250e6, 1);
         assertEq(xmxn.balanceOf(shop), 250e6);
         assertEq(xmxn.balanceOf(holder), 4_750e6);
-        (uint256 cId, address m, uint256 amt,,) = card.charges(id);
+        (uint256 cId, address m, uint256 amt,,,) = card.charges(id);
         assertEq(cId, cardId);
         assertEq(m, shop);
         assertEq(amt, 250e6);
@@ -142,18 +142,60 @@ contract MercadoCardTest is BaseV2 {
         card.charge(cardId, 10e6, "t", 1, dl, sig);
     }
 
-    function test_dailyLimitIsALeakyBucket() public {
+    /// R-041: calendar-day limit in Mexico City (UTC−6). Resets exactly at 00:00 CDMX.
+    function test_dailyLimitResetsAtMidnightCdmx() public {
+        uint256 midnight = card.dayStart(card.today() + 1); // next 00:00 CDMX
+        assertEq(midnight % 1 days, 6 hours, "00:00 CDMX = 06:00 UTC");
+        vm.warp(midnight - 2 hours); // 22:00 CDMX
         _charge(800e6, 1);
-        uint256 dl = block.timestamp + 60;
+        uint256 dl = block.timestamp + 3 hours;
         bytes memory sig = _tap(holderPk, cardId, shop, 300e6, "ticket-1", 2, dl);
         vm.prank(shop);
         vm.expectRevert(abi.encodeWithSelector(MercadoCard.OverDailyLimit.selector, 1_100e6, 1_000e6));
         card.charge(cardId, 300e6, "ticket-1", 2, dl, sig);
-        // 12h later half the limit has drained: 800 - 500 = 300 spent, 700 available
-        vm.warp(block.timestamp + 12 hours);
-        assertEq(card.getCard(cardId).availableToday, 700e6);
-        _charge(700e6, 3);
+        MercadoCard.CardView memory v = card.getCard(cardId);
+        assertEq(v.spentToday, 800e6);
+        assertEq(v.availableToday, 200e6);
+        assertEq(v.resetsAt, midnight);
+        // one second before midnight: still today
+        vm.warp(midnight - 1);
+        assertEq(card.getCard(cardId).spentToday, 800e6);
+        // at midnight the counter resets to the actual spend of the new day (0)
+        vm.warp(midnight);
+        assertEq(card.getCard(cardId).spentToday, 0);
+        assertEq(card.getCard(cardId).availableToday, 1_000e6);
+        vm.prank(shop);
+        card.charge(cardId, 300e6, "ticket-1", 2, dl, sig);
+        assertEq(card.getCard(cardId).spentToday, 300e6);
+    }
+
+    function test_noBucketRefillWithinTheDay() public {
+        vm.warp(card.dayStart(card.today() + 1) + 1 hours); // 01:00 CDMX
+        _charge(1_000e6, 1);
+        vm.warp(block.timestamp + 20 hours); // 21:00 same day: nothing refills
         assertEq(card.getCard(cardId).availableToday, 0);
+        uint256 dl = block.timestamp + 60;
+        bytes memory sig = _tap(holderPk, cardId, shop, 1e6, "ticket-1", 2, dl);
+        vm.prank(shop);
+        vm.expectRevert(abi.encodeWithSelector(MercadoCard.OverDailyLimit.selector, 1_001e6, 1_000e6));
+        card.charge(cardId, 1e6, "ticket-1", 2, dl, sig);
+    }
+
+    function test_refundRestoresLimitOnlySameDay() public {
+        vm.warp(card.dayStart(card.today() + 1) + 1 hours);
+        uint256 id1 = _charge(600e6, 1);
+        vm.startPrank(shop);
+        IERC20(address(xmxn)).approve(address(card), type(uint256).max);
+        card.refund(id1, 200e6); // same day → limit back
+        vm.stopPrank();
+        assertEq(card.getCard(cardId).spentToday, 400e6);
+        uint256 id2 = _charge(400e6, 2);
+        vm.warp(block.timestamp + 1 days); // next day
+        assertEq(card.getCard(cardId).spentToday, 0);
+        vm.prank(shop);
+        card.refund(id2, 100e6); // older charge: funds only, today's counter untouched
+        assertEq(card.getCard(cardId).spentToday, 0);
+        assertEq(card.getCard(cardId).availableToday, 1_000e6);
     }
 
     function test_limitOnlyByHolderAndBounded() public {
