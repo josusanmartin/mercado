@@ -78,17 +78,50 @@ describe("MOVE quotes (v1 SwapDesk fallback)", () => {
 });
 
 describe("MOVE quotes (v2 vAMM)", () => {
-  it("prefers deployments.v2.vamm and reports its size impact", async () => {
-    deployments = { ...ADDR, v2: { vamm: "0x00000000000000000000000000000000000000e1" } } as never;
+  const V2 = {
+    vamm: "0x00000000000000000000000000000000000000e1",
+    vault: "0x00000000000000000000000000000000000000e2",
+    xMXN: "0x00000000000000000000000000000000000000e3",
+  };
+
+  it("stays on v1 when v2 is deployed but not flipped (default v1)", async () => {
+    deployments = { ...ADDR, v2: V2 };
+    delete process.env.NEXT_PUBLIC_PROTOCOL;
+    const q = await quoteMove("usd_to_mxn", "100", 1_000);
+    expect(q.protocol).toBe("v1");
+    expect(q.source).toBe("v1-swapdesk");
+    expect(q.tokenOut).toBe(ADDR.xMXN);
+    deployments = { ...ADDR };
+  });
+
+  it("uses only v2 venue + token once flipped, and reports size impact", async () => {
+    deployments = { ...ADDR, v2: V2 };
+    process.env.NEXT_PUBLIC_PROTOCOL = "v2";
     const prev = deskImpl;
     deskImpl = () => [1_985_000_000n, 6_000_000n, 2_000_000_000n, 15n]; // out, fee, mid, impactBps
     const q = await quoteMove("usd_to_mxn", "100", 1_000);
+    expect(q.protocol).toBe("v2");
     expect(q.source).toBe("v2-vamm");
-    expect(q.venue).toBe("0x00000000000000000000000000000000000000e1");
+    expect(q.venue).toBe(V2.vamm);
+    expect(q.tokenOut).toBe(V2.xMXN);
     expect(q.sizeImpactBps).toBe(15);
     expect(q.effectiveSpreadBps).toBe(75);
     expect(q.label).toMatch(/vault vAMM/);
     deskImpl = prev;
+    delete process.env.NEXT_PUBLIC_PROTOCOL;
+    deployments = { ...ADDR };
+  });
+
+  it("never falls back to v1 when the flipped v2 venue fails", async () => {
+    deployments = { ...ADDR, v2: V2 };
+    process.env.NEXT_PUBLIC_PROTOCOL = "v2";
+    const prev = deskImpl;
+    deskImpl = () => {
+      throw new Error("rpc down");
+    };
+    await expect(quoteMove("usd_to_mxn", "100")).rejects.toMatchObject({ status: 502 });
+    deskImpl = prev;
+    delete process.env.NEXT_PUBLIC_PROTOCOL;
     deployments = { ...ADDR };
   });
 });

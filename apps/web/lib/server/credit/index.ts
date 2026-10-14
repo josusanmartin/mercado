@@ -2,7 +2,7 @@
 import { formatUnits, parseAbi, parseUnits, type Address, type Hex } from "viem";
 import { DEMO_UBER_LABEL, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import type { DriverProfileId, DriverScoreResponse } from "@mercado/shared";
-import { getDeployments } from "../deployments";
+import { activeProtocol } from "../protocol";
 import { env } from "../env";
 import { publicClient } from "../chain";
 import { DemoEarningsProvider, type EarningsProvider } from "./provider";
@@ -16,7 +16,7 @@ export * from "./attest";
 const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
 
 export function creditPoolAddress(): Address | undefined {
-  return getDeployments().creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
+  return activeProtocol().creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
 }
 
 /**

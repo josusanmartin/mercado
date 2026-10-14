@@ -277,6 +277,9 @@ export const MoveQuoteQuerySchema = z.object({
 
 export const MoveQuoteResponseSchema = z.object({
   demo: z.literal(true),
+  /** Active protocol version the quote is for (token + venue come from this version only). */
+  protocol: z.enum(["v1", "v2"]),
+  chainId: z.number().int(),
   side: MoveSideSchema,
   /** Which venue priced it: the v2 vault-integrated vAMM, or the v1 capped SwapDesk fallback. */
   source: z.enum(["v2-vamm", "v1-swapdesk"]),

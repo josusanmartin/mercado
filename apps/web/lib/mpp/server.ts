@@ -9,6 +9,7 @@ import { Challenge, Credential, Receipt } from "mppx";
 import type { Address, Hex } from "viem";
 import { TEMPO_ADDRESSES, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import { getDeployments } from "../server/deployments";
+import { activeProtocol } from "../server/protocol";
 import { fileStore } from "./store";
 import { env, repoRoot } from "../server/env";
 
@@ -43,7 +44,8 @@ export interface PaymentToken {
 export function billPaymentToken(): PaymentToken {
   const override = env("BILL_TOKEN_ADDRESS") as Address | undefined;
   if (override) return { address: override, symbol: env("BILL_TOKEN_SYMBOL") ?? "TOKEN", interim: true };
-  const xmxn = getDeployments().xMXN;
+  // Same version gate as the rest of the app: v1 xMXN until lead flips NEXT_PUBLIC_PROTOCOL=v2.
+  const xmxn = activeProtocol().xmxn;
   if (xmxn) return { address: xmxn, symbol: "xMXN", interim: false };
   return { address: TEMPO_ADDRESSES.pathUSD, symbol: "pathUSD", interim: true };
 }

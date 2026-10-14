@@ -1,12 +1,13 @@
 // MOVE module: indicative FX quotes for remittances / cross-border payments.
-// Prices from the v2 vault-integrated vAMM when deployed (deployments.v2.vamm), otherwise from the v1 capped
-// SwapDesk at the (mock admin) oracle price. Quotes are indicative: on-chain execution is bound only by
+// Prices from the v2 vault-integrated vAMM when v2 is the active protocol (lib/server/protocol.ts), otherwise
+// from the v1 capped SwapDesk at the (mock admin) oracle price. Quotes are indicative: on-chain execution is bound only by
 // the swap's own minOut. No comparison against real-world remittance pricing is made here.
 import { BaseError, ContractFunctionRevertedError, formatUnits, parseAbi, parseUnits, type Address } from "viem";
-import { fxOracleAdapterAbi, swapDeskAbi } from "@mercado/shared";
+import { TEMPO_MODERATO_CHAIN_ID, fxOracleAdapterAbi, swapDeskAbi } from "@mercado/shared";
 import type { MoveQuoteResponse, MoveSide } from "@mercado/shared";
 import { publicClient } from "../chain";
 import { getDeployments } from "../deployments";
+import { activeProtocol } from "../protocol";
 
 export const QUOTE_TTL_SECONDS = 30;
 const SLIPPAGE_BPS = 50n;
@@ -46,10 +47,10 @@ function revertName(err: unknown): string | undefined {
 
 export async function quoteMove(side: MoveSide, amount: string, now = Math.floor(Date.now() / 1000)): Promise<MoveQuoteResponse> {
   const d = getDeployments();
-  const v2 = d.v2?.vamm ? d.v2 : undefined;
+  // One protocol version end to end (R: never mix v1/v2 tokens or venues). v1 until lead flips it.
+  const proto = activeProtocol();
   const ousd = d.ousd as Address | undefined;
-  // The v2 vAMM mints/burns the v2 xMXN when it ships its own token; otherwise v1's.
-  const xmxn = (v2?.xMXN ?? d.xMXN) as Address | undefined;
+  const xmxn = proto.xmxn;
   if (!ousd || !xmxn || !d.oracle) throw new MoveQuoteError(503, "Contracts aren't deployed yet.", "NOT_DEPLOYED");
   const usdToMxn = side === "usd_to_mxn";
   const amountIn = parseUnits(amount, 6);
@@ -69,16 +70,16 @@ export async function quoteMove(side: MoveSide, amount: string, now = Math.floor
   let mid: bigint = px;
   let impactBps: number | undefined;
   try {
-    if (v2?.vamm) {
+    if (proto.version === "v2") {
       source = "v2-vamm";
-      venue = v2.vamm;
-      const [out, f, m, impact] = await client.readContract({ address: v2.vamm, abi: vammAbi, functionName: "quote", args: [usdToMxn, amountIn] });
+      venue = proto.amm;
+      const [out, f, m, impact] = await client.readContract({ address: proto.amm, abi: vammAbi, functionName: "quote", args: [usdToMxn, amountIn] });
       [amountOut, fee, mid, impactBps] = [out, f, m, Number(impact)];
     } else {
-      if (!d.swapDesk) throw new MoveQuoteError(503, "No MOVE venue is deployed yet.", "NOT_DEPLOYED");
+      if (!proto.swapDesk) throw new MoveQuoteError(503, "No MOVE venue is deployed yet.", "NOT_DEPLOYED");
       source = "v1-swapdesk";
-      venue = d.swapDesk;
-      [amountOut, fee] = await client.readContract({ address: d.swapDesk, abi: swapDeskAbi, functionName: "quote", args: [usdToMxn, amountIn] });
+      venue = proto.swapDesk;
+      [amountOut, fee] = await client.readContract({ address: proto.swapDesk, abi: swapDeskAbi, functionName: "quote", args: [usdToMxn, amountIn] });
     }
   } catch (err) {
     if (err instanceof MoveQuoteError) throw err;
@@ -96,6 +97,8 @@ export async function quoteMove(side: MoveSide, amount: string, now = Math.floor
 
   return {
     demo: true,
+    protocol: proto.version,
+    chainId: TEMPO_MODERATO_CHAIN_ID,
     side,
     source,
     venue,
