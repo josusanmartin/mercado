@@ -100,6 +100,16 @@ export async function POST(req: Request) {
       { status: 429 },
     );
   }
+  // viem's withRelay polls account_getOperation while a receipt is pending. This relay co-signs only (no accounts
+  // plugin), so answer Method-not-found right here: viem reads -32601 as "no operation store" and falls back to
+  // the receipt quietly. Through Relay it surfaced as -32603 Internal error and was retried ~4× per charge.
+  const body = (await req
+    .clone()
+    .json()
+    .catch(() => undefined)) as { id?: number | string | null; method?: string } | undefined;
+  if (body && !Array.isArray(body) && typeof body.method === "string" && body.method.startsWith("account_")) {
+    return Response.json({ jsonrpc: "2.0", id: body.id ?? null, error: { code: -32601, message: `Method not found: ${body.method}` } });
+  }
   return getRelay().fetch(req);
 }
 
