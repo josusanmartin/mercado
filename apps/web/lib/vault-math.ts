@@ -20,10 +20,12 @@ export function rateAtThreshold(collateral: bigint, debt: bigint, thresholdBps: 
   return Number((debt * thresholdBps * FX) / (collateral * BPS)) / 1e8;
 }
 
-export type Health = "none" | "safe" | "ok" | "tight" | "liquidatable";
+export type Health = "unknown" | "none" | "safe" | "ok" | "tight" | "liquidatable";
 
+/** null = no debt (infinite ratio); undefined = couldn't read it (e.g. stale oracle), never "no debt". */
 export function health(bps: bigint | null | undefined): Health {
-  if (bps === null || bps === undefined) return "none";
+  if (bps === undefined) return "unknown";
+  if (bps === null) return "none";
   if (bps < 13_500n) return "liquidatable";
   if (bps < 15_000n) return "tight";
   if (bps < 20_000n) return "ok";
@@ -31,6 +33,7 @@ export function health(bps: bigint | null | undefined): Health {
 }
 
 export const HEALTH_COPY: Record<Health, string> = {
+  unknown: "Health unavailable: the exchange rate can't be read right now",
   none: "No debt",
   safe: "Healthy",
   ok: "Below the recommended 200%",
