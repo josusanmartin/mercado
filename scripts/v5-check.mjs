@@ -67,6 +67,10 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
       const errors = []
       page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 160)))
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message.slice(0, 160)}`))
+      // name the failing URL (a bare 'Failed to load resource: 429' doesn't say whose read it was)
+      page.on('response', (res) => {
+        if (res.status() >= 400 && !/favicon/.test(res.url())) errors.push(`HTTP ${res.status()} ${res.request().method()} ${res.url().replace(BASE, '').slice(0, 90)}`)
+      })
       const row = { route: r.path, vp: `${w}`, theme, motion, status: 0, errors: 0, overflowX: 0, fold: '-', anims: '-', ok: true, notes: [] }
       try {
         const res = await page.goto(BASE + r.path, { waitUntil: 'domcontentloaded', timeout: 60_000 })
@@ -169,7 +173,7 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
         row.notes.push(`error: ${e.message.split('\n')[0].slice(0, 120)}`)
       }
       row.errors = errors.length
-      if (errors.length) row.notes.push(`console: ${errors[0]}`)
+      if (errors.length) row.notes.push(`console: ${(errors.find((e) => e.startsWith('HTTP ')) ?? errors[0])}${errors.length > 1 ? ` (+${errors.length - 1})` : ''}`)
       if (row.status !== 200) row.notes.push(`HTTP ${row.status}`)
       if (row.overflowX > 0) row.notes.push(`horizontal overflow ${row.overflowX}px`)
       row.ok = row.notes.length === 0
