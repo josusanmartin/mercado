@@ -46,9 +46,9 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
 | # | Check | Owner | Status | Evidence |
 |---|---|---|---|---|
-| M1 | Mock only what's necessary: every remaining mock is listed in `MOCKS.md` (what / why / where labeled) and `scripts/check-mocks.ts` passes | qa / all | 🟡 | Check passes (no unlisted mocks). Open gaps G1–G4 in MOCKS.md §C: hardcoded per-driver cap, static recorded agent trace, OUSD=$1 not shown in UI, FX relay timestamps |
+| M1 | Mock only what's necessary: every remaining mock is listed in `MOCKS.md` (what / why / where labeled) and `scripts/check-mocks.ts` passes | qa / all | ✅ (qa) · review re-audit requested | Scanner PASS on the 6-product app, §C gaps G1–G6 all closed. Mocks: Uber/DiDi/Rappi demo data + simulated consent, Telcel/CFE fulfillment, sOUSD mock yield, tTBILL admin price (gated issuance, real InvestDesk trades), card network/PAN, card on-ramp checkout (simulated, currently disabled) |
 | IX | Activity indexer (getLogs) is complete and correct | contracts / qa | ✅ | `scripts/check-indexer.ts` on v1 and v2: minted − burned == totalSupply (68,650 / 745,661.61), Σ Borrowed == totalBorrowed, lent − repaid + fees == outstanding, sampled txs succeeded, no duplicate rows |
-| V2 | `PROTOCOL=v2` journey green end to end (V2-SWITCH gate) | qa / contracts / api | 🟡 | `scripts/demo-journey-v2.ts` V0–V7 green live: Create (sOUSD 250%, tTBILL 300%), Move (OUSD → xMXN v2 minted to the recipient in one tx; redeem burns), Lend/Spend/Repay on pool v2 via in-process api services; supply identity asserted after each mint/burn (`scripts/evidence/v2-run-*.json`). Pending: v2 stress step (needs a contracts script), HTTP path after the flip |
+| V2 | `PROTOCOL=v2` journey green end to end (V2-SWITCH gate) | qa / contracts / api | ✅ | Gate passed; lead flipped :3100 to v2 at 02:37 UTC. `scripts/demo-journey-v2.ts` V0–V10 + VS: Create (sOUSD, tTBILL via InvestDesk), Move (mint-to-recipient, redeem), Lend/Spend/Repay on pool v2, underwriter bot over HTTP, Card (issue, limit, tap auth, frozen decline + retry, charge, refund), Invest (pool supply, sOUSD, T-bill buy/sell), stress liquidation + restore. Post-flip HTTP check on :3100 green |
 
 ## C. Pass D robustness (UI / ops)
 
