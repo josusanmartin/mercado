@@ -69,12 +69,24 @@ Protocol parameters (demo-only) are in [INTERFACES.md](INTERFACES.md#protocol-pa
 | Explorer | https://explore.testnet.tempo.xyz |
 | Faucet | `cast rpc tempo_fundAddress <address> --rpc-url https://rpc.moderato.tempo.xyz` (pathUSD, AlphaUSD, BetaUSD, ThetaUSD, OUSD) |
 | Collateral | Testnet OUSD `0x20c0000000000000000000006a37da5c996874be` |
-| Fees | Paid in a USD TIP-20 stablecoin (Tempo has no native gas token) |
+| Fees | Paid in a USD TIP-20 stablecoin (Tempo has no native gas token). Always set a USD fee token (we use AlphaUSD): with none set, a call to xMXN fails with `FeeTokenNotUsdError` |
 
 ## Deployed addresses
 
 <!-- deployments:start -->
-_Pending deployment. Source of truth: `packages/shared/src/deployments/42431.json`._
+| Contract | Address |
+|---|---|
+| xMXN (TIP-20 via TIP20Factory; vault is sole issuer) | [`0x20C0000000000000000000002486D8487268a6dd`](https://explore.testnet.tempo.xyz/address/0x20C0000000000000000000002486D8487268a6dd) |
+| Collateral: Testnet OUSD (Tempo faucet, no real value) | [`0x20c0000000000000000000006a37DA5C996874BE`](https://explore.testnet.tempo.xyz/address/0x20c0000000000000000000006a37DA5C996874BE) |
+| CollateralVault | [`0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2`](https://explore.testnet.tempo.xyz/address/0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2) |
+| FXOracleAdapter (mock admin feed) | [`0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B`](https://explore.testnet.tempo.xyz/address/0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B) |
+| SwapDesk | [`0x038296fdE32fD87EB89A6113339aD426484abec5`](https://explore.testnet.tempo.xyz/address/0x038296fdE32fD87EB89A6113339aD426484abec5) |
+| CreditPool | [`0xbda927135f23a96aa0FD8411617F01Ffa9f063A4`](https://explore.testnet.tempo.xyz/address/0xbda927135f23a96aa0FD8411617F01Ffa9f063A4) |
+| LocalStableFactory | [`0x0F11AbDFa4e0cA43AC9CE075d700FbF33B6B5591`](https://explore.testnet.tempo.xyz/address/0x0F11AbDFa4e0cA43AC9CE075d700FbF33B6B5591) |
+| Attestation signer (EOA) | [`0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee`](https://explore.testnet.tempo.xyz/address/0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee) |
+| Bill merchant / MPP recipient (EOA) | [`0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3`](https://explore.testnet.tempo.xyz/address/0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3) |
+
+Deployed 2026-10-14T00:52:45.592Z. Source of truth: `packages/shared/src/deployments/42431.json` (import `moderatoDeployment` from `@mercado/shared`).
 <!-- deployments:end -->
 
 ## Running locally
@@ -93,7 +105,8 @@ cd packages/contracts && forge test && cd -
 npm run dev
 
 # end-to-end journey on Moderato (needs the app running)
-npx tsx scripts/demo-journey.ts
+npx tsx scripts/demo-journey.ts            # J0 health → J1–J6 journey → J7 FX-stress liquidation
+npx tsx scripts/demo-journey.ts --steps J0 # pre-demo health check (refreshes oracle, reseeds desk/pool if low)
 ```
 
 > The bill-payment order store (`.data/orders.json`) and its locks are local and single-process. Run the demo on the local dev server. A serverless deploy (e.g. Vercel) would need a shared database and lock first.
