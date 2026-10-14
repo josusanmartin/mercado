@@ -6,11 +6,13 @@
 // Every number is live: balances and quotes from chain, sends on the v2 exchange, bills through the real
 // MPP 402 flow. Simulated (and labeled): the on-ramp card charge and the airtime/bill fulfillment.
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useConnection } from "wagmi";
 import { ArrowUpRight, Bell, CircleUserRound, CreditCard, ExternalLink, History, House, Lightbulb, Phone, Plus, Send, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { MEMO_MAX_BYTES, memoByteLength, useBalances, useOracle } from "@/lib/contracts";
 import { useActivityFeed, type ActivityRow } from "@/lib/contracts/activity";
 import { fmtNumber, shortAddr, toUnits } from "@/lib/format";
+import { Stagger, TickerText } from "@/lib/motion";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
@@ -115,6 +117,13 @@ function Inicio({ s, openOnramp }: AppProps) {
     if (c?.address) s.setTo(c.address);
     s.setScreen("enviar");
   };
+  // Card top-ups are paused (server flag): say so on the entry point itself (review #19). The sheet still
+  // opens: "Agregar fondos con Tempo Wallet" works there. Same query (and cache) as useOnramp.
+  const onramp = useQuery({
+    queryKey: ["onramp-status"],
+    queryFn: async () => (await fetch("/api/onramp", { cache: "no-store" })).json() as Promise<{ enabled: boolean }>,
+    staleTime: 30_000,
+  });
   const papel: CSSProperties = {
     backgroundImage: PAPEL,
     backgroundSize: "48px 48px",
@@ -153,7 +162,7 @@ function Inicio({ s, openOnramp }: AppProps) {
       <Balance />
 
       <div className="mt-6 grid grid-cols-4 px-2">
-        <RoundAction icon={<Plus />} label="Agregar" onClick={openOnramp} />
+        <RoundAction icon={<Plus />} label="Agregar" onClick={openOnramp} badge={onramp.data && !onramp.data.enabled ? "Próximamente" : undefined} />
         <RoundAction icon={<Send />} label="Enviar" onClick={() => start()} primary />
         <RoundAction icon={<Smartphone />} label="Tiempo Aire" onClick={() => s.setScreen("aire")} />
         <RoundAction icon={<Lightbulb />} label="Servicios" onClick={() => s.setScreen("servicios")} />
@@ -232,7 +241,7 @@ function CurrencyBlock({ flag, code, name, amount, sub, style }: { flag: ReactNo
       </div>
       <div className="min-w-0">
         <Display size={22} fit className="leading-tight">
-          {amount}
+          <TickerText text={amount} />
         </Display>
         <p data-honesty className="mt-1 text-[11.5px] font-medium tracking-[0.06em] uppercase opacity-70">
           {sub}
@@ -346,8 +355,9 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
       />
     );
   const shown = entries.slice(0, limit);
+  // Rows arrive after the screen (async reads), so they own their entrance: a short stagger.
   return (
-    <div>
+    <Stagger>
       {shown.map((e, i) => {
         const g = dayGroup(e.at, now);
         const head = i === 0 || dayGroup(shown[i - 1].at, now) !== g;
@@ -376,7 +386,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
           </div>
         );
       })}
-    </div>
+    </Stagger>
   );
 }
 
@@ -484,7 +494,7 @@ function Enviar({ s }: AppProps) {
         <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-[var(--m-outline-variant)] pt-3">
           <span className="text-[15px]">{contact?.name} recibe</span>
           <Display size={26} style={{ color: TERRACOTTA }}>
-            {q.amountOut !== undefined && amt > 0n ? `MX${fmtMoney(q.amountOut)}` : q.loading && amt > 0n ? "…" : "MX$0.00"}
+            <TickerText text={q.amountOut !== undefined && amt > 0n ? `MX${fmtMoney(q.amountOut)}` : q.loading && amt > 0n ? "…" : "MX$0.00"} />
           </Display>
         </div>
         <Meta className="mt-1 text-right">{rate !== undefined ? `1 USD = ${fmtNumber(rate, 4)} MXN · comisión incluida` : "Cotización en vivo"}</Meta>
