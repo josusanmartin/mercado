@@ -75,6 +75,15 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
           const box = await target.boundingBox().catch(() => null)
           const limit = r.phone ? Math.min(868, foldY) : foldY // lead 04:53: the whole phone ends ≤868
           row.fold = box ? `${Math.round(box.y + box.height)}/${limit}` : 'missing'
+          // lead 06:31: at 390 the phone app's bottom nav (fixed) must be on screen, not stranded at the page end
+          if (w < 1000 && r.phone) {
+            const nav = await page.getByRole('navigation', { name: 'Navegación' }).first().boundingBox().catch(() => null)
+            row.fold += nav ? ` nav ${Math.round(nav.y)}-${Math.round(nav.y + nav.height)}` : ' nav missing'
+            // Crédito's first-run 'Continuar con Uber' screen has no tab bar by design
+            const onboarding = !nav && (await page.getByRole('button', { name: /Continuar con Uber/i }).first().isVisible().catch(() => false))
+            if (onboarding) row.fold += ' (onboarding: no nav by design)'
+            else if (!nav || nav.y < 0 || nav.y + nav.height > h + 1) row.notes.push(`bottom nav off screen (${nav ? `${Math.round(nav.y)}–${Math.round(nav.y + nav.height)}` : 'missing'} vs ${h})`)
+          }
           // gate the fold on desktop only; at 390px the page scrolls by design (informational)
           if (w >= 1000 && (!box || box.y + box.height > limit)) row.notes.push(r.phone ? 'phone below the fold' : 'primary action below the fold')
         }
