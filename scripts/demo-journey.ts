@@ -149,6 +149,13 @@ const poolAbi = parseAbi([
   'function stats() view returns (uint256 totalSupplied, uint256 totalBorrowed, uint256 outstanding, uint256 realizedFees)',
   'function attestationSigner() view returns (address)',
   'function nonceUsed(address, uint256) view returns (bool)',
+  'function feeBps() view returns (uint256)',
+  'error NonceAlreadyUsed(uint256 nonce)',
+  'error InvalidSigner()',
+  'error AttestationExpired(uint256 expiry)',
+  'error ExceedsAttestedMax(uint256 principalAfter, uint256 maxAmount)',
+  'error ExceedsUserCap(uint256 principalAfter, uint256 cap)',
+  'error InsufficientLiquidity(uint256 available, uint256 requested)',
 ])
 
 // ---------- logging ----------
@@ -407,17 +414,23 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       if (amount > liq) throw new Error(`pool liquidity ${fmt(liq)} < borrow ${fmt(amount)}; LENDER must supply first`)
       const debtBefore = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
       const borrowArgs = [amount, maxAmount, BigInt(att.expiry), BigInt(att.nonce), att.dataHash, att.signature] as const
+      // negative checks before the real draw (simulation only)
+      const sim = { address: d.creditPool, abi: poolAbi, functionName: 'borrow', account: driver } as const
+      await expectRevert('tampered attestation (maxAmount +1)', { ...sim, args: [amount, maxAmount + 1n, ...borrowArgs.slice(2)] }, ['InvalidSigner'])
+      await expectRevert('expired attestation', { ...sim, args: [amount, maxAmount, BigInt(Math.floor(Date.now() / 1000) - 60), ...borrowArgs.slice(3)] }, ['AttestationExpired'])
+      await expectRevert('borrow above the attested max', { ...sim, args: [maxAmount + 1n, ...borrowArgs.slice(1)] }, ['ExceedsAttestedMax', 'ExceedsUserCap'])
       await send(`borrow ${fmt(amount)} xMXN`, driver, { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: borrowArgs })
       const debt = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
-      const expectedFee = (amount * 200n) / 10_000n
-      ok(`driver debt ${fmt(debtBefore)} → ${fmt(debt)} xMXN (expected +${fmt(amount + expectedFee)} incl. 2% fee)`)
+      const feeBps = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'feeBps' })
+      const expectedFee = (amount * feeBps + 9_999n) / 10_000n // CreditPool rounds the fee up
+      ok(`driver debt ${fmt(debtBefore)} → ${fmt(debt)} xMXN (expected +${fmt(amount + expectedFee)} incl. ${Number(feeBps) / 100}% fee)`)
       assert(debt - debtBefore === amount + expectedFee, `debt delta ${debt - debtBefore} == amount+fee ${amount + expectedFee}`)
       ctx.driverBorrowed = amount
 
       // negative check: replaying the same attestation must revert
       const used = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'nonceUsed', args: [driver.address, BigInt(att.nonce)] })
       assert(used, 'nonce marked used')
-      await expectRevert('replayed attestation', { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)], account: driver })
+      await expectRevert('replayed attestation', { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)], account: driver }, ['NonceAlreadyUsed'])
     },
   },
   {
