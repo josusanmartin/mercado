@@ -74,7 +74,7 @@ export function DevelopersScreen() {
       demo="partner"
       meta={
         pricing.data
-          ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value${present ? "" : " · Testnet · sin valor real"}`
+          ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value${present ? "" : " · Testnet · no real value"}`
           : undefined
       }
       purpose={

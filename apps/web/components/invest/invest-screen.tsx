@@ -27,6 +27,19 @@ const signed = (x: bigint | undefined, unit: string, d = 2) => {
   if (abs * 2n < 10n ** BigInt(6 - d)) return `${fmtAmount(0n, d)} ${unit}`;
   return `${x < 0n ? "−" : "+"}${fmtAmount(abs, d)} ${unit}`;
 };
+/** The activity labels are the phone's (Spanish); the desktop console reads English (lead 05:27). */
+const EN_LABEL: Record<string, string> = {
+  "Depósito · ahorro en dólares": "Deposit · dollar savings",
+  "Retiro · ahorro en dólares": "Withdrawal · dollar savings",
+  "Depósito · ahorro en pesos": "Deposit · peso savings",
+  "Retiro · ahorro en pesos": "Withdrawal · peso savings",
+  "Depósito · préstamo a choferes": "Deposit · driver lending",
+  "Retiro · préstamo a choferes": "Withdrawal · driver lending",
+  "Compra · acciones": "Buy · stocks",
+  "Venta · acciones": "Sell · stocks",
+  "Compra · T-bills": "Buy · T-bills",
+  "Venta · T-bills": "Sell · T-bills",
+};
 const pct = (bps: bigint | undefined) =>
   bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`;
 
@@ -131,7 +144,7 @@ function InvestV2() {
             description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
           >
             <p className="text-muted-foreground pt-2 text-[13px] font-medium">
-              Ahorro en dólares · sOUSD
+              Dollar savings · sOUSD
             </p>
             <Rows>
               <Row
@@ -150,7 +163,7 @@ function InvestV2() {
             </Rows>
 
             <p className="text-muted-foreground pt-6 text-[13px] font-medium">
-              Ahorro en pesos · {vault ? "sxMXN" : "lending pool"}
+              Peso savings · {vault ? "sxMXN" : "lending pool"}
             </p>
             {vault ? (
               <Rows>
@@ -189,7 +202,7 @@ function InvestV2() {
             )}
 
             <p className="text-muted-foreground pt-6 text-[13px] font-medium">
-              Acciones · mIDX (Mercado US Equity Index)
+              Stocks · mIDX (Mercado US Equity Index)
             </p>
             <Rows>
               <Row
@@ -275,7 +288,7 @@ function InvestV2() {
               {activity?.slice(0, 12).map((r) => (
                 <Row
                   key={`${r.txHash}-${r.logIndex}`}
-                  label={r.label}
+                  label={EN_LABEL[r.label] ?? r.label}
                   sub={
                     <a
                       href={explorerTx(r.txHash)}
