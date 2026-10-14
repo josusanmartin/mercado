@@ -131,7 +131,7 @@ function InvestV2() {
             persona="saver"
             why="Mercado Invest runs on the saver's wallet. Use the demo account or connect your own."
           >
-            <PhoneFrame label="Mercado Invest on Android" accent="#E5A823" onAccent="#0a0a0a">
+            <PhoneFrame label="Mercado Invest on Android" accent="#E5A823" onAccent="#0a0a0a" statusBar="#E5A823">
               <PhoneApp />
             </PhoneFrame>
           </ConnectGate>

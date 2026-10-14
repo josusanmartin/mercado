@@ -15,12 +15,14 @@ import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { TickerText } from "@/lib/motion";
 import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping } from "@/components/mobile";
 import { LiveMoney } from "./live-money";
 import { SXMXN, useLiveDollars, useLivePesos } from "./use-live-yield";
 import { STOCKS_DEPLOYED, useStocks, useStocksActions, useStocksQuote } from "./use-stocks";
 import { useVaultActions, useVaultPosition } from "./use-vault";
 import {
+  AccentField,
   ActionRow,
   BankRow,
   DayGroups,
@@ -35,6 +37,7 @@ import {
   useH,
   LoadError,
   StaleLine,
+  washStyle,
 } from "@/components/mobile/extra/editorial";
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
 
@@ -152,54 +155,59 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
   const r = useReturns();
   return (
     <div className="pb-6">
-      <TopMeta />
-      <section className="px-5 pt-8" aria-live="polite">
-        <BalanceHead label="Total invertido" />
-        <Money value={total} currency="USD" size={50} className="mt-3" />
-        <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, H("Pesos al tipo del oráculo demo"), H("No canjeable")]} />
-      </section>
-      <div className="px-4 pt-7">
-        <ActionRow>
-          <RoundAction primary icon={<ArrowDownLeft strokeWidth={1.75} />} label="Ahorrar" onClick={() => trade("dolares", "in")} />
-          <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Retirar" onClick={() => trade("dolares", "out")} />
-          <RoundAction icon={<TrendingUp strokeWidth={1.75} />} label="Acciones" onClick={() => trade("acciones", "in")} disabled={!STOCKS_READY} />
-          <RoundAction icon={<Layers strokeWidth={1.75} />} label="Colateral" href="/mint" />
-        </ActionRow>
-      </div>
-      <div className="px-5 pt-8">
-        <SectionHead>Tu dinero</SectionHead>
-        {ORDER.map((id) => {
-          const P = PRODUCT[id];
-          const ok = ready(id);
-          return (
-            <BankRow
-              key={id}
-              onClick={ok ? () => open(id) : undefined}
-              leading={
-                <span className="grid size-10 place-items-center rounded-full border border-[var(--m-on-surface)]">
-                  {id === "dolares" ? <Flag code="us" className="h-[12px] w-[18px]" /> : id === "pesos" ? <Flag code="mx" className="h-[12px] w-[18px]" /> : <P.icon strokeWidth={1.75} />}
-                </span>
-              }
-              title={P.title}
-              sub={r.line[id]}
-              amount={
-                !ok ? (
-                  <span className="text-[var(--m-on-surface-variant)]">Pronto</span>
-                ) : id === "acciones" ? (
-                  `US${fmtMoney(r.st.value)}`
-                ) : (
-                  <LiveMoney live={id === "dolares" ? r.usd : r.mxn} currency={P.currency} />
-                )
-              }
-              amountSub={ok ? (id === "acciones" ? `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` : P.unit) : undefined}
-            />
-          );
-        })}
-        <Meta className="mt-3">{["Se acumula cada segundo en la cadena", H("de una reserva demo"), "Tasas configuradas, no garantizadas", H("Acciones: token demo, precio del administrador"), H("Testnet")].filter(Boolean).join(" · ")}</Meta>
-      </div>
-      <div className="px-5 pt-7">
-        <SectionHead>Actividad</SectionHead>
-        <ActivityList limit={3} />
+      {/* v5 maize field: header + the one big total (kit Money ticks to each new value) */}
+      <AccentField color={MAIZ} className="pb-6">
+        <TopMeta />
+        <section className="px-5 pt-8" aria-live="polite">
+          <BalanceHead label="Total invertido" />
+          <Money value={total} currency="USD" size={50} className="mt-3" />
+          <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, H("Pesos al tipo del oráculo demo"), H("No canjeable")]} />
+        </section>
+      </AccentField>
+      <div style={washStyle(MAIZ)}>
+        <div className="px-4 pt-7">
+          <ActionRow>
+            <RoundAction primary icon={<ArrowDownLeft strokeWidth={1.75} />} label="Ahorrar" onClick={() => trade("dolares", "in")} />
+            <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Retirar" onClick={() => trade("dolares", "out")} />
+            <RoundAction icon={<TrendingUp strokeWidth={1.75} />} label="Acciones" onClick={() => trade("acciones", "in")} disabled={!STOCKS_READY} />
+            <RoundAction icon={<Layers strokeWidth={1.75} />} label="Colateral" href="/mint" />
+          </ActionRow>
+        </div>
+        <div className="px-5 pt-8">
+          <SectionHead>Tu dinero</SectionHead>
+          {ORDER.map((id) => {
+            const P = PRODUCT[id];
+            const ok = ready(id);
+            return (
+              <BankRow
+                key={id}
+                onClick={ok ? () => open(id) : undefined}
+                leading={
+                  <span className="grid size-10 place-items-center rounded-full border border-[var(--m-on-surface)]">
+                    {id === "dolares" ? <Flag code="us" className="h-[12px] w-[18px]" /> : id === "pesos" ? <Flag code="mx" className="h-[12px] w-[18px]" /> : <P.icon strokeWidth={1.75} />}
+                  </span>
+                }
+                title={P.title}
+                sub={<TickerText text={r.line[id]} />}
+                amount={
+                  !ok ? (
+                    <span className="text-[var(--m-on-surface-variant)]">Pronto</span>
+                  ) : id === "acciones" ? (
+                    `US${fmtMoney(r.st.value)}`
+                  ) : (
+                    <LiveMoney live={id === "dolares" ? r.usd : r.mxn} currency={P.currency} />
+                  )
+                }
+                amountSub={ok ? (id === "acciones" ? `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` : P.unit) : undefined}
+              />
+            );
+          })}
+          <Meta className="mt-3">{["Se acumula cada segundo en la cadena", H("de una reserva demo"), "Tasas configuradas, no garantizadas", H("Acciones: token demo, precio del administrador"), H("Testnet")].filter(Boolean).join(" · ")}</Meta>
+        </div>
+        <div className="px-5 pt-7">
+          <SectionHead>Actividad</SectionHead>
+          <ActivityList limit={3} />
+        </div>
       </div>
     </div>
   );
@@ -249,49 +257,53 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
   const ok = ready(product);
   return (
     <div className="flex flex-1 flex-col pb-6">
-      <div className="flex items-center gap-2 px-2 pt-2">
-        <button type="button" onClick={back} className="m-press grid size-12 place-items-center rounded-full" aria-label="Atrás">
-          <ArrowUpRight className="size-5 -rotate-[135deg]" strokeWidth={2} />
-        </button>
-        <Meta mark={MAIZ} parts={["06", "Invest", P.short]} className="text-[var(--m-on-surface)]" />
-      </div>
-      <section className="px-5 pt-4">
-        <Display size={44} fit>
-          {P.title}
-        </Display>
-        <div className="mt-6">
-          <BalanceHead label="Tienes" />
+      <AccentField color={MAIZ} className="pb-6">
+        <div className="flex items-center gap-2 px-2 pt-2">
+          <button type="button" onClick={back} className="m-press grid size-12 place-items-center rounded-full" aria-label="Atrás">
+            <ArrowUpRight className="size-5 -rotate-[135deg]" strokeWidth={2} />
+          </button>
+          <Meta mark="#0a0a0a" parts={["06", "Invest", P.short]} className="text-[var(--m-on-surface)]" />
         </div>
-        {view.live && ok ? (
-          <LiveMoney live={view.live} currency={P.currency} variant="hero" size={50} className="mt-3" />
-        ) : (
-          <Money value={product === "acciones" && ok ? r.st.value : undefined} currency="USD" size={50} className="mt-3" />
+        <section className="px-5 pt-4">
+          <Display size={44} fit>
+            {P.title}
+          </Display>
+          <div className="mt-6">
+            <BalanceHead label="Tienes" />
+          </div>
+          {view.live && ok ? (
+            <LiveMoney live={view.live} currency={P.currency} variant="hero" size={50} className="mt-3" />
+          ) : (
+            <Money value={product === "acciones" && ok ? r.st.value : undefined} currency="USD" size={50} className="mt-3" />
+          )}
+          <Meta className="mt-2" parts={view.meta} />
+        </section>
+      </AccentField>
+      <div className="flex flex-1 flex-col" style={washStyle(MAIZ)}>
+        <div className="grid grid-cols-2 gap-3 px-5 pt-6">
+          <Pill accent onClick={() => trade("in")} disabled={!ok || (product === "acciones" && r.st.closed)}>
+            {P.inLabel}
+          </Pill>
+          <Pill variant="line" onClick={() => trade("out")} disabled={!ok || (product === "acciones" && r.st.closed)}>
+            {P.outLabel}
+          </Pill>
+        </div>
+        {view.facts.length > 0 && (
+          <dl className="mx-5 mt-7 border-t border-[var(--m-on-surface)]">
+            {view.facts.map((f) => (
+              <div key={f.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
+                <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{f.k}</dt>
+                <dd className="m-num text-right text-[15px] font-semibold">{f.v}</dd>
+              </div>
+            ))}
+          </dl>
         )}
-        <Meta className="mt-2" parts={view.meta} />
-      </section>
-      <div className="grid grid-cols-2 gap-3 px-5 pt-6">
-        <Pill accent onClick={() => trade("in")} disabled={!ok || (product === "acciones" && r.st.closed)}>
-          {P.inLabel}
-        </Pill>
-        <Pill variant="line" onClick={() => trade("out")} disabled={!ok || (product === "acciones" && r.st.closed)}>
-          {P.outLabel}
-        </Pill>
-      </div>
-      {view.facts.length > 0 && (
-        <dl className="mx-5 mt-7 border-t border-[var(--m-on-surface)]">
-          {view.facts.map((f) => (
-            <div key={f.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
-              <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{f.k}</dt>
-              <dd className="m-num text-right text-[15px] font-semibold">{f.v}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {/* plain Meta (children) so long notes wrap; parts stay on one line each */}
-      <Meta className="px-5 pt-3">{view.note.filter(Boolean).join(" · ")}</Meta>
-      <div className="px-5 pt-7">
-        <SectionHead>Movimientos</SectionHead>
-        <ActivityList product={product} limit={5} />
+        {/* plain Meta (children) so long notes wrap; parts stay on one line each */}
+        <Meta className="px-5 pt-3">{view.note.filter(Boolean).join(" · ")}</Meta>
+        <div className="px-5 pt-7">
+          <SectionHead>Movimientos</SectionHead>
+          <ActivityList product={product} limit={5} />
+        </div>
       </div>
     </div>
   );
@@ -548,13 +560,15 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
 function Actividad() {
   return (
     <div className="pb-6">
-      <TopMeta title="Actividad" />
-      <div className="px-5 pt-6">
-        <Display size={40}>Actividad</Display>
-        <Meta className="mt-2" parts={["Depósitos y retiros", "On-chain · Tempo testnet"]} />
-        <div className="pt-3">
-          <ActivityList />
+      <AccentField color={MAIZ} className="pb-6">
+        <TopMeta title="Actividad" />
+        <div className="px-5 pt-6">
+          <Display size={40}>Actividad</Display>
+          <Meta className="mt-2" parts={["Depósitos y retiros", "On-chain · Tempo testnet"]} />
         </div>
+      </AccentField>
+      <div className="px-5 pt-3" style={washStyle(MAIZ)}>
+        <ActivityList />
       </div>
     </div>
   );
@@ -574,11 +588,15 @@ function Perfil() {
   ];
   return (
     <div className="pb-6">
-      <TopMeta title="Perfil" />
-      <div className="px-5 pt-6">
-        <Display size={44} fit>Ahorrador</Display>
-        <Meta className="mt-2" parts={[H("Cuenta demo"), H("Tempo testnet")]} />
-        <dl className="mt-6 border-t border-[var(--m-on-surface)]">
+      <AccentField color={MAIZ} className="pb-6">
+        <TopMeta title="Perfil" />
+        <div className="px-5 pt-6">
+          <Display size={44} fit>Ahorrador</Display>
+          <Meta className="mt-2" parts={[H("Cuenta demo"), H("Tempo testnet")]} />
+        </div>
+      </AccentField>
+      <div className="px-5 pt-6" style={washStyle(MAIZ)}>
+        <dl className="border-t border-[var(--m-on-surface)]">
           {rows.map((r) => (
             <div key={r.k} className="flex min-h-14 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
               <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{r.k}</dt>
