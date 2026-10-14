@@ -1,0 +1,7 @@
+partner remittance app 0x819c254B… wants a signed mxn_to_usd quote for 1000. No API key.
+mercado 402 Payment Required: Mercado MOVE signed quote (mxn_to_usd, 1000), demo testnet pricing
+tempo   paid on-chain https://explore.testnet.tempo.xyz/tx/0xffe8e7716a70c78fa39914f34d2df4807fdd709d4a585b2a6f4172dab6bb5278
+mercado 200 OK + Payment-Receipt ✓
+quote   1000 xMXN → 49.75 OUSD · rate 0.0498 · mid 20 · spread 50 bps (fee 50, size 0) · minOut 49.50125 · expires in 30s · v1-swapdesk
+partner signature verifies against Mercado quote key 0xbDdc0C3C…
+label   Demo quote from the capped testnet swap desk (v1 fallback), not a market. Priced off an admin-controlled mock FX feed; testnet OUSD has no real value and xMXN is not redeemable for pesos. Indicative: execution is bound only by your swap's minOut.
