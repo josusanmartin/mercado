@@ -16,7 +16,7 @@ import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { TickerText } from "@/lib/motion";
-import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping, useNavDirection } from "@/components/mobile";
 import { LiveMoney } from "./live-money";
 import { SXMXN, useLiveDollars, useLivePesos } from "./use-live-yield";
 import { STOCKS_DEPLOYED, useStocks, useStocksActions, useStocksQuote } from "./use-stocks";
@@ -47,6 +47,7 @@ type Product = "dolares" | "pesos" | "acciones";
 type Mode = "in" | "out";
 type Tab = "inicio" | "actividad" | "perfil";
 type View = { tab: Tab; product?: Product };
+const TABS: Tab[] = ["inicio", "actividad", "perfil"];
 type Done = { product: Product; mode: Mode; amount: bigint; symbol: string; hash?: string; url?: string };
 
 const pct = (bps: bigint | number | undefined) => (bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`);
@@ -73,8 +74,9 @@ export function PhoneApp() {
   const [done, setDone] = useState<Done>();
   const key = done ? "done" : view.product ? `p-${view.product}` : view.tab;
   const prev = usePrevious(key);
-  // into a product / the receipt slides forward, back out of them slides back, tab to tab fades
-  const dir = done || view.product ? "fwd" : prev === "done" || prev?.startsWith("p-") ? "back" : "fade";
+  const tabDir = useNavDirection(view.tab, TABS);
+  // into a product / the receipt slides forward, back out of them slides back, tab to tab slides along the nav order
+  const dir = done || view.product ? "fwd" : prev === "done" || prev?.startsWith("p-") ? "back" : tabDir;
   return (
     <EdApp screen={key}>
       <ScreenTransition className="flex-1" id={key} dir={dir}>

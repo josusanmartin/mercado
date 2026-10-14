@@ -19,7 +19,7 @@ import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
-import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney, useNavDirection } from "@/components/mobile";
 import {
   AccentField,
   ActionRow,
@@ -46,6 +46,7 @@ type Flow = "conectar" | "app" | "recibido" | "pagado";
 type Tab = "inicio" | "ganancias" | "actividad" | "perfil";
 type Sheet = "adelanto" | "pagar";
 const FLOW: Flow[] = ["conectar", "app", "recibido", "pagado"];
+const TABS: Tab[] = ["inicio", "ganancias", "actividad", "perfil"];
 const SCOPES = [
   { es: "Perfil", en: "Nombre, ciudad y calificación" },
   { es: "Viajes", en: "Cuántos y cuándo" },
@@ -72,6 +73,11 @@ function DriverAppInner() {
   const adv = useAdvance(address, platform);
   const debt = adv.pool.debt;
   const prev = useFlowDirection(flow);
+  const key = flow === "app" ? `app-${tab}` : flow;
+  const prevKey = usePrevKey(key);
+  const tabDir = useNavDirection(tab, TABS);
+  // tab ↔ tab: shared-axis slide along the nav order; flow steps: forward/back along FLOW
+  const dir = prevKey?.startsWith("app-") && key.startsWith("app-") ? tabDir : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd";
 
   // Someone with an open advance lands straight on the app (Debes), even before reconnecting a platform.
   useEffect(() => {
@@ -109,8 +115,8 @@ function DriverAppInner() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
       <div className="-mx-4 sm:mx-0">
         <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} onAccent="#0a0a0a" statusBar={flow === "recibido" || flow === "pagado" ? undefined : ROSA}>
-          <EdApp screen={flow === "app" ? `app-${tab}` : flow}>
-            <ScreenTransition className="flex-1" id={flow === "app" ? `app-${tab}` : flow} dir={flow === "app" && prev === "app" ? "fade" : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd"}>
+          <EdApp screen={key}>
+            <ScreenTransition className="flex-1" id={key} dir={dir}>
               {flow === "conectar" && <Conectar {...props} />}
               {flow === "app" && <AppShell {...props} />}
               {flow === "recibido" && <Recibido {...props} />}
@@ -142,6 +148,13 @@ function DriverAppInner() {
       </PhonePanel>
     </div>
   );
+}
+
+/** Previous distinct screen key (to tell a tab switch from a flow step). */
+function usePrevKey(key: string) {
+  const [hist, setHist] = useState<{ cur: string; prev?: string }>({ cur: key });
+  if (hist.cur !== key) setHist({ cur: key, prev: hist.cur });
+  return hist.cur === key ? hist.prev : hist.cur;
 }
 
 /** Previous flow step (for the slide direction). */
