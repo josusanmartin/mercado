@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // v5 UI pass gate (lead 04:44): after each web/mobile push, READ-ONLY. For every route at 1440x900 in dark + light,
-// with normal and reduced motion: HTTP 200, zero console errors, no horizontal overflow, the phone (or the page's
-// primary action) inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
+// with normal and reduced motion: HTTP 200, zero console errors, no horizontal overflow, the phone ending ≤868px
+// (lead 04:53) or the page's primary action inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
 // Screenshots go to review/qa-v5/<label>/ for before/after comparison.
 //   node scripts/v5-check.mjs before        # baseline
 //   node scripts/v5-check.mjs after-<sha>   # after a push; exit 1 on any FAIL
@@ -57,7 +57,7 @@ for (const theme of ['dark', 'light']) {
         if (target) {
           const box = await target.boundingBox().catch(() => null)
           row.fold = box ? `${Math.round(box.y + box.height)}px` : 'missing'
-          if (!box || box.y + box.height > 900) row.notes.push(r.phone ? 'phone below the fold' : 'primary action below the fold')
+          if (!box || box.y + box.height > (r.phone ? 868 : 900)) row.notes.push(r.phone ? 'phone below the fold' : 'primary action below the fold')
         }
         if (motion === 'reduce') {
           // anything still animating 1.5s after settle, longer than 1s and not a 1-frame tick, is a reduced-motion leak
