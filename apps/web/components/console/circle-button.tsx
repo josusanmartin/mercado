@@ -34,7 +34,7 @@ export function CircleButton({ label, icon: Icon, href, onClick, active }: Circl
 
 export function CircleRow({ items }: { items: CircleButtonProps[] }) {
   return (
-    <nav aria-label="Shortcuts" data-nav="row" className="flex flex-wrap justify-center gap-3 sm:gap-6">
+    <nav aria-label="Shortcuts" data-nav="row" className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
       {items.map((i) => (
         <CircleButton key={i.label} {...i} />
       ))}

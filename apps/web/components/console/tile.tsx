@@ -51,7 +51,7 @@ export function Tile({ title, icon: Icon, value, caption, href, onClick, badge, 
     </>
   );
   const cls = cn(
-    "bg-card shadow-tile relative flex aspect-square shrink-0 flex-col items-center justify-center gap-4 rounded-[14px] p-4 text-center",
+    "bg-card shadow-tile relative flex min-h-44 shrink-0 flex-col sm:aspect-square sm:min-h-0 items-center justify-center gap-4 rounded-[14px] p-4 text-center",
     "transition-transform duration-150 ease-out sm:w-[15.5rem] lg:w-[16.5rem]",
     "hover:scale-[1.04] focus-visible:scale-[1.04]",
     selected && "sm:scale-[1.04]",
