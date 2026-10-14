@@ -172,18 +172,21 @@ async function payLocked(request: Request, orderId: string): Promise<PayResult> 
     return { kind: "ok", body: toBody(order), receiptHeader: order.receipt?.mppReceipt };
   }
 
-  // Q-009: an unpaid order whose quote expired is closed rather than charged at a stale price. A request
-  // that already carries a credential is still verified (its challenge carries its own expiry).
-  const quote = await readStore((db) => db.quotes[order.quoteId]);
-  if (!request.headers.get("Authorization") && quote && quote.expiresAt < Date.now() / 1000) {
-    await withStore((db) => transition(db.orders[orderId], "FAILED", "Quote expired before payment; nothing was charged."));
-    throw new BillError(410, "Quote expired before payment; request a new quote", "QUOTE_EXPIRED");
-  }
-
   // R-009: before any new charge, resolve earlier attempts that may have settled on-chain without being
   // recorded (crash/timeout between broadcast and our write).
   const recovered = await recoverAttempts(order);
   if (recovered) return recovered;
+
+  // Q-009: an unpaid order whose quote expired is closed rather than charged at a stale price, but only
+  // once no earlier attempt is unresolved (recovery above ran first and throws while it can't decide).
+  // A request that already carries a credential is still verified (its challenge has its own expiry).
+  const quote = await readStore((db) => db.quotes[order.quoteId]);
+  const unresolved = await readStore((db) => db.orders[orderId].pendingAttempts?.length ?? 0);
+  if (!request.headers.get("Authorization") && quote && quote.expiresAt < Date.now() / 1000) {
+    if (unresolved) throw settlementPending();
+    await withStore((db) => transition(db.orders[orderId], "FAILED", "Quote expired before payment; no payment was received."));
+    throw new BillError(410, "Quote expired before payment; request a new quote", "QUOTE_EXPIRED");
+  }
 
   const cred = ownCredential(request);
   if (cred?.externalId && cred.externalId !== order.orderId)

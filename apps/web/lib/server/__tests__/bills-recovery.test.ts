@@ -172,6 +172,32 @@ describe("push-mode duplicate payments", () => {
 });
 
 describe("Q-009 stale CREATED orders", () => {
+  it("recovers a settled attempt instead of closing the order when the quote expired meanwhile", async () => {
+    const quoteId = await newQuote();
+    const k = key();
+    nextOutcome = { throws: "timeout after broadcast" };
+    await pay({ quoteId, idempotencyKey: k }, "Payment cred:transaction:chal-H");
+    await withStore((db) => {
+      db.quotes[quoteId].expiresAt = 1;
+    });
+    findSettled.mockResolvedValue({ txHash: tx(50), payer: "0x4444444444444444444444444444444444444444", challengeId: "chal-H" });
+    const res = await pay({ quoteId, idempotencyKey: k });
+    expect(res.status).toBe(200);
+    expect((await res.json()).receipt.txHash).toBe(tx(50));
+  });
+
+  it("doesn't close an expired order while an attempt is unresolved", async () => {
+    const quoteId = await newQuote();
+    const k = key();
+    await pay({ quoteId, idempotencyKey: k }, "Payment cred:transaction:chal-I"); // 409 pending
+    await withStore((db) => {
+      db.quotes[quoteId].expiresAt = 1;
+    });
+    const res = await pay({ quoteId, idempotencyKey: k });
+    expect(res.status).toBe(409);
+    expect((await order(k)).body.status).toBe("CREATED");
+  });
+
   it("an unpaid order whose quote expired is closed, not charged at a stale price", async () => {
     const quoteId = await newQuote();
     const k = key();
