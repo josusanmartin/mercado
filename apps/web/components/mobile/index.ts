@@ -25,6 +25,7 @@ export {
   ListHeaderAction,
   PullToRefresh,
   useNewKeys,
+  useFirstShow,
   DIVIDER,
   ListItem,
   Meta,

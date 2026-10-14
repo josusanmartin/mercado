@@ -496,13 +496,13 @@ export function ListItem({
   const cls = cn("flex w-full items-center gap-3.5 px-4", supporting ? "min-h-16 py-2" : "min-h-14 py-1", divider && DIVIDER, className);
   if (href)
     return (
-      <a href={href} target="_blank" rel="noreferrer" className={cn("m-press", cls)} onPointerDown={(e) => ripple(e)}>
+      <a href={href} target="_blank" rel="noreferrer" className={cn("m-press m-row", cls)} onPointerDown={(e) => ripple(e)}>
         {body}
       </a>
     );
   if (onClick)
     return (
-      <Pressable className={cls} onClick={onClick} disabled={disabled}>
+      <Pressable className={cn("m-row", cls)} onClick={onClick} disabled={disabled}>
         {body}
       </Pressable>
     );
@@ -659,6 +659,19 @@ export function EmptyState({ icon, title, hint, action, size = 64 }: { icon: Rea
 }
 
 /* ───────────────────────── live lists + pull to refresh (v6) ───────────────────────── */
+
+// Lists whose entrance (stagger) has already played this session: coming back to a screen must not replay
+// its reveal (V6-TASTE #6). Rows that are genuinely new still arrive via useNewKeys.
+const shownLists = new Set<string>();
+
+/** True only the first time `id` renders in this session (stable for the component's lifetime). */
+export function useFirstShow(id: string): boolean {
+  const [first] = useState(() => !shownLists.has(id));
+  useEffect(() => {
+    shownLists.add(id);
+  }, [id]);
+  return first;
+}
 
 // Keys each list has already shown, per list id, kept across remounts (a screen change remounts the list,
 // and the row you just created should still arrive with its flash when you come back to it).
@@ -924,6 +937,10 @@ export function SuccessCheck({ size = 88, color, label = "Listo" }: { size?: num
 }
 
 /** Success layout: check, display statement, big amount, details, black pill pinned low. */
+/**
+ * Success layout: check, display statement, big amount, details, black pill pinned low. v6 (#12): the amount
+ * is anchored (it never moves; it may tick in place) and the receipt below reveals in 160 ms.
+ */
 export function SuccessScreen({ title, amount, caption, children, action }: { title: ReactNode; amount?: ReactNode; caption?: ReactNode; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex min-h-full flex-col px-5 pt-12 pb-6">
@@ -932,7 +949,7 @@ export function SuccessScreen({ title, amount, caption, children, action }: { ti
         {title}
       </p>
       {amount && (
-        <p className="m-display m-rise mt-3 text-[46px]" style={{ animationDelay: "320ms", color: "var(--m-accent)" }}>
+        <p className="m-display mt-3 text-[46px]" style={{ color: "var(--m-accent)" }}>
           {amount}
         </p>
       )}
@@ -942,7 +959,7 @@ export function SuccessScreen({ title, amount, caption, children, action }: { ti
         </p>
       )}
       {children && (
-        <div className="m-rise mt-6 w-full" style={{ animationDelay: "440ms" }}>
+        <div className="m-receipt mt-6 w-full" style={{ animationDelay: "300ms" }}>
           {children}
         </div>
       )}

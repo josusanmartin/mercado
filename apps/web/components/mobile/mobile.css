@@ -264,6 +264,30 @@
     opacity: 0;
   }
 }
+/* A receipt arrives (#12): a short 160 ms reveal under an anchored amount. */
+.m-receipt {
+  animation: m-receipt 160ms var(--m-ease-out) both;
+}
+@keyframes m-receipt {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+/* Tappable rows (#12): hover and keyboard focus look the same, an accent tint plus an accent edge. */
+.m-row.m-press::before {
+  background: var(--m-accent);
+}
+.m-row.m-press:hover:not(:disabled)::before,
+.m-row.m-press:focus-visible::before {
+  opacity: 0.08;
+}
+.m-row:hover:not(:disabled),
+.m-root .m-row:focus-visible {
+  outline: none;
+  box-shadow: inset 3px 0 0 var(--m-accent);
+}
+
 /* Empty-state art settles in (and its pieces can float a little: .m-float). */
 .m-empty-art {
   animation: m-rise 420ms var(--m-ease-out) both;
