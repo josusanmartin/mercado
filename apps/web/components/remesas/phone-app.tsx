@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { personaById } from "@/components/wallet/personas";
 import { TELCEL_AMOUNTS } from "@/components/billpay/use-bill-pay";
 import type { RemesasState } from "./remesas-screen";
-import { Keypad } from "./keypad";
+import { PhoneKeypad as Keypad } from "@/components/console";
 
 export type Screen = "inicio" | "enviar" | "enviado" | "aire" | "servicios";
 

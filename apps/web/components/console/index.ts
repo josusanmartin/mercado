@@ -10,3 +10,5 @@ export { DemoModeProvider, useDemoMode, useDemoAccount } from "./demo-mode";
 export { ThemeProvider, ThemeScript, useTheme } from "./theme";
 export { KeyboardNav } from "./keyboard";
 export { ClientOnly, useHydrated } from "./client-only";
+export { PhoneFrame } from "./phone-frame";
+export { Keypad as PhoneKeypad } from "./phone-keypad";

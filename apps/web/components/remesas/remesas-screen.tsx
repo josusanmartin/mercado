@@ -21,7 +21,7 @@ import { useTourPrefill } from "@/components/tour/demo-tour";
 import { personaById } from "@/components/wallet/personas";
 import { useBillPay } from "@/components/billpay/use-bill-pay";
 import { Badge } from "@/components/ui/badge";
-import { AndroidFrame } from "./android-frame";
+import { PhoneFrame } from "@/components/console";
 import { PhoneApp, STAGE_ES, type Screen } from "./phone-app";
 
 export type RemesasState = ReturnType<typeof useRemesasState>;
@@ -90,9 +90,9 @@ export function RemesasScreen() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
         <div className="-mx-4 sm:mx-0">
           <ConnectGate persona="sender" why="Mercado Remesas runs on the sender's wallet. Use the demo account or connect your own.">
-            <AndroidFrame>
+            <PhoneFrame>
               <PhoneApp s={s} />
-            </AndroidFrame>
+            </PhoneFrame>
           </ConnectGate>
         </div>
         <WhatHappened s={s} />
