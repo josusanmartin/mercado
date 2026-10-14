@@ -5,7 +5,7 @@ v2 has its **own xMXN v2 token and CreditPool v2**, because v1's issuer roles ar
 
 ## Gate: the checklist must be all green before lead flips
 - [ ] contracts: v2 deployed and seeded. AMM equity ≥ 2,500 OUSD. CreditPool v2 supplied by LENDER with xMXN v2 (minted through the v2 vault). Personas funded for v2 (Driver has a little xMXN v2; Sender has OUSD; LP has a v2 position ≥250%; tTBILL/sOUSD faucets work). `protocol.ts` + `activeAddresses()` written. `lib/contracts/addresses.ts` (ADDR) and every hook derive from it (R-030).
-- [ ] api: the credit attestation domain (pool + chainId), the MPP charge token/recipient, /api/fx, /api/move/quote and the underwriter endpoint all derive from `activeAddresses()`. If the v2 pool is missing, fail closed (no fallback to v1 when v2 is active).
+- [x] api (1596202): the credit attestation domain (pool + chainId), the MPP charge token/recipient, /api/fx, /api/move/quote and the underwriter endpoint all derive from `activeAddresses()`. If the v2 pool is missing, fail closed (no fallback to v1 when v2 is active).
 - [ ] web: Create/Move/Home/Earn/Credit/Pay read balances and act on `activeAddresses()` only. No mixed-version screens.
 - [ ] qa: `demo-journey.ts` runs with `PROTOCOL=v2` and is green end to end (Create with sOUSD/tTBILL, Move mint-to-recipient + redeem, Lend, Spend 402, underwriter bot, stress). The v1 journey stays green too.
 - [ ] review: R-030 closed. v2 solvency findings closed or accepted by lead.
