@@ -29,7 +29,7 @@ import { Honesty, usePresent } from "@/components/console/present";
 import { PaidCalls } from "@/components/credito/paid-calls";
 import { usePricing } from "@/components/credito/use-pricing";
 import { fmtAmount } from "@/lib/format";
-import { Reveal, Stagger, SuccessCheck } from "@/lib/motion";
+import { Stagger, SuccessCheck } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ENDPOINTS,
@@ -100,47 +100,37 @@ export function DevelopersScreen() {
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <Reveal>
-            <Panel title={e.title} description={e.summary}>
-              <Rows>
-                <Row
-                  label="Request"
-                  value={
-                    <span className="font-mono text-[13px]">
-                      {e.method} {e.path}
-                    </span>
-                  }
-                />
-                <Row
-                  label="Price"
-                  value={price(e.id)}
-                  sub="Live from /api/mpp/pricing (what the route charges)"
-                />
-                <Row label="Returns" value={e.returns} />
-                <Row
-                  label="Settles"
-                  value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
-                />
-              </Rows>
-            </Panel>
-          </Reveal>
-          <Reveal delay={60}>
-            <ChallengeShape key={e.id} endpoint={e} />
-          </Reveal>
-          <Reveal delay={120}>
-            <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
-          </Reveal>
-          <Reveal delay={180}>
-            <Code
-              title="mppx client: pay and get the response"
-              code={snippetFor(e, origin, DRIVER)}
-            />
-          </Reveal>
+          <Panel title={e.title} description={e.summary}>
+            <Rows>
+              <Row
+                label="Request"
+                value={
+                  <span className="font-mono text-[13px]">
+                    {e.method} {e.path}
+                  </span>
+                }
+              />
+              <Row
+                label="Price"
+                value={price(e.id)}
+                sub="Live from /api/mpp/pricing (what the route charges)"
+              />
+              <Row label="Returns" value={e.returns} />
+              <Row
+                label="Settles"
+                value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
+              />
+            </Rows>
+          </Panel>
+          <ChallengeShape key={e.id} endpoint={e} />
+          <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
+          <Code
+            title="mppx client: pay and get the response"
+            code={snippetFor(e, origin, DRIVER)}
+          />
         </div>
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <Reveal delay={40}>
-            <TryIt key={e.id} endpoint={e} />
-          </Reveal>
+          <TryIt key={e.id} endpoint={e} />
           {e.id !== "bills" && (
             <PaidCalls
               product={e.id}
