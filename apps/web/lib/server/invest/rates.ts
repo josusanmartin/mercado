@@ -1,11 +1,12 @@
-// Mercado Invest returns, computed from the chain (no configured or invented rates):
-//   usd    → sOUSD's on-chain APR plus the exact accrual state, so a client can tick the balance per frame:
+// Mercado Invest returns, read from the chain (no invented rates):
+//   usd / mxn → the savings vaults sOUSD (over OUSD) and sxMXN (over xMXN): the same StakedOUSD contract, so each
+//            returns its on-chain configured APR plus the exact accrual state, and a client can tick a balance per frame:
 //            totalAssets(t) = assetsAccounted + min(assetsAccounted × aprBps × (t − checkpointAt) / (1e4 × YEAR), fundedReserve)
-//   mxn    → the credit pool's REALIZED APR = fees repaid ÷ time-weighted lender assets, annualized. Replays the pool's
-//            events (Supplied/Withdrawn/Borrowed/Repaid) and reconciles the replay with stats() at the same block.
+//   lendingPool → the credit pool's REALIZED APR = fees repaid ÷ time-weighted lender assets, annualized (Crédito's
+//            lenders, not Invest). Replays Supplied/Withdrawn/Borrowed/Repaid and reconciles with stats() at the same block.
 //   stocks → the equity index token's admin feed price and its change over 24h (null until it is deployed).
 import { parseAbi, parseAbiItem, type Address, type Log } from "viem";
-import { stakedOusdAbi } from "@mercado/shared";
+import { moderatoDeployment, stakedOusdAbi } from "@mercado/shared";
 import { publicClient } from "../chain";
 import { requireAddress, serverAddresses } from "../protocol";
 
@@ -44,16 +45,31 @@ export function getInvestRates(): Promise<InvestRates> {
 async function compute() {
   const c = publicClient();
   const block = await c.getBlock();
-  const [usd, mxn, stocks] = await Promise.all([usdRate(block.number), mxnRate(block.number, block.timestamp), stocksPrice(block.number, block.timestamp)]);
-  return { block: block.number.toString(), blockTimestamp: Number(block.timestamp), usd, mxn, stocks };
+  const [usd, mxn, lendingPool, stocks] = await Promise.all([
+    savingsVault("sOUSD", block.number),
+    savingsVault("sxMXN", block.number),
+    poolRealized(block.number, block.timestamp),
+    stocksPrice(block.number, block.timestamp),
+  ]);
+  return { block: block.number.toString(), blockTimestamp: Number(block.timestamp), usd, mxn, lendingPool, stocks };
 }
 
-async function usdRate(blockNumber: bigint) {
-  const sOUSD = serverAddresses().collaterals.find((x) => x.symbol === "sOUSD")?.token;
-  if (!sOUSD) return null;
+/** A savings vault of the active protocol: a collateral entry with that symbol, or a top-level v2 deployment key. */
+function vaultAddress(symbol: "sOUSD" | "sxMXN"): Address | undefined {
+  const a = serverAddresses();
+  const fromCollaterals = a.collaterals.find((x) => x.symbol === symbol)?.token;
+  if (fromCollaterals) return fromCollaterals;
+  if (a.protocol !== "v2") return undefined;
+  const v = (moderatoDeployment as { v2?: Record<string, unknown> }).v2?.[symbol];
+  return typeof v === "string" && /^0x[0-9a-fA-F]{40}$/.test(v) ? (v as Address) : undefined;
+}
+
+async function savingsVault(symbol: "sOUSD" | "sxMXN", blockNumber: bigint) {
+  const vault = vaultAddress(symbol);
+  if (!vault) return null; // not deployed on the active protocol
   const c = publicClient();
   const read = (functionName: "aprBps" | "assetsAccounted" | "fundedReserve" | "checkpointAt" | "totalSupply" | "totalAssets") =>
-    c.readContract({ address: sOUSD, abi: stakedOusdAbi, functionName, blockNumber }) as Promise<bigint>;
+    c.readContract({ address: vault, abi: stakedOusdAbi, functionName, blockNumber }) as Promise<bigint>;
   const [aprBps, assetsAccounted, fundedReserve, checkpointAt, totalSupply, totalAssets] = await Promise.all([
     read("aprBps"),
     read("assetsAccounted"),
@@ -63,7 +79,8 @@ async function usdRate(blockNumber: bigint) {
     read("totalAssets"),
   ]);
   return {
-    token: sOUSD,
+    token: vault,
+    symbol,
     aprBps: Number(aprBps),
     apr: Number(aprBps) / 10_000,
     /** Exact accrual state at `block` (base units, 6 dp). */
@@ -78,7 +95,7 @@ async function usdRate(blockNumber: bigint) {
   };
 }
 
-async function mxnRate(blockNumber: bigint, now: bigint) {
+async function poolRealized(blockNumber: bigint, now: bigint) {
   const pool = requireAddress("creditPool");
   const c = publicClient();
   const from = BigInt(serverAddresses().startBlock);
