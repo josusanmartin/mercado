@@ -304,8 +304,26 @@ function Sidebar({ active, path }: { active?: string; path: string }) {
           )}
           {theme === "dark" ? "Light theme" : "Dark theme"}
         </button>
+        <BuiltBy className="meta text-muted-foreground mt-2 border-t px-2 pt-3" />
       </div>
     </aside>
+  );
+}
+
+/** Credit line (josu 21:10), last item under the sidebar utilities and in the phone "More" menu. */
+function BuiltBy({ className }: { className?: string }) {
+  return (
+    <p className={className}>
+      Built by{" "}
+      <a
+        href="https://x.com/josusanmartin"
+        target="_blank"
+        rel="noreferrer"
+        className="text-foreground underline-offset-2 hover:underline"
+      >
+        x.com/josusanmartin
+      </a>
+    </p>
   );
 }
 
@@ -482,6 +500,9 @@ function MobileTabs({ active }: { active?: string }) {
             )}
             {theme === "dark" ? "Light theme" : "Dark theme"}
           </button>
+        </li>
+        <li>
+          <BuiltBy className="text-muted-foreground mt-1 border-t px-2 pt-3 text-[13px]" />
         </li>
       </ConsoleMenu>
     </nav>
