@@ -15,6 +15,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   type Address,
+  BaseError,
+  ContractFunctionRevertedError,
   type Hash,
   type PublicClient,
   createPublicClient,
@@ -257,13 +259,9 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
 
       // negative check (simulation only, no gas): minting past 150% must revert
       const over = (await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'maxMintable', args: [lp.address] })) + 1_000_000n
-      try {
-        await pub.simulateContract({ address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp })
-        throw new Error('mint above maxMintable did NOT revert')
-      } catch (e: any) {
-        if (String(e.message).includes('did NOT revert')) throw e
-        ok(`mint above the 150% limit reverts (${short(e)})`)
-      }
+      await expectRevert('mint above the 150% limit', { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp })
+      // only the vault may mint xMXN: a direct TIP-20 mint from the LP must revert
+      await expectRevert('direct xMXN.mint by a non-vault account', { address: d.xMXN, abi: erc20, functionName: 'mint', args: [lp.address, 1_000_000n], account: lp })
     },
   },
   {
@@ -334,19 +332,13 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const debt = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'getDebt', args: [driver.address] })
       const expectedFee = (amount * 200n) / 10_000n
       ok(`driver debt ${fmt(debtBefore)} → ${fmt(debt)} xMXN (expected +${fmt(amount + expectedFee)} incl. 2% fee)`)
-      if (debt - debtBefore !== amount + expectedFee) warn(`debt delta ${debt - debtBefore} != amount+fee ${amount + expectedFee}`)
+      assert(debt - debtBefore === amount + expectedFee, `debt delta ${debt - debtBefore} == amount+fee ${amount + expectedFee}`)
       ctx.driverBorrowed = amount
 
       // negative check: replaying the same attestation must revert
       const used = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'nonceUsed', args: [driver.address, BigInt(att.nonce)] })
       assert(used, 'nonce marked used')
-      try {
-        await pub.simulateContract({ address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)] as any, account: driver })
-        throw new Error('replayed attestation did NOT revert')
-      } catch (e: any) {
-        if (String(e.message).includes('did NOT revert')) throw e
-        ok(`replayed attestation reverts (${short(e)})`)
-      }
+      await expectRevert('replayed attestation', { address: d.creditPool, abi: poolAbi, functionName: 'borrow', args: [1_000_000n, ...borrowArgs.slice(1)], account: driver })
     },
   },
   {
@@ -422,8 +414,8 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert(again.orderId === order.orderId, `retry returned order ${again.orderId}, expected ${order.orderId}`)
       assert(again.fulfillment?.reference === order.fulfillment.reference, 'retry returned the same fulfillment reference')
       const merchantAfterRetry = await bal(d.xMXN, d.merchant)
-      ok(`retry with same idempotency key → same order + reference${merchantAfterRetry - merchantBefore > paidAmt ? ` ${C.y}(but merchant was paid again!)${C.x}` : ', not charged again'}`)
-      if (merchantAfterRetry - merchantBefore > paidAmt) note('WARNING: retry charged the driver twice')
+      assert(merchantAfterRetry - merchantBefore === paidAmt, `retry must not charge again: merchant received ${merchantAfterRetry - merchantBefore}, expected ${paidAmt}`)
+      ok('retry with same idempotency key → same order + reference, not charged again')
 
       const hist = await api(`/api/bills/orders/${order.orderId}`)
       if (hist.res.ok) log(`order history: ${JSON.stringify(hist.body.history ?? hist.body.states ?? hist.body.status)}`)
@@ -459,6 +451,19 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     },
   },
 ]
+
+/** Negative check via simulation (no gas). Passes only on a genuine contract revert, not on RPC/network errors. */
+async function expectRevert(what: string, req: { address: Address; abi: any; functionName: string; args?: readonly unknown[]; account: PrivateKeyAccount }) {
+  try {
+    await pub.simulateContract(req as any)
+  } catch (e) {
+    const revert = e instanceof BaseError ? e.walk((x) => x instanceof ContractFunctionRevertedError) : null
+    if (!revert) throw new Error(`${what}: expected a contract revert, got: ${short(e)}`)
+    ok(`${what} reverts (${short(revert)})`)
+    return
+  }
+  throw new Error(`${what} did NOT revert`)
+}
 
 function short(e: any): string {
   return String(e?.shortMessage ?? e?.message ?? e).split('\n')[0].slice(0, 160)
