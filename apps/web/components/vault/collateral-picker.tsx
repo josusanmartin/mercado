@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 
 const ltv = (minRatioBps?: bigint) => (minRatioBps ? fmtBps(Number((10_000n * 10_000n) / minRatioBps), 0) : "—");
 
-export function CollateralPicker({ items, value, onChange, disabled }: { items: Collateral[]; value: Collateral["id"]; onChange: (id: Collateral["id"]) => void; disabled?: boolean }) {
+export function CollateralPicker({ items, value, onChange, disabled }: { items: Collateral[]; value: string; onChange: (id: string) => void; disabled?: boolean }) {
   return (
     <fieldset className="grid gap-2">
       <legend className="mb-2 text-sm font-medium">Collateral</legend>
@@ -32,15 +32,26 @@ export function CollateralPicker({ items, value, onChange, disabled }: { items: 
             >
               <span className="flex items-center justify-between gap-2">
                 <span className="text-lg font-semibold">{c.symbol}</span>
-                {!c.available ? <Badge variant="secondary">v2, coming</Badge> : c.demo ? <Badge variant="mock">Demo token</Badge> : <Badge variant="success">Live</Badge>}
+                {!c.available ? (
+                  <Badge variant="secondary">v2, coming</Badge>
+                ) : c.mintPaused ? (
+                  <Badge variant="secondary">Minting paused</Badge>
+                ) : c.demo ? (
+                  <Badge variant="mock">Demo token</Badge>
+                ) : (
+                  <Badge variant="success">Live</Badge>
+                )}
               </span>
               <span className="text-muted-foreground text-sm">{c.name}</span>
+              {c.usdPx8 !== undefined && c.symbol !== "OUSD" && (
+                <span className="text-sm tabular">
+                  ${(Number(c.usdPx8) / 1e8).toFixed(2)} <span className="text-muted-foreground">per unit, admin feed</span>
+                </span>
+              )}
               <span className="grid gap-0.5 text-sm">
                 <span>
-                  Max LTV <span className="tabular font-medium">{ltv(c.minRatioBps)}</span>
-                  {c.liquidationBps && (
-                    <span className="text-muted-foreground"> · liquidation below {fmtBps(c.liquidationBps, 0)}</span>
-                  )}
+                  Max LTV <span className="tabular font-medium">{ltv(c.lines?.minBps)}</span>
+                  {c.lines && <span className="text-muted-foreground"> · liquidation below {fmtBps(c.lines.liqBps, 0)}</span>}
                 </span>
                 <span className="text-muted-foreground text-xs">Yield: {c.yieldSource}</span>
               </span>

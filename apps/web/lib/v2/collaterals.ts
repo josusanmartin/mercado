@@ -1,19 +1,25 @@
 "use client";
 // Collateral catalogue for Create (SPEC v0.2: institutions mint against yield-bearing collateral).
-// v1 has one live collateral (testnet OUSD in CollateralVault). The v2 MultiCollateralVault entries are
-// listed as "coming" until contracts publishes V2-DESIGN.md and v2 addresses; their params are read
-// from chain then, never hard-coded here.
+// v1 (default): one live collateral, testnet OUSD in CollateralVault; the v2 options are listed as
+// "coming". v2 (NEXT_PUBLIC_PROTOCOL=v2 and deployed): read from MultiCollateralVault on chain,
+// so risk params and prices are never hard-coded here.
 import type { Address } from "viem";
-import { ADDR, LIQUIDATION_THRESHOLD_BPS, MIN_MINT_RATIO_BPS } from "@/lib/contracts";
+import { ADDR } from "@/lib/contracts";
+import { V1_LINES, type Lines } from "@/lib/vault-math";
+import { USE_V2 } from "./addresses";
+import { useCollateralsV2, type CollateralV2 } from "./reads";
 
 export type Collateral = {
-  id: "ousd" | "sousd" | "ttbill";
+  id: string;
   symbol: string;
   name: string;
   address?: Address;
-  /** Min collateral ratio to mint, bps (LTV = 1 / ratio). */
-  minRatioBps?: bigint;
-  liquidationBps?: bigint;
+  lines?: Lines;
+  /** USD price of one unit, 8dp (undefined = $1, i.e. OUSD). */
+  usdPx8?: bigint;
+  debtCeiling?: bigint;
+  totalDebt?: bigint;
+  mintPaused?: boolean;
   /** Where the yield comes from, in words. Never a promised rate. */
   yieldSource: string;
   demo: boolean;
@@ -21,40 +27,43 @@ export type Collateral = {
   label: string;
 };
 
-/** "v1" (default) until lead flips NEXT_PUBLIC_PROTOCOL=v2 once v2 passes tests and the journey. */
-export const PROTOCOL = process.env.NEXT_PUBLIC_PROTOCOL === "v2" ? "v2" : "v1";
+export { USE_V2 };
+
+const KNOWN: Record<string, Pick<Collateral, "name" | "yieldSource" | "demo" | "label">> = {
+  OUSD: { name: "Testnet OUSD", yieldSource: "None. Plain testnet OUSD from the Tempo faucet", demo: false, label: "Testnet OUSD (Tempo faucet, no real value)" },
+  sOUSD: { name: "Staked OUSD", yieldSource: "Share price grows inside the token (mock APR, admin-set)", demo: true, label: "Demo staked OUSD (mock yield, testnet)" },
+  tTBILL: { name: "Tokenized T-bill", yieldSource: "Price accrues like a T-bill (admin price feed)", demo: true, label: "Demo tokenized T-bill (testnet, not a security)" },
+  tEQX: { name: "Equity index", yieldSource: "Price moves with an admin-set equity index", demo: true, label: "Demo equity index (testnet, not a security)" },
+};
+
+const V1_LIST: Collateral[] = [
+  { id: "ousd", symbol: "OUSD", address: ADDR.ousd, lines: V1_LINES, available: true, ...KNOWN.OUSD },
+  { id: "sousd", symbol: "sOUSD", available: false, ...KNOWN.sOUSD },
+  { id: "ttbill", symbol: "tTBILL", available: false, ...KNOWN.tTBILL },
+];
+
+function fromChain(c: CollateralV2): Collateral {
+  const symbol = c.symbol ?? "…";
+  const known = KNOWN[symbol] ?? { name: c.name ?? symbol, yieldSource: "Unknown", demo: true, label: `${symbol} (testnet)` };
+  const p = c.params;
+  return {
+    id: c.token,
+    symbol,
+    address: c.token,
+    lines: p
+      ? { liqBps: BigInt(p.liqRatioBps), minBps: BigInt(p.mintRatioBps), recommendedBps: BigInt(p.mintRatioBps) + 5_000n }
+      : undefined,
+    usdPx8: c.usdPx8,
+    debtCeiling: p?.debtCeiling,
+    totalDebt: c.totalDebt,
+    mintPaused: p?.mintPaused,
+    available: !!p,
+    ...known,
+  };
+}
 
 export function useCollaterals(): Collateral[] {
-  return [
-    {
-      id: "ousd",
-      symbol: "OUSD",
-      name: "Testnet OUSD",
-      address: ADDR.ousd,
-      minRatioBps: MIN_MINT_RATIO_BPS,
-      liquidationBps: LIQUIDATION_THRESHOLD_BPS,
-      yieldSource: "None. Plain testnet OUSD from the Tempo faucet",
-      demo: false,
-      available: true,
-      label: "Testnet OUSD (Tempo faucet, no real value)",
-    },
-    {
-      id: "sousd",
-      symbol: "sOUSD",
-      name: "Staked OUSD",
-      yieldSource: "Share price grows inside the token (demo, admin-set)",
-      demo: true,
-      available: false,
-      label: "Demo staked OUSD, not a real staking product",
-    },
-    {
-      id: "ttbill",
-      symbol: "tTBILL",
-      name: "Tokenized T-bill",
-      yieldSource: "Price accrues like a T-bill (demo, admin-set price)",
-      demo: true,
-      available: false,
-      label: "Demo RWA, no real T-bill backing",
-    },
-  ];
+  const v2 = useCollateralsV2();
+  if (!USE_V2) return V1_LIST;
+  return v2.items.map(fromChain);
 }

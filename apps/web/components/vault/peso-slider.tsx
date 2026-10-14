@@ -3,7 +3,7 @@
 // math on the viewer's actual (or projected) position; it never writes the shared oracle.
 import { useEffect, useMemo, useState } from "react";
 import { fmtBps, fmtNumber } from "@/lib/format";
-import { HEALTH_COPY, health, rateAtThreshold, ratioBps } from "@/lib/vault-math";
+import { health, healthCopy, mxnPerUnit, rateAtThreshold, ratioBps, V1_LINES, type Lines } from "@/lib/vault-math";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { RatioMeter } from "./ratio-meter";
@@ -16,11 +16,16 @@ export function PesoStress({
   debt,
   mxnPerUsd,
   projected,
+  usdPx8,
+  lines = V1_LINES,
 }: {
   collateral: bigint;
   debt: bigint;
   mxnPerUsd: bigint | undefined;
   projected: boolean;
+  /** Collateral USD price, 8dp (OUSD = $1). The slider stresses only the FX rate. */
+  usdPx8?: bigint;
+  lines?: Lines;
 }) {
   const current = mxnPerUsd !== undefined ? Number(mxnPerUsd) / 1e8 : 20;
   const [rate, setRate] = useState(current);
@@ -29,10 +34,13 @@ export function PesoStress({
     if (!touched) setRate(current);
   }, [current, touched]);
 
-  const bpsAt = useMemo(() => ratioBps(collateral, debt, BigInt(Math.round(rate * 1e8))), [collateral, debt, rate]);
-  const bpsNow = mxnPerUsd !== undefined ? ratioBps(collateral, debt, mxnPerUsd) : undefined;
-  const redLine = rateAtThreshold(collateral, debt, 13_500n);
-  const h = health(bpsAt);
+  const px = usdPx8 ?? 10n ** 8n;
+  const bpsAt = useMemo(() => ratioBps(collateral, debt, mxnPerUnit(BigInt(Math.round(rate * 1e8)), px)), [collateral, debt, rate, px]);
+  const bpsNow = mxnPerUsd !== undefined ? ratioBps(collateral, debt, mxnPerUnit(mxnPerUsd, px)) : undefined;
+  // Rate (MXN per USD) at which this position crosses its liquidation line, given the collateral's USD price.
+  const unitRed = rateAtThreshold(collateral, debt, lines.liqBps);
+  const redLine = unitRed === undefined ? undefined : (unitRed * 1e8) / Number(px);
+  const h = health(bpsAt, lines);
   const move = rate / current - 1; // + means the dollar buys more pesos
   const empty = debt === 0n;
 
@@ -58,7 +66,7 @@ export function PesoStress({
                 >
                   {fmtBps(bpsAt)}
                 </p>
-                <p className="text-muted-foreground text-xs">{HEALTH_COPY[h]}</p>
+                <p className="text-muted-foreground text-xs">{healthCopy(h, lines)}</p>
               </div>
             </div>
             <Slider
@@ -77,7 +85,7 @@ export function PesoStress({
               <span>{MIN_RATE} · stronger peso</span>
               <span>weaker peso · {MAX_RATE}</span>
             </div>
-            <RatioMeter bps={bpsAt} compareBps={bpsNow} />
+            <RatioMeter bps={bpsAt} compareBps={bpsNow} lines={lines} />
             <p className="text-sm text-pretty">
               {Math.abs(move) < 0.0005 ? (
                 <>This is today&apos;s mock rate.</>

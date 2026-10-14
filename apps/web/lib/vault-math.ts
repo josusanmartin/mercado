@@ -22,15 +22,37 @@ export function rateAtThreshold(collateral: bigint, debt: bigint, thresholdBps: 
 
 export type Health = "unknown" | "none" | "safe" | "ok" | "tight" | "liquidatable";
 
+/** Per-collateral risk lines (v1 OUSD defaults; v2 reads them from the vault's params). */
+export type Lines = { liqBps: bigint; minBps: bigint; recommendedBps: bigint };
+export const V1_LINES: Lines = { liqBps: 13_500n, minBps: 15_000n, recommendedBps: 20_000n };
+
 /** null = no debt (infinite ratio); undefined = couldn't read it (e.g. stale oracle), never "no debt". */
-export function health(bps: bigint | null | undefined): Health {
+export function health(bps: bigint | null | undefined, lines: Lines = V1_LINES): Health {
   if (bps === undefined) return "unknown";
   if (bps === null) return "none";
-  if (bps < 13_500n) return "liquidatable";
-  if (bps < 15_000n) return "tight";
-  if (bps < 20_000n) return "ok";
+  if (bps < lines.liqBps) return "liquidatable";
+  if (bps < lines.minBps) return "tight";
+  if (bps < lines.recommendedBps) return "ok";
   return "safe";
 }
+
+/** Copy for a health state, with this collateral's own percentages. */
+export function healthCopy(h: Health, lines: Lines = V1_LINES): string {
+  const pct = (b: bigint) => `${Number(b) / 100}%`;
+  switch (h) {
+    case "ok":
+      return `Below the recommended ${pct(lines.recommendedBps)}`;
+    case "tight":
+      return `Under ${pct(lines.minBps)}: can't mint or withdraw`;
+    case "liquidatable":
+      return `Under ${pct(lines.liqBps)}: can be liquidated`;
+    default:
+      return HEALTH_COPY[h];
+  }
+}
+
+/** Effective MXN per 1 collateral unit (8dp) = MXN/USD × collateral USD price. OUSD is $1. */
+export const mxnPerUnit = (mxnPerUsd: bigint, usdPx8 = 10n ** 8n) => (mxnPerUsd * usdPx8) / 10n ** 8n;
 
 export const HEALTH_COPY: Record<Health, string> = {
   unknown: "Health unavailable: the exchange rate can't be read right now",

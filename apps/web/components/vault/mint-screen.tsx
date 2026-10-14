@@ -1,12 +1,14 @@
 "use client";
-// Create pesos (console Settings layout): lock testnet OUSD in the CollateralVault and mint xMXN against
-// it; repay to burn and withdraw. Projections mirror the vault math; every write is simulated first.
+// Create pesos (console Settings layout): lock collateral and mint xMXN against it; repay to burn and
+// withdraw. v1 (default): testnet OUSD in CollateralVault. v2 (flag): any MultiCollateralVault
+// collateral with its own risk lines and USD price. Projections mirror the vault math; every write
+// is simulated first.
 import { useEffect, useMemo, useState } from "react";
 import { useConnection } from "wagmi";
 import { Activity, ArrowDownToLine, ArrowUpFromLine, Gauge, LineChart } from "lucide-react";
-import { MIN_MINT_RATIO_BPS, useBalances, useMercado, useOracle, useVaultPosition } from "@/lib/contracts";
+import { useBalances, useMercado, useOracle, useVaultPosition } from "@/lib/contracts";
 import { fmtAmount, fmtBps, fmtNumber, timeAgo, toUnits } from "@/lib/format";
-import { debtAt, health, HEALTH_COPY, ratioBps } from "@/lib/vault-math";
+import { debtAt, health, healthCopy, mxnPerUnit, ratioBps, V1_LINES } from "@/lib/vault-math";
 import { useNow } from "@/lib/use-now";
 import { BigNumber, ListPane, Panel, PanelActions, Row, Rows, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
@@ -17,7 +19,10 @@ import { useTourPrefill } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 import { PesoStress } from "./peso-slider";
 import { CollateralPicker } from "./collateral-picker";
-import { useCollaterals, type Collateral } from "@/lib/v2/collaterals";
+import { USE_V2, useCollaterals } from "@/lib/v2/collaterals";
+import { V2 } from "@/lib/v2/addresses";
+import { usePositionV2, useTokenBalance } from "@/lib/v2/reads";
+import { useMercadoV2 } from "@/lib/v2/actions";
 import { RatioMeter } from "./ratio-meter";
 
 type Section = "mint" | "repay" | "position" | "fx" | "stress";
@@ -25,15 +30,27 @@ const strip = (v: bigint) => fmtAmount(v, 2).replace(/,/g, "");
 
 export function MintScreen() {
   const { address } = useConnection();
-  const pos = useVaultPosition();
   const bal = useBalances();
   const fx = useOracle();
-  const m = useMercado();
+  const m1 = useMercado();
+  const m2 = useMercadoV2();
+  const tx = USE_V2 ? m2.tx : m1.tx;
   const prefill = useTourPrefill("/mint");
   const now = useNow(5_000);
   const [section, setSection] = useState<Section>("mint");
   const collaterals = useCollaterals();
-  const [collateralId, setCollateralId] = useState<Collateral["id"]>("ousd");
+  const [collateralId, setCollateralId] = useState<string>();
+  const col = collaterals.find((c) => c.id === collateralId) ?? collaterals.find((c) => c.available) ?? collaterals[0];
+  const sym = col?.symbol ?? "OUSD";
+  const lines = col?.lines ?? V1_LINES;
+
+  const posV1 = useVaultPosition();
+  const posV2 = usePositionV2(USE_V2 ? col?.address : undefined);
+  const pos = USE_V2 ? posV2 : posV1;
+  const collBalV2 = useTokenBalance(USE_V2 ? col?.address : undefined);
+  const xmxnBalV2 = useTokenBalance(USE_V2 ? V2.xmxn : undefined);
+  const collBal = USE_V2 ? collBalV2.data : bal.ousd;
+  const xmxnBal = USE_V2 ? xmxnBalV2.data : bal.xmxn;
 
   const [deposit, setDeposit] = useState("");
   const [mint, setMint] = useState("");
@@ -55,34 +72,43 @@ export function MintScreen() {
   const debt = pos.debt ?? 0n;
   const dep = toUnits(deposit);
   const mnt = toUnits(mint);
-  const price = fx.mxnPerUsd;
+  // MXN value of one collateral unit: the FX mid times the collateral's USD price (OUSD = $1 in v1).
+  const price = fx.mxnPerUsd === undefined ? undefined : !USE_V2 ? fx.mxnPerUsd : col?.usdPx8 === undefined ? undefined : mxnPerUnit(fx.mxnPerUsd, col.usdPx8);
   const oracleOk = fx.valid === true && !fx.paused;
-  const h = health(pos.ratioBps);
+  const h = health(pos.ratioBps, lines);
 
   const nextColl = coll + dep;
   const nextDebt = debt + mnt;
   const nextBps = price !== undefined ? ratioBps(nextColl, nextDebt, price) : undefined;
-  const headroom = price !== undefined ? debtAt(nextColl, price, MIN_MINT_RATIO_BPS) - debt : undefined;
+  const headroom = price !== undefined ? debtAt(nextColl, price, lines.minBps) - debt : undefined;
   const drafting = dep > 0n || mnt > 0n;
 
   const quick = useMemo(() => {
     if (price === undefined || nextColl === 0n) return [];
+    const pct = (b: bigint) => `${Number(b) / 100}%`;
     return [
-      { label: "250%", bps: 25_000n },
-      { label: "200% recommended", bps: 20_000n },
-      { label: "150% maximum", bps: 15_000n },
+      { label: pct(lines.recommendedBps + 5_000n), bps: lines.recommendedBps + 5_000n },
+      { label: `${pct(lines.recommendedBps)} recommended`, bps: lines.recommendedBps },
+      { label: `${pct(lines.minBps)} maximum`, bps: lines.minBps },
     ]
       .map((q) => ({ ...q, amount: debtAt(nextColl, price, q.bps) - debt }))
       .filter((q) => q.amount > 0n);
-  }, [price, nextColl, debt]);
+  }, [price, nextColl, debt, lines]);
 
-  const overBalance = bal.ousd !== undefined && dep > bal.ousd;
-  const belowMin = mnt > 0n && nextBps !== undefined && nextBps !== null && nextBps < MIN_MINT_RATIO_BPS;
-  const mintDisabled = m.tx.isBusy || !loaded || !drafting || overBalance || belowMin || (mnt > 0n && !oracleOk);
-  const mintLabel = dep > 0n && mnt > 0n ? "Deposit and mint" : dep > 0n ? "Deposit OUSD" : "Mint xMXN";
+  const overBalance = collBal !== undefined && dep > collBal;
+  const belowMin = mnt > 0n && nextBps !== undefined && nextBps !== null && nextBps < lines.minBps;
+  const mintDisabled = tx.isBusy || !loaded || !drafting || overBalance || belowMin || (mnt > 0n && !oracleOk);
+  const mintLabel = dep > 0n && mnt > 0n ? "Deposit and mint" : dep > 0n ? `Deposit ${sym}` : "Mint xMXN";
+  const pct = (b: bigint) => `${Number(b) / 100}%`;
 
   async function onMint() {
-    const ok = dep > 0n && mnt > 0n ? await m.depositAndMint(dep, mnt) : dep > 0n ? await m.deposit(dep) : await m.mint(mnt);
+    const ok = USE_V2
+      ? col?.address && (await m2.depositAndMint(col.address, sym, dep, mnt))
+      : dep > 0n && mnt > 0n
+        ? await m1.depositAndMint(dep, mnt)
+        : dep > 0n
+          ? await m1.deposit(dep)
+          : await m1.mint(mnt);
     if (ok) {
       setDeposit("");
       setMint("");
@@ -91,7 +117,7 @@ export function MintScreen() {
 
   const rep = toUnits(repay);
   const wd = toUnits(withdraw);
-  const repayMax = bal.xmxn !== undefined ? (bal.xmxn < debt ? bal.xmxn : debt) : undefined;
+  const repayMax = xmxnBal !== undefined ? (xmxnBal < debt ? xmxnBal : debt) : undefined;
   const afterRepayBps = price !== undefined ? ratioBps(coll, debt - (rep > debt ? debt : rep), price) : undefined;
 
   const items = [
@@ -108,12 +134,12 @@ export function MintScreen() {
         <Panel
           key="mint"
           title="Deposit and mint"
-          description="Institutions lock collateral and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from a position like this. Today's live collateral is Testnet OUSD (Tempo faucet, no real value)."
+          description={`Institutions lock collateral and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from a position like this. ${col?.label ?? ""}.`}
         >
-          <ConnectGate persona="lp" why="Connect a wallet holding testnet OUSD to open a position.">
+          <ConnectGate persona="lp" why="Connect a wallet holding collateral to open a position.">
             <div className="grid gap-5 pt-2">
-              <CollateralPicker items={collaterals} value={collateralId} onChange={setCollateralId} disabled={m.tx.isBusy} />
-              <TokenInput label="Deposit collateral" symbol="OUSD" value={deposit} onChange={setDeposit} max={bal.ousd} maxLabel="Balance" disabled={m.tx.isBusy} />
+              <CollateralPicker items={collaterals} value={col?.id ?? ""} onChange={setCollateralId} disabled={tx.isBusy} />
+              <TokenInput label="Deposit collateral" symbol={sym} value={deposit} onChange={setDeposit} max={collBal} maxLabel="Balance" disabled={tx.isBusy} />
               <div className="grid gap-2">
                 <TokenInput
                   label="Mint"
@@ -122,7 +148,7 @@ export function MintScreen() {
                   onChange={setMint}
                   max={headroom !== undefined && headroom > 0n ? headroom : undefined}
                   maxLabel="Up to"
-                  disabled={m.tx.isBusy || !oracleOk}
+                  disabled={tx.isBusy || !oracleOk}
                 />
                 {quick.length > 0 && (
                   <div data-nav="row" className="flex flex-wrap gap-2">
@@ -131,7 +157,7 @@ export function MintScreen() {
                         key={q.label}
                         type="button"
                         data-nav-item=""
-                        disabled={m.tx.isBusy || !oracleOk}
+                        disabled={tx.isBusy || !oracleOk}
                         onClick={() => setMint(strip(q.amount))}
                         className="bg-secondary rounded-full px-3.5 py-1.5 text-sm tabular disabled:opacity-50"
                       >
@@ -142,18 +168,18 @@ export function MintScreen() {
                 )}
               </div>
               <Rows>
-                <Row label="Collateral after" value={`${fmtAmount(nextColl)} OUSD`} />
+                <Row label="Collateral after" value={`${fmtAmount(nextColl)} ${sym}`} />
                 <Row label="Debt after" value={`${fmtAmount(nextDebt)} xMXN`} />
                 <Row
                   label="Ratio after"
-                  sub={HEALTH_COPY[health(nextBps)]}
+                  sub={healthCopy(health(nextBps, lines), lines)}
                   value={<span className={belowMin ? "text-destructive" : undefined}>{nextBps === undefined ? "—" : fmtBps(nextBps)}</span>}
                 />
               </Rows>
-              {drafting && <RatioMeter bps={nextBps} compareBps={pos.ratioBps} />}
+              {drafting && <RatioMeter bps={nextBps} compareBps={pos.ratioBps} lines={lines} />}
               {belowMin && (
                 <p className="text-destructive text-sm">
-                  That would put you at {fmtBps(nextBps!)}. The vault needs at least 150% to mint; we recommend 200% or more.
+                  That would put you at {fmtBps(nextBps!)}. The vault needs at least {pct(lines.minBps)} for {sym}; we recommend {pct(lines.recommendedBps)} or more.
                 </p>
               )}
               {!oracleOk && fx.valid !== undefined && <p className="text-destructive text-sm">Minting is blocked while the exchange rate is stale or paused.</p>}
@@ -162,14 +188,14 @@ export function MintScreen() {
                   {mintLabel}
                 </Button>
               </PanelActions>
-              <TxProgress tx={m.tx} successNote="Done. Your position is updated." />
+              <TxProgress tx={tx} successNote="Done. Your position is updated." />
             </div>
           </ConnectGate>
         </Panel>
       )}
 
       {section === "repay" && (
-        <Panel key="repay" title="Repay and withdraw" description="Repaid xMXN is burned, shrinking supply. Collateral can come out while the position stays at 150% or more.">
+        <Panel key="repay" title="Repay and withdraw" description={`Repaid xMXN is burned, shrinking supply. Collateral can come out while the position stays at ${pct(lines.minBps)} or more.`}>
           <ConnectGate persona="lp" why="Connect the wallet that holds the position.">
             {!loaded ? (
               <p className="text-muted-foreground py-4 text-sm">Reading your position…</p>
@@ -185,15 +211,15 @@ export function MintScreen() {
                     onChange={setRepay}
                     max={repayMax}
                     maxLabel="Up to"
-                    disabled={m.tx.isBusy || debt === 0n}
+                    disabled={tx.isBusy || debt === 0n}
                     hint={debt === 0n ? "No debt to repay." : `Ratio after: ${fmtBps(afterRepayBps)}.`}
                   />
                   <Button
                     size="lg"
                     variant="outline"
                     className="sm:justify-self-start sm:min-w-56"
-                    disabled={m.tx.isBusy || rep === 0n || (repayMax !== undefined && rep > repayMax)}
-                    onClick={async () => (await m.repayAndBurn(rep)) && setRepay("")}
+                    disabled={tx.isBusy || rep === 0n || (repayMax !== undefined && rep > repayMax)}
+                    onClick={async () => (await (USE_V2 && col?.address ? m2.repayAndBurn(col.address, rep) : m1.repayAndBurn(rep))) && setRepay("")}
                   >
                     Repay and burn
                   </Button>
@@ -201,25 +227,25 @@ export function MintScreen() {
                 <div className="grid gap-3">
                   <TokenInput
                     label="Withdraw collateral"
-                    symbol="OUSD"
+                    symbol={sym}
                     value={withdraw}
                     onChange={setWithdraw}
                     max={pos.maxWithdrawable}
                     maxLabel="Up to"
-                    disabled={m.tx.isBusy}
-                    hint={debt > 0n ? "Only what keeps you at 150% or more." : "No debt left, so all collateral can come out."}
+                    disabled={tx.isBusy}
+                    hint={debt > 0n ? `Only what keeps you at ${pct(lines.minBps)} or more.` : "No debt left, so all collateral can come out."}
                   />
                   <Button
                     size="lg"
                     variant="outline"
                     className="sm:justify-self-start sm:min-w-56"
-                    disabled={m.tx.isBusy || wd === 0n || (pos.maxWithdrawable !== undefined && wd > pos.maxWithdrawable)}
-                    onClick={async () => (await m.withdrawCollateral(wd)) && setWithdraw("")}
+                    disabled={tx.isBusy || wd === 0n || (pos.maxWithdrawable !== undefined && wd > pos.maxWithdrawable)}
+                    onClick={async () => (await (USE_V2 && col?.address ? m2.withdrawCollateral(col.address, sym, wd) : m1.withdrawCollateral(wd))) && setWithdraw("")}
                   >
-                    Withdraw OUSD
+                    Withdraw {sym}
                   </Button>
                 </div>
-                <TxProgress tx={m.tx} successNote="Done. Your position is updated." />
+                <TxProgress tx={tx} successNote="Done. Your position is updated." />
               </div>
             )}
           </ConnectGate>
@@ -234,14 +260,14 @@ export function MintScreen() {
             ) : (
               <>
                 <BigNumber value={pos.ratioBps === null ? "No debt" : fmtBps(pos.ratioBps)} className={h === "liquidatable" ? "text-destructive" : undefined} />
-                <p className="text-muted-foreground mt-2 text-sm">{HEALTH_COPY[h]}</p>
-                {pos.ratioBps !== null && pos.ratioBps !== undefined && <RatioMeter bps={pos.ratioBps} className="mt-6" />}
+                <p className="text-muted-foreground mt-2 text-sm">{healthCopy(h, lines)}</p>
+                {pos.ratioBps !== null && pos.ratioBps !== undefined && <RatioMeter bps={pos.ratioBps} className="mt-6" lines={lines} />}
                 <Rows className="mt-4">
-                  <Row label="Collateral locked" value={`${fmtAmount(pos.collateral)} OUSD`} />
+                  <Row label="Collateral locked" value={`${fmtAmount(pos.collateral)} ${sym}`} />
                   <Row label="Debt" value={`${fmtAmount(pos.debt)} xMXN`} />
-                  <Row label="Can still mint" sub="Staying at 150%" value={pos.maxMintable === undefined ? "—" : `${fmtAmount(pos.maxMintable)} xMXN`} />
-                  <Row label="Can withdraw" value={pos.maxWithdrawable === undefined ? "—" : `${fmtAmount(pos.maxWithdrawable)} OUSD`} />
-                  <Row label="Liquidation" sub="Below 135%, anyone can repay part of the debt and take collateral plus a 10% penalty" value={pos.isLiquidatable ? <span className="text-destructive">Open to liquidation</span> : "Not liquidatable"} />
+                  <Row label="Can still mint" sub={`Staying at ${pct(lines.minBps)}`} value={pos.maxMintable === undefined ? "—" : `${fmtAmount(pos.maxMintable)} xMXN`} />
+                  <Row label="Can withdraw" value={pos.maxWithdrawable === undefined ? "—" : `${fmtAmount(pos.maxWithdrawable)} ${sym}`} />
+                  <Row label="Liquidation" sub={`Below ${pct(lines.liqBps)}, anyone can repay part of the debt and take collateral plus a penalty`} value={pos.isLiquidatable ? <span className="text-destructive">Open to liquidation</span> : "Not liquidatable"} />
                 </Rows>
               </>
             )}
@@ -273,7 +299,7 @@ export function MintScreen() {
           description="Your collateral is in dollars and your debt is in pesos. When the peso strengthens, each dollar covers fewer pesos and your ratio falls."
           aside={<span className="bg-warning/15 text-warning-ink rounded-full px-3 py-1 text-sm">Mock scenario, preview only</span>}
         >
-          <PesoStress collateral={drafting ? nextColl : coll} debt={drafting ? nextDebt : debt} mxnPerUsd={price} projected={drafting} />
+          <PesoStress collateral={drafting ? nextColl : coll} debt={drafting ? nextDebt : debt} mxnPerUsd={fx.mxnPerUsd} usdPx8={USE_V2 ? col?.usdPx8 : undefined} lines={lines} projected={drafting} />
         </Panel>
       )}
     </SettingsLayout>
