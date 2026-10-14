@@ -1,0 +1,116 @@
+{
+  "label": "Demo Uber Data",
+  "demo": true,
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.",
+  "profile": "new-driver",
+  "driver": {
+    "driverId": "demo-drv-new-003",
+    "firstName": "Mariana",
+    "city": "Monterrey",
+    "vehicle": "Kia Rio 2022",
+    "rating": 4.9,
+    "activatedAt": "2026-09-21",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 65,
+      "activeHours": 26.79,
+      "grossMxn": 7377.99,
+      "serviceFeeMxn": 1844.5,
+      "netMxn": 5533.49
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 60,
+      "activeHours": 25.29,
+      "grossMxn": 6413.12,
+      "serviceFeeMxn": 1603.28,
+      "netMxn": 4809.84
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 66,
+      "activeHours": 27.65,
+      "grossMxn": 7419.86,
+      "serviceFeeMxn": 1854.97,
+      "netMxn": 5564.89
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-new-driver-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 5533.49,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-new-driver-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 4809.84,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-new-driver-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 5564.89,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

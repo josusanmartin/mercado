@@ -1,0 +1,224 @@
+{
+  "label": "Demo Uber Data",
+  "demo": true,
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.",
+  "profile": "steady",
+  "driver": {
+    "driverId": "demo-drv-steady-001",
+    "firstName": "Lupita",
+    "city": "Ciudad de México",
+    "vehicle": "Nissan Versa 2021",
+    "rating": 4.93,
+    "activatedAt": "2024-03-11",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-07-20",
+      "weekEnd": "2026-07-26",
+      "trips": 114,
+      "activeHours": 43.67,
+      "grossMxn": 13151.09,
+      "serviceFeeMxn": 3287.77,
+      "netMxn": 9863.32
+    },
+    {
+      "weekStart": "2026-07-27",
+      "weekEnd": "2026-08-02",
+      "trips": 111,
+      "activeHours": 44.76,
+      "grossMxn": 13379.88,
+      "serviceFeeMxn": 3344.97,
+      "netMxn": 10034.91
+    },
+    {
+      "weekStart": "2026-08-03",
+      "weekEnd": "2026-08-09",
+      "trips": 111,
+      "activeHours": 41.61,
+      "grossMxn": 13383.17,
+      "serviceFeeMxn": 3345.79,
+      "netMxn": 10037.38
+    },
+    {
+      "weekStart": "2026-08-10",
+      "weekEnd": "2026-08-16",
+      "trips": 113,
+      "activeHours": 43.14,
+      "grossMxn": 13717.63,
+      "serviceFeeMxn": 3429.41,
+      "netMxn": 10288.22
+    },
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 116,
+      "activeHours": 45.18,
+      "grossMxn": 13489.67,
+      "serviceFeeMxn": 3372.42,
+      "netMxn": 10117.25
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 120,
+      "activeHours": 46.81,
+      "grossMxn": 14007.68,
+      "serviceFeeMxn": 3501.92,
+      "netMxn": 10505.76
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 121,
+      "activeHours": 45.33,
+      "grossMxn": 14134.17,
+      "serviceFeeMxn": 3533.54,
+      "netMxn": 10600.63
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 122,
+      "activeHours": 45.3,
+      "grossMxn": 14788.83,
+      "serviceFeeMxn": 3697.21,
+      "netMxn": 11091.62
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 115,
+      "activeHours": 45.08,
+      "grossMxn": 13061.61,
+      "serviceFeeMxn": 3265.4,
+      "netMxn": 9796.21
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 111,
+      "activeHours": 44.93,
+      "grossMxn": 12916.56,
+      "serviceFeeMxn": 3229.14,
+      "netMxn": 9687.42
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 123,
+      "activeHours": 50.22,
+      "grossMxn": 14845.64,
+      "serviceFeeMxn": 3711.41,
+      "netMxn": 11134.23
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 111,
+      "activeHours": 44.27,
+      "grossMxn": 12917.67,
+      "serviceFeeMxn": 3229.42,
+      "netMxn": 9688.25
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-steady-01",
+      "type": "weekly_payout",
+      "paidAt": "2026-07-28T15:00:00Z",
+      "amountMxn": 9863.32,
+      "currency": "MXN",
+      "weekStart": "2026-07-20"
+    },
+    {
+      "paymentId": "demo-steady-02",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-04T15:00:00Z",
+      "amountMxn": 10034.91,
+      "currency": "MXN",
+      "weekStart": "2026-07-27"
+    },
+    {
+      "paymentId": "demo-steady-03",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-11T15:00:00Z",
+      "amountMxn": 10037.38,
+      "currency": "MXN",
+      "weekStart": "2026-08-03"
+    },
+    {
+      "paymentId": "demo-steady-04",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-18T15:00:00Z",
+      "amountMxn": 10288.22,
+      "currency": "MXN",
+      "weekStart": "2026-08-10"
+    },
+    {
+      "paymentId": "demo-steady-05",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-25T15:00:00Z",
+      "amountMxn": 10117.25,
+      "currency": "MXN",
+      "weekStart": "2026-08-17"
+    },
+    {
+      "paymentId": "demo-steady-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-01T15:00:00Z",
+      "amountMxn": 10505.76,
+      "currency": "MXN",
+      "weekStart": "2026-08-24"
+    },
+    {
+      "paymentId": "demo-steady-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-08T15:00:00Z",
+      "amountMxn": 10600.63,
+      "currency": "MXN",
+      "weekStart": "2026-08-31"
+    },
+    {
+      "paymentId": "demo-steady-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-15T15:00:00Z",
+      "amountMxn": 11091.62,
+      "currency": "MXN",
+      "weekStart": "2026-09-07"
+    },
+    {
+      "paymentId": "demo-steady-09",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-22T15:00:00Z",
+      "amountMxn": 9796.21,
+      "currency": "MXN",
+      "weekStart": "2026-09-14"
+    },
+    {
+      "paymentId": "demo-steady-10",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 9687.42,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-steady-11",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 11134.23,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-steady-12",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 9688.25,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}

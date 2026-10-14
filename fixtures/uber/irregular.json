@@ -1,0 +1,182 @@
+{
+  "label": "Demo Uber Data",
+  "demo": true,
+  "disclaimer": "Synthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.",
+  "profile": "irregular",
+  "driver": {
+    "driverId": "demo-drv-irregular-002",
+    "firstName": "Toño",
+    "city": "Guadalajara",
+    "vehicle": "Chevrolet Aveo 2019",
+    "rating": 4.81,
+    "activatedAt": "2025-01-20",
+    "currency": "MXN",
+    "source": "demo-fixture"
+  },
+  "weeks": [
+    {
+      "weekStart": "2026-08-03",
+      "weekEnd": "2026-08-09",
+      "trips": 48,
+      "activeHours": 20.17,
+      "grossMxn": 5208.59,
+      "serviceFeeMxn": 1302.15,
+      "netMxn": 3906.44
+    },
+    {
+      "weekStart": "2026-08-10",
+      "weekEnd": "2026-08-16",
+      "trips": 63,
+      "activeHours": 27.29,
+      "grossMxn": 7077.47,
+      "serviceFeeMxn": 1769.37,
+      "netMxn": 5308.1
+    },
+    {
+      "weekStart": "2026-08-17",
+      "weekEnd": "2026-08-23",
+      "trips": 48,
+      "activeHours": 19.73,
+      "grossMxn": 5391.7,
+      "serviceFeeMxn": 1347.93,
+      "netMxn": 4043.77
+    },
+    {
+      "weekStart": "2026-08-24",
+      "weekEnd": "2026-08-30",
+      "trips": 0,
+      "activeHours": 0,
+      "grossMxn": 0,
+      "serviceFeeMxn": 0,
+      "netMxn": 0
+    },
+    {
+      "weekStart": "2026-08-31",
+      "weekEnd": "2026-09-06",
+      "trips": 84,
+      "activeHours": 35.39,
+      "grossMxn": 8992.75,
+      "serviceFeeMxn": 2248.19,
+      "netMxn": 6744.56
+    },
+    {
+      "weekStart": "2026-09-07",
+      "weekEnd": "2026-09-13",
+      "trips": 39,
+      "activeHours": 15.82,
+      "grossMxn": 4408.8,
+      "serviceFeeMxn": 1102.2,
+      "netMxn": 3306.6
+    },
+    {
+      "weekStart": "2026-09-14",
+      "weekEnd": "2026-09-20",
+      "trips": 47,
+      "activeHours": 20.12,
+      "grossMxn": 5030.55,
+      "serviceFeeMxn": 1257.64,
+      "netMxn": 3772.91
+    },
+    {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27",
+      "trips": 48,
+      "activeHours": 20.02,
+      "grossMxn": 5037.46,
+      "serviceFeeMxn": 1259.37,
+      "netMxn": 3778.09
+    },
+    {
+      "weekStart": "2026-09-28",
+      "weekEnd": "2026-10-04",
+      "trips": 61,
+      "activeHours": 26.71,
+      "grossMxn": 6921.81,
+      "serviceFeeMxn": 1730.45,
+      "netMxn": 5191.36
+    },
+    {
+      "weekStart": "2026-10-05",
+      "weekEnd": "2026-10-11",
+      "trips": 74,
+      "activeHours": 31.8,
+      "grossMxn": 8080.65,
+      "serviceFeeMxn": 2020.16,
+      "netMxn": 6060.49
+    }
+  ],
+  "payments": [
+    {
+      "paymentId": "demo-irregular-01",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-11T15:00:00Z",
+      "amountMxn": 3906.44,
+      "currency": "MXN",
+      "weekStart": "2026-08-03"
+    },
+    {
+      "paymentId": "demo-irregular-02",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-18T15:00:00Z",
+      "amountMxn": 5308.1,
+      "currency": "MXN",
+      "weekStart": "2026-08-10"
+    },
+    {
+      "paymentId": "demo-irregular-03",
+      "type": "weekly_payout",
+      "paidAt": "2026-08-25T15:00:00Z",
+      "amountMxn": 4043.77,
+      "currency": "MXN",
+      "weekStart": "2026-08-17"
+    },
+    {
+      "paymentId": "demo-irregular-05",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-08T15:00:00Z",
+      "amountMxn": 6744.56,
+      "currency": "MXN",
+      "weekStart": "2026-08-31"
+    },
+    {
+      "paymentId": "demo-irregular-06",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-15T15:00:00Z",
+      "amountMxn": 3306.6,
+      "currency": "MXN",
+      "weekStart": "2026-09-07"
+    },
+    {
+      "paymentId": "demo-irregular-07",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-22T15:00:00Z",
+      "amountMxn": 3772.91,
+      "currency": "MXN",
+      "weekStart": "2026-09-14"
+    },
+    {
+      "paymentId": "demo-irregular-08",
+      "type": "weekly_payout",
+      "paidAt": "2026-09-29T15:00:00Z",
+      "amountMxn": 3778.09,
+      "currency": "MXN",
+      "weekStart": "2026-09-21"
+    },
+    {
+      "paymentId": "demo-irregular-09",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-06T15:00:00Z",
+      "amountMxn": 5191.36,
+      "currency": "MXN",
+      "weekStart": "2026-09-28"
+    },
+    {
+      "paymentId": "demo-irregular-10",
+      "type": "weekly_payout",
+      "paidAt": "2026-10-13T15:00:00Z",
+      "amountMxn": 6060.49,
+      "currency": "MXN",
+      "weekStart": "2026-10-05"
+    }
+  ]
+}
