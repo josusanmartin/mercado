@@ -69,14 +69,56 @@ test('product-specific mock labels', async ({ page }) => {
 
 test.describe('old routes redirect into the products', () => {
   for (const [from, to] of [
-    ['/credit', /\/credito/],
+    ['/credit', /\/credito\?tab=drivers/],
     ['/earn', /\/credito\?tab=lenders/],
-    ['/pay', /\/remesas/],
+    ['/pay', /\/remesas\?screen=aire/], // lands on the airtime intent, not Send
     ['/send', /\/remesas/],
   ] as const) {
     test(`${from} → ${to}`, async ({ page }) => {
       await page.goto(from)
       await expect(page).toHaveURL(to)
+    })
+  }
+})
+
+test('remesas: Android phone frame on desktop, full-screen app at phone width', async ({ page, isMobile }) => {
+  await page.goto('/remesas')
+  const frame = page.getByRole('group', { name: 'Android phone preview' })
+  if (isMobile) {
+    await expect(frame).toBeHidden()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow, 'remesas full-screen overflow').toBeLessThanOrEqual(1)
+  } else {
+    await expect(frame).toBeVisible()
+    const box = await frame.boundingBox()
+    expect(box?.width ?? 0, 'phone frame ~360px wide').toBeLessThan(420)
+  }
+  await honesty(page)
+})
+
+test('remesas at exactly 390px: full-screen (no frame)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/remesas')
+  await expect(page.getByRole('group', { name: 'Android phone preview' })).toBeHidden()
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+  await honesty(page)
+})
+
+test.describe('credito tabs', () => {
+  for (const [tab, label, re] of [
+    ['drivers', 'Drivers', /Demo Uber Data/],
+    ['lenders', 'Lenders', /no guaranteed return/i],
+    ['api', 'Underwriting API', /402/],
+  ] as const) {
+    test(`${label} tab`, async ({ page }) => {
+      const errors = trackErrors(page)
+      await page.goto('/credito')
+      await page.getByRole('tab', { name: new RegExp(label) }).or(page.getByRole('button', { name: new RegExp(`^${label}`) })).first().click()
+      await expect(page).toHaveURL(new RegExp(`tab=${tab}`))
+      await expect(visible(page, re)).toBeVisible()
+      await honesty(page)
+      expect(errors).toEqual([])
     })
   }
 })
