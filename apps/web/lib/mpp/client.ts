@@ -3,8 +3,8 @@
 // "pull" mode: mppx signs, the server broadcasts). Isomorphic: no server-only imports.
 import { Mppx, tempo } from "mppx/client";
 import { Receipt } from "mppx";
-import type { Account, Client } from "viem";
-import { TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
+import { createClient, http, type Account, type Client } from "viem";
+import { TEMPO_MODERATO_CHAIN_ID, tempoModerato } from "@mercado/shared";
 import type { BillOrder, BillPayResponse, BillQuoteRequest, BillQuoteResponse } from "@mercado/shared";
 
 export type PayStage = "requesting" | "challenge" | "signing" | "verifying" | "done";
@@ -78,7 +78,9 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
     methods: [
       tempo.charge({
         expectedChainId: TEMPO_MODERATO_CHAIN_ID,
-        ...(account ? { account } : {}),
+        // Local accounts get a client on the shared chain, whose default fee token is a USD TIP-20:
+        // xMXN can't pay Tempo fees (FeeTokenNotUsdError).
+        ...(account ? { account, getClient: () => createClient({ chain: tempoModerato, transport: http(), account }) } : {}),
         ...(walletClient ? { getClient: () => walletClient, account: walletClient.account } : {}),
       }),
     ],

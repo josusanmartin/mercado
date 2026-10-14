@@ -37,3 +37,21 @@ const m2 = await bal(merchant);
 console.log("retry same key →", again.order.orderId === r.order.orderId ? "same order" : "DIFFERENT ORDER", again.order.status, "extra merchant delta", formatUnits(m2 - m1, 6));
 const o = await getBillOrder(r.order.orderId, base);
 console.log("history", o.history.map((h) => h.status).join(" → "));
+
+// Paid underwriter access to /api/driver/score (2 xMXN via MPP).
+{
+  const { Mppx, tempo } = await import("mppx/client");
+  const { createClient } = await import("viem");
+  const { tempoModerato: chain } = await import("@mercado/shared");
+  const mppx = Mppx.create({
+    polyfill: false,
+    methods: [tempo.charge({ account, expectedChainId: 42431, getClient: () => createClient({ chain, transport: http(), account }) })],
+  });
+  const body = JSON.stringify({ borrower: "0x1111111111111111111111111111111111111111", profile: "irregular" });
+  const unpaid = await fetch(`${base}/api/driver/score?access=underwriter`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+  console.log("underwriter unpaid →", unpaid.status, unpaid.headers.get("WWW-Authenticate")?.slice(0, 40));
+  const m3 = await bal(merchant);
+  const paid = await mppx.fetch(`${base}/api/driver/score?access=underwriter`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+  const report = await paid.json();
+  console.log("underwriter paid →", paid.status, "score", report.score, "attestation?", "attestation" in report, "tx", report.payment?.txHash, "merchant delta", formatUnits((await bal(merchant)) - m3, 6));
+}
