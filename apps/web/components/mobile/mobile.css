@@ -292,8 +292,9 @@
 .m-empty-art {
   animation: m-rise 420ms var(--m-ease-out) both;
 }
+/* One lift and settle, not a perpetual idle loop (motion budget, V6 #2). */
 .m-float {
-  animation: m-float 3.2s ease-in-out infinite alternate;
+  animation: m-float 1.6s ease-in-out 2 alternate;
 }
 @keyframes m-float {
   to {
@@ -340,11 +341,12 @@
     transform: translateX(70%);
   }
 }
-/* Remesas: the US → MX route draws itself, then the destination pulses once. */
+/* Remesas: on the confirmed send, ONE ~450 ms arrival (V6 #2): the US → MX route draws, the dot lands, the
+   destination pulses once, then everything settles. */
 .m-route-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: m-route-draw 1100ms var(--m-ease-out) forwards;
+  animation: m-route-draw 450ms var(--m-ease-out) forwards;
 }
 @keyframes m-route-draw {
   to {
@@ -355,7 +357,7 @@
   transform-box: fill-box;
   transform-origin: center;
   opacity: 0;
-  animation: m-route-pulse 900ms var(--m-ease-out) 1050ms;
+  animation: m-route-pulse 700ms var(--m-ease-out) 420ms;
 }
 @keyframes m-route-pulse {
   from {

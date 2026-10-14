@@ -817,7 +817,7 @@ export function PullToRefresh({
       {stretch && <div aria-hidden className="absolute inset-x-0 top-0 h-[120px]" style={{ background: stretch }} />}
       <div aria-hidden={!busy} className="pointer-events-none absolute inset-x-0 top-0 z-20 grid justify-items-center" style={{ transform: `translateY(${pull - 44}px)`, opacity: pull ? 1 : 0, transition: dragging ? "none" : "transform 360ms var(--m-spring), opacity 200ms" }}>
         <span role={busy ? "status" : undefined} aria-label={busy ? "Actualizando" : undefined} className="grid size-9 place-items-center rounded-full bg-[var(--m-surface)] shadow-[0_2px_8px_rgb(0_0_0/0.18)]">
-          <svg viewBox="0 0 24 24" className={cn("size-5", busy && "m-spin")} style={busy ? undefined : { transform: `rotate(${k * 270}deg)` }} fill="none" stroke="var(--m-accent)" strokeWidth="2.5" strokeLinecap="round">
+          <svg viewBox="0 0 24 24" data-loop={busy ? "" : undefined} className={cn("size-5", busy && "m-spin")} style={busy ? undefined : { transform: `rotate(${k * 270}deg)` }} fill="none" stroke="var(--m-accent)" strokeWidth="2.5" strokeLinecap="round">
             <circle cx="12" cy="12" r="8" pathLength={1} strokeDasharray="1" strokeDashoffset={busy ? 0.7 : 1 - 0.8 * k} />
           </svg>
         </span>

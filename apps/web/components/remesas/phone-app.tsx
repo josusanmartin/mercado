@@ -793,10 +793,10 @@ function Arrives({ value }: { value: number }) {
   const reduced = useReducedMotion();
   const [v, setV] = useState(reduced ? value : 0);
   useEffect(() => {
-    const t = setTimeout(() => setV(value), 150);
+    const t = setTimeout(() => setV(value), 60);
     return () => clearTimeout(t);
   }, [value]);
-  return <Ticker value={v} duration={1100} format={(n) => `MX${fmtMoney(n)}`} />;
+  return <Ticker value={v} duration={450} format={(n) => `MX${fmtMoney(n)}`} />;
 }
 
 const ROUTE = "M24 62 Q160 -8 296 62";
@@ -814,7 +814,7 @@ function SendRoute({ city }: { city?: string }) {
         <circle cx="296" cy="62" r="6" fill={TERRACOTTA} />
         {reduced ? null : (
           <circle r="5" fill={TERRACOTTA} stroke="var(--m-surface)" strokeWidth="2">
-            <animateMotion dur="1.1s" fill="freeze" path={ROUTE} calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.2 0.8 0.2 1" />
+            <animateMotion dur="0.45s" fill="freeze" path={ROUTE} calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.2 0.8 0.2 1" />
           </circle>
         )}
       </svg>
