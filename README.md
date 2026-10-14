@@ -111,7 +111,7 @@ Rollback to v1: set `NEXT_PUBLIC_MERCADO_PROTOCOL=v1` in `apps/web/.env.local` a
 
 | What | Command | Result |
 |---|---|---|
-| Contracts (Foundry, real TIP-20 precompiles) | `cd packages/contracts && ~/.foundry/bin/forge test` | **136/136** across 9 suites (`scripts/evidence/forge-test.txt`) |
+| Contracts (Foundry, real TIP-20 precompiles) | `cd packages/contracts && ~/.foundry/bin/forge test` | **141/141** across 10 suites (`scripts/evidence/forge-test.txt`) |
 | v2 end-to-end journey on Moderato | `PROTOCOL=v2 npx tsx scripts/demo-journey.ts` | V0–V10 + VS green: Create, Move, Lend, Spend 402, underwriter bot, Card, Invest, stress + restore |
 | v1 journey (legacy) | `npx tsx scripts/demo-journey.ts` | J0–J7 green before the flip (API steps now need a v1 server) |
 | Bills crash/restart safety | `npx tsx scripts/bills-crash-proof.ts` | SIGKILL after/before broadcast → no double charge or fulfillment |

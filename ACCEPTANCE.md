@@ -11,7 +11,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | Area | Status | Evidence |
 |---|---|---|
 | SPEC §6 required checks 1–11 | ✅ 11/11 | §B below (v1 evidence; the same properties hold on v2 per §F) |
-| Contracts | ✅ 136/136 Foundry tests, 9 suites | `scripts/evidence/forge-test.txt` |
+| Contracts | ✅ 141/141 Foundry tests, 10 suites | `scripts/evidence/forge-test.txt` |
 | Source verification | ✅ every v1 + v2 contract `exact_match/exact_match` on Tempo's Sourcify (`contracts.tempo.xyz`), checked by qa 03:17 UTC | links in `README.md` |
 | v2 journey (six products) | ✅ V0–V10 + VS green on Moderato | §F below, `scripts/evidence/v2-run-*.json` |
 | Post-flip HTTP check (:3100 = v2) | ✅ attestation bound to pool v2, bills + underwriter 402s in xMXN v2 | §E (V2) |
