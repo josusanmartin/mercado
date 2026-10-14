@@ -207,7 +207,7 @@ export function TourPanel() {
         </button>
       </div>
       <p className="text-papel/60 mt-3 text-xs">
-        Step {index + 1} of {TOUR.length} · as {p.name}, {p.role.toLowerCase()}
+        Step {index + 1} of {TOUR.length} · as {p.name} ({p.role})
       </p>
       <h2 className="font-display mt-0.5 text-lg font-semibold">{step.title}</h2>
       <p className="text-papel/85 mt-1 text-sm text-pretty">{step.doThis}</p>

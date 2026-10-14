@@ -37,7 +37,7 @@ export function ConnectGate({ persona, children, why }: { persona: PersonaId; wh
           onClick={() => switchTo(persona).catch((e) => toast.error(String(e?.message ?? e).split("\n")[0]))}
         >
           <KeyRound />
-          Continue as {p.name}, {p.role.toLowerCase()}
+          Continue as {p.name} ({p.role})
         </Button>
       </div>
       <p className="text-muted-foreground text-xs">Demo personas use testnet demo keys with no real value. Or use Connect, top right.</p>
