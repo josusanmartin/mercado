@@ -35,6 +35,24 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
       </div>
     );
 
+  if (!o.enabled)
+    return (
+      <div className="grid gap-4 px-4 py-4">
+        <div>
+          <p className="text-lg font-semibold">Agregar dólares</p>
+          <p className="text-[13px] text-[#5b6270]">Add dollars with a card</p>
+        </div>
+        <p className="rounded-[12px] bg-[#f4f5f7] p-3 text-[15px]">
+          <span className="font-semibold">Próximamente · Coming soon.</span> Card top-ups are paused while we finish a safety review.
+        </p>
+        {o.canTempoDeposit && (
+          <button type="button" onClick={() => o.tempoDeposit()} className="flex h-11 items-center justify-center gap-2 rounded-[12px] bg-[#f4f5f7] text-[15px] font-semibold">
+            <Wallet className="size-4" /> Agregar fondos con Tempo Wallet
+          </button>
+        )}
+      </div>
+    );
+
   return (
     <div className="grid gap-4 px-4 py-4">
       <div>

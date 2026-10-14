@@ -4,7 +4,7 @@
 // via wallet_deposit for Tempo Wallet users (faucet on testnet, card/Apple Pay on mainnet).
 import { useCallback, useState } from "react";
 import { useConnection } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TEMPO_ADDRESSES, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import { useReportBusy } from "@/lib/busy";
 
@@ -36,6 +36,12 @@ export function useOnramp() {
   const { address, connector } = useConnection();
   const qc = useQueryClient();
   const [stage, setStage] = useState<OnrampStage>("idle");
+  // Server flag: off until review accepts the on-ramp (lead). The Tempo Wallet path stays available.
+  const status = useQuery({
+    queryKey: ["onramp-status"],
+    queryFn: async () => (await fetch("/api/onramp", { cache: "no-store" })).json() as Promise<{ enabled: boolean; minUsd: number; maxPerTxUsd: number }>,
+    staleTime: 30_000,
+  });
   const [result, setResult] = useState<OnrampResult>();
   const [error, setError] = useState<string>();
   useReportBusy(stage === "charging" || stage === "delivering");
@@ -104,5 +110,5 @@ export function useOnramp() {
     [connector, address, qc],
   );
 
-  return { stage, result, error, buyWithCard, canTempoDeposit, tempoDeposit, reset: () => (setStage("idle"), setResult(undefined), setError(undefined)) };
+  return { stage, result, error, enabled: status.data?.enabled ?? false, buyWithCard, canTempoDeposit, tempoDeposit, reset: () => (setStage("idle"), setResult(undefined), setError(undefined)) };
 }

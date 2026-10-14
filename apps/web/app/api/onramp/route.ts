@@ -8,7 +8,7 @@
 //   2. The transfer is SIGNED first and its hash persisted (status "signed") BEFORE broadcast.
 //   3. Any retry with a pending record reconciles by that hash and never signs a second transfer.
 //      Unknown settlement stays "pending" (202) until the chain answers; it is never re-sent.
-// Budgets (R-047): integer cents ≥ 1 and ≤ US$500 per tx; per-wallet and global daily totals computed
+// Behind ONRAMP_ENABLED (off → 503) until review accepts it. Budgets (R-047): whole cents, US$1–500 per tx; per-wallet and global daily totals computed
 // from the persisted ledger (every non-failed record counts), all under one process-wide lock; fail
 // closed if the float can't cover the amount. Single-process file store (.data/onramp.json).
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -22,6 +22,7 @@ import { jsonError, parseJson } from "@/lib/server/http";
 import { publicClient } from "@/lib/server/chain";
 import { withKeyLock } from "@/lib/server/bills/lock";
 
+const MIN_CENTS = 1_00;
 const MAX_PER_TX_CENTS = 500_00;
 const MAX_PER_WALLET_DAY_CENTS = 1_000_00;
 const MAX_GLOBAL_DAY_CENTS = 10_000_00;
@@ -85,13 +86,22 @@ async function settle(i: Intent): Promise<Intent> {
   return { ...i, status: receipt.status === "success" ? "delivered" : "failed", error: receipt.status === "success" ? undefined : "reverted" };
 }
 
+/** Off until review accepts R-046/R-047 (lead): set ONRAMP_ENABLED=1 in the root .env.local to turn it on. */
+const enabled = () => env("ONRAMP_ENABLED") === "1";
+
+export async function GET() {
+  return Response.json({ enabled: enabled(), minUsd: MIN_CENTS / 100, maxPerTxUsd: MAX_PER_TX_CENTS / 100, maxPerWalletDayUsd: MAX_PER_WALLET_DAY_CENTS / 100 });
+}
+
 export async function POST(request: Request) {
+  if (!enabled()) return jsonError(503, "Top-up is temporarily unavailable.", "ONRAMP_DISABLED");
   const [body, err] = await parseJson(request, Body);
   if (err) return err;
   const to = (body.address as Address).toLowerCase();
   const cents = Math.round(body.amountUsd * 100);
-  if (!Number.isInteger(cents) || cents < 1 || Math.abs(body.amountUsd * 100 - cents) > 1e-6)
-    return jsonError(400, "Amount must be a positive number of cents.", "INVALID_AMOUNT");
+  if (!Number.isInteger(cents) || Math.abs(body.amountUsd * 100 - cents) > 1e-6)
+    return jsonError(400, "Amount must be in whole cents.", "INVALID_AMOUNT");
+  if (cents < MIN_CENTS) return jsonError(400, `The minimum top-up is US$${MIN_CENTS / 100}.`, "BELOW_MIN");
   if (cents > MAX_PER_TX_CENTS) return jsonError(400, `At most US$${MAX_PER_TX_CENTS / 100} per top-up.`, "PER_TX_CAP");
 
   // One lock for the whole ledger: reservation, signing and persistence are serialized.
