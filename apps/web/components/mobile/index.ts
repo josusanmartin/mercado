@@ -23,6 +23,8 @@ export {
   LinearProgress,
   ListHeader,
   ListHeaderAction,
+  PullToRefresh,
+  useNewKeys,
   DIVIDER,
   ListItem,
   Meta,

@@ -14,6 +14,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { DUR, SuccessCheck as MotionCheck, Ticker, useReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -640,14 +641,175 @@ export function LinearProgress({ className }: { className?: string }) {
   return <div role="progressbar" aria-label="Procesando" className={cn("m-progress h-[3px] w-full", className)} />;
 }
 
-/** Empty state: drawing, statement, action. */
-export function EmptyState({ icon, title, hint, action }: { icon: ReactNode; title: string; hint?: string; action?: ReactNode }) {
+/**
+ * Empty state (v6, designed): an illustration in the app's accent that settles in, an optional display
+ * statement, one short Spanish line, an optional action. Never a dash or a bare sentence.
+ */
+export function EmptyState({ icon, title, hint, action, size = 64 }: { icon: ReactNode; title?: string; hint?: string; action?: ReactNode; size?: number }) {
   return (
-    <div className="grid justify-items-center gap-2 px-8 py-8 text-center">
-      <span className="grid size-16 place-items-center text-[var(--m-on-surface)] [&_svg]:size-12">{icon}</span>
-      <p className="m-display text-[22px]">{title}</p>
+    <div className="grid justify-items-center gap-2 px-8 py-7 text-center">
+      <span className="m-empty-art grid place-items-center text-[var(--m-on-surface)] [&_svg]:size-full" style={{ width: size, height: size }}>
+        {icon}
+      </span>
+      {title && <p className="m-display mt-1 text-[22px]">{title}</p>}
       {hint && <p className="text-[14px] text-[var(--m-on-surface-variant)]">{hint}</p>}
       {action}
+    </div>
+  );
+}
+
+/* ───────────────────────── live lists + pull to refresh (v6) ───────────────────────── */
+
+// Keys each list has already shown, per list id, kept across remounts (a screen change remounts the list,
+// and the row you just created should still arrive with its flash when you come back to it).
+const seenKeys = new Map<string, Set<string>>();
+
+/**
+ * Which of `keys` are new since this list last rendered (never on its first load). New rows get the
+ * `m-new` class: they slide in at the top with one soft accent flash (mobile.css).
+ */
+export function useNewKeys(listId: string, keys: string[]): Set<string> {
+  const [fresh, setFresh] = useState<Set<string>>(() => new Set());
+  const sig = keys.join("|");
+  useEffect(() => {
+    if (!keys.length) return;
+    const seen = seenKeys.get(listId);
+    if (!seen) {
+      seenKeys.set(listId, new Set(keys));
+      return;
+    }
+    const added = keys.filter((k) => !seen.has(k));
+    if (!added.length) return;
+    added.forEach((k) => seen.add(k));
+    setFresh(new Set(added));
+    const t = setTimeout(() => setFresh(new Set()), 1800);
+    return () => clearTimeout(t);
+  }, [listId, sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  return fresh;
+}
+
+const PULL_MAX = 96;
+const PULL_GO = 64;
+
+/**
+ * Pull-to-refresh for an app's home (v6): drag down from the top (touch, or a mouse drag in the desktop
+ * frame) and the content follows with resistance; past the line an accent spinner holds while the page's
+ * live reads refetch (the same react-query queries that poll on their own), then everything springs back.
+ */
+export function PullToRefresh({
+  children,
+  onRefresh,
+  className,
+  stretch,
+}: {
+  children: ReactNode;
+  onRefresh?: () => Promise<unknown>;
+  className?: string;
+  /** The color the top of the screen stretches with while pulling (an app's top color field). */
+  stretch?: string;
+}) {
+  const qc = useQueryClient();
+  const ref = useRef<HTMLDivElement>(null);
+  const [pull, setPull] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const live = useRef({ onRefresh, qc, busy });
+  live.current = { onRefresh, qc, busy };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let y0: number | null = null;
+    let engaged = false;
+    let dist = 0;
+    const atTop = () => {
+      const sc = el.closest(".m-scroll") as HTMLElement | null;
+      const framed = sc && getComputedStyle(sc).overflowY !== "visible";
+      return framed ? sc.scrollTop <= 0 : window.scrollY <= 0;
+    };
+    const begin = (y: number) => {
+      if (live.current.busy || !atTop()) return;
+      y0 = y;
+      engaged = false;
+      dist = 0;
+    };
+    const move = (y: number, e: Event) => {
+      if (y0 === null) return;
+      const dy = y - y0;
+      if (!engaged) {
+        if (dy < -4) return void (y0 = null); // scrolling up the page: not a pull
+        if (dy < 10) return;
+        engaged = true;
+        setDragging(true);
+      }
+      if (e.cancelable) e.preventDefault();
+      dist = Math.max(0, Math.min(PULL_MAX, (dy - 10) * 0.5));
+      setPull(dist);
+    };
+    const end = async () => {
+      if (y0 === null) return;
+      y0 = null;
+      if (!engaged) return;
+      engaged = false;
+      setDragging(false);
+      // A mouse drag must not also count as a click on whatever it started on.
+      window.addEventListener("click", stop, true);
+      setTimeout(() => window.removeEventListener("click", stop, true), 0);
+      if (dist < PULL_GO) return setPull(0);
+      setBusy(true);
+      setPull(56);
+      haptic();
+      const { onRefresh: fn, qc: client } = live.current;
+      await Promise.all([(fn ?? (() => client.refetchQueries({ type: "active" })))().catch(() => undefined), new Promise((r) => setTimeout(r, 700))]);
+      setBusy(false);
+      setPull(0);
+    };
+    const stop = (ev: Event) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+    };
+    const onTouchStart = (e: TouchEvent) => begin(e.touches[0].clientY);
+    const onTouchMove = (e: TouchEvent) => move(e.touches[0].clientY, e);
+    const onDown = (e: globalThis.PointerEvent) => {
+      if (e.pointerType === "mouse" && e.button === 0) begin(e.clientY);
+    };
+    const onMove = (e: globalThis.PointerEvent) => {
+      if (e.pointerType === "mouse") move(e.clientY, e);
+    };
+    const onUp = (e: globalThis.PointerEvent) => {
+      if (e.pointerType === "mouse") void end();
+    };
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    const onTouchEnd = () => void end();
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  const k = Math.min(1, pull / PULL_GO);
+  return (
+    <div ref={ref} className={cn("relative", dragging && "select-none", className)}>
+      {stretch && <div aria-hidden className="absolute inset-x-0 top-0 h-[120px]" style={{ background: stretch }} />}
+      <div aria-hidden={!busy} className="pointer-events-none absolute inset-x-0 top-0 z-20 grid justify-items-center" style={{ transform: `translateY(${pull - 44}px)`, opacity: pull ? 1 : 0, transition: dragging ? "none" : "transform 360ms var(--m-spring), opacity 200ms" }}>
+        <span role={busy ? "status" : undefined} aria-label={busy ? "Actualizando" : undefined} className="grid size-9 place-items-center rounded-full bg-[var(--m-surface)] shadow-[0_2px_8px_rgb(0_0_0/0.18)]">
+          <svg viewBox="0 0 24 24" className={cn("size-5", busy && "m-spin")} style={busy ? undefined : { transform: `rotate(${k * 270}deg)` }} fill="none" stroke="var(--m-accent)" strokeWidth="2.5" strokeLinecap="round">
+            <circle cx="12" cy="12" r="8" pathLength={1} strokeDasharray="1" strokeDashoffset={busy ? 0.7 : 1 - 0.8 * k} />
+          </svg>
+        </span>
+      </div>
+      <div className="relative" style={pull ? { transform: `translateY(${pull}px)`, transition: dragging ? "none" : "transform 360ms var(--m-spring)" } : { transition: "transform 360ms var(--m-spring)" }}>{children}</div>
     </div>
   );
 }

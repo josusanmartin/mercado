@@ -235,6 +235,115 @@
   }
 }
 
+/* ── v6: live lists, designed empties, card flip/shine, the send route ── */
+/* A row that just arrived: slides in at the top, one soft accent flash (opacity on an overlay). */
+.m-new {
+  position: relative;
+  animation: m-new-in 420ms var(--m-ease-out) both;
+}
+.m-new::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--m-accent);
+  opacity: 0;
+  animation: m-new-flash 1400ms var(--m-ease-out);
+}
+@keyframes m-new-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+@keyframes m-new-flash {
+  0% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* Empty-state art settles in (and its pieces can float a little: .m-float). */
+.m-empty-art {
+  animation: m-rise 420ms var(--m-ease-out) both;
+}
+.m-float {
+  animation: m-float 3.2s ease-in-out infinite alternate;
+}
+@keyframes m-float {
+  to {
+    transform: translateY(-4px);
+  }
+}
+/* Pull-to-refresh spinner. */
+.m-spin {
+  animation: m-spin 800ms linear infinite;
+}
+@keyframes m-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Card flip: two faces, 3D turn on tap (reduced motion: an instant swap). */
+.m-flip {
+  transform-style: preserve-3d;
+  transition: transform 560ms var(--m-ease-out);
+}
+.m-flip[data-flipped] {
+  transform: rotateY(180deg);
+}
+.m-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.m-face-back {
+  transform: rotateY(180deg);
+}
+/* One light sweep across the card when a payment is approved. */
+.m-shine {
+  position: absolute;
+  inset: -20% -60%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.65) 50%, transparent 62%);
+  transform: translateX(-70%);
+  animation: m-shine 1000ms var(--m-ease-out) 120ms forwards;
+}
+@keyframes m-shine {
+  to {
+    transform: translateX(70%);
+  }
+}
+/* Remesas: the US → MX route draws itself, then the destination pulses once. */
+.m-route-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: m-route-draw 1100ms var(--m-ease-out) forwards;
+}
+@keyframes m-route-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.m-route-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: m-route-pulse 900ms var(--m-ease-out) 1050ms;
+}
+@keyframes m-route-pulse {
+  from {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
 /* Snackbar. */
 .m-snack {
   animation: m-snack-in 220ms var(--m-ease-emph-decel) both;
@@ -310,10 +419,16 @@
   .m-root *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important; /* loops (papel pan, spinners, float) must not flicker */
     transition-duration: 0.01ms !important;
   }
-  .m-root .m-skeleton::after {
+  .m-root .m-skeleton::after,
+  .m-root .m-shine,
+  .m-root .m-route-pulse {
     display: none;
+  }
+  .m-root .m-route-line {
+    stroke-dashoffset: 0;
   }
   .m-press:active:not(:disabled),
   .m-tap:active {
