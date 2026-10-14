@@ -36,7 +36,7 @@ for (const line of existsSync(join(ROOT, '.env.local')) ? readFileSync(join(ROOT
   if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '')
 }
 const shared = await import('@mercado/shared')
-const { activeAddresses, multiCollateralVaultAbi, moveAmmAbi, stakedOusdAbi, demoRwaAbi, priceFeedAbi, creditPoolAbi, tip20Abi, fxOracleAdapterAbi } = shared as any
+const { activeAddresses, mercadoCardAbi, multiCollateralVaultAbi, moveAmmAbi, stakedOusdAbi, demoRwaAbi, priceFeedAbi, creditPoolAbi, tip20Abi, fxOracleAdapterAbi } = shared as any
 const A = activeAddresses('v2')
 
 const RPC = process.env.TEMPO_RPC_URL ?? tempoModerato.rpcUrls.default.http[0]
@@ -441,6 +441,99 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert(/no borrow attestation included/.test(out), 'paid report carried no borrow attestation')
       evidence[current].txs['underwriter MPP payment (xMXN v2)'] = txUrl(tx)
       ok(`bot paid ${fmt(paid)} xMXN v2 over 402 and got the report + Payment-Receipt  ${C.dim}${txUrl(tx)}${C.x}`)
+    },
+  },
+  {
+    id: 'V9',
+    title: 'Card: Familia taps Mercado Card at a demo merchant terminal (EIP-712 tap → real xMXN v2 charge → refund), incl. a frozen-card decline + retry',
+    async run() {
+      const card: Address | undefined = (A as any).card ?? (shared as any).moderatoDeployment?.v2?.card
+      if (!card) throw new SkipStep('deployments.v2.card missing (MercadoCard not deployed)')
+      const holder = account('RECIPIENT') // Familia (MX)
+      const terminal = account('MERCHANT') // "Tienda Doña Mary · CDMX" demo terminal
+      const sender = account('SENDER')
+      const ids: bigint[] = await read(card, mercadoCardAbi, 'cardsOf', [holder.address])
+      if (!ids.length) throw new SkipStep(`holder ${holder.address} has no card yet`)
+      const cardId = ids[0]
+      const c0 = await read(card, mercadoCardAbi, 'getCard', [cardId])
+      const m = await read(card, mercadoCardAbi, 'merchant', [terminal.address])
+      assert(m[0], `terminal ${terminal.address} is an allowlisted merchant`)
+      log(`card #${cardId} (demo •••• ${c0.last4}, DEMO network) held by ${holder.address} · daily limit ${fmt(c0.dailyLimit)} · available today ${fmt(c0.availableToday)} · merchant "${m[1]}"`)
+      const amount = parseUnits('50', 6)
+      assert(c0.availableToday >= amount, `available today ${fmt(c0.availableToday)} ≥ 50`)
+      assert((await bal(A.xMXN, holder.address)) >= amount, 'holder holds ≥ 50 xMXN v2 (run V3 first)')
+      await approveIfNeeded(holder, A.xMXN, card, amount, 'xMXN v2 → card (spending allowance)')
+
+      const domain = { name: 'MercadoCard', version: '1', chainId: 42431, verifyingContract: card } as const
+      const types = {
+        Tap: [
+          { name: 'cardId', type: 'uint256' },
+          { name: 'holder', type: 'address' },
+          { name: 'merchant', type: 'address' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'merchantRef', type: 'bytes32' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
+        ],
+      } as const
+      const { keccak256, toHex } = await import('viem')
+      const mkTap = (amt: bigint, signer = holder, deadline = BigInt(Math.floor(Date.now() / 1000) + 300)) => {
+        const tap = { cardId, holder: holder.address, merchant: terminal.address, amount: amt, merchantRef: keccak256(toHex(`journey-${Date.now()}-${Math.random()}`)), nonce: BigInt(Date.now()) * 1000n + BigInt(Math.floor(Math.random() * 1000)), deadline }
+        return signer.signTypedData({ domain, types, primaryType: 'Tap', message: tap }).then((sig) => ({ tap, sig }))
+      }
+      const chargeReq = (t: any, sig: `0x${string}`, amt = t.amount, caller = terminal) =>
+        ({ address: card, abi: mercadoCardAbi, functionName: 'charge', args: [cardId, amt, t.merchantRef, t.nonce, t.deadline, sig], account: caller }) as const
+
+      // the terminal can never pull funds on its own
+      const good = await mkTap(amount)
+      const forged = await mkTap(amount, sender)
+      await expectRevert('tap signed by someone other than the holder', chargeReq(forged.tap, forged.sig), ['BadTapSignature'])
+      await expectRevert('terminal charges more than the holder tapped', chargeReq(good.tap, good.sig, amount * 2n), ['BadTapSignature'])
+      await expectRevert('a non-merchant submits a valid tap', chargeReq(good.tap, good.sig, amount, sender), ['NotMerchant'])
+      const expired = await mkTap(amount, holder, BigInt(Math.floor(Date.now() / 1000) - 60))
+      await expectRevert('expired tap', chargeReq(expired.tap, expired.sig), ['TapExpired'])
+      // +5 xMXN margin: with a refilling (leaky-bucket) limit, availableToday grows ~0.0116 xMXN/s between read and sim
+      const big = await mkTap(c0.availableToday + parseUnits('5', 6))
+      await expectRevert('charge above what is left of the daily limit', chargeReq(big.tap, big.sig), ['OverDailyLimit'])
+      await expectRevert("a non-holder tries to freeze the card", { address: card, abi: mercadoCardAbi, functionName: 'setFrozen', args: [cardId, true], account: sender }, ['NotHolder'])
+
+      // recovery case: frozen card declines the tap, holder unfreezes, the retry succeeds exactly once
+      await send('holder freezes the card', holder, { address: card, abi: mercadoCardAbi, functionName: 'setFrozen', args: [cardId, true] })
+      await expectRevert('tap on a frozen card is declined', chargeReq(good.tap, good.sig), ['CardIsFrozen'])
+      await send('holder unfreezes the card', holder, { address: card, abi: mercadoCardAbi, functionName: 'setFrozen', args: [cardId, false] })
+
+      const h0 = await bal(A.xMXN, holder.address)
+      const mer0 = await bal(A.xMXN, terminal.address)
+      const supply0: bigint = await read(A.xMXN, tip20Abi, 'totalSupply')
+      const st0 = await read(card, mercadoCardAbi, 'stats')
+      const { rcpt } = await send(`terminal charges 50 xMXN v2 (holder's tap)`, terminal, chargeReq(good.tap, good.sig))
+      const ev = rcpt.logs
+        .filter((l: any) => l.address.toLowerCase() === card.toLowerCase())
+        .map((l: any) => {
+          try {
+            return decodeEventLog({ abi: mercadoCardAbi, ...l }) as any
+          } catch {
+            return undefined
+          }
+        })
+        .find((e: any) => e?.eventName === 'CardCharged')
+      assert(ev && ev.args.amount === amount && ev.args.cardId === cardId, 'CardCharged(cardId, amount) emitted')
+      assert(h0 - (await bal(A.xMXN, holder.address)) === amount, 'holder paid exactly 50')
+      assert((await bal(A.xMXN, terminal.address)) - mer0 === amount, 'merchant received exactly 50')
+      assert((await read(A.xMXN, tip20Abi, 'totalSupply')) === supply0, 'a card charge moves xMXN; it never mints')
+      const st1 = await read(card, mercadoCardAbi, 'stats')
+      assert(st1[1] - st0[1] === amount, 'card stats: spent +50')
+      ok(`charge #${ev.args.chargeId}: 50 xMXN v2 Familia → "${m[1]}"; available today ${fmt((await read(card, mercadoCardAbi, 'getCard', [cardId])).availableToday)}`)
+      await expectRevert('the same tap replayed', chargeReq(good.tap, good.sig), ['TapReplayed'])
+
+      const refund = parseUnits('10', 6)
+      const h1 = await bal(A.xMXN, holder.address)
+      // refunds pull xMXN from the merchant back to the holder (safeTransferFrom), so the terminal approves the card first
+      await approveIfNeeded(terminal, A.xMXN, card, refund, 'merchant xMXN v2 → card (refund allowance)')
+      await send('merchant refunds 10 xMXN v2', terminal, { address: card, abi: mercadoCardAbi, functionName: 'refund', args: [ev.args.chargeId, refund] })
+      assert((await bal(A.xMXN, holder.address)) - h1 === refund, 'holder got the 10 back')
+      await expectRevert('refund more than what is left of the charge', { address: card, abi: mercadoCardAbi, functionName: 'refund', args: [ev.args.chargeId, amount], account: terminal }, ['RefundTooLarge'])
+      ok('refund 10 → holder; over-refund rejected; the card network/PAN is the only simulated part (MOCKS.md A8)')
     },
   },
   {

@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T02:36:44.498Z",
+  "protocol": "v2",
+  "steps": [
+    "V9"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V9": {
+      "status": "fail",
+      "txs": {
+        "holder freezes the card": "https://explore.testnet.tempo.xyz/tx/0xa83a239e09507b491e3a8a1a2148e9928a231590829bc0d7fdc5ed87ebf17f8c",
+        "holder unfreezes the card": "https://explore.testnet.tempo.xyz/tx/0xcd4044c778e480a1cd0290fd979861c8b9dd0e05f56ef3308b745bd02c07ec69",
+        "terminal charges 50 xMXN v2 (holder's tap)": "https://explore.testnet.tempo.xyz/tx/0xb287cde8fa0fec307c310365afb47de73ab2b4210695027d6ecc2241d8f6fe4f"
+      },
+      "notes": [],
+      "error": "The contract function \"refund\" reverted with the following signature:"
+    }
+  }
+}

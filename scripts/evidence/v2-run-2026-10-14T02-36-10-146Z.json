@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-14T02:36:10.146Z",
+  "protocol": "v2",
+  "steps": [
+    "V9"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V9": {
+      "status": "fail",
+      "txs": {},
+      "notes": [],
+      "error": "charge above what is left of the daily limit did NOT revert"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-14T02:37:23.834Z",
+  "protocol": "v2",
+  "steps": [
+    "V9"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V9": {
+      "status": "pass",
+      "txs": {
+        "holder freezes the card": "https://explore.testnet.tempo.xyz/tx/0x9d5ce26129e96491c13a8d96196bf446aee538fa700b6565d670c7736eb92ccc",
+        "holder unfreezes the card": "https://explore.testnet.tempo.xyz/tx/0x4c6e7ce7344b9be958674625f27b32b16899f90c2eab9e660ff9845ad1dc1deb",
+        "terminal charges 50 xMXN v2 (holder's tap)": "https://explore.testnet.tempo.xyz/tx/0xd86f8b49c0131a30247cd17d3c9f5dac815d76324cab4f095db87386ed0e12a9",
+        "approve merchant xMXN v2 → card (refund allowance)": "https://explore.testnet.tempo.xyz/tx/0x1bdccbe13ffa7702b8fa4b19753b26d930edb7ee280631e992430a16c5f16b4d",
+        "merchant refunds 10 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0x39fd807a8da292deb8a5512a74b3b2061e3ab7b4c2e3b68b2e1b85fbdbff60d4"
+      },
+      "notes": []
+    }
+  }
+}
