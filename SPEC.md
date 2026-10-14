@@ -165,3 +165,18 @@ Real fiat-backed issuance, MXN bank redemption, SPEI rails, vendor settlement wi
 - Open USD issuer: https://withbridge.com/blog/ousd-is-live-issued-by-bridge
 
 **Production gate:** Have Mexican legal and compliance specialists review lending, money transmission, digital assets, AML/KYC, consumer disclosures and data privacy, and verify actual contractual permissions and cash-settlement flows before dealing with real customers or money.
+
+---
+
+## v0.2 product direction (josu, 14 Oct 2026, supersedes §0–§2 where they conflict)
+
+**Pitch:** *A parallel financial system for emerging markets, built on Tempo.* Mercado is an ecosystem of modules around one synthetic local currency (xMXN first):
+
+1. **Create: institutional money creation.** The minters are institutions and sophisticated players, not retail. They mint xMXN by depositing **yield-bearing collateral**: staked OUSD and other staked stablecoins, plus **RWAs** (tokenized T-bills and equities). Because the collateral keeps earning its native yield while it's locked, holders are incentivised to put idle collateral to work creating money that enters circulation. (Yield accrues *inside* the collateral token, e.g. ERC-4626 share price growth. The vault runs no strategies of its own; this replaces the old "no yield on locked collateral" rule.)
+2. **Move: remittances and cross-border payments through a vault-integrated vAMM.** The same mint/redeem vault is also the exchange. OUSD coming in (e.g. a US sender) **mints** xMXN directly. xMXN going out (cross-border payment back to USD) is **burned** and redeems OUSD. Pricing is oracle-anchored with a virtual-reserve curve, giving competitive, size-dependent rates. This replaces the separately capitalized SwapDesk as the main path (the desk can remain as a fallback).
+3. **Lend: uncollateralized credit through the gig economy.** Driver advances from the credit pool (existing).
+4. **Spend: MPP payments** (bills, and agents paying for APIs) settle in xMXN (existing).
+
+**Honesty constraints still apply (testnet):** "staked OUSD" and any RWA on Moderato are **demo tokens** with admin-set yield/prices, labeled as such. No claim of real T-bill or stock backing, real yield, a peg, or fiat redemption. The vAMM's solvency limits (e.g. OUSD reserve vs. xMXN outstanding when the peso appreciates) must be enforced on-chain and explained, not hidden.
+
+**Build rule:** v2 contracts deploy **alongside** v1. The v1 demo stays live and green until v2 passes tests and the e2e journey, then the app switches over.
