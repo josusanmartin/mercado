@@ -56,7 +56,19 @@ function panel(page: Page, texts: RegExp[]): Locator {
   for (const t of texts) l = l.filter({ hasText: t })
   return l.last()
 }
+/** The Panel component renders a <section>: take the heading's nearest section. */
+const sectionOf = (page: Page, heading: RegExp) => page.getByRole('heading', { name: heading }).first().locator('xpath=ancestor::section[1]')
+/** Sticky/fixed bars (top bar, footer) would overlap element shots: hide them for capture. */
+async function hideChrome(page: Page) {
+  await page.evaluate(() => {
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
+      const pos = getComputedStyle(el).position
+      if (pos === 'sticky' || pos === 'fixed') el.style.setProperty('visibility', 'hidden', 'important')
+    }
+  })
+}
 async function shootPanel(loc: Locator, name: string) {
+  await hideChrome(loc.page())
   await loc.scrollIntoViewIfNeeded()
   await loc.page().waitForTimeout(300)
   await loc.screenshot({ path: join(OUT, `${name}.png`), animations: 'disabled' })
@@ -125,14 +137,25 @@ test('panels: Mint Risk numbers, Global quote, Crédito loan book, 402 trace, ve
   await shootPanel(panel(page, [/01 · Respaldo del intercambio/i, /02 · Respaldo del sistema/i]), 'panel-mint-risk')
 
   await go(page, '/global')
-  await shootPanel(panel(page, [/Indicative quote/i, /Rate/i]), 'panel-global-quote')
+  await shootPanel(sectionOf(page, /^Indicative quote/i), 'panel-global-quote')
 
   await go(page, '/credito?tab=backoffice')
-  await shootPanel(panel(page, [/^Loan book/]), 'panel-credito-loanbook')
+  await shootPanel(sectionOf(page, /^Loan book/i), 'panel-credito-loanbook')
 
   await go(page, '/developers')
-  await shootPanel(panel(page, [/The 402 challenge/i]), 'panel-developers-402')
+  await shootPanel(sectionOf(page, /^The 402 challenge/i), 'panel-developers-402')
 
+  // /contracts: just two verified rows (factory + vault), clipped, so it reads as a "verified" list not a wall
   await go(page, '/contracts')
-  await shootPanel(panel(page, [/01 · Mint/i, /Verified|verificad|exact/i]), 'panel-contracts-verified')
+  await hideChrome(page)
+  const r1 = page.getByText('MercadoFactoryV2', { exact: true }).first()
+  const r2 = page.getByText('MultiCollateralVault', { exact: true }).first()
+  await r1.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(400)
+  const b1 = (await r1.boundingBox())!
+  void r2
+  // bottom edge = just above the next row's title ("Collateral · OUSD"), so the vault row is included whole
+  const next = (await page.getByText(/Collateral\s*·\s*OUSD/).first().boundingBox())!
+  const left = 272 // content column (sidebar excluded)
+  await page.screenshot({ path: join(OUT, 'panel-contracts-verified.png'), clip: { x: left, y: b1.y - 16, width: 1440 - left - 32, height: next.y - 14 - (b1.y - 16) } })
 })
