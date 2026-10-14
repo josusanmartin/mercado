@@ -1,0 +1,153 @@
+"use client";
+// One hook with every protocol write, each wrapped in useTx() with approve-if-needed.
+//   const m = useMercado();
+//   await m.deposit(toUnits("100"));          // Approve OUSD (if needed) → Deposit
+//   m.tx.status / m.tx.stepLabel / m.tx.error / m.tx.steps[i].url
+import { useCallback } from "react";
+import { parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
+import { useConfig } from "wagmi";
+import { getConnection, readContract } from "wagmi/actions";
+import { ADDR, CHAIN_ID } from "./addresses";
+import { creditPoolAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
+import { useTx, type TxApi } from "./tx";
+
+/** Fields from POST /api/driver/score → attestation (strings as the API returns them). */
+export type Attestation = {
+  maxAmount: string | bigint;
+  expiry: number | bigint;
+  nonce: string | bigint;
+  dataHash: Hex;
+  signature: Hex;
+};
+
+/** Encode a short remittance note (≤ 32 bytes UTF-8) as a TIP-20 bytes32 memo. */
+export function memoToBytes32(memo: string): Hex {
+  const bytes = new TextEncoder().encode(memo);
+  if (bytes.length > 32) throw new Error("Memo must be at most 32 bytes.");
+  return stringToHex(memo, { size: 32 });
+}
+
+/** Apply slippage (bps) to a quoted output to get minOut. */
+export const withSlippage = (amountOut: bigint, slippageBps = 50n) => (amountOut * (10_000n - slippageBps)) / 10_000n;
+
+export function useMercado() {
+  const config = useConfig();
+  const tx = useTx();
+
+  const approveIfNeeded = useCallback(
+    async (t: TxApi, token: Address, spender: Address, amount: bigint, symbol: string) => {
+      const owner = getConnection(config).address;
+      if (!owner) throw new Error("Connect a wallet first.");
+      const allowance = await readContract(config, {
+        address: token,
+        abi: tokenAbi,
+        functionName: "allowance",
+        args: [owner, spender],
+        chainId: CHAIN_ID,
+      });
+      if (allowance < amount) {
+        await t.write({ address: token, abi: tokenAbi as Abi, functionName: "approve", args: [spender, amount] }, `Approve ${symbol}`);
+      }
+    },
+    [config],
+  );
+
+  const call = (address: Address, abi: Abi, functionName: string, args: readonly unknown[]) => ({
+    address,
+    abi,
+    functionName,
+    args,
+  });
+  const vault = (fn: string, args: readonly unknown[]) => call(ADDR.vault, vaultAbi as Abi, fn, args);
+  const desk = (fn: string, args: readonly unknown[]) => call(ADDR.swapDesk, swapDeskAbi as Abi, fn, args);
+  const pool = (fn: string, args: readonly unknown[]) => call(ADDR.creditPool, creditPoolAbi as Abi, fn, args);
+
+  return {
+    tx,
+
+    // ---------------------------------------------------------------- vault (Create pesos)
+    deposit: (amount: bigint) =>
+      tx.run(async (t) => {
+        await approveIfNeeded(t, ADDR.ousd, ADDR.vault, amount, "OUSD");
+        await t.write(vault("depositCollateral", [amount]), "Deposit OUSD");
+      }),
+    /** Optional convenience: deposit then mint in one flow. */
+    depositAndMint: (collateral: bigint, xmxn: bigint) =>
+      tx.run(async (t) => {
+        if (collateral > 0n) {
+          await approveIfNeeded(t, ADDR.ousd, ADDR.vault, collateral, "OUSD");
+          await t.write(vault("depositCollateral", [collateral]), "Deposit OUSD");
+        }
+        await t.write(vault("mint", [xmxn]), "Mint xMXN");
+      }),
+    mint: (xmxn: bigint) => tx.run((t) => t.write(vault("mint", [xmxn]), "Mint xMXN")),
+    repayAndBurn: (xmxn: bigint) =>
+      tx.run(async (t) => {
+        await approveIfNeeded(t, ADDR.xmxn, ADDR.vault, xmxn, "xMXN");
+        await t.write(vault("repayAndBurn", [xmxn]), "Repay & burn xMXN");
+      }),
+    withdrawCollateral: (amount: bigint) => tx.run((t) => t.write(vault("withdrawCollateral", [amount]), "Withdraw OUSD")),
+    liquidate: (user: Address, debtToCover: bigint) =>
+      tx.run(async (t) => {
+        await approveIfNeeded(t, ADDR.xmxn, ADDR.vault, debtToCover, "xMXN");
+        await t.write(vault("liquidate", [user, debtToCover]), "Liquidate");
+      }),
+
+    // ---------------------------------------------------------------- swap desk (Send money)
+    /** Swap with a minimum output computed from `quotedOut` minus `slippageBps` (default 0.5%). */
+    swap: (ousdToXmxn: boolean, amountIn: bigint, quotedOut: bigint, slippageBps = 50n) =>
+      tx.run(async (t) => {
+        const minOut = withSlippage(quotedOut, slippageBps);
+        if (ousdToXmxn) {
+          await approveIfNeeded(t, ADDR.ousd, ADDR.swapDesk, amountIn, "OUSD");
+          await t.write(desk("swapOusdForXmxn", [amountIn, minOut]), "Swap OUSD → xMXN");
+        } else {
+          await approveIfNeeded(t, ADDR.xmxn, ADDR.swapDesk, amountIn, "xMXN");
+          await t.write(desk("swapXmxnForOusd", [amountIn, minOut]), "Swap xMXN → OUSD");
+        }
+      }),
+    /** Plain TIP-20 transfer, or transferWithMemo when a memo is given (visible on the explorer). */
+    transfer: (token: Address, to: Address, amount: bigint, memo?: string) =>
+      tx.run((t) =>
+        memo
+          ? t.write(call(token, tokenAbi as Abi, "transferWithMemo", [to, amount, memoToBytes32(memo)]), "Send")
+          : t.write(call(token, tokenAbi as Abi, "transfer", [to, amount]), "Send"),
+      ),
+    /** Swap OUSD → xMXN then send the xMXN received to `to` (with optional memo), as one flow. */
+    swapAndSend: (amountIn: bigint, quotedOut: bigint, to: Address, memo?: string, slippageBps = 50n) =>
+      tx.run(async (t) => {
+        const minOut = withSlippage(quotedOut, slippageBps);
+        await approveIfNeeded(t, ADDR.ousd, ADDR.swapDesk, amountIn, "OUSD");
+        const swapped = await t.write(desk("swapOusdForXmxn", [amountIn, minOut]), "Swap OUSD → xMXN");
+        // forward exactly what the swap paid out (from the Swapped event), not the quote
+        const [ev] = parseEventLogs({ abi: swapDeskAbi, eventName: "Swapped", logs: swapped.receipt?.logs ?? [] });
+        const send = ev?.args.amountOut ?? minOut;
+        await t.write(
+          memo
+            ? call(ADDR.xmxn, tokenAbi as Abi, "transferWithMemo", [to, send, memoToBytes32(memo)])
+            : call(ADDR.xmxn, tokenAbi as Abi, "transfer", [to, send]),
+          "Send xMXN",
+        );
+      }),
+
+    // ---------------------------------------------------------------- credit pool (Advance / Earn)
+    supply: (amount: bigint) =>
+      tx.run(async (t) => {
+        await approveIfNeeded(t, ADDR.xmxn, ADDR.creditPool, amount, "xMXN");
+        await t.write(pool("supply", [amount]), "Supply xMXN");
+      }),
+    withdrawSupply: (amount: bigint) => tx.run((t) => t.write(pool("withdrawAvailable", [amount]), "Withdraw xMXN")),
+    borrow: (amount: bigint, a: Attestation) =>
+      tx.run((t) =>
+        t.write(
+          pool("borrow", [amount, BigInt(a.maxAmount), BigInt(a.expiry), BigInt(a.nonce), a.dataHash, a.signature]),
+          "Draw advance",
+        ),
+      ),
+    repayLoan: (amount: bigint) =>
+      tx.run(async (t) => {
+        await approveIfNeeded(t, ADDR.xmxn, ADDR.creditPool, amount, "xMXN");
+        await t.write(pool("repay", [amount]), "Repay advance");
+      }),
+  };
+}
