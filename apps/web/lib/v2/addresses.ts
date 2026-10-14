@@ -15,7 +15,7 @@ const addr = (...keys: string[]) => {
 export const V2 = {
   xmxn: addr("xMXN", "xmxn"),
   vault: addr("vault", "multiCollateralVault"),
-  amm: addr("moveAmm", "moveAMM", "amm"),
+  amm: addr("vamm", "moveAmm", "moveAMM", "amm"),
   creditPool: addr("creditPool"),
   sOUSD: addr("sOUSD", "sousd"),
   tTBILL: addr("tTBILL", "ttbill"),

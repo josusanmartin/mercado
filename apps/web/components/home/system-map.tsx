@@ -13,7 +13,8 @@ const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0)
 
 export function SystemMap() {
   const b = useThreeBuckets();
-  // MPP bill payments settle to the merchant wallet: its xMXN balance is what Spend has received.
+  // MPP bill payments settle to the merchant wallet. Its balance is a live proxy (it also moves with
+  // seed funds and withdrawals), so it's labeled as a wallet balance, not cumulative payment volume.
   const merchant = useBalances(ADDR.merchant);
 
   const modules: Module[] = [
@@ -24,7 +25,7 @@ export function SystemMap() {
       icon: Coins,
       value: n0(b.vault.collateralOusd),
       caption: "OUSD locked as collateral",
-      note: "Institutions lock collateral that keeps its own yield",
+      note: "Live: OUSD. Yield-bearing collateral (staked OUSD, T-bills) is v2, in progress",
     },
     {
       name: "Move",
@@ -33,7 +34,7 @@ export function SystemMap() {
       icon: ArrowLeftRight,
       value: n0(b.desk.xmxn),
       caption: "xMXN of exchange liquidity",
-      note: "Dollars in, pesos out, on Tempo",
+      note: "Live: capped swap desk. Vault-as-exchange is v2, in progress",
     },
     {
       name: "Lend",
@@ -50,7 +51,7 @@ export function SystemMap() {
       href: "/pay",
       icon: Receipt,
       value: n0(merchant.xmxn),
-      caption: "xMXN paid through MPP",
+      caption: "xMXN in the merchant wallet",
       note: "Real 402 payments, SIMULATED top-ups",
     },
   ];

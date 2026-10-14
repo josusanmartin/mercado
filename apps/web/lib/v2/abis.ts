@@ -1,4 +1,4 @@
-// v2 ABIs transcribed from crew/V2-DESIGN.md §3–§4. Replace with the generated
+// v2 ABIs transcribed from crew/V2-DESIGN.md §3–§4, checked against packages/contracts/src/v2. Replace with the generated
 // @mercado/shared abi/{MultiCollateralVault,MoveAMM} exports once contracts publishes them.
 import { parseAbi } from "viem";
 
@@ -19,7 +19,7 @@ export const vaultV2Abi = parseAbi([
 ]);
 
 export const moveAmmAbi = parseAbi([
-  "function quote(bool usdToMxn, uint256 amountIn) view returns (uint256 out, uint256 fee, uint256 impactBps, uint256 mid)",
+  "function quote(bool usdToMxn, uint256 amountIn) view returns (uint256 amountOut, uint256 fee, uint256 midPrice, uint256 impactBps)",
   "function swapOusdForXmxn(uint256 amountIn, uint256 minOut, address to) returns (uint256 out)",
   "function swapXmxnForOusd(uint256 amountIn, uint256 minOut, address to) returns (uint256 out)",
   "function state() view returns (uint256 reserve, uint256 liability, uint256 equity, uint256 coverageBps, uint256 redeemedToday, uint256 redeemCap)",

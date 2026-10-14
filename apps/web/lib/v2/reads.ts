@@ -103,7 +103,7 @@ export function useMoveQuote(usdToMxn: boolean, amountIn: bigint | undefined) {
     chainId: CHAIN_ID,
     query: { enabled: !!V2.amm && !!amountIn && amountIn > 0n, retry: false, ...REFRESH },
   });
-  return { ...q, amountOut: q.data?.[0], fee: q.data?.[1], impactBps: q.data?.[2], mid: q.data?.[3] };
+  return { ...q, amountOut: q.data?.[0], fee: q.data?.[1], mid: q.data?.[2], impactBps: q.data?.[3] };
 }
 
 /** Move's balance sheet: OUSD reserve vs xMXN it issued, and the resulting coverage. */
