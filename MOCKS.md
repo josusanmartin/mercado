@@ -2,7 +2,7 @@
 
 josu's rule: **mock only what's necessary, wire everything we can.** This file is the complete list of what is *not* real in Mercado. Each entry says why it can't be real on testnet and where it's labeled for users. Anything else the app shows (balances, KPIs, charts, activity tables, receipts, volumes, coverage, pool stats, quotes, fees) must be read from chain (contract views and event logs) or our own real API state.
 
-**Enforcement:** `npx tsx scripts/check-mocks.ts` fails if code contains a mock/fixture/hardcoded-data marker in a file that isn't listed in the **Code** column below, or a hardcoded numeric value rendered as data in a UI row. `ACCEPTANCE.md` check **M1** requires it to pass. Owner: `qa`. `review` audits it against the code (`review/MOCK-AUDIT.md`).
+**Enforcement (necessary, not sufficient):** `npx tsx scripts/check-mocks.ts` fails if code contains a mock/fixture/hardcoded-data marker in a file that isn't listed in the **Code** column below, or a hardcoded numeric value rendered as data in a UI row. `ACCEPTANCE.md` check **M1** requires it to pass *and* §C to be empty. The scanner checks marker coverage per file and literal numbers in UI rows. It can't catch derived hardcoded constants (e.g. a fee constant used in a preview), so `review` audits data provenance by hand (`review/MOCK-AUDIT.md`). Owner: `qa`. `review` audits it against the code (`review/MOCK-AUDIT.md`).
 
 ## A. Allowed mocks (external dependencies we truly can't reach on testnet)
 
@@ -26,7 +26,7 @@ josu's rule: **mock only what's necessary, wire everything we can.** This file i
 | B5 | **Repayment top-ups in scripts**: the LP sends the driver xMXN to repay | There's no real Uber payout to repay from | Journey log: "stand-in for next week's earnings" | `scripts/demo-journey*.ts` |
 | B6 | **Mock-rate notes in copy**: the peso-appreciation slider and "≈ USD at the mock rate" | Preview math on the user's real position at hypothetical/mock rates; never writes the oracle | "mock scenario" / "mock rate" in the copy | `apps/web/components/vault/peso-slider.tsx`, `apps/web/components/home/*` |
 
-Not mocks (real): every balance, position, ratio, quote, fee, reserve, coverage and pool stat (contract views); activity tables and flow counters (event logs via the contracts indexer); bill orders and MPP receipts (real 402 + on-chain verification, `.data/` order store); paid-API ledger (`apps/web/lib/mpp/ledger.ts`, recorded on verified payment). Fixed protocol parameters (ratios, fees, caps) are contract constants or owner-set values and should be *read* from chain where the UI shows them.
+Not mocks (real): every balance, position, ratio, quote, fee, reserve, coverage and pool stat (contract views); activity tables and flow counters (event logs via the contracts indexer; ⚠ **pending**: not yet verified until the getLogs code and its coverage are checked); bill orders and MPP receipts (real 402 + on-chain verification, `.data/` order store); paid-API ledger (`apps/web/lib/mpp/ledger.ts`, recorded on verified payment). Fixed protocol parameters (ratios, fees, caps) are contract constants or owner-set values and should be *read* from chain where the UI shows them.
 
 ## D. Label and plumbing locations (carry the labels above; not mocks themselves)
 
@@ -42,7 +42,7 @@ Not mocks (real): every balance, position, ratio, quote, fee, reserve, coverage 
 
 | # | Gap | Owner | Status |
 |---|---|---|---|
-| G1 | `earn-screen.tsx:175` renders "Per-driver cap 1,500.00 xMXN" as a literal. Read `CreditPool.perUserCap()` | contracts / api | open |
+| G1 | Mutable CreditPool params rendered as literals (R-035): "Per-driver cap 1,500.00 xMXN" (`earn-screen.tsx:175`), the 2% fee / `FEE_BPS` debt preview in CreditScreen, and the 80% utilization limit on Earn. Read `perUserCap()`, `feeBps()`, `maxUtilizationBps()` | contracts / api | in progress (contracts wiring usePool) |
 | G2 | `agent-api-panel.tsx` renders a **static recorded trace** of `underwriter-agent.ts`. Replace with live rows from the paid-API ledger, or label it "recorded trace" with its timestamp + tx link (currently labeled "Recorded trace") | api | open (labeled) |
 | G3 | OUSD = $1.00 assumption (B2) isn't visible in the UI. Show "OUSD valued at $1.00 (testnet assumption)" wherever collateral value is shown | web / contracts | open |
 | G4 | FX relay label must show source rate date + fetch time + on-chain time (B1) once the relay ships | contracts / web | pending relay |

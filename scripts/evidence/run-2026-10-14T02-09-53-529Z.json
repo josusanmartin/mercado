@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-14T02:09:53.528Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J4",
+    "J5",
+    "J6"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J4": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN": "https://explore.testnet.tempo.xyz/tx/0x44426fff203676d0a539a6241c5fae8cd164c0fb39b5b411acb762bab5283c83"
+      },
+      "notes": []
+    },
+    "J5": {
+      "status": "fail",
+      "txs": {
+        "MPP payment (pull)": "https://explore.testnet.tempo.xyz/tx/0x020afe8b82e04e9bbda6daf278c4173ae28f32d4a436d0387d8006c226863dba",
+        "MPP payment (push)": "https://explore.testnet.tempo.xyz/tx/0xa7a677e833493cabefe246954a3b5f0308a20f2c2ef6388055e899322d8ed552"
+      },
+      "notes": [
+        "[pull] 402 challenge: Payment id=\"kUMD81TN9gXCXX2EXWZz_cMg9xGYgpq8UtotJaw90uM\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfNmQ4ZjljOGUtYmY4Yi00OTBlLWJhMzItOWY2ODEyOGMyNjVlIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T02:18:57.521Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MjIwOGU1YmMxYzJkYTBlYzYxMDE4Yzc1ZDI3YjVhY2QzMjQ0MTIwMzM1ZmMzOTE5YWFjOGU0Y2JkNjRiOWIxYSIsIm9yZGVySWQiOiJvcmRfNmQ4ZjljOGUtYmY4Yi00OTBlLWJhMzItOWY2ODEyOGMyNjVlIiwicXVvdGVJZCI6InFfMzM1Y2Q1YWMtY2E2My00NzMxLWIzNTgtYjRjZGU5MTJiNTgzIn0\"",
+        "[push] 402 challenge: Payment id=\"yZTcLfWZTmnHm-_aulp_5rssWXPdtJy61TH4BX4y1gg\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfM2JmZDk2MzctMTRiOS00NGM1LThiN2EtMjBmY2EyNmJkNWU2IiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****5678\", expires=\"2026-10-14T02:19:21.799Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MmZiOTFmYTVlZDIxNjdhMmEzNmU1YWZlZWMxNTE3OWVjOGM4NzU2ZWIxNWZjZTc3NDFkZjQ3OTczZWNjMDNkZiIsIm9yZGVySWQiOiJvcmRfM2JmZDk2MzctMTRiOS00NGM1LThiN2EtMjBmY2EyNmJkNWU2IiwicXVvdGVJZCI6InFfN2VkNjgzYzYtMGFmZS00MDM1LThlM2EtMmZmYzM2MzE1NTRkIn0\"",
+        "[pull] 402 challenge: Payment id=\"6bHsqkrXI1u9jYaGFZW8xviGdIgmhHzXOnU3x5h65D0\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIxMDAwMDAwMDAiLCJjdXJyZW5jeSI6IjB4MjBDMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjQ4NkQ4NDg3MjY4YTZkZCIsImV4dGVybmFsSWQiOiJvcmRfMmQzMDU1ZGEtY2NhMS00NjBkLWIzNTktMTU3OWRiZGI1MjNmIiwibWV0aG9kRGV0YWlscyI6eyJjaGFpbklkIjo0MjQzMX0sInJlY2lwaWVudCI6IjB4NjcyNzIwMzdCMDJmNEY0OERBYzgzODgzZjhkMUEyNjRhMGExZDRkMyJ9\", description=\"Telcel airtime 100 MXN \\u2192 55****0000\", expires=\"2026-10-14T02:19:29.065Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4ZDNlNGNkYTI5MWMxZGYzYTFiMDU5NTU0YzIyMTJjMjkxOGUxY2JiMjk1MmVkYjk1YzI5ODJmYjE4ZTA0YzAyMyIsIm9yZGVySWQiOiJvcmRfMmQzMDU1ZGEtY2NhMS00NjBkLWIzNTktMTU3OWRiZGI1MjNmIiwicXVvdGVJZCI6InFfNzY2NTZkMmEtNTJjNy00NzdmLWI3NGYtNDYxNDVjMjQzMTliIn0\""
+      ],
+      "error": "assertion failed: paid /api/bills/pay → 409 {\"error\":\"A payment attempt for this order is still settling or failed moments ago; retry in a minute (same idempote"
+    },
+    "J6": {
+      "status": "pass",
+      "txs": {
+        "top-up 452 xMXN LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x93f4810724605893b5f3031dfb74253cdcf6aa6994226a30c626c3be370421bd",
+        "approve xMXN → pool": "https://explore.testnet.tempo.xyz/tx/0x8e8b1ed93dbfaf4d1b85df337d1de11206aa0423cb5ce0daf7cbb578927935e4",
+        "repay 1,020 xMXN": "https://explore.testnet.tempo.xyz/tx/0x5e2e8b1ebe3a3875dd2f0aaec8ba14e258a195a032451dd764532e03bd4f8910"
+      },
+      "notes": []
+    }
+  }
+}
