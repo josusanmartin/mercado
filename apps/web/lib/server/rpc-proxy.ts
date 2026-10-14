@@ -111,6 +111,11 @@ async function upstream(req: RpcRequest, retries: number): Promise<RpcResponse> 
 const cache = new Map<string, { exp: number; body: RpcResponse }>();
 const pending = new Map<string, Promise<RpcResponse>>();
 
+/** Drop every short-lived ("latest") read so the next poll sees post-write state. Immutable entries stay. */
+function invalidateLatest() {
+  for (const [k, v] of cache) if (v.exp - Date.now() <= 2_000) cache.delete(k);
+}
+
 function sweep() {
   if (cache.size < 5_000) return;
   const now = Date.now();
@@ -124,6 +129,7 @@ async function handle(req: RpcRequest): Promise<RpcResponse> {
   if (!cacheable(req.method)) {
     // writes and live reads: no cache/dedupe; a write is retried ONLY on an explicit rate limit
     const r = await upstream({ method: req.method, params }, 3);
+    if (WRITES.has(req.method) && !r.error) invalidateLatest(); // fresh balances right after a send
     return { ...r, jsonrpc: "2.0", id };
   }
   const key = `${req.method}:${JSON.stringify(params)}`;
@@ -133,6 +139,8 @@ async function handle(req: RpcRequest): Promise<RpcResponse> {
   if (!p) {
     p = upstream({ method: req.method, params }, 5).then((body) => {
       const ms = body.error ? Math.min(ttl(req.method, params, undefined), 1_000) : ttl(req.method, params, body.result);
+      // a receipt seen mined for the first time = state just changed: drop stale "latest" reads
+      if (req.method === "eth_getTransactionReceipt" && body.result) invalidateLatest();
       if (ms > 0) {
         sweep();
         cache.set(key, { exp: Date.now() + ms, body });
