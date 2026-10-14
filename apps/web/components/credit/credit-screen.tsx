@@ -1,28 +1,25 @@
 "use client";
-// "Get an advance" in the console Settings layout: a section list on the left (Driver · Credit line ·
-// Draw · Your advance · Lenders · Agent API) and one plain panel per section on the right.
+// Mercado Crédito · Drivers tab body (embedded in the /credito product shell): section tabs (Driver ·
+// Credit line · Draw · Your advance) and one plain panel per section.
 // Flow: demo driver earnings → explainable score → signed, expiring eligibility → draw xMXN from the
 // separately funded CreditPool → manual repayment. Everything mocked is labeled as such.
 import { useEffect, useRef, useState } from "react";
 import {
-  Bot,
   Gauge,
   HandCoins,
-  Landmark,
   RotateCcw,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 import type { Address, Hex } from "viem";
 import { useConnection } from "wagmi";
 import type { DriverProfileId } from "@mercado/shared";
 import {
   BigNumber,
-  ListPane,
   Panel,
   PanelActions,
   Row,
   Rows,
-  SettingsLayout,
 } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,18 +33,16 @@ import {
 import { fmtAmount, toUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { TxProgress } from "@/components/shell/tx-progress";
-import { AgentApiPanel } from "./agent-api-panel";
 import { EarningsChart } from "./earnings-chart";
 import {
   PROFILES,
+  bpsToPct,
   useCountdown,
   useDriverDemo,
   useEligibility,
 } from "./use-advance";
 
-const FEE_BPS = 200n; // CreditPool borrow fee, added to debt at draw time
-
-type Section = "driver" | "offer" | "draw" | "repay" | "lenders" | "agent";
+type Section = "driver" | "offer" | "draw" | "repay";
 
 const DEMO_BADGES = (
   <div className="flex flex-wrap gap-2">
@@ -74,6 +69,12 @@ export function CreditScreen() {
   const expired = secondsLeft === 0;
 
   const pool = usePool();
+  const params = pool; // live feeBps / perUserCap / maxUtilizationBps (R-035)
+  const feePct = bpsToPct(params.feeBps);
+  const owed = (amount: bigint) =>
+    params.feeBps === undefined
+      ? undefined
+      : amount + (amount * params.feeBps + 9_999n) / 10_000n;
   const balances = useBalances();
   const capacity = useBorrowCapacity(att ? BigInt(att.maxAmount) : undefined);
   // Live on-chain capacity once we have an attestation; the API's snapshot until then.
@@ -170,22 +171,27 @@ export function CreditScreen() {
       icon: RotateCcw,
       hint: address && debt > 0n ? fmtAmount(debt, 0) : undefined,
     },
-    { id: "lenders", label: "Lenders", icon: Landmark },
-    { id: "agent", label: "Agent API", icon: Bot },
   ];
 
+  // Embedded in Mercado Crédito's shell (which owns the product hero and the tab row): numbered steps,
+  // then the panel for the selected step.
   return (
-    <SettingsLayout
-      title="Get an advance"
-      list={
-        <ListPane
-          label="Advance sections"
-          items={items}
-          value={section}
-          onChange={(id) => setSection(id as Section)}
-        />
-      }
-    >
+    <div className="grid gap-4">
+      <DriverSteps
+        items={items.map((it) => ({
+          ...it,
+          done:
+            it.id === "driver"
+              ? !!profile
+              : it.id === "offer"
+                ? !!score
+                : it.id === "draw"
+                  ? drawTx.tx.status === "success" || debt > 0n
+                  : false,
+        }))}
+        value={section}
+        onChange={(id) => setSection(id as Section)}
+      />
       {section === "driver" && (
         <Panel
           title="Choose a demo driver"
@@ -324,7 +330,7 @@ export function CreditScreen() {
                         ? `${fmtAmount(available, 0)} xMXN`
                         : "—"
                     }
-                    sub="Limited by pool cash, 80% utilization and what you already owe"
+                    sub={`Limited by pool cash, ${bpsToPct(params.maxUtilizationBps) ?? "the pool's"} max utilization, the ${params.perUserCap !== undefined ? `${fmtAmount(params.perUserCap, 0)} xMXN` : ""} per-driver cap and what you already owe`}
                   />
                 )}
               </Rows>
@@ -372,7 +378,7 @@ export function CreditScreen() {
       {section === "draw" && (
         <Panel
           title="Draw your advance"
-          description="Paid in xMXN from the credit pool, which lenders fund separately from the peso vault. A flat 2% fee is added to what you owe."
+          description={`Paid in xMXN from the credit pool, which lenders fund separately from the peso vault. ${feePct ? `A flat ${feePct} fee` : "The pool's flat fee"} is added to what you owe.`}
         >
           {!att || expired || !score?.eligible ? (
             <Empty>
@@ -416,7 +422,11 @@ export function CreditScreen() {
                 {drawAmount > 0n && !drawError && (
                   <Row
                     label="You'll owe"
-                    value={`${fmtAmount(drawAmount + (drawAmount * FEE_BPS + 9_999n) / 10_000n)} xMXN`}
+                    value={
+                      owed(drawAmount) !== undefined
+                        ? `${fmtAmount(owed(drawAmount))} xMXN`
+                        : "Fee unavailable"
+                    }
                     sub={`You receive ${fmtAmount(drawAmount)} xMXN`}
                   />
                 )}
@@ -525,37 +535,7 @@ export function CreditScreen() {
           </div>
         </Panel>
       )}
-
-      {section === "lenders" && (
-        <Panel
-          title="Lender side"
-          description="The pool is funded by lenders' xMXN deposits, separate from the vault and the swap desk. No guaranteed yield."
-        >
-          <Rows>
-            <Row
-              label="Pool cash available"
-              value={`${fmtAmount(pool.available, 0)} xMXN`}
-            />
-            <Row
-              label="Loans out"
-              value={`${fmtAmount(pool.outstanding, 0)} xMXN`}
-            />
-            <Row
-              label="Lender claims"
-              value={`${fmtAmount(pool.totalAssets, 0)} xMXN`}
-              sub="Cash plus lent principal"
-            />
-            <Row
-              label="Realized fees"
-              value={`${fmtAmount(pool.realizedFees)} xMXN`}
-              sub="From repaid advances"
-            />
-          </Rows>
-        </Panel>
-      )}
-
-      {section === "agent" && <AgentApiPanel />}
-    </SettingsLayout>
+    </div>
   );
 }
 
@@ -595,3 +575,71 @@ const fmtClock = (s?: number) =>
   s === undefined
     ? "—"
     : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+type StepItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  hint?: string;
+  done: boolean;
+};
+
+/** Numbered stepper for the driver journey (not a second tab bar): click any step to open it. */
+function DriverSteps({
+  items,
+  value,
+  onChange,
+}: {
+  items: StepItem[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <ol
+      aria-label="Driver steps"
+      data-nav="row"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+    >
+      {items.map((it, i) => {
+        const on = it.id === value;
+        return (
+          <li key={it.id}>
+            <button
+              type="button"
+              data-nav-item=""
+              aria-current={on ? "step" : undefined}
+              onClick={() => onChange(it.id)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-[12px] border p-3 text-left transition-colors duration-150",
+                on
+                  ? "border-product bg-product-soft"
+                  : "bg-card hover:bg-accent",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
+                  it.done
+                    ? "bg-product border-product text-white"
+                    : on
+                      ? "border-product text-product"
+                      : "text-muted-foreground",
+                )}
+              >
+                {it.done ? "✓" : i + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[15px] font-medium">
+                  {it.label}
+                </span>
+                <span className="text-muted-foreground block truncate text-xs">
+                  {it.hint ?? "\u00a0"}
+                </span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}

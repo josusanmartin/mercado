@@ -140,11 +140,32 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
   });
 
   onStage?.("requesting");
-  const res = await mppx.fetch(`${baseUrl}/api/bills/pay`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ quoteId, idempotencyKey }),
-  });
+  let res: Response;
+  try {
+    res = await mppx.fetch(`${baseUrl}/api/bills/pay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quoteId, idempotencyKey }),
+    });
+  } catch (err) {
+    // The mppx client can throw in its own failure path (e.g. "Body has already been consumed") and mask
+    // the server's answer, possibly after a payment was sent. Ask the server for the truth with the same
+    // key and no credential (never pays) instead of reporting a bare crash.
+    const check = await checkBillSettlement(
+      quoteId,
+      idempotencyKey,
+      baseUrl,
+    ).catch(() => undefined);
+    if (check?.state === "settled") {
+      onStage?.("done");
+      return { order: check.order, receipt: null, idempotencyKey };
+    }
+    if (check?.state === "pending")
+      throw new BillPaymentError(check.message, 409, "SETTLEMENT_PENDING");
+    if (check?.state === "closed")
+      throw new BillPaymentError(check.message, 410, "ORDER_CLOSED");
+    throw err;
+  }
   const text = await res.text();
   let body: unknown;
   try {

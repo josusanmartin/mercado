@@ -77,3 +77,9 @@ export function useCountdown(expiry: number | undefined) {
   }, [expiry]);
   return expiry && now !== undefined ? Math.max(0, expiry - now) : undefined;
 }
+
+/** "2%" from 200 bps; undefined when the on-chain param couldn't be read. */
+export const bpsToPct = (bps: bigint | undefined) =>
+  bps === undefined
+    ? undefined
+    : `${(Number(bps) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;

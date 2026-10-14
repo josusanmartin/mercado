@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { ClientOnly } from "@/components/console";
-import { EarnScreen } from "@/components/earn/earn-screen";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Earn" };
-
-export default function EarnPage() {
-  // wallet state restores before hydration; render client-side only to avoid a mismatch
-  return (
-    <ClientOnly>
-      <EarnScreen />
-    </ClientOnly>
-  );
+// Old route: lending now lives in Mercado Crédito → Lenders (Demo mode switches to the Lender role).
+export default function Page() {
+  redirect("/credito?tab=lenders");
 }
