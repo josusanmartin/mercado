@@ -63,7 +63,7 @@ export function WalletDialog({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WalletChooser({ onDone }: { onDone: () => void }) {
+export function WalletChooser({ onDone }: { onDone: () => void }) {
   const { isConnected, address } = useConnection();
   const connectors = useConnectors();
   const { mutateAsync: connect, isPending, variables } = useConnect();
