@@ -445,23 +445,41 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
   },
   {
     id: 'V9',
-    title: 'Card: Familia taps Mercado Card at a demo merchant terminal (EIP-712 tap → real xMXN v2 charge → refund), incl. a frozen-card decline + retry',
+    title: 'Card: issue → limit → EIP-712 tap → real xMXN v2 charge at a demo merchant → refund, incl. a frozen-card decline + single retry',
     async run() {
       const card: Address | undefined = (A as any).card ?? (shared as any).moderatoDeployment?.v2?.card
       if (!card) throw new SkipStep('deployments.v2.card missing (MercadoCard not deployed)')
-      const holder = account('RECIPIENT') // Familia (MX)
+      // journey cardholder = Miguel (SENDER), so the Familia demo card shown in the app stays untouched
+      const holder = account('SENDER')
       const terminal = account('MERCHANT') // "Tienda Doña Mary · CDMX" demo terminal
-      const sender = account('SENDER')
-      const ids: bigint[] = await read(card, mercadoCardAbi, 'cardsOf', [holder.address])
-      if (!ids.length) throw new SkipStep(`holder ${holder.address} has no card yet`)
-      const cardId = ids[0]
+      const sender = account('LENDER') // an unrelated account for the negative checks
+      const amount = parseUnits('50', 6)
+      // fund the holder with xMXN v2 through Mercado Global (vAMM mint to self) if needed
+      if ((await bal(A.xMXN, holder.address)) < amount * 2n) {
+        const usd = parseUnits('10', 6)
+        await ensureOusd(holder.address, usd, 'Miguel')
+        await approveIfNeeded(holder, A.ousd, A.vamm!, usd, 'OUSD → vamm')
+        const [q] = await read(A.vamm!, moveAmmAbi, 'quote', [true, usd])
+        await send('fund Miguel: 10 OUSD → xMXN v2 (vAMM mint to self)', holder, { address: A.vamm!, abi: moveAmmAbi, functionName: 'swapOusdForXmxn', args: [usd, (q * 99n) / 100n, holder.address] })
+      }
+      // ISSUE (once per holder; reused on later runs)
+      let ids: bigint[] = await read(card, mercadoCardAbi, 'cardsOf', [holder.address])
+      if (!ids.length) {
+        await send('issue a Mercado Card (daily limit 1,000 xMXN)', holder, { address: card, abi: mercadoCardAbi, functionName: 'issueCard', args: [parseUnits('1000', 6)] })
+        ids = await read(card, mercadoCardAbi, 'cardsOf', [holder.address])
+      }
+      const cardId = ids[ids.length - 1]
+      // LIMIT: a real limit change by the holder (alternates 600/700 so every run writes a change)
+      const before = (await read(card, mercadoCardAbi, 'getCard', [cardId])).dailyLimit as bigint
+      const newLimit = before === parseUnits('600', 6) ? parseUnits('700', 6) : parseUnits('600', 6)
+      await send(`holder sets the daily limit ${fmt(before)} → ${fmt(newLimit)} xMXN`, holder, { address: card, abi: mercadoCardAbi, functionName: 'setDailyLimit', args: [cardId, newLimit] })
       const c0 = await read(card, mercadoCardAbi, 'getCard', [cardId])
+      assert(c0.dailyLimit === newLimit, 'on-chain daily limit updated')
+      await expectRevert('limit change by a non-holder', { address: card, abi: mercadoCardAbi, functionName: 'setDailyLimit', args: [cardId, newLimit], account: sender }, ['NotHolder'])
       const m = await read(card, mercadoCardAbi, 'merchant', [terminal.address])
       assert(m[0], `terminal ${terminal.address} is an allowlisted merchant`)
-      log(`card #${cardId} (demo •••• ${c0.last4}, DEMO network) held by ${holder.address} · daily limit ${fmt(c0.dailyLimit)} · available today ${fmt(c0.availableToday)} · merchant "${m[1]}"`)
-      const amount = parseUnits('50', 6)
+      log(`card #${cardId} (demo •••• ${c0.last4}, DEMO network) held by Miguel ${holder.address} · daily limit ${fmt(c0.dailyLimit)} · available today ${fmt(c0.availableToday)}${c0.resetsAt ? ` · resets ${new Date(Number(c0.resetsAt) * 1000).toISOString()}` : ''} · merchant "${m[1]}"`)
       assert(c0.availableToday >= amount, `available today ${fmt(c0.availableToday)} ≥ 50`)
-      assert((await bal(A.xMXN, holder.address)) >= amount, 'holder holds ≥ 50 xMXN v2 (run V3 first)')
       await approveIfNeeded(holder, A.xMXN, card, amount, 'xMXN v2 → card (spending allowance)')
 
       const domain = { name: 'MercadoCard', version: '1', chainId: 42431, verifyingContract: card } as const
@@ -519,11 +537,12 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
         .find((e: any) => e?.eventName === 'CardCharged')
       assert(ev && ev.args.amount === amount && ev.args.cardId === cardId, 'CardCharged(cardId, amount) emitted')
       assert(h0 - (await bal(A.xMXN, holder.address)) === amount, 'holder paid exactly 50')
+      assert(((await read(card, mercadoCardAbi, 'getCard', [cardId])).availableToday as bigint) <= c0.availableToday - amount + parseUnits('1', 6), 'availableToday fell by the charge')
       assert((await bal(A.xMXN, terminal.address)) - mer0 === amount, 'merchant received exactly 50')
       assert((await read(A.xMXN, tip20Abi, 'totalSupply')) === supply0, 'a card charge moves xMXN; it never mints')
       const st1 = await read(card, mercadoCardAbi, 'stats')
       assert(st1[1] - st0[1] === amount, 'card stats: spent +50')
-      ok(`charge #${ev.args.chargeId}: 50 xMXN v2 Familia → "${m[1]}"; available today ${fmt((await read(card, mercadoCardAbi, 'getCard', [cardId])).availableToday)}`)
+      ok(`charge #${ev.args.chargeId}: 50 xMXN v2 Miguel → "${m[1]}"; available today ${fmt((await read(card, mercadoCardAbi, 'getCard', [cardId])).availableToday)}`)
       await expectRevert('the same tap replayed', chargeReq(good.tap, good.sig), ['TapReplayed'])
 
       const refund = parseUnits('10', 6)
