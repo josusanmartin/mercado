@@ -11,17 +11,22 @@ import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { personaByAddress } from "@/components/wallet/personas";
 import { PersonaRestore } from "@/components/wallet/use-persona";
 import { useDemoMode } from "./demo-mode";
+import { TourChip, useTour } from "@/components/tour/demo-tour";
 
 export function TopBar() {
   const { on, setOn } = useDemoMode();
   const busy = useAnyBusy();
   const { address, isConnected } = useConnection();
   const persona = personaByAddress(address);
+  const tour = useTour();
+  // Phones: during the tour its chip takes the Demo toggle's place (the tour keeps Demo mode on).
+  const tourOnPhone = tour.active && !tour.finished;
   return (
     <div className="ml-auto flex items-center gap-2 sm:gap-3">
       {on && <PersonaRestore />}
       <NetworkBadge className="hidden sm:inline-flex" />
-      <label className={cn("meta flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5", busy && "cursor-not-allowed opacity-60")}>
+      <TourChip className="sm:hidden" />
+      <label className={cn("meta flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5", busy && "cursor-not-allowed opacity-60", tourOnPhone && "max-sm:hidden")}>
         <span className="hidden sm:inline">Demo mode</span>
         <span className="sm:hidden">Demo</span>
         <button

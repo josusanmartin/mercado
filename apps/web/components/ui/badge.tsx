@@ -28,7 +28,8 @@ function Badge({
   ...props
 }: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot.Root : "span";
-  return <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props} />;
+  // data-variant lets ?present=1 capture mode hide the "mock" honesty badges (SIMULATED, Demo, Admin relay).
+  return <Comp data-slot="badge" data-variant={variant ?? "default"} className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
 export { Badge, badgeVariants };

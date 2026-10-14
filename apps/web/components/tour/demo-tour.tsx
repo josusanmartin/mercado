@@ -80,7 +80,7 @@ export const TOUR: TourStep[] = [
     persona: "saver",
     href: "/invest",
     title: "Save and invest",
-    doThis: "Peso savings fund the driver advances (real fees, variable, not guaranteed); dollar savings earn the configured demo rate as it accrues.",
+    doThis: "Save dollars or pesos and watch the return accrue live at the configured annual rate, or buy the demo US stock index (mIDX).",
   },
 ];
 
@@ -99,6 +99,9 @@ type TourCtx = {
   step: TourStep | undefined;
   visits: Visit[];
   going: boolean;
+  /** The panel is tucked away (desktop pill / top-bar chip on phones). */
+  minimized: boolean;
+  setMinimized: (v: boolean) => void;
   start: () => void;
   stop: () => void;
   finish: () => void;
@@ -111,6 +114,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<TourState>(EMPTY);
   const [loaded, setLoaded] = useState(false);
   const [going, setGoing] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const router = useRouter();
   const demo = useDemoMode();
   const busy = useAnyBusy();
@@ -141,6 +145,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
         return;
       }
       setGoing(true);
+      setMinimized(false); // every step opens expanded so its instruction is read
       try {
         if (!demo.on) demo.setOn(true);
         const account = personaById(step.persona).address;
@@ -183,12 +188,14 @@ export function TourProvider({ children }: { children: ReactNode }) {
       step: state.active ? TOUR[state.index] : undefined,
       visits: state.visits,
       going,
+      minimized,
+      setMinimized,
       start: () => void go(0, true),
       stop: () => void close({ active: false, finished: false }),
       finish: () => void close({ finished: true }),
       go: (i: number) => go(i),
     }),
-    [state, going, go, close],
+    [state, going, go, close, minimized],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -364,35 +371,52 @@ function Unexplained({ trace }: { trace: StepTrace }) {
 // ---------------------------------------------------------------- panel
 
 export function TourPanel() {
-  const { active, finished, index, step, visits, stop, go, going, finish, start } = useTour();
+  const { active, finished, index, step, visits, stop, go, going, finish, start, minimized: min, setMinimized: setMin } = useTour();
   const path = usePathname();
   const busy = useAnyBusy();
-  const [min, setMin] = useState(false);
   const mine = useMemo(() => visits.filter((v) => v.step === index), [visits, index]);
   const bal = useBalances(TOUR[index] ? (personaById(TOUR[index].persona).address as Address | undefined) : undefined);
   const trace = useStepTrace(mine, active && !finished);
+  // Judge rehearsal: the expanded panel covered product actions (Card POS at 1440, most phone screens at
+  // 390). The first tap outside it tucks it away (the tap still goes through); a new step re-expands it.
+  useEffect(() => {
+    if (!active || finished || min) return;
+    const tuck = (e: PointerEvent) => {
+      if (!(e.target instanceof Element) || e.target.closest("[data-tour-ui]")) return;
+      setMin(true);
+    };
+    document.addEventListener("pointerdown", tuck, true);
+    return () => document.removeEventListener("pointerdown", tuck, true);
+  }, [active, finished, min, setMin]);
   if (!active || !step) return null;
   if (finished) return <TourSummary onClose={stop} onRestart={start} />;
   const p = personaById(step.persona);
   const product = PRODUCTS.find((x) => x.id === step.product)!;
   const here = path === step.href.split("?")[0];
 
+  const nextLabel = !here ? `Open ${product.short}` : index < TOUR.length - 1 ? `Next: ${PRODUCTS.find((x) => x.id === TOUR[index + 1].product)!.short}` : "See the whole trail";
+  const advance = () => (!here ? go(index) : index < TOUR.length - 1 ? go(index + 1) : finish());
+
+  // Tucked away: a small pill on sm+ (phones get the chip in the top bar instead, see TourChip).
   if (min)
     return (
-      <button
-        type="button"
-        onClick={() => setMin(false)}
-        className="meta bg-foreground text-background fixed right-4 bottom-[7.2rem] z-40 flex items-center gap-2 rounded-full px-4 py-2 lg:bottom-14"
-      >
-        <span className="size-2.5 rounded-full" style={{ background: product.color }} />
-        Tour {index + 1}/{TOUR.length} · {product.short}
-        <ChevronUp className="size-4" />
-      </button>
+      <div data-tour-ui className="bg-foreground text-background fixed right-4 bottom-14 z-40 hidden items-center gap-1 rounded-full p-1 pl-4 sm:flex">
+        <button type="button" onClick={() => setMin(false)} className="meta flex items-center gap-2 py-1.5" aria-label="Show the tour step">
+          <span className="size-2.5 rounded-full" style={{ background: product.color }} />
+          Tour {index + 1}/{TOUR.length} · {product.short}
+          <ChevronUp className="size-4" />
+        </button>
+        <button type="button" disabled={going || busy} onClick={advance} className="bg-background text-foreground ml-2 flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium disabled:opacity-60">
+          {nextLabel}
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
     );
 
   return (
     <aside
       aria-label="Demo Tour"
+      data-tour-ui
       data-product={step.product}
       className="bg-card animate-in fade-in-0 slide-in-from-bottom-3 fixed inset-x-3 bottom-[6.8rem] z-40 max-h-[70dvh] overflow-y-auto rounded-[8px] border border-foreground p-5 shadow-[0_8px_24px_rgb(0_0_0/0.08)] duration-150 sm:right-6 sm:left-auto sm:w-[26rem] lg:bottom-14"
     >
@@ -466,6 +490,27 @@ export function TourPanel() {
         )}
       </div>
     </aside>
+  );
+}
+
+/** Phones: the tour lives in the top bar (in place of the Demo toggle, which the tour keeps on). */
+export function TourChip({ className }: { className?: string }) {
+  const { active, finished, index, minimized, setMinimized } = useTour();
+  if (!active || finished || !TOUR[index]) return null;
+  const product = PRODUCTS.find((x) => x.id === TOUR[index].product)!;
+  return (
+    <button
+      type="button"
+      data-tour-ui
+      onClick={() => setMinimized(!minimized)}
+      aria-expanded={!minimized}
+      aria-label={`Demo Tour step ${index + 1} of ${TOUR.length}: ${product.short}. ${minimized ? "Show" : "Hide"} the step`}
+      className={cn("meta flex items-center gap-1.5 rounded-full border px-3 py-1.5", className)}
+    >
+      <span className="size-2 rounded-full" style={{ background: product.color }} aria-hidden />
+      Tour {index + 1}/{TOUR.length}
+      {minimized ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
+    </button>
   );
 }
 

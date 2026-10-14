@@ -1,10 +1,10 @@
 "use client";
-// Honesty footer, visible on every screen and width (SPEC §6).
+// Honesty footer, visible on every screen and width (SPEC §6); hidden only in ?present=1 capture mode.
 import { TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 
 export function HintBar() {
   return (
-    <footer data-phone-hide className="bg-background/95 fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-30 border-t lg:sticky lg:bottom-0 lg:z-20">
+    <footer data-phone-hide data-honesty className="bg-background/95 fixed inset-x-0 bottom-[calc(3.6rem+env(safe-area-inset-bottom))] z-30 border-t lg:sticky lg:bottom-0 lg:z-20">
       <p className="meta text-muted-foreground mx-auto max-w-[84rem] px-4 py-2 sm:px-8">
         <span className="text-foreground">
           <span className="bg-success mr-1.5 inline-block size-1.5 align-middle" />
