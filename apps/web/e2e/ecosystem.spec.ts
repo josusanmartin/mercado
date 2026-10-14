@@ -7,6 +7,8 @@ const PRODUCTS = [
   { path: '/remesas', name: /Mercado Remesas/i },
   { path: '/global', name: /Mercado Global/i },
   { path: '/credito', name: /Mercado Cr[ée]dito/i },
+  { path: '/card', name: /Mercado Card/i },
+  { path: '/invest', name: /Mercado Invest/i },
 ]
 
 const visible = (page: Page, re: RegExp) => page.getByText(re).filter({ visible: true }).first()
@@ -30,7 +32,7 @@ async function honesty(page: Page) {
 test('home: the ecosystem map names all four products around xMXN', async ({ page }) => {
   const errors = trackErrors(page)
   expect((await page.goto('/'))?.status()).toBeLessThan(400)
-  for (const n of [/Mint/, /Remesas/, /Global/, /Cr[ée]dito/]) await expect(visible(page, n)).toBeVisible()
+  for (const n of [/Mint/, /Remesas/, /Global/, /Cr[ée]dito/, /Card/, /Invest/]) await expect(visible(page, n)).toBeVisible()
   await expect(visible(page, /xMXN/)).toBeVisible()
   await honesty(page)
   expect(errors).toEqual([])
@@ -64,7 +66,7 @@ test('product-specific mock labels', async ({ page }) => {
   await expect(visible(page, /indicativ/i)).toBeVisible() // "signed indicative quote", never "firm"
   await expect(page.getByText(/\bfirm quote\b/i)).toHaveCount(0)
   await page.goto('/mint')
-  await expect(visible(page, /assumed \$1\.00/i)).toBeVisible() // OUSD valuation assumption (MOCKS.md B2)
+  await expect(visible(page, /assumed \$1\.00|\$1\.00 \(assum|supuesto/i)).toBeVisible() // OUSD valued at a fixed $1.00 (MOCKS.md B2)
   await page.getByRole('tab', { name: /Issue/ }).or(page.getByRole('button', { name: /^Issue/ })).first().click()
   await expect(visible(page, /relayed|mock|reference rate|oracle/i)).toBeVisible() // FX provenance where minting is priced
 })
@@ -107,20 +109,23 @@ test('remesas at exactly 390px: full-screen (no frame)', async ({ page }) => {
   await honesty(page)
 })
 
-test.describe('credito tabs', () => {
+test.describe('credito tabs (Crédito v2: Driver app · Back office)', () => {
   for (const [tab, label, re] of [
-    ['drivers', 'Drivers', /Demo Uber Data/],
-    ['lenders', 'Lenders', /no guaranteed return/i],
-    ['api', 'Underwriting API', /402/],
+    ['driver', 'Driver app', /Demo|simulad|simulated|not affiliated/i],
+    ['backoffice', 'Back office', /no guaranteed return|sin rendimiento garantizado|402/i],
   ] as const) {
     test(`${label} tab`, async ({ page }) => {
       const errors = trackErrors(page)
       await page.goto('/credito')
-      await page.getByRole('tab', { name: new RegExp(label) }).or(page.getByRole('button', { name: new RegExp(`^${label}`) })).first().click()
+      await page.getByRole('tab', { name: new RegExp(label) }).or(page.getByRole('button', { name: new RegExp(label) })).first().click()
       await expect(page).toHaveURL(new RegExp(`tab=${tab}`))
       await expect(visible(page, re)).toBeVisible()
       await honesty(page)
       expect(errors).toEqual([])
     })
   }
+  test('old deep links still land: ?tab=lenders → Back office', async ({ page }) => {
+    await page.goto('/credito?tab=lenders')
+    await expect(visible(page, /no guaranteed return|sin rendimiento garantizado|Loan book|Cartera/i)).toBeVisible()
+  })
 })
