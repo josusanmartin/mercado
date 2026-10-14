@@ -45,7 +45,10 @@ export function TopBar() {
               {shortAddr(address)}
             </span>
           ) : (
-            "Connect wallet"
+            <>
+              <span className="sm:hidden">Connect</span>
+              <span className="hidden sm:inline">Connect wallet</span>
+            </>
           )}
         </button>
       </WalletDialog>

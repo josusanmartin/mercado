@@ -20,9 +20,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar active={product.id} path={path} />
       <div className="flex min-h-dvh min-w-0 flex-col">
         <header className="bg-background/90 supports-[backdrop-filter]:bg-background/75 sticky top-0 z-30 backdrop-blur">
-          <div className="mx-auto flex max-w-[84rem] items-center gap-3 px-4 py-3 sm:px-8">
+          <div className="mx-auto flex max-w-[84rem] items-center gap-2 px-4 py-3 sm:gap-3 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Mercado home">
-              <Wordmark />
+              <Wordmark compact />
             </Link>
             <ClientOnly fallback={<div className="ml-auto h-9 w-64" />}>
               <TopBar />
@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function Wordmark({ className }: { className?: string }) {
+export function Wordmark({ className, compact }: { className?: string; compact?: boolean }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
       <span className="grid size-7 grid-cols-2 grid-rows-2 gap-[3px]" aria-hidden>
@@ -48,7 +48,7 @@ export function Wordmark({ className }: { className?: string }) {
         <span className="bg-global rounded-[3px]" />
         <span className="bg-credito rounded-[3px]" />
       </span>
-      <span className="text-lg font-bold tracking-tight">Mercado</span>
+      <span className={cn("text-lg font-bold tracking-tight", compact && "hidden sm:inline")}>Mercado</span>
     </span>
   );
 }

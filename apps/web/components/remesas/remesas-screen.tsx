@@ -138,7 +138,7 @@ function SendFlow({ s }: { s: RemesasState }) {
       aside={r ? <Badge variant="success">Delivered</Badge> : undefined}
     >
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <FlowNode title="You send" value={inUsd > 0n ? `$${fmtAmount(inUsd)}` : "—"} sub={`OUSD from Sender (US) ${shortAddr(address)}`} />
+        <FlowNode title="Monto a enviar · Amount sending" value={inUsd > 0n ? `$${fmtAmount(inUsd)}` : "—"} sub={`OUSD from Sender (US) ${shortAddr(address)}`} />
         <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
         <FlowNode title={q.venue} value={USE_V2 ? "mint" : "swap"} sub={USE_V2 ? "OUSD into the reserve, xMXN minted" : "desk inventory, then a transfer"} accent />
         <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
