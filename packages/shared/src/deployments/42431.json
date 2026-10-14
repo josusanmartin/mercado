@@ -59,10 +59,11 @@
     "creditPool": "0xaB32daeF142B442d24589D2161967a843720C6D7",
     "fxOracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
     "card": "0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6",
-    "investDesk": "0xDacE8de24876Dc52930B3f986C4c9427d124EfEd",
+    "investDesk": "0xD4662343deeE28B4d4a9E4be8E718d9C7d5E4c32",
     "tTBILLFeed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
     "sOUSD": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
-    "tTBILL": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+    "tTBILL": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
+    "tTBILLLegacy": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
     "collaterals": [
       {
         "symbol": "OUSD",
@@ -80,10 +81,17 @@
       },
       {
         "symbol": "tTBILL",
-        "token": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+        "token": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
         "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
         "demo": true,
         "label": "Demo tokenized T-bill (testnet, not a security)"
+      },
+      {
+        "symbol": "tTBILL-legacy",
+        "token": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+        "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+        "demo": true,
+        "label": "Demo T-bill, legacy faucet issue (minting paused; repay/withdraw only)"
       }
     ],
     "attestationSigner": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
@@ -133,7 +141,18 @@
       "investStage.mint": "0x7724ae88641e7ecfad2ce57500c2ca8b5f7fb42413dcaf7d078ed5016697d3c3",
       "investStage.approve": "0xce2cd1584a184c283f539e183956bd14b6313fe77616e00fba59966a17e58346",
       "investStage.approve#2": "0xf2a77478bf7c574d1e6cd750f816550626de0f8c40f2e25a04afed65784b8136",
-      "investStage.seed": "0x2b4f37697970416b61fe0a076ba7e3ab3d56f98948cff2bdeae527e50a7a2360"
+      "investStage.seed": "0x2b4f37697970416b61fe0a076ba7e3ab3d56f98948cff2bdeae527e50a7a2360",
+      "gateTbill.deployDemoRWA": "0x9c1c35d893a2ff7ea0a40f05ae20ef195f085a9cd78cbaacc1a60b80304afd91",
+      "gateTbill.addCollateral": "0xf0a906687dc7c98a25df47cd98edf5e06474f912fb72f8c450d6038a7ae9567b",
+      "gateTbill.setMintPaused": "0x445ab9a2b83188fc70b0641f5d26abc23901dc96a44482602a2a783d3740a173",
+      "gateTbill.withdraw": "0xcf56b3ace87f9cccb39ca0d87c199f90dcba56ef1a711664e0a7d3afba5890cf",
+      "gateTbill.pause": "0xf02a14086dbe3a70244bdc2e73a5c8a27e9c536a33caf6d54455b71318c9adae",
+      "gateTbill.deployInvestDesk": "0x8ce47a9f6d7423492d42405d0819f15e442187f0b980d92635fe906f1e60c2d9",
+      "gateTbill.mint": "0x8e216eb2feb53354468fca20b40f8cb4129a6e1e88b7d5a33deafe77cbaf8601",
+      "gateTbill.mint#2": "0x6bdfd7400fab211b740fec75cefdbe23189edfb2aaa58af334723bdb07aca8a0",
+      "gateTbill.approve": "0x707db4449d14707b2abd5bf5e5690af0c1f6f1ac518434f44ee7bfac34d9ac8c",
+      "gateTbill.approve#2": "0x14e44be9fac408b0c9598eaaf28d13c22cae6447f8ee63b7583309fa0841e13d",
+      "gateTbill.seed": "0xd829174890561d97abb6b6f3c718531e1d72d8ac88c3adb2d3f95a07017c3176"
     }
   }
 }

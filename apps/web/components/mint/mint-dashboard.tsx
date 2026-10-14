@@ -4,17 +4,27 @@
 // the Move exchange's issued supply. Protocol comes from activeAddresses() (crew/V2-SWITCH.md).
 import { useState } from "react";
 import { useConnection } from "wagmi";
-import { Activity, Gauge, Layers, PlusCircle } from "lucide-react";
+import { Activity, Gauge, Layers, PlusCircle, ShieldAlert } from "lucide-react";
 import { explorerAddress } from "@mercado/shared";
 import { BigNumber, ListPane, Panel, Row, Rows, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { MintScreen } from "@/components/vault/mint-screen";
-import { PROTOCOL, useCollateralBook, useFlowTotals, useMyPositions, useThreeBuckets, type CollateralBookRow } from "@/lib/contracts";
+import {
+  PROTOCOL,
+  useActivityFeed,
+  useCollateralBook,
+  useExchangeState,
+  useFlowTotals,
+  useMyPositions,
+  useOracle,
+  useThreeBuckets,
+  type CollateralBookRow,
+} from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { ActivityTable } from "./activity-table";
 
-type Section = "overview" | "positions" | "issue" | "activity";
+type Section = "overview" | "positions" | "issue" | "risk" | "activity";
 const x = (v: bigint | undefined, unit = "xMXN") => (v === undefined ? "…" : `${fmtAmount(v)} ${unit}`);
 const pct = (num?: bigint, den?: bigint) => (num === undefined || !den ? undefined : Number((num * 10_000n) / den) / 100);
 
@@ -118,6 +128,119 @@ function Overview() {
   );
 }
 
+/** Risk: live coverage, haircuts, redemption bucket and FX breakpoints; liquidations from real event logs. */
+function Risk() {
+  const book = useCollateralBook();
+  const ex = useExchangeState();
+  const fx = useOracle();
+  const liqs = useActivityFeed("mint").rows.filter((r) => r.event === "Liquidated").slice(0, 5);
+  const rate = fx.rate;
+  const backingBps = book.totalValueXmxn !== undefined && book.totalDebt ? (book.totalValueXmxn * 10_000n) / book.totalDebt : undefined;
+  // FX at which a ratio scales to a target (ratios scale linearly with MXN per USD for USD collateral)
+  const fxAt = (nowBps?: bigint, targetBps = 10_000) =>
+    nowBps === undefined || rate === undefined || nowBps === 0n ? undefined : (rate * targetBps) / Number(nowBps);
+  const v2 = ex.protocol === "v2";
+  const cov = v2 ? (ex as { coverageBps?: bigint }).coverageBps : undefined;
+  const covShown = cov === undefined ? "…" : cov > 10_000_000n ? "∞ (nothing issued)" : fmtBps(cov, 0);
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Panel
+        title={v2 ? "Exchange backing (Move)" : "Swap desk inventory"}
+        description={
+          v2
+            ? "xMXN issued by the exchange is backed by its own OUSD reserve, never by Mint collateral. When coverage drops below 100%, minting stops and redemptions pay pro rata."
+            : "v1 uses a separately seeded, capped swap desk."
+        }
+      >
+        <Rows>
+          {v2 ? (
+            <>
+              <Row label="Reserve" sub="OUSD held by the exchange" value={x((ex as { reserveOusd?: bigint }).reserveOusd, "OUSD")} />
+              <Row label="Issued xMXN" sub="The exchange's liability" value={x((ex as { liabilityXmxn?: bigint }).liabilityXmxn)} />
+              <Row label="Equity buffer" sub="First-loss OUSD, adds reserve without liability" value={x((ex as { equityOusd?: bigint }).equityOusd, "OUSD")} />
+              <Row label="Coverage" sub="reserve × FX ÷ issued" value={covShown} />
+              <Row
+                label="Redemptions, rolling 24h"
+                sub={`Leaky bucket: up to ${(ex as { redeemCapBps?: bigint }).redeemCapBps === undefined ? "…" : fmtBps((ex as { redeemCapBps?: bigint }).redeemCapBps, 0)} of the reserve at once, refilling over 24h`}
+                value={`${x((ex as { bucketUsedOusd?: bigint }).bucketUsedOusd, "OUSD")} / ${x((ex as { bucketCapOusd?: bigint }).bucketCapOusd, "OUSD")}`}
+              />
+              <Row
+                label="Coverage hits 100% at"
+                sub="USD/MXN if the peso strengthens this far"
+                value={(() => {
+                  const f = cov !== undefined && cov < 10_000_000n ? fxAt(cov) : undefined;
+                  return f === undefined ? "—" : `${f.toFixed(2)} MXN/USD`;
+                })()}
+              />
+            </>
+          ) : (
+            <>
+              <Row label="OUSD" value={x((ex as { reserveOusd?: bigint }).reserveOusd, "OUSD")} />
+              <Row label="xMXN" value={x((ex as { reserveXmxn?: bigint }).reserveXmxn)} />
+            </>
+          )}
+        </Rows>
+      </Panel>
+
+      <Panel title="Collateral haircuts" description="Each collateral has its own mint line (max loan-to-value), liquidation line and penalty.">
+        <Rows>
+          {book.rows.map((r) => (
+            <Row
+              key={r.token}
+              label={
+                <span className="flex items-center gap-2">
+                  {r.symbol} <DemoBadge r={r} />
+                </span>
+              }
+              sub={`Liquidation below ${r.liqRatioBps ? fmtBps(r.liqRatioBps, 0) : "…"} · penalty ${r.penaltyBps ? fmtBps(r.penaltyBps, 0) : "…"}`}
+              value={r.mintRatioBps ? `max LTV ${((10_000 / r.mintRatioBps) * 100).toFixed(0)}%` : "…"}
+            />
+          ))}
+          <Row
+            label="System backing"
+            sub="All collateral value ÷ all Mint debt"
+            value={backingBps === undefined ? "…" : fmtBps(backingBps, 0)}
+          />
+          <Row
+            label="Backing hits 135% at"
+            sub="USD/MXN if the peso strengthens (OUSD-valued collateral scales with FX)"
+            value={(() => {
+              const f = fxAt(backingBps, 13_500);
+              return f === undefined ? "—" : `${f.toFixed(2)} MXN/USD`;
+            })()}
+          />
+        </Rows>
+      </Panel>
+
+      <div className="lg:col-span-2">
+        <Panel
+          title="Stress tests on-chain"
+          description="Each stress run shocks the admin-relayed rate (forceSet), liquidates a dedicated position at the new rate, then restores the real rate. These rows are the real liquidations."
+        >
+          {liqs.length === 0 ? (
+            <p className="text-muted-foreground py-4 text-sm">No liquidations yet in this protocol.</p>
+          ) : (
+            <Rows>
+              {liqs.map((r) => (
+                <Row
+                  key={`${r.txHash}-${r.logIndex}`}
+                  label={r.label}
+                  sub={
+                    <a href={r.url} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                      {r.txHash.slice(0, 10)}… on the explorer
+                    </a>
+                  }
+                  value={`${fmtAmount(r.amount)} xMXN covered · ${fmtAmount(r.amountOut ?? 0n)} ${r.tokenOut} seized`}
+                />
+              ))}
+            </Rows>
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
 function Positions() {
   const { positions, open, isLoading } = useMyPositions();
   return (
@@ -170,6 +293,7 @@ export function MintDashboard() {
     { id: "overview", label: "Overview", icon: Layers },
     { id: "issue", label: "Issue & manage", icon: PlusCircle },
     { id: "positions", label: "Your positions", icon: Gauge, hint: address ? String(open.length) : undefined },
+    { id: "risk", label: "Risk", icon: ShieldAlert },
     { id: "activity", label: "Activity", icon: Activity },
   ];
 
@@ -191,6 +315,7 @@ export function MintDashboard() {
       {section === "overview" && <Overview />}
       {section === "issue" && <MintScreen embedded />}
       {section === "positions" && <Positions />}
+      {section === "risk" && <Risk />}
       {section === "activity" && (
         <ActivityTable
           kind="mint"

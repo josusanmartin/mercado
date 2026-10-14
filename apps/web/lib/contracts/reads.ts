@@ -3,7 +3,7 @@
 // allowFailure, so the UI gets `undefined` plus `oracle.valid === false` instead of an exception.
 import type { Address } from "viem";
 import { useConnection, useReadContract, useReadContracts } from "wagmi";
-import { moveAmmAbi, multiCollateralVaultAbi } from "@mercado/shared";
+import { investDeskAbi, moveAmmAbi, multiCollateralVaultAbi } from "@mercado/shared";
 import { ADDR, CHAIN_ID, COLLATERALS, PROTOCOL } from "./addresses";
 import { creditPoolAbi, oracleAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
 
@@ -517,5 +517,42 @@ export function useExchangeState() {
     dailyCapOusd: ok<bigint>(d[3]),
     paused: ok<boolean>(d[4]),
     remainingDailyCap: address ? ok<bigint>(d[5]) : undefined,
+  };
+}
+
+// ---------------------------------------------------------------- Invest desk (v2)
+
+/** InvestDesk state + the wallet's buy-back eligibility: the desk buys back at most `sellableTbill` (what this
+ *  address bought from it and hasn't sold), regardless of the wallet's tTBILL balance (review R-042). */
+export function useInvestDesk(user?: Address) {
+  const who = useWho(user);
+  const enabled = V2 && ADDR.investDesk !== "0x0000000000000000000000000000000000000000";
+  const q = useReadContracts({
+    contracts: [
+      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
+      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "spreadBps", chainId: CHAIN_ID },
+      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "maxTradeUsd", chainId: CHAIN_ID },
+      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "paused", chainId: CHAIN_ID },
+      {
+        address: ADDR.investDesk,
+        abi: investDeskAbi,
+        functionName: "bought",
+        args: [who ?? "0x0000000000000000000000000000000000000000"],
+        chainId: CHAIN_ID,
+      },
+    ],
+    query: { enabled, ...REFRESH },
+  });
+  const r = ok<readonly [bigint, bigint]>(q.data?.[0]);
+  return {
+    ...q,
+    enabled,
+    reserveOusd: r?.[0],
+    reserveTbill: r?.[1],
+    spreadBps: ok<bigint>(q.data?.[1]),
+    maxTradeUsd: ok<bigint>(q.data?.[2]),
+    paused: ok<boolean>(q.data?.[3]),
+    /** tTBILL this wallet can sell back to the desk (personal, non-transferable buy-back allowance) */
+    sellableTbill: who ? ok<bigint>(q.data?.[4]) : undefined,
   };
 }

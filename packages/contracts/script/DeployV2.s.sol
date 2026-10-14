@@ -40,6 +40,7 @@ contract DeployV2 is Script {
     address tbillFeed;
     address card;
     address investDesk;
+    address tbillLegacy;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -61,6 +62,7 @@ contract DeployV2 is Script {
             tbillFeed = _a(j, ".tTBILLFeed");
             card = _a(j, ".card");
             investDesk = _a(j, ".investDesk");
+            tbillLegacy = _a(j, ".tTBILLLegacy");
         }
     }
 
@@ -195,6 +197,39 @@ contract DeployV2 is Script {
         _save();
     }
 
+    /// R-042 (lead): GATE tTBILL issuance. The original tTBILL has a public faucet that can't be disabled, so:
+    ///  - deploy a new tTBILL with faucetCap = 0 (faucet always reverts; owner-only mint to demo personas + inventory)
+    ///  - add it to the vault (same feed + risk params); pause minting on the legacy tTBILL (repay/withdraw still work)
+    ///  - redeploy InvestDesk on the new token, seeded with owner-minted inventory; drain + pause the old desk
+    ///  - give the LP institution 1,000 new tTBILL
+    function gateTbill() external {
+        uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPk);
+        address lp = vm.envAddress("LP_ADDRESS");
+        address oldDesk = investDesk;
+        vm.startBroadcast(deployerPk);
+        if (tbillLegacy == address(0)) tbillLegacy = tbill;
+        DemoRWA t = new DemoRWA("Demo tokenized T-bill (testnet, not a security)", "tTBILL", deployer, 0);
+        tbill = address(t);
+        MultiCollateralVault v = MultiCollateralVault(vault);
+        v.addCollateral(tbill, IPriceFeed(tbillFeed), 20_000, 17_000, 1_200, 1_000_000e6);
+        v.setMintPaused(tbillLegacy, true);
+        if (oldDesk != address(0)) {
+            (uint256 o, uint256 b) = InvestDesk(oldDesk).reserves();
+            if (o + b > 0) InvestDesk(oldDesk).withdraw(o, b, deployer);
+            if (!InvestDesk(oldDesk).paused()) InvestDesk(oldDesk).pause();
+        }
+        InvestDesk d = new InvestDesk(deployer, IERC20(ousd), IERC20(tbill), IERC20(xmxn), IPriceFeed(tbillFeed), MoveAMM(vamm));
+        investDesk = address(d);
+        t.mint(deployer, 2_000e6);
+        t.mint(lp, 1_000e6);
+        IERC20(tbill).approve(investDesk, 2_000e6);
+        IERC20(ousd).approve(investDesk, 20_000e6);
+        d.seed(20_000e6, 2_000e6);
+        vm.stopBroadcast();
+        _save();
+    }
+
     function _save() internal {
         string memory k = "v2";
         vm.serializeAddress(k, "factory", factory);
@@ -210,6 +245,7 @@ contract DeployV2 is Script {
         vm.serializeAddress(k, "tTBILL", tbill);
         vm.serializeAddress(k, "card", card);
         vm.serializeAddress(k, "investDesk", investDesk);
+        vm.serializeAddress(k, "tTBILLLegacy", tbillLegacy);
         string memory out = vm.serializeAddress(k, "tTBILLFeed", tbillFeed);
         vm.writeJson(out, path);
         console.log("wrote", path);
