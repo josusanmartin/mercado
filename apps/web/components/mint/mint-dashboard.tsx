@@ -24,6 +24,7 @@ import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Stagger, TickerText } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
+import { RatioMeter } from "@/components/vault/ratio-meter";
 import { ActivityTable } from "./activity-table";
 import { useMintMeta } from "./use-mint-meta";
 
@@ -78,7 +79,7 @@ function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> 
     total === undefined || total === 0n || book.rows.some((r) => r.valueXmxn === undefined)
       ? undefined
       : book.rows
-          .map((r) => ({ symbol: r.symbol, demo: r.demo, share: Number(((r.valueXmxn ?? 0n) * 10_000n) / total) / 100 }))
+          .map((r) => ({ symbol: r.symbol, demo: r.demo, value: r.valueXmxn ?? 0n, share: Number(((r.valueXmxn ?? 0n) * 10_000n) / total) / 100 }))
           .sort((a, b) => b.share - a.share);
   // shades of the product accent, strongest first (no invented chart colors)
   const shade = (i: number) => `color-mix(in oklab, var(--accent) ${[100, 72, 50, 34, 22, 14][Math.min(i, 5)]}%, var(--background))`;
@@ -86,11 +87,28 @@ function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> 
     <section className="grid gap-2.5" aria-label="What backs Mint's xMXN">
       <span className="meta text-muted-foreground">What backs Mint&apos;s xMXN · collateral value at live prices</span>
       <div
-        className="bg-muted flex h-3 w-full overflow-hidden rounded-full"
+        className="bg-muted flex h-3 w-full rounded-full"
         role="img"
         aria-label={parts ? parts.map((p) => `${p.symbol} ${p.share.toFixed(1)}%`).join(", ") : "Collateral mix loading"}
       >
-        {parts?.map((p, i) => <span key={p.symbol} className="h-full" style={{ width: `${p.share}%`, background: shade(i) }} />)}
+        {/* v6: hover (or focus) a segment for its token, value and share */}
+        {parts?.map((p, i) => {
+          // keep the tooltip inside the strip: left-aligned near the start, right-aligned near the end
+          const mid = parts.slice(0, i).reduce((t, q) => t + q.share, 0) + p.share / 2;
+          const align = mid < 35 ? "left-0" : mid > 65 ? "right-0" : "left-1/2 -translate-x-1/2";
+          return (
+          <span
+            key={p.symbol}
+            tabIndex={0}
+            className="group relative h-full min-w-1 outline-none first:rounded-l-full last:rounded-r-full focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            style={{ width: `${p.share}%`, background: shade(i) }}
+          >
+            <span className={`bg-foreground text-background pointer-events-none absolute bottom-full ${align} z-10 mb-2 translate-y-1 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap opacity-0 shadow-sm transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100`}>
+              <span className="font-semibold">{p.symbol}</span> · {fmtAmount(p.value, 0)} xMXN · {p.share.toFixed(1)}%
+            </span>
+          </span>
+          );
+        })}
       </div>
       <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-[13px]">
         {parts
@@ -275,6 +293,69 @@ function Overview({ go }: { go: (s: Section) => void }) {
   );
 }
 
+/**
+ * v6 Risk gauge: the USD/MXN axis. Today's rate sits in the safe (accent) zone; going left the peso strengthens:
+ * the system's aggregate backing reaches the 135% line, then the exchange's coverage reaches 100%.
+ */
+function FxGauge({ rate, at135, at100 }: { rate?: number; at135?: number; at100?: number }) {
+  if (rate === undefined || at135 === undefined) {
+    return <div className="bg-muted h-3 w-full animate-pulse rounded-full" aria-label="Risk gauge loading" />;
+  }
+  const marks = [rate, at135, ...(at100 !== undefined ? [at100] : [])];
+  const lo = Math.max(0, Math.floor(Math.min(...marks) * 0.8));
+  const hi = Math.ceil(Math.max(...marks) * 1.15);
+  const at = (v: number) => `${((v - lo) / (hi - lo)) * 100}%`;
+  const move = (1 - at135 / rate) * 100;
+  return (
+    <figure
+      className="grid gap-2"
+      aria-label={`USD/MXN today ${rate.toFixed(2)}. System backing reaches 135% at ${at135.toFixed(2)}${
+        at100 !== undefined ? `; exchange coverage reaches 100% at ${at100.toFixed(2)}` : ""
+      }.`}
+    >
+      {/* labels above: the 135% line and today */}
+      <div className="relative h-11 text-[13px]">
+        <span className="absolute bottom-0 grid -translate-x-1/2 justify-items-center" style={{ left: at(at135) }}>
+          <span className="text-warning font-semibold tabular">{at135.toFixed(2)}</span>
+          <span className="text-muted-foreground whitespace-nowrap">135% line</span>
+        </span>
+        <span className="absolute bottom-0 grid -translate-x-1/2 justify-items-center" style={{ left: at(rate) }}>
+          <span className="text-product font-semibold tabular">
+            <TickerText text={rate.toFixed(2)} />
+          </span>
+          <span className="text-muted-foreground whitespace-nowrap">today</span>
+        </span>
+      </div>
+      <div className="relative h-3 w-full rounded-full">
+        <div className="absolute inset-y-0 left-0 rounded-l-full bg-[var(--destructive)]/70" style={{ width: at(at100 ?? lo) }} />
+        <div
+          className="bg-warning/60 absolute inset-y-0"
+          style={{ left: at(at100 ?? lo), width: `calc(${at(at135)} - ${at(at100 ?? lo)})` }}
+        />
+        <div className="absolute inset-y-0 right-0 rounded-r-full bg-[var(--accent)]/80" style={{ left: at(at135) }} />
+        <span className="bg-foreground absolute -top-1 h-5 w-0.5 -translate-x-1/2" style={{ left: at(at135) }} aria-hidden />
+        <span
+          className="border-background absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-[var(--accent)] shadow transition-[left] duration-500"
+          style={{ left: at(rate) }}
+          aria-hidden
+        />
+      </div>
+      {/* label below: the exchange's 100% point */}
+      <div className="relative h-9 text-[13px]">
+        {at100 !== undefined && (
+          <span className="absolute top-0 grid -translate-x-1/2 justify-items-center" style={{ left: at(at100) }}>
+            <span className="text-destructive font-semibold tabular">{at100.toFixed(2)}</span>
+            <span className="text-muted-foreground whitespace-nowrap">exchange 100%</span>
+          </span>
+        )}
+      </div>
+      <figcaption className="text-muted-foreground text-[13px]">
+        USD/MXN. The peso would have to strengthen {move.toFixed(0)}% for the system to reach its 135% line.
+      </figcaption>
+    </figure>
+  );
+}
+
 /** Risk: live coverage, haircuts, redemption bucket and FX breakpoints; liquidations from real event logs. */
 function Risk() {
   const book = useCollateralBook();
@@ -307,19 +388,16 @@ function Risk() {
           <SectionLabel index="01">Exchange coverage</SectionLabel>
           <BigNumber className="text-product" value={<TickerText text={covShown} />} />
           <p className="text-muted-foreground max-w-md text-[15px]">
-            Exchange coverage today. It falls to 100% only if the peso strengthens to{" "}
-            <span className="text-foreground font-semibold">{covBreak === undefined ? "—" : `${covBreak.toFixed(2)} MXN/USD`}</span>.
+            Falls to 100% only at <span className="text-foreground font-semibold">{covBreak === undefined ? "—" : `${covBreak.toFixed(2)} MXN/USD`}</span>.
           </p>
         </div>
         <div className="grid content-start gap-2">
           <SectionLabel index="02">System backing</SectionLabel>
           <BigNumber className="text-product" value={backingBps === undefined ? "…" : <TickerText text={fmtBps(backingBps, 0)} />} />
-          <p className="text-muted-foreground max-w-md text-[15px]">
-            Aggregate CDP coverage; positions have separate liquidation limits. All collateral ÷ all Mint debt reaches the 135% line only at{" "}
-            <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>.
-          </p>
+          <p className="text-muted-foreground max-w-md text-[15px]">Aggregate CDP coverage; positions have separate liquidation limits.</p>
         </div>
       </section>
+      <FxGauge rate={rate} at135={backBreak} at100={covBreak} />
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
       <section className="grid content-start gap-3">
       <SectionLabel index="03">Exchange balance sheet</SectionLabel>
@@ -443,6 +521,14 @@ function Risk() {
 
 function Positions() {
   const { positions, open, isLoading } = useMyPositions();
+  const book = useCollateralBook();
+  // each collateral's own risk lines (same "recommended = mint line + 50%" rule as the collateral picker)
+  const linesFor = (token: string) => {
+    const r = book.rows.find((b) => b.token.toLowerCase() === token.toLowerCase());
+    return r?.liqRatioBps && r.mintRatioBps
+      ? { liqBps: BigInt(r.liqRatioBps), minBps: BigInt(r.mintRatioBps), recommendedBps: BigInt(r.mintRatioBps) + 5_000n }
+      : undefined;
+  };
   return (
     <Panel title="Your positions" description="One independent position per collateral. A shock to one never liquidates another.">
       <ConnectGate persona="lp" why="Connect the institution's wallet to see its positions.">
@@ -463,7 +549,17 @@ function Positions() {
                       {p.isLiquidatable && <Badge variant="destructive">Liquidatable</Badge>}
                     </span>
                   }
-                  sub={`${x(p.collateral, p.symbol)} locked · can mint ${x(p.maxMintable)} more · can withdraw ${x(p.maxWithdrawable, p.symbol)}`}
+                  sub={
+                    <span className="grid w-full max-w-md gap-2 pt-1 sm:min-w-[20rem]">
+                      <span>
+                        {x(p.collateral, p.symbol)} locked · can mint {x(p.maxMintable)} more
+                      </span>
+                      {/* v6: the position's health as a bar against its own liquidation / mint / recommended lines */}
+                      {p.ratioBps !== undefined && p.ratioBps !== null && linesFor(p.token) && (
+                        <RatioMeter bps={p.ratioBps} lines={linesFor(p.token)} />
+                      )}
+                    </span>
+                  }
                   value={
                     <span className="grid justify-items-end">
                       {x(p.debt)}
