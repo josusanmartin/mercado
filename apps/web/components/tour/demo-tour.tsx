@@ -1,16 +1,21 @@
 "use client";
 // Demo Tour across the six products (judge item 1): Mint → Remesas → Global → Crédito → Card → Invest.
 // Each step turns on Demo mode and opens its product, which connects that product's demo account.
-// Traceable: when a step starts we record the block and the account's balances; the panel then shows
-// live balances with the change since the step began, and every xMXN/OUSD transfer the account made
-// or received since that block (read from Transfer logs on Tempo), each linked to the explorer.
-// It ends on a summary of every transaction in the tour. No dead ends: Back/Next/Open everywhere.
+// Traceable (R-049): every time a step is entered we open a VISIT, a half-open block interval (from, to]
+// for that step's account. Leaving the step closes it at the same block the next visit opens at, so
+// intervals never overlap: a Card payment by the Driver is never also counted under Crédito, and coming
+// back to a step opens a new visit instead of stretching the old one. For each visit, balances are read
+// PINNED at both ends (an open visit pins one fresh block per refresh) and Transfer logs are read for
+// exactly that interval, so the balance change and the trail reconcile; any part of the change the
+// transfers don't explain is shown, not hidden. It ends on a summary listing every transfer of the tour.
+// No dead ends: Back/Next/Open everywhere.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useConfig, usePublicClient } from "wagmi";
 import { readContract } from "wagmi/actions";
-import { useQuery } from "@tanstack/react-query";
+import type { Config } from "wagmi";
+import { useQueries } from "@tanstack/react-query";
 import { parseAbiItem, type Address, type Hex } from "viem";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink, Loader2, Route, X } from "lucide-react";
 import { toast } from "sonner";
@@ -79,17 +84,20 @@ export const TOUR: TourStep[] = [
   },
 ];
 
-type StepStart = { block: string; xmxn?: string; ousd?: string; account: string };
-type TourState = { active: boolean; index: number; finished: boolean; starts: Record<number, StepStart> };
-const KEY = "mercado.tour.v3";
-const EMPTY: TourState = { active: false, index: 0, finished: false, starts: {} };
+/** One stay on a step: transfers and balance changes of `account` in blocks (from, to]. Open while `to` is unset. */
+export type Visit = { step: number; account: string; from: string; to?: string };
+type TourState = { active: boolean; index: number; finished: boolean; visits: Visit[] };
+const KEY = "mercado.tour.v4";
+const EMPTY: TourState = { active: false, index: 0, finished: false, visits: [] };
+
+const closeOpen = (visits: Visit[], at: string) => visits.map((v) => (v.to === undefined ? { ...v, to: at } : v));
 
 type TourCtx = {
   active: boolean;
   finished: boolean;
   index: number;
   step: TourStep | undefined;
-  starts: Record<number, StepStart>;
+  visits: Visit[];
   going: boolean;
   start: () => void;
   stop: () => void;
@@ -107,7 +115,6 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const demo = useDemoMode();
   const busy = useAnyBusy();
   const client = usePublicClient({ chainId: CHAIN_ID });
-  const config = useConfig();
 
   // Load once, and only save after loading: otherwise the initial empty state overwrites the saved
   // tour (React runs mount effects twice in dev).
@@ -136,23 +143,19 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setGoing(true);
       try {
         if (!demo.on) demo.setOn(true);
-        // Snapshot where this step starts (block + balances) unless it already has one.
-        let snap = fresh ? undefined : state.starts[index];
         const account = personaById(step.persona).address;
-        if (!snap && account && client) {
-          const [block, xmxn, ousd] = await Promise.all([
-            client.getBlockNumber(),
-            readContract(config, { address: ADDR.xmxn, abi: tokenAbi, functionName: "balanceOf", args: [account], chainId: CHAIN_ID }).catch(() => undefined),
-            readContract(config, { address: ADDR.ousd, abi: tokenAbi, functionName: "balanceOf", args: [account], chainId: CHAIN_ID }).catch(() => undefined),
-          ]);
-          snap = { block: block.toString(), xmxn: xmxn?.toString(), ousd: ousd?.toString(), account };
-        }
-        setState((s) => ({
-          active: true,
-          finished: false,
-          index,
-          starts: snap ? { ...(fresh ? {} : s.starts), [index]: snap } : fresh ? {} : s.starts,
-        }));
+        // One block number both closes the visit we're leaving and opens the new one: no gap, no overlap.
+        const at = client ? (await client.getBlockNumber()).toString() : undefined;
+        setState((s) => {
+          const open = s.visits.find((v) => v.to === undefined);
+          const stay = !fresh && open?.step === index; // e.g. "Open Crédito" while already on that step
+          let visits = fresh ? [] : s.visits;
+          if (!stay && at) {
+            visits = closeOpen(visits, at);
+            if (account) visits = [...visits, { step: index, account, from: at }];
+          }
+          return { active: true, finished: false, index, visits };
+        });
         router.push(step.href);
       } catch (e) {
         toast.error(e instanceof Error ? e.message.split("\n")[0] : "Could not open that step");
@@ -160,7 +163,16 @@ export function TourProvider({ children }: { children: ReactNode }) {
         setGoing(false);
       }
     },
-    [busy, demo, router, state.starts, client, config],
+    [busy, demo, router, client],
+  );
+
+  /** Close the open visit at the current block (finish / stop), so nothing after it is attributed. */
+  const close = useCallback(
+    async (patch: Partial<TourState>) => {
+      const at = await client?.getBlockNumber().catch(() => undefined);
+      setState((s) => ({ ...s, ...patch, visits: at !== undefined ? closeOpen(s.visits, at.toString()) : s.visits }));
+    },
+    [client],
   );
 
   const value = useMemo<TourCtx>(
@@ -169,14 +181,14 @@ export function TourProvider({ children }: { children: ReactNode }) {
       finished: state.finished,
       index: state.index,
       step: state.active ? TOUR[state.index] : undefined,
-      starts: state.starts,
+      visits: state.visits,
       going,
       start: () => void go(0, true),
-      stop: () => setState((s) => ({ ...s, active: false, finished: false })),
-      finish: () => setState((s) => ({ ...s, finished: true })),
+      stop: () => void close({ active: false, finished: false }),
+      finish: () => void close({ finished: true }),
       go: (i: number) => go(i),
     }),
-    [state, going, go],
+    [state, going, go, close],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -207,31 +219,78 @@ export function TourLauncher() {
 // ---------------------------------------------------------------- on-chain trace
 
 const TRANSFER = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 amount)");
-export type TraceRow = { hash: Hex; token: "xMXN" | "OUSD"; amount: bigint; dir: "out" | "in"; counterparty: Address; block: bigint };
 
-/** Every xMXN/OUSD transfer to or from `account` since `fromBlock`, newest first. */
-export function useTrace(account?: string, fromBlock?: string, enabled = true) {
+export type TraceRow = { hash: Hex; logIndex: number; token: "xMXN" | "OUSD"; amount: bigint; dir: "out" | "in"; counterparty: Address; block: bigint };
+type Bal = { xmxn?: bigint; ousd?: bigint };
+type VisitData = { rows: TraceRow[]; to: bigint; start: Bal; end: Bal };
+
+async function balancesAt(config: Config, account: Address, blockNumber: bigint): Promise<Bal> {
+  const read = (address: Address) =>
+    readContract(config, { address, abi: tokenAbi, functionName: "balanceOf", args: [account], chainId: CHAIN_ID, blockNumber }).catch(() => undefined);
+  const [xmxn, ousd] = await Promise.all([read(ADDR.xmxn), read(ADDR.ousd)]);
+  return { xmxn, ousd };
+}
+
+/** xMXN/OUSD transfers to or from `who` in blocks [from, to]. */
+async function transfers(client: NonNullable<ReturnType<typeof usePublicClient>>, who: Address, from: bigint, to: bigint): Promise<TraceRow[]> {
+  if (to < from) return [];
+  const base = { address: [ADDR.xmxn, ADDR.ousd] as Address[], event: TRANSFER, fromBlock: from, toBlock: to };
+  type TLog = { args: { from?: Address; to?: Address; amount?: bigint }; transactionHash: Hex | null; logIndex: number | null; address: Address; blockNumber: bigint | null };
+  const [out, inn] = (await Promise.all([client.getLogs({ ...base, args: { from: who } }), client.getLogs({ ...base, args: { to: who } })])) as [TLog[], TLog[]];
+  return [
+    ...out.map((l) => ({ l, dir: "out" as const, cp: l.args.to! })),
+    ...inn.map((l) => ({ l, dir: "in" as const, cp: l.args.from! })),
+  ].map(({ l, dir, cp }) => ({
+    hash: l.transactionHash as Hex,
+    logIndex: l.logIndex ?? 0,
+    token: l.address.toLowerCase() === ADDR.xmxn.toLowerCase() ? ("xMXN" as const) : ("OUSD" as const),
+    amount: l.args.amount ?? 0n,
+    dir,
+    counterparty: cp,
+    block: l.blockNumber ?? 0n,
+  }));
+}
+
+export type StepTrace = {
+  loading: boolean;
+  rows: TraceRow[];
+  /** Balance change over all visits (end − start, each pinned), per token. */
+  delta: Bal;
+  /** Part of `delta` that the listed transfers don't explain (should be 0). */
+  unexplained: Bal;
+};
+
+/** Reads every visit of a step: closed visits once (immutable), the open one every 10 s at a pinned block. */
+export function useStepTrace(visits: Visit[], enabled = true): StepTrace {
   const client = usePublicClient({ chainId: CHAIN_ID });
-  return useQuery({
-    queryKey: ["tour-trace", account, fromBlock, ADDR.xmxn, ADDR.ousd],
-    enabled: enabled && !!client && !!account && !!fromBlock,
-    refetchInterval: 10_000,
-    queryFn: async (): Promise<TraceRow[]> => {
-      const who = account as Address;
-      const base = { address: [ADDR.xmxn, ADDR.ousd] as Address[], event: TRANSFER, fromBlock: BigInt(fromBlock!), toBlock: "latest" as const };
-      const [out, inn] = await Promise.all([client!.getLogs({ ...base, args: { from: who } }), client!.getLogs({ ...base, args: { to: who } })]);
-      const rows = [
-        ...out.map((l) => ({ l, dir: "out" as const, cp: l.args.to! })),
-        ...inn.map((l) => ({ l, dir: "in" as const, cp: l.args.from! })),
-      ].map(({ l, dir, cp }) => ({
-        hash: l.transactionHash as Hex,
-        token: l.address.toLowerCase() === ADDR.xmxn.toLowerCase() ? ("xMXN" as const) : ("OUSD" as const),
-        amount: l.args.amount ?? 0n,
-        dir,
-        counterparty: cp,
-        block: l.blockNumber ?? 0n,
-      }));
-      return rows.sort((a, b) => Number(b.block - a.block));
+  const config = useConfig();
+  return useQueries({
+    queries: visits.map((v) => ({
+      queryKey: ["tour-visit", v.account, v.from, v.to ?? "open", ADDR.xmxn, ADDR.ousd],
+      enabled: enabled && !!client,
+      refetchInterval: v.to === undefined ? 10_000 : (false as const),
+      staleTime: v.to === undefined ? 0 : Infinity,
+      queryFn: async (): Promise<VisitData> => {
+        const who = v.account as Address;
+        const from = BigInt(v.from);
+        const to = v.to !== undefined ? BigInt(v.to) : await client!.getBlockNumber();
+        const [rows, start, end] = await Promise.all([transfers(client!, who, from + 1n, to), balancesAt(config, who, from), balancesAt(config, who, to)]);
+        return { rows, to, start, end };
+      },
+    })),
+    combine: (results) => {
+      const done = results.map((r) => r.data).filter((d): d is VisitData => !!d);
+      const rows = done.flatMap((d) => d.rows).sort((a, b) => (a.block === b.block ? b.logIndex - a.logIndex : a.block > b.block ? -1 : 1));
+      const sum = (k: keyof Bal) =>
+        done.length && done.every((d) => d.start[k] !== undefined && d.end[k] !== undefined) ? done.reduce((a, d) => a + d.end[k]! - d.start[k]!, 0n) : undefined;
+      const net = (t: TraceRow["token"]) => rows.filter((r) => r.token === t).reduce((a, r) => a + (r.dir === "in" ? r.amount : -r.amount), 0n);
+      const delta = { xmxn: sum("xmxn"), ousd: sum("ousd") };
+      return {
+        loading: results.some((r) => r.isPending && r.fetchStatus !== "idle"),
+        rows,
+        delta,
+        unexplained: { xmxn: delta.xmxn === undefined ? undefined : delta.xmxn - net("xMXN"), ousd: delta.ousd === undefined ? undefined : delta.ousd - net("OUSD") },
+      };
     },
   });
 }
@@ -259,45 +318,64 @@ function nameOf(a: Address): string {
   return shortAddr(a);
 }
 
-function TraceList({ rows, empty }: { rows: TraceRow[] | undefined; empty: string }) {
-  if (!rows) return <p className="text-muted-foreground text-[13px]">Reading the chain…</p>;
+function TraceList({ trace, empty, limit }: { trace: StepTrace; empty: string; limit?: number }) {
+  const [all, setAll] = useState(false);
+  const { rows } = trace;
+  if (trace.loading && rows.length === 0) return <p className="text-muted-foreground text-[13px]">Reading the chain…</p>;
   if (rows.length === 0) return <p className="text-muted-foreground text-[13px]">{empty}</p>;
+  const shown = limit && !all ? rows.slice(0, limit) : rows;
   return (
-    <ul className="grid gap-1">
-      {rows.slice(0, 5).map((r, i) => (
-        <li key={r.hash + i}>
-          <a href={explorerTx(r.hash)} target="_blank" rel="noreferrer" className="hover:bg-well flex items-center gap-2 rounded-md px-1 py-1 text-[13px]">
-            <span className={cn("w-4 text-center font-semibold", r.dir === "in" ? "text-success" : "text-muted-foreground")}>{r.dir === "in" ? "+" : "−"}</span>
-            <span className="tabular font-medium">
-              {fmtAmount(r.amount)} {r.token}
-            </span>
-            <span className="text-muted-foreground min-w-0 flex-1 truncate">
-              {r.dir === "in" ? "from" : "to"} {nameOf(r.counterparty)}
-            </span>
-            <ExternalLink className="text-muted-foreground size-3.5 shrink-0" />
-          </a>
-        </li>
-      ))}
-    </ul>
+    <div className="grid gap-1">
+      <ul className="grid gap-1">
+        {shown.map((r) => (
+          <li key={`${r.hash}-${r.logIndex}-${r.dir}`}>
+            <a href={explorerTx(r.hash)} target="_blank" rel="noreferrer" className="hover:bg-well flex items-center gap-2 rounded-md px-1 py-1 text-[13px]">
+              <span className={cn("w-4 text-center font-semibold", r.dir === "in" ? "text-success" : "text-muted-foreground")}>{r.dir === "in" ? "+" : "−"}</span>
+              <span className="tabular font-medium">
+                {fmtAmount(r.amount)} {r.token}
+              </span>
+              <span className="text-muted-foreground min-w-0 flex-1 truncate">
+                {r.dir === "in" ? "from" : "to"} {nameOf(r.counterparty)}
+              </span>
+              <ExternalLink className="text-muted-foreground size-3.5 shrink-0" />
+            </a>
+          </li>
+        ))}
+      </ul>
+      {limit !== undefined && rows.length > limit && (
+        <button type="button" onClick={() => setAll((x) => !x)} className="meta text-muted-foreground hover:text-foreground justify-self-start px-1">
+          {all ? "Show fewer" : `Show all ${rows.length} transfers`}
+        </button>
+      )}
+      <Unexplained trace={trace} />
+    </div>
   );
+}
+
+/** Reconciliation: balance change that the listed transfers don't account for (should never appear). */
+function Unexplained({ trace }: { trace: StepTrace }) {
+  const parts = (["xmxn", "ousd"] as const)
+    .filter((k) => trace.unexplained[k] !== undefined && trace.unexplained[k] !== 0n)
+    .map((k) => `${trace.unexplained[k]! > 0n ? "+" : "−"}${fmtAmount(trace.unexplained[k]! > 0n ? trace.unexplained[k]! : -trace.unexplained[k]!)} ${k === "xmxn" ? "xMXN" : "OUSD"}`);
+  if (!parts.length) return null;
+  return <p className="text-muted-foreground px-1 text-[12px]">Balance also changed by {parts.join(", ")} without an xMXN/OUSD transfer in this step.</p>;
 }
 
 // ---------------------------------------------------------------- panel
 
 export function TourPanel() {
-  const { active, finished, index, step, starts, stop, go, going, finish, start } = useTour();
+  const { active, finished, index, step, visits, stop, go, going, finish, start } = useTour();
   const path = usePathname();
   const busy = useAnyBusy();
   const [min, setMin] = useState(false);
-  const snap = starts[index];
-  const bal = useBalances(snap?.account as Address | undefined);
-  const trace = useTrace(snap?.account, snap?.block, active && !finished);
+  const mine = useMemo(() => visits.filter((v) => v.step === index), [visits, index]);
+  const bal = useBalances(TOUR[index] ? (personaById(TOUR[index].persona).address as Address | undefined) : undefined);
+  const trace = useStepTrace(mine, active && !finished);
   if (!active || !step) return null;
   if (finished) return <TourSummary onClose={stop} onRestart={start} />;
   const p = personaById(step.persona);
   const product = PRODUCTS.find((x) => x.id === step.product)!;
   const here = path === step.href.split("?")[0];
-  const delta = (now?: bigint, start?: string) => (now === undefined || start === undefined ? undefined : now - BigInt(start));
 
   if (min)
     return (
@@ -357,11 +435,11 @@ export function TourPanel() {
           Cuenta demo · <span className="text-foreground">{p.name}</span> · {shortAddr(p.address)}
         </p>
         <div className="grid grid-cols-2 gap-3">
-          <BalanceCell label="xMXN" now={bal.xmxn} d={delta(bal.xmxn, snap?.xmxn)} />
-          <BalanceCell label="OUSD" now={bal.ousd} d={delta(bal.ousd, snap?.ousd)} />
+          <BalanceCell label="xMXN" now={bal.xmxn} d={trace.delta.xmxn} />
+          <BalanceCell label="OUSD" now={bal.ousd} d={trace.delta.ousd} />
         </div>
-        <p className="meta text-muted-foreground">On-chain since this step started</p>
-        <TraceList rows={snap ? trace.data : []} empty="No transfers yet. Each one will appear here with its explorer link." />
+        <p className="meta text-muted-foreground">On-chain during this step{mine.length > 1 ? ` · ${mine.length} visits` : ""}</p>
+        <TraceList trace={trace} limit={5} empty="No transfers yet. Each one will appear here with its explorer link." />
       </div>
 
       <div className="mt-4 flex items-center gap-2">
@@ -408,7 +486,7 @@ function BalanceCell({ label, now, d }: { label: string; now?: bigint; d?: bigin
 
 /** Final screen: every step with its account and on-chain transfers. */
 function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: () => void }) {
-  const { starts } = useTour();
+  const { visits } = useTour();
   return (
     <aside
       aria-label="Demo Tour summary"
@@ -425,7 +503,7 @@ function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: (
       </div>
       <ol className="mt-4 grid gap-4">
         {TOUR.map((s, i) => (
-          <SummaryStep key={i} i={i} step={s} start={starts[i]} />
+          <SummaryStep key={i} i={i} step={s} visits={visits.filter((v) => v.step === i)} />
         ))}
       </ol>
       <div className="mt-4 flex gap-2">
@@ -442,18 +520,18 @@ function TourSummary({ onClose, onRestart }: { onClose: () => void; onRestart: (
   );
 }
 
-function SummaryStep({ i, step, start }: { i: number; step: TourStep; start?: StepStart }) {
+function SummaryStep({ i, step, visits }: { i: number; step: TourStep; visits: Visit[] }) {
   const pr = PRODUCTS.find((x) => x.id === step.product)!;
-  const trace = useTrace(start?.account, start?.block, !!start);
+  const trace = useStepTrace(visits);
   return (
     <li>
       <p className="flex items-center gap-2 text-[15px] font-semibold">
         <span className="size-2.5 rounded-full" style={{ background: pr.color }} />
         {i + 1}. {pr.short}: {step.title}
       </p>
-      {start ? (
+      {visits.length ? (
         <div className="mt-1 pl-4">
-          <TraceList rows={trace.data} empty="No transfers in this step." />
+          <TraceList trace={trace} empty="No transfers in this step." />
         </div>
       ) : (
         <p className="text-muted-foreground mt-1 pl-4 text-[13px]">Skipped.</p>
