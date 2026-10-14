@@ -115,7 +115,7 @@ function Sidebar({ active, path }: { active: string; path: string }) {
 
 function MobileTabs({ active }: { active: string }) {
   return (
-    <nav aria-label="Products" className="bg-card scrollbar-none fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav data-phone-hide aria-label="Products" className="bg-card scrollbar-none fixed inset-x-0 bottom-0 z-40 flex overflow-x-auto border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
       {PRODUCTS.map((p) => {
         const on = p.id === active;
         const Icon = p.icon;

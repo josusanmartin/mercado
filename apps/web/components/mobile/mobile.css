@@ -315,3 +315,16 @@
     background-position: 480px 0;
   }
 }
+
+/* Real-phone mode (<640px, set by AndroidDevice on <html>): the phone app is the page. Site chrome marked
+   data-phone-hide (product hero, product tabs, hint bar) steps aside; the app pins its own bottom nav,
+   keeps its TESTNET · SIN VALOR REAL label, and the explanation panel collapses below it (PhonePanel). */
+@media (max-width: 639px) {
+  html[data-phone-app] [data-phone-hide] {
+    display: none !important;
+  }
+  html[data-phone-app] #main {
+    padding-top: 0;
+    padding-bottom: 96px;
+  }
+}

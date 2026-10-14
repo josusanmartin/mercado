@@ -16,7 +16,9 @@ import { cn } from "@/lib/utils";
 import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
 import { TELCEL_AMOUNTS, useRecentOrders, type RecentOrder } from "@/components/billpay/use-bill-pay";
 import {
+  AppHeader,
   Avatar,
+  BalanceHead,
   Banner,
   BottomNav,
   BottomSheet,
@@ -33,13 +35,13 @@ import {
   ListHeader,
   ListItem,
   Meta,
+  Money,
   NumericKeypad,
   Pressable,
   RoundAction,
   ScreenTransition,
   SkeletonList,
   SuccessScreen,
-  TickUp,
   TopAppBar,
   fmtMoney,
   fmtTyping,
@@ -123,15 +125,20 @@ function Inicio({ s, openOnramp }: AppProps) {
   };
   return (
     <div className="pb-6">
-      <header className="flex h-14 items-center gap-2 pr-2 pl-4">
-        <Meta className="flex-1 text-[var(--m-on-surface)]">■ 02 · Remesas</Meta>
-        <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
-          <Bell className="size-[22px]" strokeWidth={1.75} />
-        </IconButton>
-        <Avatar name="Sender US" size={36}>
-          S
-        </Avatar>
-      </header>
+      <AppHeader
+        index="02"
+        product="Remesas"
+        right={
+          <>
+            <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
+              <Bell className="size-[22px]" strokeWidth={1.75} />
+            </IconButton>
+            <Avatar name="Sender US" size={36}>
+              S
+            </Avatar>
+          </>
+        }
+      />
 
       <div className="px-4">
         <Display as="h1" size={58} style={papel} className="pt-1">
@@ -197,13 +204,8 @@ function Balance() {
   const total = usd !== undefined && mxn !== undefined && fx.rate ? usd + mxn / fx.rate : undefined;
   return (
     <section className="mt-7 px-4" aria-label="Saldo">
-      <div className="flex items-center justify-between">
-        <Meta>Saldo total</Meta>
-        <DemoBadge>Testnet · sin valor real</DemoBadge>
-      </div>
-      <Display size={48} fit className="mt-2">
-        <TickUp value={total} format={(n) => `US${fmtMoney(n)}`} />
-      </Display>
+      <BalanceHead label="Saldo total" />
+      <Money value={total} currency="USD" size={52} className="mt-2" />
       <div className="mt-3 flex items-center gap-3">
         <span className="m-meta text-[var(--m-on-surface)]">
           1 USD = {fmtNumber(fx.rate, 2)} MXN{change !== undefined && Math.abs(change) >= 0.005 ? ` ${change > 0 ? "▲" : "▼"}${fmtNumber(Math.abs(change), 2)}%` : ""}

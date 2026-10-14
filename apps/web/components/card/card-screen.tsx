@@ -27,6 +27,7 @@ import { useReportBusy } from "@/lib/busy";
 import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { Panel, PhoneFrame, PhoneKeypad, Row, Rows, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
+import { PhonePanel } from "@/components/mobile";
 import { CARD_CREAM, HolderApp, type Pending } from "./holder-app";
 import { personaById } from "@/components/wallet/personas";
 import { Badge } from "@/components/ui/badge";
@@ -133,16 +134,21 @@ function CardDemo({ holderId }: { holderId: HolderId }) {
           />
         </PhoneFrame>
       </div>
-      <div className="grid content-start gap-10">
-        <Terminal holder={address} pending={pending} setPending={setPending} refund={terminal.refund} />
-        <Activity holder={address} />
-        <Panel title="What's real here">
-          <Rows>
-            <Row label="Charges, refunds, limit, freeze" sub="MercadoCard on Tempo; every charge needs the holder's signed tap for its exact amount and shop" value={<Badge variant="success">Real</Badge>} />
-            <Row label="Card network and number" sub={CARD_LABEL} value={<Badge variant="mock">Simulated</Badge>} />
-            <Row label="Money" sub="Testnet xMXN, no real value; not redeemable for pesos" value={<Badge variant="secondary">Testnet</Badge>} />
-          </Rows>
-        </Panel>
+      <div className="grid content-start gap-10 max-sm:gap-0">
+        {/* On a real phone the shop terminal and the explanations collapse below the full-screen app. */}
+        <PhonePanel summary="Terminal de la tienda · Shop POS (demo)">
+          <Terminal holder={address} pending={pending} setPending={setPending} refund={terminal.refund} />
+        </PhonePanel>
+        <PhonePanel className="grid content-start gap-10">
+          <Activity holder={address} />
+          <Panel title="What's real here">
+            <Rows>
+              <Row label="Charges, refunds, limit, freeze" sub="MercadoCard on Tempo; every charge needs the holder's signed tap for its exact amount and shop" value={<Badge variant="success">Real</Badge>} />
+              <Row label="Card network and number" sub={CARD_LABEL} value={<Badge variant="mock">Simulated</Badge>} />
+              <Row label="Money" sub="Testnet xMXN, no real value; not redeemable for pesos" value={<Badge variant="secondary">Testnet</Badge>} />
+            </Rows>
+          </Panel>
+        </PhonePanel>
       </div>
     </div>
   );

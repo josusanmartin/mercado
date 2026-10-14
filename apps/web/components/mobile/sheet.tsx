@@ -13,6 +13,7 @@ export function BottomSheet({
   sub,
   children,
   dismissable = true,
+  ariaLabel,
   className,
 }: {
   open: boolean;
@@ -22,6 +23,8 @@ export function BottomSheet({
   children: ReactNode;
   /** false while something irreversible is in flight (signing, paying). */
   dismissable?: boolean;
+  /** Accessible name for the dialog (defaults to a string title, then the sub). */
+  ariaLabel?: string;
   className?: string;
 }) {
   const host = useOverlayHost();
@@ -60,7 +63,7 @@ export function BottomSheet({
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label={typeof title === "string" ? title : undefined}
+        aria-label={ariaLabel ?? (typeof title === "string" ? title : typeof sub === "string" ? sub : undefined)}
         tabIndex={-1}
         data-closing={closing || undefined}
         className={cn(

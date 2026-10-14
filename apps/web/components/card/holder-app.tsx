@@ -6,14 +6,17 @@
 // card network and number are simulated (the "Demo" mark on the card and the meta line under it).
 import { useEffect, useState } from "react";
 import { type Address, type Hex } from "viem";
-import { Check, ExternalLink, Lock, Snowflake, Store } from "lucide-react";
+import { Check, CircleUserRound, CreditCard, ExternalLink, History, Lock, Snowflake, Store } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
 import { toUnits } from "@/lib/format";
 import { useBalances, useCardActions, useCards, usePool, type Tap } from "@/lib/contracts";
 import { useActivityFeed } from "@/lib/contracts/activity";
 import { useNow } from "@/lib/use-now";
 import {
+  AppHeader,
   Avatar,
+  BalanceHead,
+  BottomNav,
   Banner,
   BottomSheet,
   Button,
@@ -22,10 +25,14 @@ import {
   ListItem,
   LinearProgress,
   Meta,
+  Money,
+  ScreenTransition,
   Skeleton,
   Switch,
+  TopAppBar,
   fmtMoney,
   haceTiempo,
+  type NavItem,
 } from "@/components/mobile";
 
 export const CARD_CREAM = "#f2e6c9";
@@ -57,120 +64,184 @@ export function HolderApp({
   const card = cards.at(-1);
   const busy = a.tx.isBusy;
   const [limitOpen, setLimitOpen] = useState(false);
+  const [tab, setTab] = useState<Tab>("tarjeta");
 
   return (
-    <div className="relative flex min-h-full flex-col pb-6">
+    <div className="relative flex min-h-full flex-col">
       {busy && <LinearProgress className="absolute inset-x-0 top-0 z-20" />}
-      <header className="flex h-14 items-center gap-2 pr-3 pl-4">
-        <Meta className="flex-1 text-[var(--m-on-surface)]">■ 05 · Tarjeta</Meta>
-        <Avatar name={who.hello} size={36} />
-      </header>
-      <Display as="h1" size={40} className="px-4 pt-1">
-        Hola, {who.hello}
-      </Display>
-
-      {isLoading ? (
-        <div className="mt-6 px-4">
-          <Skeleton className="aspect-[1.586] w-full rounded-[8px]" />
-        </div>
-      ) : !card ? (
-        <div className="mt-6 grid gap-4 px-4">
-          <p className="text-[16px]">Aún no tienes tarjeta.</p>
-          <Button variant="accent" loading={busy} disabled={busy} onClick={() => a.issueCard(toUnits("1000"))}>
-            Emitir tarjeta virtual
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className="mt-6 px-4">
-            <CardFront last4={card.last4} frozen={card.frozen} name={who.onCard} />
-            <Meta className="mt-2">Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo</Meta>
-          </div>
-
-          <section className="mt-6 px-4" aria-label="Saldo">
-            <Meta>Saldo</Meta>
-            <Display size={44} fit className="mt-2">
-              MX{fmtMoney(bal.xmxn)}
+      <ScreenTransition id={tab} dir="fade" className="flex-1 pb-6">
+        {tab === "actividad" && (
+          <>
+            <TopAppBar title="Actividad" sub="Compras y reembolsos" />
+            <CardActivity holder={holder} merchantName={merchantName} limit={30} />
+          </>
+        )}
+        {tab === "perfil" && <Perfil who={who} holder={holder} last4={card?.last4} />}
+        {tab === "tarjeta" && (
+          <>
+            <AppHeader index="05" product="Tarjeta" right={<Avatar name={who.hello} size={36} />} />
+            <Display as="h1" size={40} className="px-4 pt-1">
+              Hola, {who.hello}
             </Display>
-            <div className="mt-4">
-              <div className="flex items-baseline justify-between">
-                <Meta>Disponible hoy</Meta>
-                <span className="m-num text-[15px] font-semibold">MX{fmtMoney(card.availableToday)}</span>
+
+            {isLoading ? (
+              <div className="mt-6 px-4">
+                <Skeleton className="aspect-[1.586] w-full rounded-[8px]" />
               </div>
-              <div className="mt-2 h-1.5 w-full bg-[var(--m-surface-3)]" aria-hidden>
-                <div
-                  className="h-full transition-[width] duration-500"
-                  style={{ width: `${card.dailyLimit > 0n ? Math.min(100, Number((card.spentToday * 100n) / card.dailyLimit)) : 0}%`, background: CARD_CREAM }}
+            ) : !card ? (
+              <div className="mt-6 grid gap-4 px-4">
+                <p className="text-[16px]">Aún no tienes tarjeta.</p>
+                <Button variant="accent" loading={busy} disabled={busy} onClick={() => a.issueCard(toUnits("1000"))}>
+                  Emitir tarjeta virtual
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="mt-6 px-4">
+                  <CardFront last4={card.last4} frozen={card.frozen} name={who.onCard} />
+                  <Meta className="mt-2">Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo</Meta>
+                </div>
+
+                <section className="mt-6 px-4" aria-label="Saldo">
+                  <BalanceHead label="Saldo" />
+                  <Money value={bal.xmxn} currency="MXN" size={52} className="mt-2" />
+                  <div className="mt-4">
+                    <div className="flex items-baseline justify-between">
+                      <Meta>Disponible hoy</Meta>
+                      <span className="m-num text-[15px] font-semibold">MX{fmtMoney(card.availableToday)}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full bg-[var(--m-surface-3)]" aria-hidden>
+                      <div
+                        className="h-full transition-[width] duration-500"
+                        style={{
+                          width: `${card.dailyLimit > 0n ? Math.min(100, Number((card.spentToday * 100n) / card.dailyLimit)) : 0}%`,
+                          background: CARD_CREAM,
+                        }}
+                      />
+                    </div>
+                    <Meta className="mt-1.5">
+                      {fmtMoney(card.spentToday, 0)} de {fmtMoney(card.dailyLimit, 0)} gastado · se reinicia a medianoche (CDMX)
+                    </Meta>
+                  </div>
+                  {showAdvance && (
+                    <div className="mt-4 flex items-baseline justify-between border-t border-[var(--m-outline-variant)] pt-3">
+                      <span className="text-[15px]">Adelanto pendiente</span>
+                      <span className="m-num text-[15px] font-semibold">{pool.debt === undefined ? "—" : `MX${fmtMoney(pool.debt)}`}</span>
+                    </div>
+                  )}
+                </section>
+
+                <ListHeader>Controles</ListHeader>
+                <div className="border-t border-[var(--m-outline-variant)]">
+                  <div className="flex min-h-16 items-center gap-3.5 border-b border-[var(--m-outline-variant)] px-4">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)]">
+                      <Snowflake className="size-5" strokeWidth={1.75} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[16px] font-medium">Congelar</span>
+                      <span className="block text-[13.5px] text-[var(--m-on-surface-variant)]">
+                        {card.frozen ? "Congelada: se rechaza todo cobro" : "Bloquea todo cobro al instante"}
+                      </span>
+                    </span>
+                    <Switch checked={card.frozen} disabled={busy} label="Congelar · Freeze" onChange={(v) => a.setFrozen(card.cardId, v)} />
+                  </div>
+                  <ListItem
+                    divider
+                    leading={<RowGlyph>≤</RowGlyph>}
+                    headline="Límite diario"
+                    supporting="Se reinicia a medianoche (CDMX)"
+                    trailing={`MX${fmtMoney(card.dailyLimit, 0)}`}
+                    onClick={() => setLimitOpen(true)}
+                    disabled={busy}
+                  />
+                  <ListItem
+                    divider
+                    leading={<RowGlyph>✓</RowGlyph>}
+                    headline="Permiso de gasto"
+                    supporting="Lo que la tarjeta puede mover de tu saldo"
+                    trailing={`MX${fmtMoney(allowance, 0)}`}
+                    onClick={() => a.approveSpending(card.dailyLimit * 2n)}
+                    disabled={busy}
+                  />
+                </div>
+                {a.tx.status === "error" && a.tx.error && (
+                  <div className="px-4 pt-3">
+                    <Banner tone="error">{a.tx.error}</Banner>
+                  </div>
+                )}
+
+                <ListHeader
+                  action={
+                    <button type="button" onClick={() => setTab("actividad")} className="m-meta h-8 text-[var(--m-on-surface)] underline underline-offset-4">
+                      Ver todo
+                    </button>
+                  }
+                >
+                  Movimientos
+                </ListHeader>
+                <CardActivity holder={holder} merchantName={merchantName} limit={3} />
+
+                <LimitSheet
+                  open={limitOpen}
+                  onClose={() => setLimitOpen(false)}
+                  current={Number(card.dailyLimit) / 1e6}
+                  busy={busy}
+                  onSave={async (v) => {
+                    await a.setDailyLimit(card.cardId, toUnits(String(v)));
+                    setLimitOpen(false);
+                  }}
                 />
-              </div>
-              <Meta className="mt-1.5">
-                {fmtMoney(card.spentToday, 0)} de {fmtMoney(card.dailyLimit, 0)} gastado · se reinicia a medianoche (CDMX)
-              </Meta>
-            </div>
-            {showAdvance && (
-              <div className="mt-4 flex items-baseline justify-between border-t border-[var(--m-outline-variant)] pt-3">
-                <span className="text-[15px]">Adelanto pendiente</span>
-                <span className="m-num text-[15px] font-semibold">{pool.debt === undefined ? "—" : `MX${fmtMoney(pool.debt)}`}</span>
-              </div>
+              </>
             )}
-          </section>
-
-          <ListHeader>Controles</ListHeader>
-          <div className="border-t border-[var(--m-outline-variant)]">
-            <div className="flex min-h-16 items-center gap-3.5 border-b border-[var(--m-outline-variant)] px-4">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)]">
-                <Snowflake className="size-5" strokeWidth={1.75} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[16px] font-medium">Congelar</span>
-                <span className="block text-[13.5px] text-[var(--m-on-surface-variant)]">{card.frozen ? "Congelada: se rechaza todo cobro" : "Bloquea todo cobro al instante"}</span>
-              </span>
-              <Switch checked={card.frozen} disabled={busy} label="Congelar · Freeze" onChange={(v) => a.setFrozen(card.cardId, v)} />
-            </div>
-            <ListItem
-              divider
-              leading={<RowGlyph>≤</RowGlyph>}
-              headline="Límite diario"
-              supporting="Se reinicia a medianoche (CDMX)"
-              trailing={`MX${fmtMoney(card.dailyLimit, 0)}`}
-              onClick={() => setLimitOpen(true)}
-              disabled={busy}
-            />
-            <ListItem
-              divider
-              leading={<RowGlyph>✓</RowGlyph>}
-              headline="Permiso de gasto"
-              supporting="Lo que la tarjeta puede mover de tu saldo"
-              trailing={`MX${fmtMoney(allowance, 0)}`}
-              onClick={() => a.approveSpending(card.dailyLimit * 2n)}
-              disabled={busy}
-            />
-          </div>
-          {a.tx.status === "error" && a.tx.error && (
-            <div className="px-4 pt-3">
-              <Banner tone="error">{a.tx.error}</Banner>
-            </div>
-          )}
-
-          <ListHeader>Movimientos</ListHeader>
-          <CardActivity holder={holder} merchantName={merchantName} />
-
-          <LimitSheet
-            open={limitOpen}
-            onClose={() => setLimitOpen(false)}
-            current={Number(card.dailyLimit) / 1e6}
-            busy={busy}
-            onSave={async (v) => {
-              await a.setDailyLimit(card.cardId, toUnits(String(v)));
-              setLimitOpen(false);
-            }}
-          />
-        </>
-      )}
+          </>
+        )}
+      </ScreenTransition>
+      <BottomNav items={TABS} value={tab} onChange={setTab} />
 
       {pending && pending.tap.holder.toLowerCase() === holder?.toLowerCase() && (
         <TapPrompt key={pending.tap.merchantRef} pending={pending} merchantName={merchantName} onApprove={onApprove} onDecline={onDecline} />
       )}
+    </div>
+  );
+}
+
+type Tab = "tarjeta" | "actividad" | "perfil";
+const TABS: NavItem<Tab>[] = [
+  { id: "tarjeta", label: "Tarjeta", icon: <CreditCard /> },
+  { id: "actividad", label: "Actividad", icon: <History /> },
+  { id: "perfil", label: "Perfil", icon: <CircleUserRound /> },
+];
+
+function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }; holder?: Address; last4?: number }) {
+  return (
+    <div>
+      <TopAppBar title="Perfil" sub="Cuenta demo" />
+      <div className="flex items-center gap-4 px-4 pt-2 pb-5">
+        <Avatar name={who.hello} size={64} />
+        <div className="min-w-0">
+          <Display size={24}>{who.onCard}</Display>
+          <p className="mt-1 font-mono text-[13px] text-[var(--m-on-surface-variant)]">{holder ? `${holder.slice(0, 6)}…${holder.slice(-4)}` : "—"}</p>
+        </div>
+      </div>
+      <div className="border-t border-[var(--m-outline-variant)]">
+        <ListItem
+          divider
+          leading={<RowGlyph>▭</RowGlyph>}
+          headline="Tarjeta virtual"
+          supporting={last4 !== undefined ? `Terminación ${String(last4).padStart(4, "0")} · número demo` : "Sin tarjeta"}
+        />
+        <ListItem divider leading={<RowGlyph>⛓</RowGlyph>} headline="Red" supporting="Tempo Moderato · testnet" />
+        {holder && (
+          <ListItem
+            divider
+            leading={<RowGlyph>↗</RowGlyph>}
+            headline="Mi cuenta en el explorador"
+            supporting="explore.testnet.tempo.xyz"
+            href={`https://explore.testnet.tempo.xyz/address/${holder}`}
+          />
+        )}
+      </div>
+      <Meta className="mt-5 px-4">Tarjeta demo · no es Visa/Mastercard · testnet · sin valor real</Meta>
     </div>
   );
 }
@@ -182,7 +253,12 @@ const RowGlyph = ({ children }: { children: string }) => (
 /** The card: flat cream, ink type, Mercado wordmark, no network marks. */
 function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; name: string }) {
   return (
-    <div className="relative aspect-[1.586] overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]" style={{ background: CARD_CREAM }} role="img" aria-label={`Tarjeta Mercado terminación ${last4}${frozen ? ", congelada" : ""}`}>
+    <div
+      className="relative aspect-[1.586] overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]"
+      style={{ background: CARD_CREAM }}
+      role="img"
+      aria-label={`Tarjeta Mercado terminación ${last4}${frozen ? ", congelada" : ""}`}
+    >
       <span aria-hidden className="absolute -right-10 -bottom-16 size-52 rounded-full border-[18px] border-[#e2603f]/80" />
       <span aria-hidden className="absolute -right-2 -bottom-8 size-28 rounded-full bg-[#1f3d2b]" />
       <div className="relative flex items-start justify-between">
@@ -203,8 +279,8 @@ function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; na
   );
 }
 
-function CardActivity({ holder, merchantName }: { holder?: Address; merchantName: string }) {
-  const feed = useActivityFeed("card", { account: holder, limit: 12 });
+function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; merchantName: string; limit?: number }) {
+  const feed = useActivityFeed("card", { account: holder, limit: 40 });
   const now = useNow(30_000) ?? 0;
   const rows = feed.rows.filter((r) => r.event === "CardCharged" || r.event === "CardRefunded");
   if (feed.isLoading && rows.length === 0)
@@ -217,7 +293,7 @@ function CardActivity({ holder, merchantName }: { holder?: Address; merchantName
   if (rows.length === 0) return <Meta className="px-4 py-3">Aún no hay cobros con esta tarjeta</Meta>;
   return (
     <div className="border-t border-[var(--m-outline-variant)]">
-      {rows.slice(0, 6).map((r) => {
+      {rows.slice(0, limit).map((r) => {
         const refund = r.event === "CardRefunded";
         return (
           <ListItem
@@ -240,7 +316,19 @@ function CardActivity({ holder, merchantName }: { holder?: Address; merchantName
   );
 }
 
-function LimitSheet({ open, onClose, current, busy, onSave }: { open: boolean; onClose: () => void; current: number; busy: boolean; onSave: (v: number) => void }) {
+function LimitSheet({
+  open,
+  onClose,
+  current,
+  busy,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  current: number;
+  busy: boolean;
+  onSave: (v: number) => void;
+}) {
   const [v, setV] = useState(current);
   useEffect(() => {
     if (open) setV(current);
@@ -291,8 +379,8 @@ function TapPrompt({ pending, merchantName, onApprove, onDecline }: { pending: P
     setClosed(key);
   };
   return (
-    <BottomSheet open={closed !== key} onClose={close} dismissable={!inFlight} sub={`${merchantName} te cobra`}>
-      <div className="grid gap-5 px-6" role="group" aria-label="Approve card payment">
+    <BottomSheet open={closed !== key} onClose={close} dismissable={!inFlight} sub={`${merchantName} te cobra`} ariaLabel="Approve card payment">
+      <div className="grid gap-5 px-6">
         <Display size={52} fit>
           MX{fmtMoney(tap.amount)}
         </Display>
@@ -315,7 +403,12 @@ function TapPrompt({ pending, merchantName, onApprove, onDecline }: { pending: P
           <p className="flex items-center gap-2 text-[16px] font-semibold">
             <Check className="size-5" /> Pagado
             {pending.hash && (
-              <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="m-meta ml-auto inline-flex items-center gap-1 text-[var(--m-on-surface)] underline underline-offset-4">
+              <a
+                href={explorerTx(pending.hash)}
+                target="_blank"
+                rel="noreferrer"
+                className="m-meta ml-auto inline-flex items-center gap-1 text-[var(--m-on-surface)] underline underline-offset-4"
+              >
                 Ver recibo <ExternalLink className="size-3" />
               </a>
             )}

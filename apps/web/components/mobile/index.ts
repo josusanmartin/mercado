@@ -5,7 +5,9 @@
 //   useSnackbar()("Copiado") shows a snackbar; ScreenTransition + useNavDirection give M3 motion.
 export { AndroidDevice, InPhone, useOverlayHost, useSnackbar } from "./device";
 export {
+  AppHeader,
   Avatar,
+  BalanceHead,
   Banner,
   BottomNav,
   Button,
@@ -21,6 +23,7 @@ export {
   ListHeader,
   ListItem,
   Meta,
+  Money,
   Pressable,
   RoundAction,
   Rule,
@@ -31,6 +34,7 @@ export {
   SuccessScreen,
   Switch,
   TickUp,
+  useTickUp,
   TopAppBar,
   ripple,
   useNavDirection,
@@ -40,3 +44,4 @@ export { BottomSheet } from "./sheet";
 export { NumericKeypad, nextAmount } from "./keypad";
 export { BrandLogo, BrandTile, ConsentSheet, PlatformButton, brandName, type BrandId } from "./brands";
 export { fmtMoney, fmtTyping, haceTiempo, haptic, initials } from "./format";
+export { PhonePanel } from "./phone-panel";

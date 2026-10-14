@@ -87,7 +87,7 @@ export function ProductHero({
   return (
     // Size container: the statement is fit to the content column, not the viewport (which includes the
     // sidebar). 12.5cqw keeps an 11-letter word ("VERIFICADO.", ~7.7em in Archivo Black) whole.
-    <section className="grid min-w-0 gap-6 [container-type:inline-size]">
+    <section data-phone-hide className="grid min-w-0 gap-6 [container-type:inline-size]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
         <Meta>
           <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />

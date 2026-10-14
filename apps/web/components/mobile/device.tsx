@@ -58,6 +58,15 @@ export function AndroidDevice({
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
+  // Real-phone mode: the app is the page (mobile.css hides [data-phone-hide] site chrome; see PhonePanel).
+  useEffect(() => {
+    if (!small) return;
+    const html = document.documentElement;
+    html.dataset.phoneApp = "on";
+    return () => {
+      delete html.dataset.phoneApp;
+    };
+  }, [small]);
 
   const layers = (
     <>
@@ -101,7 +110,7 @@ export function AndroidDevice({
               data-theme={theme}
             >
               <StatusBar bg={statusBar} />
-              <div className="m-scroll relative min-h-0 flex-1 sm:overflow-y-auto sm:pb-5">{children}</div>
+              <div className="m-scroll relative min-h-0 flex-1 max-sm:min-h-[calc(100dvh-58px)] max-sm:pb-[76px] sm:overflow-y-auto sm:pb-5">{children}</div>
               {/* gesture navigation handle (edge-to-edge, over the app) */}
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-30 hidden h-5 items-center justify-center sm:flex">
                 <span className="h-[4px] w-[108px] rounded-full bg-[var(--m-on-surface)] opacity-80" />

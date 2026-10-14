@@ -21,6 +21,7 @@ import { personaById } from "@/components/wallet/personas";
 import { useBillPay } from "@/components/billpay/use-bill-pay";
 import { Badge } from "@/components/ui/badge";
 import { PhoneFrame } from "@/components/console";
+import { PhonePanel } from "@/components/mobile";
 import { ONRAMP_LABEL } from "@/lib/remesas/use-onramp";
 import { PhoneApp, STAGE_ES, type Screen } from "./phone-app";
 
@@ -90,11 +91,11 @@ export function RemesasScreen() {
 
 function WhatHappened({ s }: { s: RemesasState }) {
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">
+    <PhonePanel className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-6">
       {s.last === "bill" ? <BillTrace s={s} /> : <SendFlow s={s} />}
       <BillHistory />
       <Honesty />
-    </div>
+    </PhonePanel>
   );
 }
 

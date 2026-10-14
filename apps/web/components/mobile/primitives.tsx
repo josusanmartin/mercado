@@ -15,7 +15,7 @@ import {
 } from "react";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { haptic, initials } from "./format";
+import { fmtMoney, haptic, initials } from "./format";
 
 /* ───────────────────────── ripple / pressable ───────────────────────── */
 
@@ -114,12 +114,102 @@ export function Display({
   );
 }
 
-/** Tiny uppercase meta line ("■ 02 · REMESAS", "TESTNET · SIN VALOR REAL"). */
-export function Meta({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
+/**
+ * Tiny uppercase meta line ("■ 02 · REMESAS", "TESTNET · SIN VALOR REAL"). Either children, or `parts`
+ * joined with middle dots plus an optional colored `mark` square (same API as mobile2's editorial Meta).
+ */
+export function Meta({
+  children,
+  parts,
+  mark,
+  className,
+  style,
+}: {
+  children?: ReactNode;
+  parts?: (ReactNode | false | undefined | null)[];
+  mark?: string;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const items = (parts ?? []).filter((p) => p !== false && p !== undefined && p !== null && p !== "");
+  if (!parts && !mark)
+    return (
+      <p className={cn("m-meta", className)} style={style}>
+        {children}
+      </p>
+    );
   return (
-    <p className={cn("m-meta", className)} style={style}>
+    <p className={cn("m-meta flex flex-wrap items-center gap-x-1.5", className)} style={style}>
+      {mark && <span aria-hidden className="inline-block size-[7px]" style={{ background: mark }} />}
       {children}
+      {items.map((p, i) => (
+        <span key={i} className="whitespace-nowrap">
+          {p}
+          {i < items.length - 1 && <span aria-hidden className="ml-1.5">·</span>}
+        </span>
+      ))}
     </p>
+  );
+}
+
+/** Every app's first row: "■ 02 · REMESAS" (accent square, site index) + a right slot (avatar, bell). */
+export function AppHeader({ index, product, right }: { index: string; product: string; right?: ReactNode }) {
+  return (
+    <header className="flex h-14 items-center gap-2 pr-3 pl-4">
+      <Meta mark="var(--m-accent)" parts={[index, product]} className="flex-1 text-[var(--m-on-surface)]" />
+      {right}
+    </header>
+  );
+}
+
+/** The balance label row: the label on the left, the one compact honesty label on the right. */
+export function BalanceHead({ label, honesty = "Testnet · sin valor real" }: { label: ReactNode; honesty?: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <Meta>{label}</Meta>
+      <DemoBadge>{honesty}</DemoBadge>
+    </div>
+  );
+}
+
+/**
+ * The one big balance: "US$1,250" in the display face with ".00" smaller (fintech style), fit to one
+ * line, ticking up to its value. `currency` picks the prefix (US$ / MX$); pass a number (units) or a 6dp bigint.
+ */
+export function Money({
+  value,
+  currency = "MXN",
+  size = 48,
+  digits = 2,
+  className,
+  style,
+}: {
+  value: bigint | number | undefined;
+  currency?: "USD" | "MXN";
+  size?: number;
+  digits?: number;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const n = useTickUp(typeof value === "bigint" ? Number(value) / 1e6 : value);
+  const s = fmtMoney(n, digits);
+  const neg = s.startsWith("-");
+  const [int, dec] = s.replace(/^-?\$/, "").split(".");
+  return (
+    <Display fit size={size} className={cn("flex items-baseline", className)} style={style}>
+      {s === "—" ? (
+        <span className="text-[var(--m-surface-3)]">—</span>
+      ) : (
+        <>
+          <span>
+            {neg && "−"}
+            {currency === "USD" ? "US$" : "MX$"}
+            {int}
+          </span>
+          {dec && <span className="text-[0.46em]">.{dec}</span>}
+        </>
+      )}
+    </Display>
   );
 }
 
@@ -242,7 +332,7 @@ export type NavItem<T extends string> = { id: T; label: string; icon: ReactNode;
 /** Bottom nav: 4 icons, labels, a small accent dot under the active one. Hairline on top. */
 export function BottomNav<T extends string>({ items, value, onChange }: { items: NavItem<T>[]; value: T; onChange: (id: T) => void }) {
   return (
-    <nav className="relative z-10 grid h-[72px] grid-flow-col border-t border-[var(--m-outline-variant)] bg-[var(--m-surface)] sm:sticky sm:bottom-0 sm:-mb-5 sm:h-[92px] sm:pb-5" aria-label="Navegación">
+    <nav className="z-10 grid h-[72px] grid-flow-col border-t border-[var(--m-outline-variant)] bg-[var(--m-surface)] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(72px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:bottom-0 sm:-mb-5 sm:h-[92px] sm:pb-5" aria-label="Navegación">
       {items.map((it) => {
         const on = it.id === value;
         const body = (
@@ -528,26 +618,31 @@ export function ScreenTransition({ id, dir = "fwd", children, className }: { id:
   );
 }
 
-/** Counts a number up to `value` once (number tick-up), then follows it. */
-export function TickUp({ value, format, ms = 700 }: { value: number | undefined; format: (n: number) => string; ms?: number }) {
+/** A number that ticks up to `value` (ease-out, ~700ms) and then follows it; undefined until known. */
+export function useTickUp(value: number | undefined, ms = 700) {
   const [shown, setShown] = useState<number>();
   const from = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (value === undefined) return;
     const start = from.current ?? 0;
     from.current = value;
-    if (start === value || typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(value);
+    if (start === value || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(value);
     const t0 = performance.now();
     let raf = 0;
     const step = (t: number) => {
       const k = Math.min(1, (t - t0) / ms);
-      const e = 1 - Math.pow(1 - k, 3);
-      setShown(start + (value - start) * e);
+      setShown(start + (value - start) * (1 - Math.pow(1 - k, 3)));
       if (k < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [value, ms]);
+  return shown;
+}
+
+/** Counts a number up to `value` once (number tick-up), then follows it. */
+export function TickUp({ value, format, ms = 700 }: { value: number | undefined; format: (n: number) => string; ms?: number }) {
+  const shown = useTickUp(value, ms);
   return <>{shown === undefined ? "—" : format(shown)}</>;
 }
 
