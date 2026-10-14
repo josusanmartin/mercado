@@ -289,10 +289,20 @@ function HandshakeFlow({
 }) {
   const reached = (k: TraceStep["kind"]) => trace.some((s) => s.kind === k);
   const ok = trace.some((s) => s.kind === "response");
+  const failed = !busy && !ok && trace.some((s) => s.kind === "error");
+  // the first stage the call did not reach (0 request, 1 challenge, 2 payment, 3 response)
+  const stage = !reached("request")
+    ? 0
+    : !reached("challenge")
+      ? 1
+      : !reached("credential")
+        ? 2
+        : 3;
   const tick = (on: boolean) => (on ? " ✓" : "");
   return (
     <FlowPath
-      active={busy}
+      state={busy ? "pending" : ok ? "confirmed" : failed ? "failed" : "idle"}
+      failedAt={failed ? stage : undefined}
       label="HTTP 402 handshake: request, 402 challenge, payment, 200 with Payment-Receipt"
       className="pb-5"
       nodes={[

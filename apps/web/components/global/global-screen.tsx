@@ -622,7 +622,17 @@ function PaySupplier() {
         {/* v6 "show, don't tell": the money flow + 3 numbers; every quote row stays one click away */}
         <div className="grid min-h-[22rem] content-start gap-6 pt-1">
           <FlowPath
-            active={m.tx.isBusy}
+            state={
+              m.tx.isBusy
+                ? "pending"
+                : m.tx.status === "success"
+                  ? "confirmed"
+                  : m.tx.status === "error"
+                    ? "failed"
+                    : q
+                      ? "quoted"
+                      : "idle"
+            }
             label="Money flow: you pay OUSD, the exchange converts, the supplier receives xMXN"
             nodes={[
               {
