@@ -3,8 +3,10 @@
 #   packages/contracts/script/demo-reset            (or: npm run demo:reset)
 #   DEMO_RESET_SKIP_ORDERS=1 …                      skip archiving bill orders
 # 1) archive bill orders (refuses if a payment is in flight, see api's archive-orders.mts)
-# 2) on-chain reset (script/DemoReset.s.sol): oracle 20.00, desk unpaused + reseeded, pool cash ≥ 10k,
-#    driver debt-free with 20 xMXN, sender/recipient xMXN swept to LP, LP ≥ 300%
+# 2) on-chain reset for the ACTIVE protocol (apps/web/.env.local NEXT_PUBLIC_MERCADO_PROTOCOL, or MERCADO_PROTOCOL):
+#    v2 → script/DemoResetV2.s.sol (pool v2, driver debt, Familia + Javier cards, SENDER2 = 1,250 OUSD, AMM equity)
+#    v1 → script/DemoReset.s.sol
+#    The FX oracle is NEVER touched (fx-relay owns the real rate).
 # 3) print the state table
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,12 +22,16 @@ if [ "${DEMO_RESET_SKIP_ORDERS:-0}" != "1" ]; then
   fi
 fi
 
-echo "== on-chain reset"
+PROTO="${MERCADO_PROTOCOL:-$(grep -E '^NEXT_PUBLIC_MERCADO_PROTOCOL=' "$root/apps/web/.env.local" 2>/dev/null | cut -d= -f2)}"
+PROTO="${PROTO:-v1}"
+SCRIPT=script/DemoReset.s.sol; STATE=demo-state.mjs
+[ "$PROTO" = "v2" ] && SCRIPT=script/DemoResetV2.s.sol && STATE=demo-state-v2.mjs
+echo "== on-chain reset ($PROTO)"
 cd "$here"
 # Normal nonces. If another DEPLOYER tx (oracle keeper, qa's J0 heal) lands mid-run, forge aborts with "nonce
 # changed"; a fresh run re-simulates against current state (every step is idempotent), so we retry.
 reset() {
-  forge script script/DemoReset.s.sol --rpc-url moderato --broadcast --slow \
+  forge script "$SCRIPT" --rpc-url moderato --broadcast --slow \
     --tempo.fee-token 0x20C0000000000000000000000000000000000001 2>&1 \
     | grep -vE "WARN|^\s*$" | grep -E "seeded|supplied|repaid|swept|DEMO_RESET|Error|error|revert|SUCCESS|No transactions" || true
 }
@@ -37,5 +43,5 @@ for attempt in 1 2 3; do
 done
 
 echo "== state"
-node "$here/script/demo-state.mjs"
+node "$here/script/$STATE"
 [ "$ok" = 1 ] || { echo "!! demo reset did not complete" >&2; exit 1; }

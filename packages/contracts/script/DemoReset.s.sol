@@ -11,7 +11,7 @@ import {FXOracleAdapter} from "../src/FXOracleAdapter.sol";
 
 /// @notice Idempotent demo reset (run via script/demo-reset). Every step is a no-op when already in the target
 ///         state, so it's safe to run before every take.
-///   1. oracle  → forceSet 20.00 (fresh timestamp)              [DEPLOYER]
+///   1. oracle  → NEVER touched (the real rate is admin-relayed by fx-relay)
 ///   2. desk    → unpause; top up to ≥ 1,000 OUSD / 20,000 xMXN [DEPLOYER, LP]
 ///   3. pool    → idle cash ≥ 10,000 xMXN                        [LENDER, from its own 400% position]
 ///   4. driver  → advance + vault debt repaid, vault emptied, xMXN = 20  [LP funds repayment, DRIVER repays]
@@ -19,7 +19,6 @@ import {FXOracleAdapter} from "../src/FXOracleAdapter.sol";
 ///      LP      → ratio ≥ 300% (tops up collateral); surplus xMXN repays LP's own vault debt
 /// xMXN for any shortfall is minted by LP from its own vault position, never from anyone else's collateral.
 contract DemoReset is Deployed {
-    uint256 constant PX = 20e8;
     uint256 constant DESK_OUSD = 1_000e6;
     uint256 constant DESK_XMXN = 20_000e6;
     uint256 constant POOL_CASH = 10_000e6;
@@ -31,8 +30,11 @@ contract DemoReset is Deployed {
     uint256 lpPk;
     address lp;
 
+    uint256 PX; // current oracle rate (read only)
+
     function run() external {
         _load();
+        (PX,) = FXOracleAdapter(oracle).price();
         deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         lpPk = vm.envUint("LP_PRIVATE_KEY");
         lp = vm.addr(lpPk);
@@ -50,10 +52,11 @@ contract DemoReset is Deployed {
 
     function _oracleAndDesk() internal {
         SwapDesk desk = SwapDesk(swapDesk);
-        vm.startBroadcast(deployerPk);
-        FXOracleAdapter(oracle).forceSet(PX);
-        if (desk.paused()) desk.unpause();
-        vm.stopBroadcast();
+        if (desk.paused()) {
+            vm.startBroadcast(deployerPk);
+            desk.unpause();
+            vm.stopBroadcast();
+        }
 
         (uint256 rO, uint256 rX) = desk.reserves();
         uint256 needO = DESK_OUSD > rO ? DESK_OUSD - rO : 0;
@@ -127,7 +130,7 @@ contract DemoReset is Deployed {
             v.repayAndBurn(repay);
             p.debt -= repay;
         }
-        // collateral needed for LP_MIN_RATIO at 20.00 (rounded up)
+        // collateral needed for LP_MIN_RATIO at the current rate (rounded up)
         uint256 required = (p.debt * LP_MIN_RATIO_BPS * 1e8 + PX * 10_000 - 1) / (PX * 10_000);
         if (p.collateral < required) {
             uint256 add = required - p.collateral;
