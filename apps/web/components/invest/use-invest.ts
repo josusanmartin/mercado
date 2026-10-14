@@ -1,8 +1,10 @@
 "use client";
 // Mercado Invest data + actions, all real on-chain:
-//   Ahorro en pesos   → CreditPool supply / withdrawAvailable (yield = realized driver fees, variable)
+//   Ahorro en pesos   → sxMXN (the sOUSD contract over xMXN, configured APR) once deployed; until then the
+//                       CreditPool supply / withdrawAvailable path (yield = realized driver fees, variable)
 //   Ahorro en dólares → sOUSD (ERC-4626 over OUSD; accrual from an admin-funded demo yield reserve)
-//   T-bills           → InvestDesk buy/sell of the demo tTBILL at its admin price feed ± spread
+//   Acciones (Stocks) → the second InvestDesk: buy/sell mIDX (demo US equity index) at its admin feed ± spread
+//   T-bills           → legacy (lead 03:29: out of the product); reads kept so older holdings still show
 // Positions' cost basis and accrued yield come from the account's own on-chain events.
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -36,6 +38,11 @@ import {
 const A = activeAddresses();
 const sOUSD = COLLATERALS.find((c) => c.symbol === "sOUSD");
 const tTBILL = COLLATERALS.find((c) => c.symbol === "tTBILL");
+const mIDX = COLLATERALS.find((c) => c.symbol === "mIDX");
+/** sxMXN (lead 03:32): a collateral entry or a top-level v2 address, whichever contracts publishes. */
+const SXMXN: Address | undefined =
+  (A.protocol === "v2" ? A.sxMXN : undefined) ??
+  COLLATERALS.find((c) => c.symbol === "sxMXN")?.token;
 /** InvestDesk (v2 only), from the one source of truth (packages/shared/src/protocol.ts). */
 const DESK: Address | undefined =
   A.protocol === "v2" ? A.investDesk : undefined;
@@ -49,6 +56,13 @@ export const INVEST = {
   tTBILL: tTBILL?.token,
   tTBILLFeed: tTBILL?.feed,
   desk: DESK,
+  sxMXN: SXMXN,
+  mIDX: mIDX?.token,
+  mIDXFeed: mIDX?.feed,
+  /** The Stocks desk (same InvestDesk contract, trading mIDX). */
+  deskIdx: (A.protocol === "v2" ? A.investDeskIdx : undefined) as
+    | Address
+    | undefined,
   startBlock: BigInt(A.startBlock ?? 0),
 };
 
@@ -106,6 +120,43 @@ export function useInvestPositions() {
           },
         ]
       : []),
+    ...(INVEST.mIDX && INVEST.mIDXFeed
+      ? [
+          {
+            address: INVEST.mIDX,
+            abi: erc20Abi,
+            functionName: "balanceOf",
+            args: [who],
+          },
+          {
+            address: INVEST.mIDXFeed,
+            abi: priceFeedAbi,
+            functionName: "peek",
+          },
+        ]
+      : []),
+    ...(INVEST.sxMXN
+      ? [
+          {
+            address: INVEST.sxMXN,
+            abi: stakedOusdAbi,
+            functionName: "balanceOf",
+            args: [who],
+          },
+          {
+            address: INVEST.sxMXN,
+            abi: stakedOusdAbi,
+            functionName: "maxWithdraw",
+            args: [who],
+          },
+          { address: INVEST.sxMXN, abi: stakedOusdAbi, functionName: "aprBps" },
+          {
+            address: INVEST.sxMXN,
+            abi: stakedOusdAbi,
+            functionName: "yieldReserve",
+          },
+        ]
+      : []),
   ].map((c) => ({ ...c, chainId: CHAIN_ID }));
   const q = useReadContracts({
     contracts: contracts as never,
@@ -136,7 +187,33 @@ export function useInvestPositions() {
           };
         })()
       : undefined;
+  const stocks =
+    INVEST.mIDX && INVEST.mIDXFeed
+      ? (() => {
+          const bal = address ? next<bigint>() : (i++, undefined);
+          const peek = next<readonly [bigint, bigint, boolean]>();
+          return {
+            balance: bal,
+            px8: peek?.[0],
+            priceAt: peek?.[1],
+            priceValid: peek?.[2],
+            value:
+              bal !== undefined && peek
+                ? (bal * peek[0]) / 100_000_000n
+                : undefined,
+          };
+        })()
+      : undefined;
+  const pesosVault = INVEST.sxMXN
+    ? {
+        shares: address ? next<bigint>() : (i++, undefined),
+        value: address ? next<bigint>() : (i++, undefined), // maxWithdraw = xMXN redeemable now
+        aprBps: next<bigint>(),
+        yieldReserve: next<bigint>(),
+      }
+    : undefined;
   const deskQ = useInvestDesk();
+  const idxQ = useInvestDesk(undefined, INVEST.deskIdx ?? ZERO);
   const desk = INVEST.desk
     ? {
         reserveOusd: deskQ.reserveOusd,
@@ -171,8 +248,22 @@ export function useInvestPositions() {
       feeBps: pool.feeBps,
     },
     dollars,
+    /** sxMXN savings vault (undefined until deployed). */
+    pesosVault,
     tbill: tbill && { ...tbill, value: tbillValue },
     desk,
+    stocks,
+    stocksDesk: INVEST.deskIdx
+      ? {
+          reserveOusd: idxQ.reserveOusd,
+          reserveIdx: idxQ.reserveTbill,
+          spreadBps: idxQ.spreadBps,
+          maxTradeUsd: idxQ.maxTradeUsd,
+          paused: idxQ.paused,
+          /** mIDX this wallet can sell back (the desk only buys back what this wallet bought there). */
+          sellable: idxQ.sellableTbill,
+        }
+      : undefined,
   };
 }
 
@@ -196,6 +287,9 @@ const sold = parseAbiItem(
   "event Sold(address indexed user, bool forXmxn, uint256 tbillIn, uint256 ousdOut, uint256 received, uint256 fee, uint256 px)",
 );
 
+/** Stocks trades are a separate list (`stockRows`) so `rows` keeps its three products for existing consumers. */
+export type StockActivity = Omit<InvestActivity, "product"> & { product: "stocks" };
+
 export type InvestActivity = {
   product: "pesos" | "dolares" | "tbills";
   label: string;
@@ -214,6 +308,9 @@ const ts = (l: { blockTimestamp?: unknown }) =>
     : Number(BigInt(l.blockTimestamp as string | bigint | number));
 
 const CHUNK = 50_000n;
+// once sxMXN exists, peso savings is the vault and pool deposits are lending to drivers (Crédito's lenders)
+const POOL_IN = INVEST.sxMXN ? "Depósito · préstamo a choferes" : "Depósito · ahorro en pesos";
+const POOL_OUT = INVEST.sxMXN ? "Retiro · préstamo a choferes" : "Retiro · ahorro en pesos";
 
 export function useInvestHistory() {
   const { address } = useConnection();
@@ -226,6 +323,7 @@ export function useInvestHistory() {
       const c = client!;
       const latest = await c.getBlockNumber();
       const rows: InvestActivity[] = [];
+      const stockRows: StockActivity[] = [];
       let pesosIn = 0n,
         pesosOut = 0n,
         dolIn = 0n,
@@ -236,10 +334,18 @@ export function useInvestHistory() {
         sharesOut = 0n,
         tbIn = 0n,
         tbOut = 0n;
+      let vaultIn = 0n,
+        vaultOut = 0n,
+        sxSharesIn = 0n,
+        sxSharesOut = 0n,
+        idxCost = 0n,
+        idxProceeds = 0n,
+        idxIn = 0n,
+        idxOut = 0n;
       for (let from = INVEST.startBlock; from <= latest; from += CHUNK) {
         const to = from + CHUNK - 1n < latest ? from + CHUNK - 1n : latest;
         const range = { fromBlock: from, toBlock: to, strict: true } as const;
-        const [s, w, dep, wd, b, so] = await Promise.all([
+        const [s, w, dep, wd, b, so, sxd, sxw, ib, isold] = await Promise.all([
           c.getLogs({
             address: INVEST.pool,
             event: supplied,
@@ -284,12 +390,100 @@ export function useInvestHistory() {
                 ...range,
               })
             : [],
+          INVEST.sxMXN
+            ? c.getLogs({
+                address: INVEST.sxMXN,
+                event: depositEv,
+                args: { owner: address },
+                ...range,
+              })
+            : [],
+          INVEST.sxMXN
+            ? c.getLogs({
+                address: INVEST.sxMXN,
+                event: withdrawEv,
+                args: { owner: address },
+                ...range,
+              })
+            : [],
+          INVEST.deskIdx
+            ? c.getLogs({
+                address: INVEST.deskIdx,
+                event: bought,
+                args: { user: address },
+                ...range,
+              })
+            : [],
+          INVEST.deskIdx
+            ? c.getLogs({
+                address: INVEST.deskIdx,
+                event: sold,
+                args: { user: address },
+                ...range,
+              })
+            : [],
         ]);
+        for (const l of sxd) {
+          vaultIn += l.args.assets;
+          sxSharesIn += l.args.shares;
+          rows.push({
+            product: "pesos",
+            label: "Depósito · ahorro en pesos",
+            amount: l.args.assets,
+            symbol: "xMXN",
+            txHash: l.transactionHash,
+            block: l.blockNumber,
+            logIndex: l.logIndex,
+            timestamp: ts(l),
+          });
+        }
+        for (const l of sxw) {
+          vaultOut += l.args.assets;
+          sxSharesOut += l.args.shares;
+          rows.push({
+            product: "pesos",
+            label: "Retiro · ahorro en pesos",
+            amount: l.args.assets,
+            symbol: "xMXN",
+            txHash: l.transactionHash,
+            block: l.blockNumber,
+            logIndex: l.logIndex,
+            timestamp: ts(l),
+          });
+        }
+        for (const l of ib) {
+          idxCost += l.args.ousdUsed;
+          idxIn += l.args.tbillOut;
+          stockRows.push({
+            product: "stocks",
+            label: "Compra · acciones",
+            amount: l.args.tbillOut,
+            symbol: "mIDX",
+            txHash: l.transactionHash,
+            block: l.blockNumber,
+            logIndex: l.logIndex,
+            timestamp: ts(l),
+          });
+        }
+        for (const l of isold) {
+          idxProceeds += l.args.ousdOut;
+          idxOut += l.args.tbillIn;
+          stockRows.push({
+            product: "stocks",
+            label: "Venta · acciones",
+            amount: l.args.tbillIn,
+            symbol: "mIDX",
+            txHash: l.transactionHash,
+            block: l.blockNumber,
+            logIndex: l.logIndex,
+            timestamp: ts(l),
+          });
+        }
         for (const l of s) {
           pesosIn += l.args.amount;
           rows.push({
             product: "pesos",
-            label: "Depósito · ahorro en pesos",
+            label: POOL_IN,
             amount: l.args.amount,
             symbol: "xMXN",
             txHash: l.transactionHash,
@@ -302,7 +496,7 @@ export function useInvestHistory() {
           pesosOut += l.args.amount;
           rows.push({
             product: "pesos",
-            label: "Retiro · ahorro en pesos",
+            label: POOL_OUT,
             amount: l.args.amount,
             symbol: "xMXN",
             txHash: l.transactionHash,
@@ -375,8 +569,12 @@ export function useInvestHistory() {
             ? -1
             : 1,
       );
+      const newestFirst = (x: { block: bigint; logIndex: number }, y: { block: bigint; logIndex: number }) =>
+        x.block === y.block ? y.logIndex - x.logIndex : x.block > y.block ? -1 : 1;
+      stockRows.sort(newestFirst);
       return {
         rows,
+        stockRows,
         /** Net amounts put in (deposits − withdrawals), for "earned since deposit". */
         netPesos: pesosIn - pesosOut,
         netDolares: dolIn - dolOut,
@@ -387,21 +585,31 @@ export function useInvestHistory() {
          *  collateral or a faucet would otherwise be miscounted as gains/losses). */
         sharesFromEvents: sharesIn - sharesOut,
         tbillFromEvents: tbIn - tbOut,
+        /** sxMXN: xMXN put in (deposits − withdrawals) and the shares those explain. */
+        netPesosVault: vaultIn - vaultOut,
+        sxSharesFromEvents: sxSharesIn - sxSharesOut,
+        /** Stocks: OUSD spent on mIDX minus OUSD received, and the mIDX units those trades explain. */
+        netStocksCost: idxCost - idxProceeds,
+        stocksFromEvents: idxIn - idxOut,
       };
     },
   });
 }
 
-/** Live InvestDesk quote while the user types. */
-export function useTbillQuote(side: "buy" | "sell", amountIn: bigint) {
+/** Live InvestDesk quote while the user types (T-bill desk by default; pass INVEST.deskIdx for Stocks). */
+export function useTbillQuote(
+  side: "buy" | "sell",
+  amountIn: bigint,
+  desk: Address | undefined = INVEST.desk,
+) {
   const q = useReadContract({
-    address: INVEST.desk,
+    address: desk,
     abi: investDeskAbi,
     functionName: side === "buy" ? "quoteBuy" : "quoteSell",
     args: [amountIn],
     chainId: CHAIN_ID,
     query: {
-      enabled: !!INVEST.desk && amountIn > 0n,
+      enabled: !!desk && amountIn > 0n,
       retry: false,
       refetchInterval: 10_000,
     },
@@ -409,6 +617,9 @@ export function useTbillQuote(side: "buy" | "sell", amountIn: bigint) {
   const r = q.data as readonly [bigint, bigint, bigint] | undefined;
   return { ...q, out: r?.[0], fee: r?.[1], px8: r?.[2] };
 }
+
+export const useStocksQuote = (side: "buy" | "sell", amountIn: bigint) =>
+  useTbillQuote(side, amountIn, INVEST.deskIdx);
 
 // ---------------------------------------------------------------- actions
 
@@ -528,6 +739,35 @@ export function useInvestActions() {
             args: [tbillIn, withSlippage(quotedOut)],
           },
           "Vender T-bills",
+        );
+      }),
+    buyStocks: (ousdIn: bigint, quotedOut: bigint) =>
+      tx.run(async (t) => {
+        if (!INVEST.deskIdx) throw new Error("Acciones needs the v2 Stocks desk.");
+        await approve(t, INVEST.ousd, INVEST.deskIdx, ousdIn, "OUSD");
+        await t.write(
+          {
+            address: INVEST.deskIdx,
+            abi: investDeskAbi as Abi,
+            functionName: "buy",
+            args: [ousdIn, withSlippage(quotedOut)],
+          },
+          "Comprar acciones",
+        );
+      }),
+    sellStocks: (idxIn: bigint, quotedOut: bigint) =>
+      tx.run(async (t) => {
+        if (!INVEST.deskIdx || !INVEST.mIDX)
+          throw new Error("Acciones needs the v2 Stocks desk.");
+        await approve(t, INVEST.mIDX, INVEST.deskIdx, idxIn, "mIDX");
+        await t.write(
+          {
+            address: INVEST.deskIdx,
+            abi: investDeskAbi as Abi,
+            functionName: "sell",
+            args: [idxIn, withSlippage(quotedOut)],
+          },
+          "Vender acciones",
         );
       }),
   };
