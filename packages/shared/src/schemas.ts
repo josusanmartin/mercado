@@ -35,8 +35,10 @@ export const FxResponseSchema = z.object({
     .object({
       source: z.string(),
       sourceKind: z.enum(["intraday", "daily"]),
-      sourceTime: z.string(),
+      /** The source's own timestamp; omitted when the source doesn't publish one. */
+      sourceTime: z.string().optional(),
       fetchedAt: z.string(),
+      /** Block time of the oracle update (= oracle updatedAt), not wall time. */
       onchainAt: z.string(),
       txHash: HexSchema,
     })

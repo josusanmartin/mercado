@@ -18,11 +18,11 @@ type RelayRecord = {
   mxnPerUsd8: string;
   source: string;
   sourceKind: "intraday" | "daily";
-  sourceTime: string;
+  /** The source's own timestamp, when it publishes one (unknown otherwise). */
+  sourceTime?: string | null;
   fetchedAt: string;
   onchainAt: string;
   txHash: `0x${string}`;
-  label: string;
 };
 
 /** contracts' FX relay keeper record (packages/contracts/cache/fx-relay.json), if present. */
@@ -32,6 +32,43 @@ function readRelay(): RelayRecord | undefined {
     return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as RelayRecord) : undefined;
   } catch {
     return undefined;
+  }
+}
+
+const hhmm = (d: Date) => `${d.toISOString().slice(11, 16)} UTC`;
+
+function relayLabel(r: RelayRecord, updatedAt: bigint) {
+  const what =
+    r.sourceKind === "daily"
+      ? `daily reference rate${r.sourceTime ? ` of ${r.sourceTime.slice(0, 10)}` : ""}`
+      : `intraday indicative rate${r.sourceTime ? ` as of ${hhmm(new Date(r.sourceTime))}` : ", source time not published"}`;
+  return `Admin-relayed from ${r.source} (${what}) · fetched ${hhmm(new Date(r.fetchedAt))} · on-chain ${hhmm(new Date(Number(updatedAt) * 1000))} (block time) · not a decentralized oracle`;
+}
+
+const verified = new Map<string, boolean>();
+
+/**
+ * R-037: the relay record only describes the current on-chain value if its tx actually set THIS oracle and
+ * the oracle's updatedAt equals that tx's block time (same rate alone isn't enough: an admin reset to the
+ * same price would otherwise inherit the relay's provenance).
+ */
+async function relayBacksCurrentValue(relay: RelayRecord, oracle: Address, px: bigint, updatedAt: bigint) {
+  if (relay.mxnPerUsd8 !== px.toString()) return false;
+  const key = `${relay.txHash}:${oracle}:${updatedAt}`;
+  const hit = verified.get(key);
+  if (hit !== undefined) return hit;
+  try {
+    const client = publicClient();
+    const receipt = await client.getTransactionReceipt({ hash: relay.txHash });
+    const block = await client.getBlock({ blockNumber: receipt.blockNumber });
+    const ok =
+      receipt.status === "success" &&
+      receipt.to?.toLowerCase() === oracle.toLowerCase() &&
+      block.timestamp === updatedAt;
+    verified.set(key, ok);
+    return ok;
+  } catch {
+    return false;
   }
 }
 
@@ -52,9 +89,9 @@ export async function getFx(): Promise<FxResponse> {
     // The keeper records where the on-chain value came from. Only trust that record if it matches the
     // value actually on-chain (a stress-demo forceSet, for example, won't).
     const relay = readRelay();
-    const matches = relay && relay.mxnPerUsd8 === mxnPerUsd.toString();
+    const matches = !!relay && (await relayBacksCurrentValue(relay, oracle, mxnPerUsd, updatedAt));
     const feed = matches
-      ? relay.label
+      ? relayLabel(relay, updatedAt)
       : isMock
         ? "Admin-set testnet FX value (no matching relay record, e.g. a stress-demo override), not a market rate"
         : "On-chain FX oracle (testnet)";
@@ -72,9 +109,9 @@ export async function getFx(): Promise<FxResponse> {
             relay: {
               source: relay.source,
               sourceKind: relay.sourceKind,
-              sourceTime: relay.sourceTime,
+              ...(relay.sourceTime ? { sourceTime: relay.sourceTime } : {}),
               fetchedAt: relay.fetchedAt,
-              onchainAt: relay.onchainAt,
+              onchainAt: new Date(Number(updatedAt) * 1000).toISOString(),
               txHash: relay.txHash,
             },
           }
