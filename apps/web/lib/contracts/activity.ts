@@ -4,12 +4,14 @@
 //
 //   const feed = useActivityFeed("move", { account, limit: 20 });   // rows, newest first
 //   const t = useFlowTotals();                                        // all-time sums (bigint, 6dp)
+// Labels: "Minted xMXN", "OUSD → xMXN", "Advance drawn", "Transfer to merchant" (merchant inflows, R-038).
 //
 // Kinds:
 //   mint   CREATE vault: Deposited / Minted / Repaid / Withdrawn / Liquidated
 //   move   v2 MoveAMM Swapped (OUSD→xMXN mints to `to`, xMXN→OUSD redeems) · v1 SwapDesk Swapped
 //   credit CreditPool: Supplied / Withdrawn (lenders) · Borrowed / Repaid (drivers)
-//   mpp    xMXN Transfer → merchant (MPP 402 bill/API payments)
+//   mpp    xMXN Transfer → merchant wallet: MERCHANT INFLOWS. MPP payments settle here, but a transfer alone is
+//          not proof of a verified MPP order (review R-038); verified orders live in the bills API.
 // Logs are scanned from the protocol's deployment block and cached incrementally in memory.
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
@@ -22,7 +24,7 @@ export type ActivityRow = {
   kind: ActivityKind;
   /** Event name, e.g. "Minted", "Swapped", "Borrowed", "Transfer". */
   event: string;
-  /** Short human label, e.g. "Minted xMXN", "OUSD → xMXN", "Advance drawn", "MPP payment". */
+  /** Short human label, e.g. "Minted xMXN", "OUSD → xMXN", "Advance drawn", "Transfer to merchant". */
   label: string;
   /** Main amount (6dp base units) and its token symbol. */
   amount: bigint;
@@ -80,13 +82,14 @@ type AnyLog = Log & { eventName: string; args: Record<string, unknown>; blockTim
 function source(kind: ActivityKind) {
   switch (kind) {
     case "mint":
-      return { address: A.vault, events: V2 ? VAULT_V2 : VAULT_V1, args: undefined };
+      return { address: A.vault, events: V2 ? VAULT_V2 : VAULT_V1 };
     case "move":
-      return V2 ? { address: A.vamm!, events: AMM, args: undefined } : { address: A.swapDesk!, events: DESK, args: undefined };
+      return V2 ? { address: A.vamm!, events: AMM } : { address: A.swapDesk!, events: DESK };
     case "credit":
-      return { address: A.creditPool, events: POOL, args: undefined };
+      return { address: A.creditPool, events: POOL };
     case "mpp":
-      return { address: A.xMXN, events: TRANSFER, args: { to: A.merchant } };
+      // single event + indexed arg → filtered by topic on the node, not client-side
+      return { address: A.xMXN, event: TRANSFER[0], args: { to: A.merchant } };
   }
 }
 
@@ -147,7 +150,7 @@ function toRow(kind: ActivityKind, l: AnyLog): ActivityRow {
       l.eventName === "Supplied" ? "Lender supplied" : l.eventName === "Withdrawn" ? "Lender withdrew" : l.eventName === "Borrowed" ? "Advance drawn" : "Advance repaid";
     return { ...base, label, amount: a.amount, token: "xMXN", account: who, fee: l.eventName === "Borrowed" ? a.fee : undefined };
   }
-  return { ...base, label: "MPP payment", amount: a.amount, token: "xMXN", account: a.from, from: a.from, to: a.to };
+  return { ...base, label: "Transfer to merchant", amount: a.amount, token: "xMXN", account: a.from, from: a.from, to: a.to };
 }
 
 // ---------------------------------------------------------------- incremental cache (per kind, this tab)
@@ -169,14 +172,7 @@ export async function fetchActivity(client: PublicClient, kind: ActivityKind): P
     const fresh: ActivityRow[] = [];
     for (let from = c.toBlock + 1n; from <= latest; from += CHUNK) {
       const to = from + CHUNK - 1n < latest ? from + CHUNK - 1n : latest;
-      const logs = (await client.getLogs({
-        address: s.address,
-        events: s.events,
-        args: s.args as never,
-        fromBlock: from,
-        toBlock: to,
-        strict: true,
-      } as never)) as unknown as AnyLog[];
+      const logs = (await client.getLogs({ ...s, fromBlock: from, toBlock: to, strict: true } as never)) as unknown as AnyLog[];
       for (const l of logs) fresh.push(toRow(kind, l));
     }
     const rows = [...c.rows, ...fresh].sort((x, y) => (x.blockNumber === y.blockNumber ? y.logIndex - x.logIndex : x.blockNumber > y.blockNumber ? -1 : 1));
@@ -220,7 +216,8 @@ export type FlowTotals = {
   deliveredMxn: bigint;
   lent: bigint;
   repaid: bigint;
-  mppPaid: bigint;
+  /** xMXN received by the merchant wallet (where MPP payments settle; not each is a verified order) */
+  merchantInflows: bigint;
   counts: Record<ActivityKind, number>;
 };
 
@@ -247,7 +244,7 @@ export function useFlowTotals() {
         deliveredMxn: sum(move, (r) => (r.token === "OUSD" ? (r.amountOut ?? 0n) : 0n)),
         lent: sum(credit, (r) => (r.event === "Borrowed" ? r.amount : 0n)),
         repaid: sum(credit, (r) => (r.event === "Repaid" ? r.amount : 0n)),
-        mppPaid: sum(mpp, (r) => r.amount),
+        merchantInflows: sum(mpp, (r) => r.amount),
         counts: { mint: mint.length, move: move.length, credit: credit.length, mpp: mpp.length },
       };
     },
