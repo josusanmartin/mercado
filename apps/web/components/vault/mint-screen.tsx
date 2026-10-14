@@ -16,6 +16,8 @@ import { MockOracleBadge } from "@/components/shell/labels";
 import { useTourPrefill } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 import { PesoStress } from "./peso-slider";
+import { CollateralPicker } from "./collateral-picker";
+import { useCollaterals, type Collateral } from "@/lib/v2/collaterals";
 import { RatioMeter } from "./ratio-meter";
 
 type Section = "mint" | "repay" | "position" | "fx" | "stress";
@@ -30,6 +32,8 @@ export function MintScreen() {
   const prefill = useTourPrefill("/mint");
   const now = useNow(5_000);
   const [section, setSection] = useState<Section>("mint");
+  const collaterals = useCollaterals();
+  const [collateralId, setCollateralId] = useState<Collateral["id"]>("ousd");
 
   const [deposit, setDeposit] = useState("");
   const [mint, setMint] = useState("");
@@ -104,10 +108,11 @@ export function MintScreen() {
         <Panel
           key="mint"
           title="Deposit and mint"
-          description="Lock Testnet OUSD (Tempo faucet, no real value) and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from a position like this."
+          description="Institutions lock collateral and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from a position like this. Today's live collateral is Testnet OUSD (Tempo faucet, no real value)."
         >
           <ConnectGate persona="lp" why="Connect a wallet holding testnet OUSD to open a position.">
             <div className="grid gap-5 pt-2">
+              <CollateralPicker items={collaterals} value={collateralId} onChange={setCollateralId} disabled={m.tx.isBusy} />
               <TokenInput label="Deposit collateral" symbol="OUSD" value={deposit} onChange={setDeposit} max={bal.ousd} maxLabel="Balance" disabled={m.tx.isBusy} />
               <div className="grid gap-2">
                 <TokenInput
