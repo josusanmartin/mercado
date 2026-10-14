@@ -4,11 +4,12 @@
 //   await m.deposit(toUnits("100"));          // Approve OUSD (if needed) → Deposit
 //   m.tx.status / m.tx.stepLabel / m.tx.error / m.tx.steps[i].url
 import { useCallback } from "react";
-import { parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
+import { isAddress, parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
 import { useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 import { ADDR, CHAIN_ID } from "./addresses";
 import { creditPoolAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
+import { readableError } from "./errors";
 import { useTx, type TxApi } from "./tx";
 
 /** Fields from POST /api/driver/score → attestation (strings as the API returns them). */
@@ -20,11 +21,20 @@ export type Attestation = {
   signature: Hex;
 };
 
+export const MEMO_MAX_BYTES = 32;
+
+/** UTF-8 byte length of a memo (accented letters take 2 bytes). Use for the Send screen's counter. */
+export const memoByteLength = (memo: string) => new TextEncoder().encode(memo).length;
+
 /** Encode a short remittance note (≤ 32 bytes UTF-8) as a TIP-20 bytes32 memo. */
 export function memoToBytes32(memo: string): Hex {
-  const bytes = new TextEncoder().encode(memo);
-  if (bytes.length > 32) throw new Error("Memo must be at most 32 bytes.");
+  const n = memoByteLength(memo);
+  if (n > MEMO_MAX_BYTES) throw new Error(`The note is ${n} bytes; the limit is ${MEMO_MAX_BYTES} (accented letters count as 2).`);
   return stringToHex(memo, { size: 32 });
+}
+
+function checkRecipient(to: string): asserts to is Address {
+  if (!isAddress(to)) throw new Error("Enter a valid recipient address (0x…).");
 }
 
 /** Apply slippage (bps) to a quoted output to get minOut. */
@@ -107,26 +117,38 @@ export function useMercado() {
       }),
     /** Plain TIP-20 transfer, or transferWithMemo when a memo is given (visible on the explorer). */
     transfer: (token: Address, to: Address, amount: bigint, memo?: string) =>
-      tx.run((t) =>
-        memo
-          ? t.write(call(token, tokenAbi as Abi, "transferWithMemo", [to, amount, memoToBytes32(memo)]), "Send")
-          : t.write(call(token, tokenAbi as Abi, "transfer", [to, amount]), "Send"),
-      ),
+      tx.run((t) => {
+        checkRecipient(to);
+        const memo32 = memo ? memoToBytes32(memo) : undefined; // validate before anything is signed
+        return memo32
+          ? t.write(call(token, tokenAbi as Abi, "transferWithMemo", [to, amount, memo32]), "Send")
+          : t.write(call(token, tokenAbi as Abi, "transfer", [to, amount]), "Send");
+      }),
     /** Swap OUSD → xMXN then send the xMXN received to `to` (with optional memo), as one flow. */
     swapAndSend: (amountIn: bigint, quotedOut: bigint, to: Address, memo?: string, slippageBps = 50n) =>
       tx.run(async (t) => {
+        // R-017: validate everything the final send needs BEFORE approving or swapping
+        checkRecipient(to);
+        const memo32 = memo ? memoToBytes32(memo) : undefined;
         const minOut = withSlippage(quotedOut, slippageBps);
         await approveIfNeeded(t, ADDR.ousd, ADDR.swapDesk, amountIn, "OUSD");
         const swapped = await t.write(desk("swapOusdForXmxn", [amountIn, minOut]), "Swap OUSD → xMXN");
         // forward exactly what the swap paid out (from the Swapped event), not the quote
         const [ev] = parseEventLogs({ abi: swapDeskAbi, eventName: "Swapped", logs: swapped.receipt?.logs ?? [] });
         const send = ev?.args.amountOut ?? minOut;
-        await t.write(
-          memo
-            ? call(ADDR.xmxn, tokenAbi as Abi, "transferWithMemo", [to, send, memoToBytes32(memo)])
-            : call(ADDR.xmxn, tokenAbi as Abi, "transfer", [to, send]),
-          "Send xMXN",
-        );
+        try {
+          await t.write(
+            memo32
+              ? call(ADDR.xmxn, tokenAbi as Abi, "transferWithMemo", [to, send, memo32])
+              : call(ADDR.xmxn, tokenAbi as Abi, "transfer", [to, send]),
+            "Send xMXN",
+          );
+        } catch (e) {
+          // the swap already happened: don't make the user swap again, just retry the send
+          throw new Error(
+            `The swap went through (you now hold the xMXN), but sending failed: ${readableError(e)} Retry with "Send only", no new swap needed.`,
+          );
+        }
       }),
 
     // ---------------------------------------------------------------- credit pool (Advance / Earn)
