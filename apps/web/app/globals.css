@@ -250,3 +250,182 @@
     display: none;
   }
 }
+
+/* ───────────────────────── v5 · color worlds + motion (crew/PRINCIPLES.md §v5) ─────────────────────────
+   Tokens, per-product "on accent" text colors (AA for small text on every fill, both themes), the hero
+   field + wash, and the keyframes behind lib/motion. transform/opacity only; reduced motion = final state. */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 180ms;
+  --dur: 280ms;
+  --dur-slow: 420ms;
+}
+/* Text on a product fill. Light: white on jade (11:1), cobalt (7.4:1), ink; ink on terracotta (5.64), rosa (4.56),
+   maize (9.39). Dark: every accent is a light tint, so ink everywhere. Card's hero field is cream with ink. */
+[data-product] {
+  --on-accent: #ffffff;
+  --hero-bg: var(--accent);
+  --hero-fg: var(--on-accent);
+}
+[data-product="remesas"],
+[data-product="credito"],
+[data-product="invest"] {
+  --on-accent: #0a0a0a;
+}
+[data-product="card"] {
+  --hero-bg: #f2e6c9;
+  --hero-fg: #0a0a0a;
+}
+.dark [data-product] {
+  --on-accent: #0a0a0a;
+}
+
+/* Soft accent wash under the hero (the one place a gradient is allowed besides image-in-type). */
+.mx-wash {
+  background-image: radial-gradient(120% 460px at 50% 0, color-mix(in oklab, var(--accent) 7%, transparent), transparent 72%);
+  background-repeat: no-repeat;
+}
+
+@keyframes mx-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes mx-letter {
+  from {
+    opacity: 0;
+    transform: translateY(0.32em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes mx-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes mx-pan {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+@keyframes mx-draw-k {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes mx-ripple-k {
+  from {
+    transform: scale(0.6);
+    opacity: 0.35;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.mx-enter {
+  animation: mx-enter var(--dur) var(--ease-out) both;
+}
+.mx-reveal {
+  opacity: 0;
+}
+.mx-reveal[data-shown] {
+  animation: mx-fade-up var(--dur-slow) var(--ease-out) var(--mx-delay, 0ms) both;
+}
+.mx-stagger > * {
+  opacity: 0;
+}
+.mx-stagger[data-shown] > * {
+  animation: mx-fade-up var(--dur-slow) var(--ease-out) calc(var(--i, 0) * var(--mx-step, 40ms)) both;
+}
+.mx-letters span span {
+  display: inline-block;
+  animation: mx-letter 360ms var(--ease-out) calc(var(--i, 0) * var(--mx-step, 24ms)) both;
+}
+.mx-pan {
+  background-size: 160% auto;
+  animation: mx-pan 48s linear infinite alternate;
+}
+.mx-press {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.mx-press:active {
+  transform: scale(0.97);
+}
+.mx-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mx-draw-k 420ms var(--ease-out) forwards;
+}
+.mx-draw-2 {
+  animation-delay: 220ms;
+}
+.mx-ripple {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+  animation: mx-ripple-k 700ms var(--ease-out) forwards;
+}
+/* Sidebar: the accent pill glides between rows. */
+.mx-pill {
+  transition:
+    transform var(--dur) var(--ease-out),
+    height var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out);
+}
+/* Rows: an accent sweep from the left on hover/focus. */
+.mx-sweep {
+  background-image: linear-gradient(color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent), color-mix(in oklab, var(--sweep, var(--accent)) 9%, transparent));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size var(--dur) var(--ease-out);
+}
+.mx-sweep:hover,
+.mx-sweep:focus-visible {
+  background-size: 100% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-enter,
+  .mx-reveal,
+  .mx-reveal[data-shown],
+  .mx-stagger > *,
+  .mx-stagger[data-shown] > *,
+  .mx-letters span span,
+  .mx-pan,
+  .mx-ripple {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .mx-ripple {
+    opacity: 0 !important;
+  }
+  .mx-draw {
+    animation: none !important;
+    stroke-dashoffset: 0;
+  }
+  .mx-pill,
+  .mx-press,
+  .mx-sweep {
+    transition: none !important;
+  }
+  .mx-press:active {
+    transform: none;
+  }
+}

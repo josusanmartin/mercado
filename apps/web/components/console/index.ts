@@ -4,7 +4,7 @@ export { CircleButton, CircleRow, type CircleButtonProps } from "./circle-button
 export { HintBar } from "./hint-bar";
 export { ProfileBar, TopBar } from "./top-bar";
 export { AppShell, Wordmark } from "./shell";
-export { SettingsLayout, ProductHero, SectionLabel, ListPane, Panel, Row, Rows, BigNumber, PanelActions, type ListItemDef, type Kpi } from "./settings";
+export { SettingsLayout, ProductHero, ProductHero as ProductHeader, SectionLabel, ListPane, Panel, Row, Rows, BigNumber, PanelActions, type ListItemDef, type Kpi } from "./settings";
 export { PRODUCTS, productForPath, type Product, type ProductId } from "./products";
 export { DemoModeProvider, useDemoMode, useDemoAccount } from "./demo-mode";
 export { ThemeProvider, ThemeScript, useTheme } from "./theme";

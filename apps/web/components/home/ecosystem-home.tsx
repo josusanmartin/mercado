@@ -14,6 +14,7 @@ import { LiveMeta, Meta, PRODUCTS, type ProductId } from "@/components/console";
 import { useTour } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 import { BuiltOnTempo } from "./built-on-tempo";
+import { TickerText } from "@/lib/motion";
 
 const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0));
 
@@ -88,7 +89,7 @@ export function EcosystemHome() {
         <h1
           // Dark theme: a cream-for-ink variant of the texture (black bands vanish on dark and chop the letters).
           // pt: background-clip:text only paints the padding box, and the caps rise above the tight line box.
-          className="display image-type bg-[url(/photos/sarape.webp)] pt-[0.1em] text-[clamp(2.2rem,15cqw,12rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)] dark:bg-[url(/photos/sarape-dark.webp)]"
+          className="display image-type mx-pan bg-[url(/photos/sarape.webp)] pt-[0.1em] text-[clamp(2.2rem,15cqw,12rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)] dark:bg-[url(/photos/sarape-dark.webp)]"
           aria-label="One currency. Six products."
         >
           One currency.
@@ -138,9 +139,10 @@ function ProductIndex({ live }: { live: Live }) {
   return (
     <section aria-label="Products" className="grid gap-3">
       <Meta>Index · six products, one currency</Meta>
-      <ol onKeyDown={onKey} className="border-t">
+      {/* v5: rows fade up one after another; hover/focus sweeps the product's color in from the left. */}
+      <ol onKeyDown={onKey} className="mx-stagger border-t" data-shown>
         {products.map((p, i) => (
-          <li key={p.id} className="border-b">
+          <li key={p.id} className="border-b" style={{ ["--i" as string]: i, ["--mx-step" as string]: "50ms" }}>
             <Link
               ref={(el) => {
                 refs.current[i] = el;
@@ -149,7 +151,8 @@ function ProductIndex({ live }: { live: Live }) {
               tabIndex={i === sel ? 0 : -1}
               onFocus={() => setSel(i)}
               onMouseEnter={() => setSel(i)}
-              className="group grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-5 transition-colors duration-150 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:py-6"
+              className="mx-sweep group grid grid-cols-[2.5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-1 py-5 transition-colors duration-150 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2 sm:py-6"
+              style={{ ["--sweep" as string]: p.color }}
               aria-label={`${p.index} ${p.name}: ${p.line}. ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
             >
               <span className="meta text-muted-foreground tabular">{p.index}</span>
@@ -165,7 +168,7 @@ function ProductIndex({ live }: { live: Live }) {
               </span>
               <span className="col-start-2 text-left sm:col-start-3 sm:text-right">
                 <span className="display block text-[clamp(1.6rem,3vw,2.6rem)] tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
-                  {live[p.id as Pid].value}
+                  <TickerText text={live[p.id as Pid].value} />
                 </span>
                 <span className="meta text-muted-foreground">{live[p.id as Pid].caption}</span>
               </span>

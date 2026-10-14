@@ -15,6 +15,7 @@ import type { PersonaId } from "@/components/wallet/personas";
 import { PRODUCTS, productForPath, type ProductId } from "./products";
 import { useDemoAccount } from "./demo-mode";
 import { LiveMeta, Meta } from "./meta";
+import { LetterReveal } from "@/lib/motion";
 
 export type Kpi = { label: string; value: ReactNode; sub?: ReactNode };
 
@@ -84,34 +85,44 @@ export function ProductHero({
   const p = PRODUCTS.find((x) => x.id === product)!;
   const persona = useDemoAccount(demo);
   const { address } = useConnection();
+  const world = p.id !== "home"; // v5 color field on product pages; Home/Developers stay on the canvas
+  const word = statement ?? (p.id === "home" ? (title ?? p.name) : p.short);
   return (
     // Size container: the statement is fit to the content column, not the viewport (which includes the
-    // sidebar). 12.5cqw keeps an 11-letter word ("VERIFICADO.", ~7.7em in Archivo Black) whole.
-    // CR-04: capped at 80px and the whole block kept ≤170px at 1440x900, so the product's phone and primary
-    // action fit in the first screen (the giant title made products non-actionable above the fold).
+    // sidebar). CR-04: capped at 72–80px and the whole block kept ≤170px of the 1440x900 fold.
+    // v5 color world: on product pages the meta row + statement sit on a full-bleed field of the product's
+    // accent (--hero-bg/--hero-fg: AA for small text on every fill, both themes); the purpose sits on the wash.
     <section data-phone-hide className="grid min-w-0 gap-3 [container-type:inline-size]">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
-        <Meta>
-          <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
-          {p.index} · {p.id === "home" ? "Mercado" : p.name}
-        </Meta>
-        {meta ? <Meta>{meta}</Meta> : <LiveMeta />}
-      </div>
-      <div className="grid gap-2">
+      <div
+        className={cn(
+          "grid gap-2",
+          world && "-mx-4 -mt-5 bg-[var(--hero-bg)] px-4 pt-4 pb-5 text-[var(--hero-fg)] transition-colors duration-300 sm:-mx-8 sm:-mt-8 sm:px-8",
+        )}
+      >
+        <div className={cn("flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-2", world && "border-current/25")}>
+          <Meta className={cn(world && "text-current")}>
+            <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: world ? "currentColor" : p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
+            {p.index} · {p.id === "home" ? "Mercado" : p.name}
+          </Meta>
+          {meta ? <Meta className={cn(world && "text-current")}>{meta}</Meta> : <LiveMeta className={cn(world && "text-current")} />}
+        </div>
         {/* CR-04: the demo account sits on the title row, so it never costs a line of its own. */}
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
-          <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,5rem)] break-words" style={p.id === "home" || p.id === "invest" ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1, so Invest's statement is ink */}>
-            {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
+          <h1
+            className={cn("display break-words", world ? "text-[clamp(2.2rem,12.5cqw,4.5rem)]" : "text-product text-[clamp(2.2rem,12.5cqw,5rem)]")}
+            style={!world && (p.id === "home" || p.id === "invest") ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1 */}
+          >
+            {typeof word === "string" ? <LetterReveal text={word} /> : word}
           </h1>
           {persona && (
-            <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className="meta text-muted-foreground hover:text-foreground pb-2" title="Testnet demo key, no real value">
-              Demo account · <span className="text-foreground">{persona.name}</span>
+            <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className={cn("meta pb-2", world ? "text-current hover:underline" : "text-muted-foreground hover:text-foreground")} title="Testnet demo key, no real value">
+              Demo account · <span className={cn(!world && "text-foreground")}>{persona.name}</span>
               {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
             </a>
           )}
         </div>
-        {(purpose ?? p.purpose) && <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>}
       </div>
+      {(purpose ?? p.purpose) && <p className="mx-reveal line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg" data-shown>{purpose ?? p.purpose}</p>}
       {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
           numbers belong where the user acts (quote, draw sheet, Risk tab). */}
     </section>
