@@ -12,7 +12,7 @@ from principles import apply as principles  # noqa: E402
 VISUALS = {
     "j1-mint": [("strip", "panel-mint-risk.png")],
     "j2-send": [("phone", "phone-remesas-home.png"), ("phone", "phone-remesas-quote.png")],
-    "p-global": [("panel", "panel-global-quote.png")],
+    "p-global": [("panel", "panel-global-pay.png")],
     "j3-advance": [("phone", "phone-credito-inicio.png"), ("phone", "phone-credito-adelanto.png")],
     "p-card": [("phone", "phone-card-approve.png"), ("video", "hero-spend-final.mp4", "hero-spend-final-paid.png")],
 }
