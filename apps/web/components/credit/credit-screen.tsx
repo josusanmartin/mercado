@@ -23,6 +23,7 @@ import {
   usePool,
 } from "@/lib/contracts";
 import { fmtAmount, toUnits } from "@/lib/format";
+import { AgentApiPanel } from "./agent-api-panel";
 import { EarningsChart } from "./earnings-chart";
 import { TxStatus } from "./tx-status";
 import {
@@ -124,7 +125,7 @@ export function CreditScreen() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid gap-6">
           {/* 1. Connect demo driver */}
           <Card>
@@ -437,6 +438,9 @@ export function CreditScreen() {
             </CardContent>
           </Card>
         </div>
+      </div>
+      <div className="mt-6">
+        <AgentApiPanel />
       </div>
     </div>
   );
