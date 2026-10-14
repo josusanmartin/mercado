@@ -22,28 +22,32 @@ Most remittance users are on Android phones, so on desktop `/remesas` renders th
 - In Demo mode each product auto-uses its own testnet demo account, named as a role rather than a face. Mint = "Institución demo" (LP), Remesas = "Sender (US)" → recipient "Familia (MX)", Global = "Business demo" (merchant), Crédito = "Driver" on the Drivers tab and "Lender" on the Lenders tab. Show it as a small "Demo account · 0x12…ab" chip in the product header.
 - The Demo Tour walks the products in order: Mint → Remesas → Global → Crédito.
 
-## 3. Brand: Mexican-modern fintech, confident and colorful (NOT toy-like)
-**Kill the kid look:** no oversized pills everywhere, no toy-like rounded tiles, no flat grey canvas with tiny text, no cartoon icons or emoji. Personality comes from color, type, art and data density.
+## 3. Brand v4 (josu, 02:15): CLEAN, Switch-menu-like, clean colors, NO Paradigm visuals in the product
+The pitch deck keeps its dark editorial/glitch look. **The PRODUCT does not.** Remove from the app: the glitch/datamosh art, dark hero bands, warm-paper canvas and boxy bordered cards everywhere.
 
-- **Canvas:** warm paper `#F5EFE4` (light) / deep ink `#15110E` (dark). Cards are `#FFFDF8` with 1px `#E7DCCB` borders and radius 12–14px. Shadows stay subtle.
-- **Each product has a signature color**, used for its hero band, active nav, charts, key numbers and primary buttons:
-  - Mint: **jade** `#0E7C66`
-  - Remesas: **cempasúchil (marigold)** `#F08C00`
-  - Global: **talavera cobalt** `#1E4FD6`
-  - Crédito: **rosa mexicano** `#E4007C`
-  - The Mercado home uses all four together.
-  - Ink `#15110E` for text and a status set (success `#1F9D55`, warning `#C77700`, danger `#C4352B`).
-- **Type** (shared with the pitch deck): Instrument Sans (400/500/600/700) for UI and display. Big confident numbers at 48–72px with tabular figures. DM Mono for hashes, addresses, API snippets and the 402 trace. Tight tracking on display sizes.
-- **Art:** each product's hero band carries generated glitch/datamosh art in its color (same generator as the deck: deck/art/make_art.py, so app and deck look like one brand). `slides` renders the banners into `apps/web/public/art/` (mint, remesas, global, credito, home), 2400×480 plus a square.
-- **Layout:** a left sidebar with the product switcher (Mercado home + four products, each with its color dot and short name), collapsing to a bottom tab bar on mobile. The product page is a hero band (name, one-line purpose, 3 live KPIs over the art), then a grid of cards: action panel(s), charts (simple SVG: no new chart framework), and an activity table with explorer links.
-- **Motion:** purposeful only: number tick-ups, the home flow diagram's moving particles, a 150ms panel transition.
-- **Honesty stays visible everywhere:** the footer line ("Testnet prototype · OUSD has no real value · xMXN not redeemable for pesos") and the in-panel Demo / SIMULATED / demo-token badges.
+Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately legible. It must NOT look childish, so avoid tiny grey text, pills everywhere and toy proportions.
+- **Canvas:** clean white `#FFFFFF`, with a soft neutral `#F4F5F7` for page background areas. Dark mode is `#0F1115` / `#1A1D23`.
+- **Fewer boxes:** separate content by spacing and type hierarchy, not borders. Use cards only for things you act on (tiles, the action panel). No 1px borders around every section. Shadows only on the focused/hovered tile (soft, single layer).
+- **Clean product colors** (flat, bright, no gradients):
+  - Mint teal `#00A68A`
+  - Remesas orange `#FF8A1F`
+  - Global blue `#2F6BFF`
+  - Crédito pink `#F2357D`
+
+  Use them as solid fills on product tiles and icons, as the active-tab underline, and for key numbers. Text on fills is white. Everything else stays neutral (ink `#111418`, secondary `#5B6270`, hairline `#E6E8EC`).
+- **Home = the Switch row:** four big rounded-square product tiles (≈260px, radius 20px, solid product color, white line icon, product name, one live number), selected with the cyan-teal focus ring (`#00C3E3`, 4px, offset 4px, gentle pulse) and keyboard arrows + Enter. Above the row: "Mercado: one currency, four products" in big clean type. Below: the "How money moves" map, redrawn flat (thin colored lines, small dots, live numbers, no boxes).
+- **Product pages:** a simple header (colored icon chip + product name + one-line purpose), then the 3 KPIs as big numbers on white with **no box**, then ONE underline tab row, then content laid out with whitespace: an action column (one card) and lists/rows separated by hairlines.
+- **Type:** Instrument Sans 400/500/600. Display 40–56px, numbers 32–48px tabular, body 15–16px, nothing under 13px. DM Mono only for hashes/addresses/API.
+- **Icons:** one consistent line set (lucide), 1.75px stroke.
+- **Motion:** quick 120–180ms. Tile scale 1.03 + ring on focus. Number tick-ups.
+- **Remesas:** still a mobile app inside a generic **Android** phone frame on desktop (rules above). Its in-phone UI follows the same clean language with an orange accent.
+- **Honesty labels stay visible:** a quiet footer line plus small neutral badges ("Demo", "SIMULATED", "demo token").
 
 ## 4. Ownership (rebuild in parallel)
 - `web` FIRST (~25 min): re-skin `@/components/console` into the new brand with the **same component APIs** where possible (so existing screens re-skin automatically), the sidebar shell, theme tokens per product (`data-product="mint|remesas|global|credito"` sets `--accent`), removing the persona bar, Demo mode, and the ecosystem home `/`. Then **/remesas** (send + Tiempo Aire/services, reusing api's billpay components).
 - `contracts`: **/mint** (institutional dashboard on the v2 MultiCollateralVault) and **/global** (cross-border on the v2 MoveAMM + partner API panel).
 - `api`: **/credito** (Drivers / Lenders / Underwriting API; fold in contracts' Earn components), plus redirects for the old /credit, /pay and /earn.
-- `slides`: the app hero art (above), then the deck's ecosystem story.
+- `slides`: deck only (the app no longer uses the glitch art).
 - `qa`: e2e for the new routes, recapture screenshots and the hero video once the products land, and keep the v2 journey going.
 - `review`: IA/UX pass (does each product make sense to its user? can a judge grasp the ecosystem from `/` in 10 seconds?) plus labels.
 - **Target v2:** the new products build against `activeAddresses()`. lead flips to v2 when crew/V2-SWITCH.md is green.
