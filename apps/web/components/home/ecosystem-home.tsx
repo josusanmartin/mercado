@@ -154,7 +154,6 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
   const now = useNow(15_000);
   const receipt = feed.rows.find((r) => r.label === "OUSD → xMXN");
   const P = (id: Pid) => PRODUCTS.find((x) => x.id === id)!;
-  const color = (id: Pid) => (id === "invest" ? "var(--ink)" : P(id).color);
   const ys = [10, 30, 50, 70, 90];
   const receiptLine = feed.isPending ? (
     <span className="text-muted-foreground">Reading Tempo…</span>
@@ -184,7 +183,11 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
           ))}
         </svg>
         <Link href="/mint" className="absolute top-1/2 left-0 grid w-[17%] -translate-y-1/2 rounded-[4px] hover:underline">
-          <span className="text-[13px] font-semibold" style={{ color: P("mint").color }}>Mint issues</span>
+          {/* Review P1: small names are ink (AA); the product color lives on the dot and the paths. */}
+          <span className="flex items-center gap-1.5 text-[13px] font-semibold">
+            <span className="size-2 shrink-0 rounded-full" style={{ background: P("mint").color }} aria-hidden />
+            Mint issues
+          </span>
           <span className="text-[1.15rem] leading-tight font-semibold tabular">{live.mint.value}</span>
           <span className="text-muted-foreground text-[12px] leading-tight">{live.mint.caption}</span>
         </Link>
@@ -200,9 +203,8 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
             className="absolute left-[42%] flex w-[33%] -translate-y-1/2 items-baseline gap-1.5 truncate text-[13px] hover:underline"
             style={{ top: `${ys[i]}%` }}
           >
-            <span className="font-semibold" style={{ color: color(br.id) }}>
-              {P(br.id).short}
-            </span>
+            <span className="size-2 shrink-0 self-center rounded-full" style={{ background: P(br.id).color }} aria-hidden />
+            <span className="font-semibold">{P(br.id).short}</span>
             <span className="text-muted-foreground">{br.verb}</span>
             <span className="ml-auto font-semibold tabular">{live[br.id].value}</span>
             <span className="text-muted-foreground">{br.unit}</span>
@@ -216,7 +218,8 @@ function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined
       {/* Phone: hub, the five branches as linked chips, the receipt. */}
       <div className="grid gap-2 sm:hidden">
         <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
-          <Link href="/mint" className="font-semibold" style={{ color: P("mint").color }}>
+          <Link href="/mint" className="flex items-center gap-1.5 self-center font-semibold">
+            <span className="size-2 rounded-full" style={{ background: P("mint").color }} aria-hidden />
             Mint
           </Link>
           <span className="text-muted-foreground">issues</span>

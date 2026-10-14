@@ -58,6 +58,9 @@ function useMemoProofs() {
     enabled: !!client,
     staleTime: 120_000,
     queryFn: async () => {
+      // Review P1 (10:07): a failed read must never look like "no transfers". getLogs errors propagate (the query
+      // errors and React Query keeps the last good data → "stale"); sponsor-lookup / receipt failures and the
+      // receipt cap mark the sponsorship result incomplete. Only a complete successful read may be empty.
       const sponsor = await fetch("/api/sponsor")
         .then((r) => r.json() as Promise<{ sponsor?: string }>)
         .then((j) => j.sponsor?.toLowerCase())
@@ -66,17 +69,22 @@ function useMemoProofs() {
       let memo: { text: string; hash: Hex } | undefined;
       let sponsored: { hash: Hex; feePayer: string; at?: number } | undefined;
       let receipts = 0;
+      let sponsoredComplete = !!sponsor;
       for (let i = 0n; i < 4n && (!memo || !sponsored); i++) {
         const to = latest - i * CHUNK;
-        const logs = await client!.getLogs({ address: ADDR.xmxn as Address, event: MEMO, fromBlock: to - CHUNK + 1n, toBlock: to }).catch(() => []);
+        const logs = await client!.getLogs({ address: ADDR.xmxn as Address, event: MEMO, fromBlock: to - CHUNK + 1n, toBlock: to });
         for (const l of [...logs].reverse()) {
           if (!memo && l.args.memo) {
             const text = memoText(l.args.memo);
             if (text) memo = { text, hash: l.transactionHash as Hex };
           }
+          if (!sponsored && sponsor && receipts >= 8) sponsoredComplete = false; // bounded check: not proof of none
           if (!sponsored && sponsor && receipts < 8) {
             receipts++;
-            const r = await client!.getTransactionReceipt({ hash: l.transactionHash as Hex }).catch(() => undefined);
+            const r = await client!.getTransactionReceipt({ hash: l.transactionHash as Hex }).catch(() => {
+              sponsoredComplete = false;
+              return undefined;
+            });
             const fp = (r as unknown as { feePayer?: string } | undefined)?.feePayer?.toLowerCase();
             const ts = (l as unknown as { blockTimestamp?: string | number | bigint }).blockTimestamp;
             if (r && fp === sponsor && fp !== r.from.toLowerCase()) sponsored = { hash: l.transactionHash as Hex, feePayer: fp, at: ts !== undefined ? Number(BigInt(ts)) : undefined };
@@ -84,7 +92,7 @@ function useMemoProofs() {
           if (memo && sponsored) break;
         }
       }
-      return { sponsor, memo, sponsored };
+      return { sponsor, memo, sponsored, sponsoredComplete: sponsoredComplete || !!sponsored };
     },
   });
 }
@@ -116,10 +124,11 @@ type ProofQuery = { isPending: boolean; isError: boolean; dataUpdatedAt: number;
 export type ProofState = "loading" | "ready" | "empty" | "stale" | "error";
 
 /** V6-TASTE #11: one state contract for every proof visual. A failed read never looks like "no activity". */
-function proofState(q: ProofQuery, empty = false): ProofState {
+function proofState(q: ProofQuery, empty = false, incomplete = false): ProofState {
   if (q.isPending) return "loading";
   if (q.isError) return q.data !== undefined ? "stale" : "error";
-  return empty ? "empty" : "ready";
+  if (empty) return incomplete ? "error" : "empty"; // an incomplete read is not evidence of "none"
+  return "ready";
 }
 
 /** V6-TASTE #12: hover and keyboard focus show the same accent border/background; only actionable tiles lift (≤2px). */
@@ -137,6 +146,7 @@ function Tile({
   pulse,
   q,
   empty,
+  incomplete,
 }: {
   icon: LucideIcon;
   value: ReactNode;
@@ -146,8 +156,9 @@ function Tile({
   pulse?: unknown;
   q: ProofQuery;
   empty?: boolean;
+  incomplete?: boolean;
 }) {
-  const state = proofState(q, empty);
+  const state = proofState(q, empty, incomplete);
   const now = useNow(30_000);
   const checked = q.dataUpdatedAt ? ago(Math.floor(q.dataUpdatedAt / 1000), now) : undefined;
   const big =
@@ -292,6 +303,7 @@ export function BuiltOnTempo() {
           icon={Fuel}
           q={mp}
           empty={!!mp.data && !m?.sponsored}
+          incomplete={!!mp.data && !m?.sponsoredComplete}
           value={m?.sponsored ? (ago(m.sponsored.at, now) ?? "✓") : dash}
           label="last fee paid by Mercado"
           href={m?.sponsored ? explorerTx(m.sponsored.hash) : m?.sponsor ? explorerAddress(m.sponsor) : undefined}
