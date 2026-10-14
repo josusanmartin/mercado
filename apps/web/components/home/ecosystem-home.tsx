@@ -5,6 +5,7 @@
 // Every number is read live from chain (josu's wiring rule: no fixtures, no hardcoded numbers).
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Route } from "lucide-react";
 import { CARD_ENABLED, PROTOCOL, useCardStats, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
@@ -19,9 +20,27 @@ const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0)
 type Pid = Exclude<ProductId, "home">;
 type Live = Record<Pid, { value: string; caption: string }>;
 
+type Vault = { aprBps: number } | null;
+type InvestRates = { usd: Vault; mxn: Vault; stocks: { symbol: string; price: number; valid: boolean } | null };
+const pct = (bps: number) => `${(bps / 100).toFixed(2)}%`;
+
+/** Invest returns from GET /api/invest/rates: on-chain configured vault APRs and the mIDX feed price. */
+function useInvestRates() {
+  return useQuery({
+    queryKey: ["invest-rates"],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const r = await fetch("/api/invest/rates");
+      if (!r.ok) throw new Error(`rates ${r.status}`);
+      return (await r.json()) as InvestRates;
+    },
+  });
+}
+
 function useLive() {
   const b = useThreeBuckets();
   const card = useCardStats();
+  const rates = useInvestRates().data;
   const v2 = PROTOCOL === "v2";
   const live: Live = {
     mint: v2
@@ -37,8 +56,17 @@ function useLive() {
     card: CARD_ENABLED
       ? { value: n0(card.totalSpent), caption: `xMXN spent with Card · ${card.charges?.toString() ?? "—"} charges` }
       : { value: "—", caption: "Card runs on v2" },
-    // Ahorro en pesos IS the credit pool's supply: lender claims are real savings today.
-    invest: { value: n0(b.pool.lenderClaims), caption: "xMXN saved by lenders" },
+    // Real configured returns only (lead 03:31): dollars (sOUSD), pesos (sxMXN, once deployed), stocks (mIDX price).
+    invest: {
+      value: rates?.usd ? pct(rates.usd.aprBps) : "—",
+      caption: [
+        rates?.usd && "a year on dollars",
+        rates?.mxn && `${pct(rates.mxn.aprBps)} on pesos`,
+        rates?.stocks?.valid && `${rates.stocks.symbol} at US$${rates.stocks.price.toFixed(2)}`,
+      ]
+        .filter(Boolean)
+        .join(" · ") || "returns on dollars, pesos and stocks",
+    },
   };
   return { b, live };
 }
@@ -164,7 +192,7 @@ const FLOWS: { product: Pid; label: string; outbound: boolean }[] = [
   { product: "global", label: "MXN↔USD for businesses", outbound: true },
   { product: "credito", label: "advances out, repaid with fees", outbound: true },
   { product: "card", label: "xMXN spent at shops", outbound: true },
-  { product: "invest", label: "savings in, yield out", outbound: true },
+  { product: "invest", label: "savings in, returns out", outbound: true },
 ];
 const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const mx = (a.x + b.x) / 2;
