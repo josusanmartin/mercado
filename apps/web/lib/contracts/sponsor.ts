@@ -94,7 +94,10 @@ export const pacedFetch: typeof fetch = async (input, init) => {
       release();
     }
     if ((res.status !== 429 && res.status !== 403) || attempt >= MAX_ATTEMPTS) return res;
-    const hint = Number((await res.clone().text().catch(() => "")).match(/try again in (\d+)\s*ms/)?.[1] ?? 0);
+    const text = await res.clone().text().catch(() => "");
+    // a 403 carrying a JSON-RPC answer is final (Tempo: -32601 "method not allowed", e.g. account_getOperation)
+    if (res.status === 403 && /"code"\s*:\s*-32601/.test(text)) return res;
+    const hint = Number(text.match(/try again in (\d+)\s*ms/)?.[1] ?? 0);
     const wait = Math.max(hint, 300 * 2 ** (attempt - 1)) + Math.random() * 200;
     pausedUntil = Math.max(pausedUntil, Date.now() + wait);
     tokens = 0;
@@ -109,11 +112,12 @@ export const rpcTransport = (rpcUrl: string = `${origin()}/api/rpc`) =>
   viemHttp(rpcUrl, { fetchFn: pacedFetch, retryCount: 2, retryDelay: 400, timeout: 30_000 });
 
 /** Relay transport that falls back to an unsponsored fill on the node when the relay itself errors. */
-// The fill fallback goes to the PUBLIC node: if our relay is unreachable, so is our proxy.
+// The unsponsored fill fallback tries our /api/rpc proxy first, then the public node (paced lane either way).
 export function resilientRelay(relayUrl: string, rpcUrl: string = TEMPO_RPC_URL): Transport {
   return (config) => {
     const relay = viemHttp(relayUrl, { retryCount: 0 })(config);
     const rpc = rpcTransport(rpcUrl)(config);
+    const proxy = rpcTransport(relayUrl.replace(/\/api\/sponsor$/, "/api/rpc"))(config);
     return createTransport({
       key: "mercadoRelay",
       name: "Mercado fee relay (with direct fallback)",
@@ -126,7 +130,12 @@ export function resilientRelay(relayUrl: string, rpcUrl: string = TEMPO_RPC_URL)
           const [req, ...rest] = (params as unknown[]) ?? [];
           const unsponsored = { ...((req ?? {}) as Record<string, unknown>) };
           delete unsponsored.feePayer;
-          return rpc.request({ method, params: [unsponsored, ...rest] } as never);
+          // our gated proxy first (no public limiter on stage); the public node only if our server is down
+          try {
+            return await proxy.request({ method, params: [unsponsored, ...rest] } as never);
+          } catch {
+            return rpc.request({ method, params: [unsponsored, ...rest] } as never);
+          }
         }
       }) as never,
     });

@@ -3,13 +3,14 @@
 // The relay co-signs as fee payer for the app's own calls (see policy.ts), so drivers and passkey users need no
 // fee tokens. Anything refused falls back to the sender paying its own fees.
 // GET returns the sponsor address, policy and limits.
-import { createClient, http, type Address } from "viem";
+import { createClient, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { Relay } from "viem/tempo";
-import { FEE_TOKEN, tempoModerato, TEMPO_RPC_URL } from "@mercado/shared";
+import { FEE_TOKEN, tempoModerato } from "@mercado/shared";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { env, repoRoot } from "@/lib/server/env";
+import { gatedTransport } from "./upstream";
 import {
   ALLOWED_TARGETS,
   FEE_TOKENS,
@@ -60,7 +61,7 @@ function createRelay() {
   const account = privateKeyToAccount(sponsorKey());
   const personas = new Set(PERSONA_VARS.map(rootVar).filter((a): a is string => !!a).map((a) => a.toLowerCase()));
   return Relay.create({
-    client: createClient({ chain: tempoModerato, transport: http(TEMPO_RPC_URL) }),
+    client: createClient({ chain: tempoModerato, transport: gatedTransport() }),
     plugins: [
       Relay.feePayer({
         account,

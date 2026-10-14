@@ -11,11 +11,11 @@
 //     are refused before they touch the quota (R-016 Sybil bound).
 //   - ≤ PER_SENDER_PER_HOUR per sender and ≤ GLOBAL_PER_HOUR overall; re-filling the same transaction
 //     doesn't consume quota again.
+import { gatedTransport } from "./upstream";
 import {
   createPublicClient,
   decodeFunctionData,
   getAddress,
-  http,
   parseAbi,
   recoverTypedDataAddress,
   toFunctionSelector,
@@ -36,7 +36,6 @@ import {
   tempoModerato,
   TEMPO_ADDRESSES,
   TEMPO_MODERATO_CHAIN_ID,
-  TEMPO_RPC_URL,
   tip20Abi,
 } from "@mercado/shared";
 
@@ -190,7 +189,7 @@ export function refusal(req: SponsorRequest): string | undefined {
   return undefined;
 }
 
-const client = createPublicClient({ chain: tempoModerato, transport: http(TEMPO_RPC_URL) });
+const client = createPublicClient({ chain: tempoModerato, transport: gatedTransport() });
 
 const BORROW = sel(creditPoolAbi as Abi, "borrow")[0];
 
