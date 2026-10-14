@@ -341,7 +341,8 @@ function CardFront({
               </span>
             </div>
           )}
-          {shine && <span key={shine} aria-hidden className="m-shine" />}
+          {/* after the paid sheet closes itself (2.5 s + exit), so the sweep isn't under the scrim */}
+          {shine && <span key={shine} aria-hidden className="m-shine" style={{ animationDelay: "2750ms" }} />}
         </div>
         <div
           className="m-face m-face-back overflow-hidden rounded-[8px] text-[#0a0a0a]"
