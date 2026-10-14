@@ -2,6 +2,7 @@
 // v5 UI pass gate (lead 04:44): after each web/mobile push, READ-ONLY. For every route at 1440x900 in dark + light,
 // with normal and reduced motion, plus a 390x844 phone-width pass (dark): HTTP 200, zero console errors, no horizontal overflow, the phone ending ≤868px
 // (lead 04:53) or the page's primary action inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
+// Headings: h1/h2 accessible names must be words, not spaced letters (lead 06:11).
 // Screenshots go to review/qa-v5/<label>/ for before/after comparison.
 //   node scripts/v5-check.mjs before        # baseline
 //   node scripts/v5-check.mjs after-<sha>   # after a push; exit 1 on any FAIL
@@ -76,6 +77,12 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
           row.fold = box ? `${Math.round(box.y + box.height)}/${limit}` : 'missing'
           // gate the fold on desktop only; at 390px the page scrolls by design (informational)
           if (w >= 1000 && (!box || box.y + box.height > limit)) row.notes.push(r.phone ? 'phone below the fold' : 'primary action below the fold')
+        }
+        // lead 06:11: every h1/h2 accessible name is the word, not 'C r é d i t o' (LetterReveal a11y)
+        if (motion === 'no-preference') {
+          const snap = await page.locator('body').ariaSnapshot().catch(() => '')
+          const spaced = [...snap.matchAll(/heading "([^"]*)" \[level=[12]\]/g)].map((m) => m[1]).filter((t) => /(?:^|\s)(?:\S\s){3,}\S(?:\s|$)/u.test(t))
+          if (spaced.length) row.notes.push(`heading name spelled out: "${spaced[0].slice(0, 40)}"`)
         }
         if (motion === 'reduce') {
           // anything still animating 1.5s after settle, longer than 1s and not a 1-frame tick, is a reduced-motion leak
