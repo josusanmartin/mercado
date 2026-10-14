@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { Mppx, tempo } from "mppx/server";
-import { Credential, Receipt } from "mppx";
+import { Challenge, Credential, Receipt } from "mppx";
 import type { Address, Hex } from "viem";
 import { TEMPO_ADDRESSES, TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import { getDeployments } from "../server/deployments";
@@ -133,4 +133,50 @@ export async function charge(request: Request, opts: ChargeOptions): Promise<Cha
     /* payer is best-effort; the receipt is authoritative */
   }
   return { paid: true, receipt, receiptHeader, txHash: receipt.reference as Hex, payer, externalId };
+}
+
+/** Payload type of the MPP credential on `request`, if any: "hash" = client already broadcast (push). */
+export function credentialKind(request: Request): "hash" | "transaction" | "proof" | null {
+  const header = request.headers.get("Authorization");
+  if (!header) return null;
+  try {
+    const cred = Credential.deserialize<{ type?: string }>(Credential.extractPaymentScheme(header) ?? header);
+    const t = cred.payload?.type;
+    return t === "hash" || t === "transaction" || t === "proof" ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface CredentialInfo {
+  kind: "hash" | "transaction" | "proof";
+  challengeId: string;
+  externalId?: string;
+  expires?: string;
+  /** Push mode: the already-broadcast tx hash. */
+  txHash?: Hex;
+}
+
+/**
+ * Parses the MPP credential on `request` and returns it only if its challenge was issued by THIS server
+ * (HMAC check with our secret). Null when absent, malformed or foreign.
+ */
+export function ownCredential(request: Request): CredentialInfo | null {
+  const header = request.headers.get("Authorization");
+  if (!header) return null;
+  try {
+    const cred = Credential.deserialize<{ type?: string; hash?: string }>(Credential.extractPaymentScheme(header) ?? header);
+    if (!Challenge.verify(cred.challenge, { secretKey: secretKey() })) return null;
+    const kind = cred.payload?.type;
+    if (kind !== "hash" && kind !== "transaction" && kind !== "proof") return null;
+    return {
+      kind,
+      challengeId: cred.challenge.id,
+      externalId: (cred.challenge.request as { externalId?: string }).externalId,
+      expires: cred.challenge.expires,
+      txHash: kind === "hash" ? (cred.payload.hash as Hex) : undefined,
+    };
+  } catch {
+    return null;
+  }
 }

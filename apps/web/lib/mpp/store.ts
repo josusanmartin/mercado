@@ -10,7 +10,9 @@ const replacer = (_: string, v: unknown) => (typeof v === "bigint" ? { __bigint:
 const reviver = (_: string, v: unknown) =>
   v && typeof v === "object" && "__bigint" in v ? BigInt((v as { __bigint: string }).__bigint) : v;
 
-export function fileStore(file = path.join(repoRoot(), ".data", "mppx-store.json")) {
+export function fileStore(
+  file = process.env.MERCADO_MPPX_STORE_FILE ?? path.join(repoRoot(), ".data", "mppx-store.json"),
+) {
   const load = (): Record<string, string> => (existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {});
   const save = (data: Record<string, string>) => {
     mkdirSync(path.dirname(file), { recursive: true });

@@ -1,5 +1,6 @@
 // EIP-712 eligibility attestations for CreditPool.borrow (see INTERFACES.md → ICreditPool).
-import { keccak256, toHex, type Address, type Hex } from "viem";
+import type { EligibilityAttestation } from "@mercado/shared";
+import { isAddressEqual, keccak256, recoverTypedDataAddress, toHex, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 export const ELIGIBILITY_TYPES = {
@@ -63,4 +64,30 @@ export async function signEligibility(
     message,
   });
   return { signature, signer: account.address };
+}
+
+/**
+ * Off-chain mirror of the CreditPool checks: signature recovers to `expectedSigner`, not expired.
+ * (Nonce reuse, caps and liquidity are enforced on-chain.)
+ */
+export async function verifyEligibility(
+  att: Pick<EligibilityAttestation, "borrower" | "maxAmount" | "expiry" | "nonce" | "dataHash" | "signature" | "pool" | "chainId">,
+  expectedSigner: Address,
+  now = Math.floor(Date.now() / 1000),
+): Promise<{ ok: true } | { ok: false; reason: "expired" | "bad-signer" }> {
+  if (att.expiry <= now) return { ok: false, reason: "expired" };
+  const recovered = await recoverTypedDataAddress({
+    domain: eligibilityDomain(att.pool as Address, att.chainId),
+    types: ELIGIBILITY_TYPES,
+    primaryType: "Eligibility",
+    message: {
+      borrower: att.borrower as Address,
+      maxAmount: BigInt(att.maxAmount),
+      expiry: BigInt(att.expiry),
+      nonce: BigInt(att.nonce),
+      dataHash: att.dataHash as Hex,
+    },
+    signature: att.signature as Hex,
+  });
+  return isAddressEqual(recovered, expectedSigner) ? { ok: true } : { ok: false, reason: "bad-signer" };
 }

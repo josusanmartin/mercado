@@ -139,10 +139,14 @@ export const DriverScoreResponseSchema = z.object({
   scoreFloor: z.number(),
   features: ScoreFeaturesSchema,
   explanation: z.array(z.string()),
-  /** xMXN 6dp; "0" when ineligible. */
+  /** Credit line, xMXN 6dp ("0" when ineligible). This is the attested maxAmount: the borrower's
+   *  outstanding principal after any draw must stay ≤ it. */
   maxAmount: UintStringSchema,
-  /** What bounded maxAmount: 15% of median weekly net, the 1,500 MXN ceiling, or pool liquidity. */
-  capReason: z.enum(["income-share", "absolute-cap", "pool-liquidity", "ineligible"]),
+  /** What can actually be drawn right now (CreditPool.borrowCapacity: line headroom, per-user cap,
+   *  idle cash, 80% utilization), xMXN 6dp. Use this as the draw input's max. "0" when unknown. */
+  availableToBorrow: UintStringSchema,
+  /** What bounded the credit line: 15% of median weekly net or the 1,500 MXN ceiling. */
+  capReason: z.enum(["income-share", "absolute-cap", "ineligible"]),
   dataHash: Bytes32Schema,
   attestation: EligibilityAttestationSchema.optional(),
   /** Why an eligible driver got no attestation (pool not deployed, liquidity unreadable, …). */
@@ -234,6 +238,11 @@ export const BillOrderSchema = z.object({
   paidButUnfulfilled: z.boolean(),
   receipt: PaymentReceiptSchema.optional(),
   fulfillment: FulfillmentSchema.optional(),
+  /** Verified payments that did NOT settle this order (e.g. a push-mode wallet paid twice, or paid after
+   *  the order expired). Money moved; flagged for manual refund, never fulfilled. */
+  unappliedPayments: z
+    .array(z.object({ txHash: HexSchema, amount: UintStringSchema, payer: AddressSchema.optional(), detectedAt: z.string(), reason: z.string() }))
+    .optional(),
   history: z.array(OrderHistoryEntrySchema),
   createdAt: z.string(),
   updatedAt: z.string(),

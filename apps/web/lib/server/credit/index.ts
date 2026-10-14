@@ -13,22 +13,24 @@ export * from "./provider";
 export * from "./score";
 export * from "./attest";
 
-const poolAbi = parseAbi(["function availableLiquidity() view returns (uint256)"]);
+const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
 
 export function creditPoolAddress(): Address | undefined {
   return getDeployments().creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
 }
 
-/** Pool liquidity in whole xMXN; throws if the pool can't be read. */
-export async function readPoolLiquidityMxn(pool: Address): Promise<number> {
-  const raw = await publicClient().readContract({ address: pool, abi: poolAbi, functionName: "availableLiquidity" });
-  return Number(formatUnits(raw, 6));
+/**
+ * What `borrower` could actually draw right now under an attestation for `maxAmount`
+ * (CreditPool.borrowCapacity: attested headroom, per-user cap, idle cash, 80% utilization). Throws if unreadable.
+ */
+export async function readBorrowCapacity(pool: Address, borrower: Address, maxAmount: bigint): Promise<bigint> {
+  return publicClient().readContract({ address: pool, abi: poolAbi, functionName: "borrowCapacity", args: [borrower, maxAmount] });
 }
 
 export interface AssessOptions {
   provider?: EarningsProvider;
-  /** Override pool liquidity (tests). `null` = skip the on-chain read. */
-  poolLiquidityMxn?: number | null;
+  /** Override CreditPool.borrowCapacity in whole xMXN (tests). `null` = skip the on-chain read. */
+  borrowCapacityMxn?: number | null;
   pool?: Address;
   signerKey?: Hex;
   now?: number; // unix seconds
@@ -47,20 +49,8 @@ export async function assessDriver(
   ]);
 
   const pool = opts.pool ?? creditPoolAddress();
-  // An attestation is only issued once pool liquidity has been read successfully (or injected by a test):
-  // never advertise an executable advance we couldn't check against real liquidity.
-  let liquidity: number | undefined;
-  let liquidityError: string | undefined;
-  if (opts.poolLiquidityMxn !== undefined && opts.poolLiquidityMxn !== null) liquidity = opts.poolLiquidityMxn;
-  else if (opts.poolLiquidityMxn === undefined && pool) {
-    try {
-      liquidity = await readPoolLiquidityMxn(pool);
-    } catch (err) {
-      liquidityError = (err as Error).message.split("\n")[0];
-      console.warn("[credit] availableLiquidity() read failed; withholding attestation:", liquidityError);
-    }
-  }
-  const result = scoreDriver(weeks, liquidity);
+  const result = scoreDriver(weeks);
+  const maxAmount = parseUnits(String(result.capMxn), 6);
 
   // The income report is kept off-chain; only its hash goes into the attestation.
   const report = {
@@ -77,7 +67,6 @@ export async function assessDriver(
     score: result.score,
   };
   const dataHash = reportDataHash(report);
-  const maxAmount = parseUnits(String(result.capMxn), 6);
 
   console.info(
     `[credit] borrower=${borrower} profile=${profile} score=${result.score} eligible=${result.eligible} cap=${result.capMxn} reason=${result.capReason} dataHash=${dataHash}`,
@@ -94,22 +83,50 @@ export async function assessDriver(
     features: result.features,
     explanation: result.explanation,
     maxAmount: maxAmount.toString(),
+    availableToBorrow: "0",
     capReason: result.capReason,
     dataHash,
   };
 
   if (!result.eligible) return response;
 
+  // Only attest once we've read what the pool can actually lend this borrower right now: never
+  // advertise an executable advance we couldn't check against real on-chain capacity (R-001, R-006).
+  let capacity: bigint | undefined;
+  let capacityError: string | undefined;
+  if (typeof opts.borrowCapacityMxn === "number") {
+    const injected = parseUnits(String(opts.borrowCapacityMxn), 6);
+    capacity = injected < maxAmount ? injected : maxAmount;
+  } else if (opts.borrowCapacityMxn === undefined && pool) {
+    try {
+      capacity = await readBorrowCapacity(pool, borrower, maxAmount);
+    } catch (err) {
+      capacityError = (err as Error).message.split("\n")[0];
+      console.warn("[credit] borrowCapacity() read failed; withholding attestation:", capacityError);
+    }
+  }
+  if (capacity !== undefined) {
+    response.availableToBorrow = capacity.toString();
+    if (capacity < maxAmount)
+      response.explanation.push(
+        capacity === 0n
+          ? "Nothing can be drawn right now: pool liquidity/utilization limit reached or your line is fully used. Repay or try later."
+          : `You can draw up to ${formatUnits(capacity, 6)} xMXN right now (limited by pool liquidity/utilization or your outstanding advance).`,
+      );
+  }
+
   const signerKey = opts.signerKey ?? (env("ATTESTATION_SIGNER_PRIVATE_KEY") as Hex | undefined);
   const withheld = !pool
     ? "the credit pool isn't deployed yet"
-    : liquidityError
-      ? "pool liquidity couldn't be read right now, try again shortly"
-      : liquidity === undefined && opts.poolLiquidityMxn !== null
-        ? "pool liquidity is unknown"
-        : !signerKey
-          ? "the attestation signer key is not configured"
-          : undefined;
+    : capacityError
+      ? "pool capacity couldn't be read right now, try again shortly"
+      : capacity === undefined
+        ? "pool capacity is unknown"
+        : capacity === 0n
+          ? "no borrowing capacity available right now"
+          : !signerKey
+            ? "the attestation signer key is not configured"
+            : undefined;
   if (withheld || !pool || !signerKey) {
     response.explanation.push(`No attestation issued: ${withheld ?? "unavailable"}.`);
     response.attestationWithheld = withheld ?? "unavailable";

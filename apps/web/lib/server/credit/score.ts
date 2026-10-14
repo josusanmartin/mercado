@@ -65,24 +65,22 @@ export function computeFeatures(weeks: WeeklyEarnings[]): ScoreFeatures {
   };
 }
 
-export type CapReason = "income-share" | "absolute-cap" | "pool-liquidity" | "ineligible";
+export type CapReason = "income-share" | "absolute-cap" | "ineligible";
 
 export interface ScoreResult {
   score: number;
   eligible: boolean;
   features: ScoreFeatures;
   explanation: string[];
-  /** Whole MXN (== xMXN), already rounded down. 0 when ineligible. */
+  /** Credit line in whole MXN (== xMXN), rounded down to 10. 0 when ineligible. */
   capMxn: number;
   capReason: CapReason;
 }
 
 const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
-/**
- * @param poolLiquidityMxn available xMXN in the CreditPool if readable, else undefined (not applied).
- */
-export function scoreDriver(weeks: WeeklyEarnings[], poolLiquidityMxn?: number): ScoreResult {
+/** Score + credit line from earnings alone. Pool capacity is applied separately (see assessDriver). */
+export function scoreDriver(weeks: WeeklyEarnings[]): ScoreResult {
   const f = computeFeatures(weeks);
   const c = f.components;
   const score = r1(c.income + c.stability + c.activity + c.tripConsistency);
@@ -105,23 +103,14 @@ export function scoreDriver(weeks: WeeklyEarnings[], poolLiquidityMxn?: number):
   }
 
   const incomeCap = INCOME_SHARE * f.medianWeeklyNetMxn;
-  let cap = Math.min(incomeCap, ABSOLUTE_CAP_MXN);
-  let capReason: CapReason = incomeCap <= ABSOLUTE_CAP_MXN ? "income-share" : "absolute-cap";
+  const cap = Math.min(incomeCap, ABSOLUTE_CAP_MXN);
+  const capReason: CapReason = incomeCap <= ABSOLUTE_CAP_MXN ? "income-share" : "absolute-cap";
   explanation.push(
     capReason === "income-share"
       ? `Advance limit is 15% of median weekly net (${fmt(incomeCap)} MXN), under the ${fmt(ABSOLUTE_CAP_MXN)} MXN ceiling.`
       : `15% of median weekly net is ${fmt(incomeCap)} MXN, so the ${fmt(ABSOLUTE_CAP_MXN)} MXN ceiling applies.`,
   );
-  if (poolLiquidityMxn !== undefined && poolLiquidityMxn < cap) {
-    cap = poolLiquidityMxn;
-    capReason = "pool-liquidity";
-    explanation.push(`Limited by credit pool liquidity currently available (${fmt(poolLiquidityMxn)} xMXN).`);
-  }
   const capMxn = Math.floor(cap / CAP_STEP_MXN) * CAP_STEP_MXN;
-  if (capMxn <= 0) {
-    explanation.push("Not eligible right now: the credit pool has no liquidity available.");
-    return { score, eligible: false, features: f, explanation, capMxn: 0, capReason: "pool-liquidity" };
-  }
-  explanation.push(`Score ${score} ≥ floor ${SCORE_FLOOR}: eligible for up to ${fmt(capMxn)} xMXN. Illustrative demo heuristic only, not a validated credit model.`);
+  explanation.push(`Score ${score} ≥ floor ${SCORE_FLOOR}: credit line of ${fmt(capMxn)} xMXN. Illustrative demo heuristic only, not a validated credit model.`);
   return { score, eligible: true, features: f, explanation, capMxn, capReason };
 }

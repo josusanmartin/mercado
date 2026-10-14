@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import path from "node:path";
 import type { BillOrder, BillProviderId, OrderStatus } from "@mercado/shared";
 import { repoRoot } from "../env";
+import type { PendingAttempt } from "../../mpp/reconcile";
 
 export interface StoredQuote {
   quoteId: string;
@@ -20,7 +21,12 @@ export interface StoredQuote {
   createdAt: string;
 }
 
-export type StoredOrder = BillOrder & { account: string; recipient: `0x${string}` };
+export type StoredOrder = BillOrder & {
+  account: string;
+  recipient: `0x${string}`;
+  /** Credentials seen for this order that haven't resolved yet (R-009 crash/timeout recovery). */
+  pendingAttempts?: PendingAttempt[];
+};
 
 export interface StoreData {
   version: 1;
@@ -87,6 +93,6 @@ export function transition(order: StoredOrder, status: OrderStatus, note?: strin
 /** Public view of an order (drops the raw account identifier). */
 export function publicOrder(o: StoredOrder): BillOrder {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { account, recipient, ...rest } = o;
+  const { account, recipient, pendingAttempts, ...rest } = o;
   return rest;
 }
