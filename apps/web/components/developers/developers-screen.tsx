@@ -3,7 +3,7 @@
 // challenge (decoded from a no-payment call), copy-paste curl + an mppx client snippet, and a LIVE "Try it"
 // that pays from the API partner demo account and shows 402 → pay → 200 + Payment-Receipt.
 import { probeChallenge } from "@/lib/mpp/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   Check,
   Copy,
@@ -29,6 +29,7 @@ import { Honesty, usePresent } from "@/components/console/present";
 import { PaidCalls } from "@/components/credito/paid-calls";
 import { usePricing } from "@/components/credito/use-pricing";
 import { fmtAmount } from "@/lib/format";
+import { Reveal, Stagger, SuccessCheck } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ENDPOINTS,
@@ -78,13 +79,9 @@ export function DevelopersScreen() {
       }
       purpose={
         <>
-          Pay per call with MPP: no API key, account or card. Each endpoint
-          answers HTTP 402 with a payment challenge; your client pays in xMXN on
-          Tempo and retries with the credential, and the response carries a
-          Payment-Receipt you can check on the explorer.
-          <span className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="mock">Testnet · xMXN has no real value</Badge>
-          </span>
+          Pay per call with MPP, no API key or account: each endpoint answers
+          HTTP 402, your client pays in xMXN on Tempo and retries, and the
+          response carries a Payment-Receipt you can check on the explorer.
         </>
       }
       list={
@@ -103,37 +100,47 @@ export function DevelopersScreen() {
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <Panel title={e.title} description={e.summary}>
-            <Rows>
-              <Row
-                label="Request"
-                value={
-                  <span className="font-mono text-[13px]">
-                    {e.method} {e.path}
-                  </span>
-                }
-              />
-              <Row
-                label="Price"
-                value={price(e.id)}
-                sub="Live from /api/mpp/pricing (what the route charges)"
-              />
-              <Row label="Returns" value={e.returns} />
-              <Row
-                label="Settles"
-                value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
-              />
-            </Rows>
-          </Panel>
-          <ChallengeShape key={e.id} endpoint={e} />
-          <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
-          <Code
-            title="mppx client: pay and get the response"
-            code={snippetFor(e, origin, DRIVER)}
-          />
+          <Reveal>
+            <Panel title={e.title} description={e.summary}>
+              <Rows>
+                <Row
+                  label="Request"
+                  value={
+                    <span className="font-mono text-[13px]">
+                      {e.method} {e.path}
+                    </span>
+                  }
+                />
+                <Row
+                  label="Price"
+                  value={price(e.id)}
+                  sub="Live from /api/mpp/pricing (what the route charges)"
+                />
+                <Row label="Returns" value={e.returns} />
+                <Row
+                  label="Settles"
+                  value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
+                />
+              </Rows>
+            </Panel>
+          </Reveal>
+          <Reveal delay={60}>
+            <ChallengeShape key={e.id} endpoint={e} />
+          </Reveal>
+          <Reveal delay={120}>
+            <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
+          </Reveal>
+          <Reveal delay={180}>
+            <Code
+              title="mppx client: pay and get the response"
+              code={snippetFor(e, origin, DRIVER)}
+            />
+          </Reveal>
         </div>
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <TryIt key={e.id} endpoint={e} />
+          <Reveal delay={40}>
+            <TryIt key={e.id} endpoint={e} />
+          </Reveal>
           {e.id !== "bills" && (
             <PaidCalls
               product={e.id}
@@ -160,8 +167,18 @@ function ChallengeShape({ endpoint }: { endpoint: PaidEndpoint }) {
     // the server makes the unpaid call (GET /api/mpp/challenge), so the browser doesn't log a red 402
     const probe =
       endpoint.id === "move-quote"
-        ? probeChallenge("move-quote", Object.fromEntries(new URL(endpoint.path, "http://x").searchParams))
-        : probeChallenge("underwriting", Object.fromEntries(Object.entries(endpoint.body!({ borrower: DRIVER })).map(([k, v]) => [k, String(v)])));
+        ? probeChallenge(
+            "move-quote",
+            Object.fromEntries(new URL(endpoint.path, "http://x").searchParams),
+          )
+        : probeChallenge(
+            "underwriting",
+            Object.fromEntries(
+              Object.entries(endpoint.body!({ borrower: DRIVER })).map(
+                ([k, v]) => [k, String(v)],
+              ),
+            ),
+          );
     probe
       .then(async (res) => {
         const header = res.wwwAuthenticate ?? "";
@@ -290,14 +307,19 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
           </p>
         )}
         {t.trace.length > 0 && (
-          <ol className="mt-6 grid gap-4">
+          <Stagger as="ol" className="mt-6 grid gap-4">
             {t.trace.map((s, i) => (
               <Step key={i} s={s} />
             ))}
-          </ol>
+          </Stagger>
         )}
         {receiptTx && (
-          <div className="mt-6 grid gap-1 text-[15px]">
+          <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-1 text-[15px]">
+            <SuccessCheck
+              size={40}
+              label="Paid"
+              className="text-success row-span-2"
+            />
             <span className="text-muted-foreground text-[13px]">
               Settlement
             </span>
@@ -335,9 +357,9 @@ const DOT: Record<TraceStep["kind"], string> = {
   error: "bg-destructive",
 };
 
-function Step({ s }: { s: TraceStep }) {
+function Step({ s, style }: { s: TraceStep; style?: CSSProperties }) {
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+    <li style={style} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
       <span className={cn("mt-1.5 size-2.5 rounded-full", DOT[s.kind])} />
       <div className="min-w-0">
         <p className="flex flex-wrap items-baseline justify-between gap-2 text-[15px] font-medium">
