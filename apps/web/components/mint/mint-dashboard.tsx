@@ -58,7 +58,7 @@ function Overview() {
         title="Collateral mix"
         description={
           PROTOCOL === "v2"
-            ? "What institutions have locked to mint xMXN, valued at the live feeds. sOUSD and tTBILL are demo tokens with admin-set yield and prices."
+            ? "What institutions have locked to mint xMXN. OUSD is valued at an assumed $1.00 (testnet), sOUSD at its share price, tTBILL at its demo admin price feed; sOUSD and tTBILL are demo tokens."
             : "Testnet OUSD locked in the vault (valued at an assumed $1.00). Multi-collateral issuance is the v2 vault."
         }
       >

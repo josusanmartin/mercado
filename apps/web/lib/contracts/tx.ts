@@ -15,7 +15,14 @@ export type TxStatus = "idle" | "simulating" | "signing" | "pending" | "success"
 /** Minimal receipt shape (Tempo receipts carry extra fields and statuses). */
 export type TxReceipt = { status: string; transactionHash: Hash; blockNumber: bigint; logs: Log[] };
 
-export type TxStep = { label: string; hash: Hash; url: string; receipt?: TxReceipt };
+export type TxStep = {
+  label: string;
+  hash: Hash;
+  url: string;
+  receipt?: TxReceipt;
+  /** Who paid the network fee: "sponsor" (Mercado's fee payer) or "you" (fallback: show "Comisión de red pagada por ti"). */
+  feePaidBy?: "sponsor" | "you";
+};
 
 export type WriteRequest = {
   address: Address;
@@ -73,6 +80,8 @@ export function useTx() {
       const receipt = await waitForTransactionReceipt(config, { hash, chainId: CHAIN_ID });
       if (receipt.status !== "success") throw new Error(`${label} reverted on-chain (${hash}).`);
       step.receipt = receipt as unknown as TxReceipt;
+      const r = receipt as unknown as { from?: Address; feePayer?: Address | null };
+      step.feePaidBy = r.feePayer && r.from && r.feePayer.toLowerCase() !== r.from.toLowerCase() ? "sponsor" : "you";
       setSteps((s) => s.map((x) => (x.hash === hash ? { ...step } : x)));
       return step;
     },
