@@ -12,6 +12,7 @@
 //   node scripts/v5-check.mjs before        # baseline
 //   node scripts/v5-check.mjs after-<sha>   # after a push; exit 1 on any FAIL
 //   node scripts/v5-check.mjs x --only nojs # one pass: desktop | 390 | nojs
+//   node scripts/v5-check.mjs x --routes global,developers   # only those routes
 import { createRequire } from 'node:module'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -22,6 +23,8 @@ const BASE = process.env.MERCADO_APP_URL ?? 'http://localhost:3100'
 const label = process.argv[2] ?? 'run'
 // --only desktop|390|nojs runs one pass (the full gate is all three)
 const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : undefined
+// --routes global,developers limits the run to routes whose name matches (quick re-check after a scoped push)
+const ROUTE_FILTER = process.argv.includes('--routes') ? process.argv[process.argv.indexOf('--routes') + 1].split(',') : undefined
 const OUT = new URL(`../review/qa-v5/${label}/`, import.meta.url).pathname
 mkdirSync(OUT, { recursive: true })
 
@@ -38,6 +41,7 @@ const ROUTES = [
   { path: '/contracts', name: 'contracts', fold: (p) => p.getByRole('link', { name: /Verified ✓/ }).first() },
 ]
 
+if (ROUTE_FILTER) ROUTES.splice(0, ROUTES.length, ...ROUTES.filter((r) => ROUTE_FILTER.includes(r.name)))
 const results = []
 const browser = await chromium.launch()
 const RUNS = [
