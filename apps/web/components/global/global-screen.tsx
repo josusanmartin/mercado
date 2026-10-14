@@ -457,7 +457,7 @@ function PaySupplier() {
         <PanelActions>
           <Button
             size="lg"
-            className="h-auto min-h-16 max-w-full py-2 whitespace-normal sm:min-h-12"
+            className="h-auto min-h-16 max-w-full py-2 whitespace-normal sm:min-h-12 sm:min-w-[22rem]!"
             pending={m.tx.isBusy}
             disabled={!canPay}
             onClick={() => {
