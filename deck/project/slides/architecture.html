@@ -1,65 +1,39 @@
-<section id="architecture" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
-<div style="display:flex;flex-direction:column;gap:20px">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:32px">
-<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">How it works</p>
-<div style="display:flex;gap:16px">
-<p style="font-size:24px;font-weight:600;padding:6px 18px;border-radius:999px;background:#13241F;color:#F5F0E6">Solid = on-chain</p>
-<p style="font-size:24px;font-weight:600;padding:4px 16px;border-radius:999px;border:2px dashed #A64B0A;color:#A64B0A">Dashed = mock, labeled</p>
+<section id="architecture" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">A1 — appendix: how it works</p>
+<h2 style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Three separate pots,</h2>
+<h2 style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">one peso token.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<div style="position:absolute;left:128px;top:468px;width:1664px;display:grid;grid-template-columns:400px 560px 1fr;gap:48px">
+<div style="display:flex;flex-direction:column;gap:14px">
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">people</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">LP / minter</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">Sender in the US</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">Gig driver</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">Lender</p>
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#999999">Tempo Wallet, passkey or demo persona</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;padding:0 0 0 40px;border-left:1px solid rgba(255,255,255,0.12)">
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">Mercado app · Next.js API</p>
+<p style="font-size:32px;font-weight:500;color:#999999">/api/fx <span style="color:#FFB547">· mock feed</span></p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">/api/driver/score</p>
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">Demo Uber Data in, EIP-712 out</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">/api/bills/pay</p>
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">HTTP 402, then a simulated top-up</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">/api/sponsor</p>
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">fee-payer relay</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;padding:0 0 0 40px;border-left:1px solid rgba(255,255,255,0.12)">
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">Tempo Moderato contracts</p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">xMXN <span style="color:#999999">· TIP-20, vault is sole issuer</span></p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">CollateralVault <span style="color:#FFB547">· pot 1</span></p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">SwapDesk <span style="color:#FFB547">· pot 2</span></p>
+<p style="font-size:32px;font-weight:500;color:#F2F0EA">CreditPool <span style="color:#FFB547">· pot 3</span></p>
+<p style="font-size:32px;font-weight:500;color:#999999">FXOracleAdapter <span style="color:#FFB547">· mock feed</span></p>
+<p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#999999">locked OUSD · own desk reserves · lender cash</p>
 </div>
 </div>
-<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">Three separate pots, one peso token</h2>
-</div>
-<div style="display:grid;grid-template-columns:340px 72px 560px 72px 620px;align-items:center">
-<div style="display:flex;flex-direction:column;gap:12px">
-<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#5B6963">People</p>
-<p style="font-size:24px;font-weight:600;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px;color:#13241F">LP / minter</p>
-<p style="font-size:24px;font-weight:600;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px;color:#13241F">Sender in the US</p>
-<p style="font-size:24px;font-weight:600;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px;color:#13241F">Gig driver</p>
-<p style="font-size:24px;font-weight:600;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px;color:#13241F">Lender</p>
-<p style="font-size:24px;line-height:1.3;color:#4B5A54">Tempo Wallet, passkey or demo persona</p>
-</div>
-<x-shape kind="arrow-right" style="background:#A64B0A;width:48px;height:28px;justify-self:center"></x-shape>
-<div style="display:flex;flex-direction:column;gap:12px">
-<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#5B6963">Mercado app · Next.js API</p>
-<div style="display:flex;flex-direction:column;gap:4px;padding:16px 20px;border:2px dashed #A64B0A;border-radius:12px">
-<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#13241F">/api/fx</p>
-<p style="font-size:24px;line-height:1.3;color:#4B5A54">Admin mock FX feed (testnet only)</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px">
-<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#13241F">/api/driver/score</p>
-<p style="font-size:24px;line-height:1.3;color:#4B5A54">Demo Uber Data in, signed EIP-712 attestation out</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:16px 20px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:12px">
-<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#13241F">/api/bills/pay</p>
-<p style="font-size:24px;line-height:1.3;color:#4B5A54">mppx HTTP 402, then a SIMULATED Telcel top-up</p>
-</div>
-</div>
-<x-shape kind="arrow-right" style="background:#A64B0A;width:48px;height:28px;justify-self:center"></x-shape>
-<div style="display:flex;flex-direction:column;gap:12px">
-<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#5B6963">Tempo Moderato contracts</p>
-<div style="display:flex;flex-direction:column;gap:4px;padding:14px 20px;background:#13241F;border-radius:12px">
-<p style="font-size:24px;font-weight:600;color:#F5F0E6">xMXN · TIP-20</p>
-<p style="font-size:24px;line-height:1.3;color:#BCCBC4">Minted and burned only by the vault</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:14px 20px;background:#13241F;border-radius:12px">
-<p style="font-size:24px;font-weight:600;color:#F5F0E6">CollateralVault <span style="color:#F2A54A">· pot 1</span></p>
-<p style="font-size:24px;line-height:1.3;color:#BCCBC4">Holds locked OUSD collateral</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:14px 20px;background:#13241F;border-radius:12px">
-<p style="font-size:24px;font-weight:600;color:#F5F0E6">SwapDesk <span style="color:#F2A54A">· pot 2</span></p>
-<p style="font-size:24px;line-height:1.3;color:#BCCBC4">Its own finite OUSD and xMXN reserves</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:14px 20px;background:#13241F;border-radius:12px">
-<p style="font-size:24px;font-weight:600;color:#F5F0E6">CreditPool <span style="color:#F2A54A">· pot 3</span></p>
-<p style="font-size:24px;line-height:1.3;color:#BCCBC4">Lender-supplied xMXN, capped exposure</p>
-</div>
-<div style="display:flex;flex-direction:column;gap:4px;padding:12px 18px;border:2px dashed #A64B0A;border-radius:12px">
-<p style="font-size:24px;font-weight:600;color:#13241F">FXOracleAdapter</p>
-<p style="font-size:24px;line-height:1.3;color:#4B5A54">Mock feed; stale or outlier prices revert</p>
-</div>
-</div>
-</div>
-<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">A1</p>
-<aside>Appendix: skip in the 3-minute pitch; use for Q&amp;A. Left to right: people connect a Tempo Wallet, a passkey, or a demo persona. The Next.js app talks to three server routes and five contracts on Tempo Moderato. The key point is the three pots: vault collateral, swap-desk inventory and credit-pool cash are funded separately, so the vault never pays for a swap or a loan. Dashed boxes are mocks we label in the UI and the API responses.</aside>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">A1</p>
+<aside>Appendix: skip in the 3-minute pitch; use for Q&amp;A. Left to right: people connect a Tempo Wallet, a passkey, or a demo persona. The Next.js app talks to four server routes and five contracts on Tempo Moderato. The key point is the three pots: vault collateral, swap-desk inventory and credit-pool cash are funded separately, so the vault never pays for a swap or a loan. Amber marks the pots and the mocks; the FX feed is an admin mock on testnet. /api/sponsor pays fees for Mercado calls so new wallets need no gas token.</aside>
 </section>
