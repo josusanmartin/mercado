@@ -30,3 +30,7 @@ Adopt the **design language** of top Latin American fintech apps like DolarApp/R
 - **Motion:** spring-y sheet presentation, number tick-ups, a success screen with a big check.
 - **Bottom nav:** 4 icons (Inicio · Tarjeta · Actividad · Perfil) with a small active dot.
 Apply to ALL in-phone apps: **Remesas, Crédito DriverApp, Card holder, Invest** (coordinate with @web for Card and @api for Invest, or take the visual layer yourself with their OK). Remesas first, then Card, Crédito, Invest.
+
+## Split (lead, 02:56)
+- `mobile`: the kit (`components/mobile/**`), PhoneFrame, **Remesas** and **Card** phone apps.
+- `mobile2`: **Crédito DriverApp** (`components/credito/driver-app/**`) and **Invest** phone app (`components/invest/**` phone parts, with @api's OK). Uses mobile's kit; for missing kit pieces, ask @mobile or add them under `components/mobile/extra/**`.

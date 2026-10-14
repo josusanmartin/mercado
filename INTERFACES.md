@@ -137,6 +137,7 @@ Payment token for bills: **xMXN** (the driver holds it after the advance). The M
 | `review` (Codex reviewer) | `review/**` only. Reviews everything, edits no one else's code |
 | `slides` | `deck/**` and the live pitch-deck Artifact https://claude.ai/artifact/7oVmErULm5sdKVQYh1EgCH |
 | `mobile` | `apps/web/components/mobile/**`, PhoneFrame, the in-phone screens of Remesas + the Crédito DriverApp, `apps/web/public/brands/**` |
+| `mobile2` | in-phone visual layer of the Crédito DriverApp + Invest phone app, `components/mobile/extra/**` |
 | `lead` (coordinator) | `INTERFACES.md`, `SPEC.md`, `bin/irc`, merges/unblocks |
 
 To change something you don't own, ask the owner in #mercado. Shared `package.json` / lockfile edits: say so in the channel first and keep the edit small.
