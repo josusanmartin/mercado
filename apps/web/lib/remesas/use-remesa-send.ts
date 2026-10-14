@@ -4,7 +4,7 @@
 // (or mint-to-self then transferWithMemo when there's a note). One active tx state for whichever
 // path runs (R-034); every input is validated before the first write (R-017/R-032); the delivered
 // amount is frozen from the confirmed transfer log, never a balance diff (R-020).
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isAddress, zeroAddress, type Address, type Hex } from "viem";
 import { usePublicClient } from "wagmi";
 import {
@@ -30,7 +30,7 @@ import { explorerTx } from "@mercado/shared";
 export const SLIPPAGE_BPS = 50n;
 const PENDING_NOTE = "Tu entrega anterior aún se está confirmando en Tempo. No la enviaremos de nuevo hasta que se confirme.";
 
-import { reconcile, type ReconcileClient, type Stranded } from "./reconcile-delivery";
+import { learnFrom, reconcile, type Delivery, type ReconcileClient, type Stranded } from "./reconcile-delivery";
 export type { Stranded };
 const strandedKey = (a: Address) => `mercado.remesas.stranded.${a.toLowerCase()}`;
 function loadStranded(a: Address | undefined, fallbackToken: Address): Stranded | undefined {
@@ -141,6 +141,33 @@ export function useRemesaSend(amountIn: bigint) {
   const sendStep = active === "send" ? sendTx.steps.find((st) => /^Send/.test(st.label)) : undefined;
   const converted = convertStep && me ? deliveredFromReceipt(convertStep, xmxnToken, me).amount : undefined; // 0 when minted straight to the recipient
 
+  /** Merge what the node told us about the recorded delivery (nonce, key, expiry) into the record. */
+  const mergeLearned = useCallback(
+    (account: Address, hash: Hex, learned: Partial<Delivery>) => {
+      const cur = loadStranded(account, xmxnToken);
+      if (!cur?.delivery || cur.delivery.hash !== hash) return;
+      const v: Stranded = { ...cur, delivery: { ...cur.delivery, ...learned } };
+      saveStranded(account, v);
+      setStranded((s) => (s?.delivery?.hash === hash ? v : s));
+    },
+    [xmxnToken],
+  );
+  // CR-01: learn a broadcast delivery's nonce/expiry right away, while the node still knows it, so a later
+  // reconcile can PROVE it can no longer land instead of guessing from elapsed time.
+  const learning = useRef(new Set<Hex>());
+  const learnDelivery = useCallback(
+    async (account: Address, hash: Hex) => {
+      if (!client || learning.current.has(hash)) return;
+      learning.current.add(hash);
+      for (let i = 0; i < 20; i++) {
+        const tx = await client.getTransaction({ hash }).catch(() => undefined);
+        if (tx) return mergeLearned(account, hash, learnFrom(tx as never));
+        await new Promise((r) => setTimeout(r, 1_000));
+      }
+    },
+    [client, mergeLearned],
+  );
+
   // Load (and quietly reconcile) the record for this sender.
   useEffect(() => {
     const v = loadStranded(me, xmxnToken);
@@ -154,13 +181,16 @@ export function useRemesaSend(amountIn: bigint) {
         if (rc.state === "delivered") {
           saveStranded(v.account, undefined);
           setStranded(undefined);
-        } else if (rc.state === "pending") setRecoveryNote(PENDING_NOTE);
+        } else if (rc.state === "pending") {
+          setRecoveryNote(PENDING_NOTE);
+          if (rc.learned && v.delivery) mergeLearned(v.account, v.delivery.hash, rc.learned);
+        }
       })
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [me, client, xmxnToken]);
+  }, [me, client, xmxnToken, mergeLearned]);
 
   // Persist from the moment the conversion confirms; add the delivery hash once broadcast; clear on success.
   useEffect(() => {
@@ -181,12 +211,13 @@ export function useRemesaSend(amountIn: bigint) {
       fromBlock: convertStep.receipt!.blockNumber.toString(),
       delivery: sendStep ? { hash: sendStep.hash, at: Date.now() } : undefined,
     };
-    // Keep when a delivery was first seen (the drop timer must not restart on re-renders).
+    // Keep what was already learned about this delivery (first-seen time, nonce, expiry).
     const prev = loadStranded(me, xmxnToken);
     if (v.delivery && prev?.delivery?.hash === v.delivery.hash) v.delivery = prev.delivery;
     saveStranded(me, v);
+    if (v.delivery && v.delivery.nonce === undefined) void learnDelivery(me, v.delivery.hash);
     if (sendTx.status === "error") setStranded(v); // surface it only once the flow has failed
-  }, [convertStep, converted, sendStep, attempt, me, xmxnToken, sendTx.status]);
+  }, [convertStep, converted, sendStep, attempt, me, xmxnToken, sendTx.status, learnDelivery]);
 
   // Recovery delivery broadcast: record its hash immediately (it may time out before a receipt).
   const recoverStep = active === "recover" ? m1.tx.steps.find((st) => /^Send/.test(st.label)) : undefined;
@@ -195,7 +226,8 @@ export function useRemesaSend(amountIn: bigint) {
     const v: Stranded = { ...stranded, delivery: { hash: recoverStep.hash, at: Date.now() } };
     saveStranded(v.account, v);
     setStranded(v);
-  }, [recoverStep, stranded]);
+    void learnDelivery(v.account, recoverStep.hash);
+  }, [recoverStep, stranded, learnDelivery]);
 
   const deliverStranded = useCallback(async () => {
     if (!stranded || !client) return undefined;
@@ -211,6 +243,7 @@ export function useRemesaSend(amountIn: bigint) {
     const rc = await reconcile(client as unknown as ReconcileClient, stranded);
     if (rc.state === "delivered") return done(rc.hash, [{ label: "Send xMXN", hash: rc.hash, url: explorerTx(rc.hash) }], stranded.amount);
     if (rc.state === "pending") {
+      if (rc.learned && stranded.delivery) mergeLearned(stranded.account, stranded.delivery.hash, rc.learned);
       setRecoveryNote(PENDING_NOTE);
       return undefined;
     }
@@ -219,7 +252,7 @@ export function useRemesaSend(amountIn: bigint) {
     const last = steps?.at(-1);
     if (!last) return undefined; // failed or unconfirmed: the record (with its delivery hash) stays for reconciliation
     return done(last.hash, steps ?? [], deliveredFromReceipt(last, stranded.token, stranded.to).amount ?? stranded.amount);
-  }, [stranded, client, m1, amountIn]);
+  }, [stranded, client, m1, amountIn, mergeLearned]);
 
   return {
     tx,
