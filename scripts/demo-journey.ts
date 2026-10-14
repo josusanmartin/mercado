@@ -25,6 +25,7 @@ import {
   decodeEventLog,
   formatUnits,
   http,
+  maxUint256,
   parseAbi,
   parseUnits,
 } from 'viem'
@@ -536,10 +537,53 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert(after === 0n, `driver debt after full repay is ${after}`)
       const stats = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'stats' })
       ok(`driver debt ${fmt(debt)} → 0`)
-      ok(`pool: supplied ${fmt(stats[0])}, borrowed ${fmt(stats[1])}, outstanding ${fmt(statsBefore[2])} → ${fmt(stats[2])}, realized fees ${fmt(statsBefore[3])} → ${fmt(stats[3])} xMXN`)
+      ok(`pool: lender claims ${fmt(stats[0])}, borrowed ${fmt(stats[1])}, outstanding ${fmt(statsBefore[2])} → ${fmt(stats[2])}, realized fees ${fmt(statsBefore[3])} → ${fmt(stats[3])} xMXN`)
       assert(stats[3] > statsBefore[3], 'realized fees increased after repayment')
       const lender = process.env.LENDER_ADDRESS as Address
       ok(`lender claim: ${fmt(await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'lenderBalance', args: [lender] }))} xMXN (principal + realized fee share; no APY promised)`)
+    },
+  },
+  {
+    id: 'J7',
+    title: 'FX stress (runs last): peso appreciation makes a position liquidatable; everything is restored',
+    async run({ d }) {
+      const script = join(ROOT, 'packages/contracts/script/StressDemo.s.sol')
+      if (!existsSync(script)) return warn('packages/contracts/script/StressDemo.s.sol not there yet; skipping (pending @contracts)')
+      const [pxBefore] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'peek' })
+      const fromBlock = await pub.getBlockNumber()
+      // ~/.local/bin/forge is an unrelated CLI on this box; use Foundry's explicitly
+      const forge = process.env.FORGE_BIN ?? join(process.env.HOME ?? '', '.foundry/bin/forge')
+      log(`running ${forge} script script/StressDemo.s.sol --broadcast (pause desk → 160% position → forceSet 20→13 → liquidate → restore → unpause)`)
+      const { spawnSync } = await import('node:child_process')
+      const r = spawnSync(forge, ['script', 'script/StressDemo.s.sol', '--rpc-url', RPC, '--broadcast'], {
+        cwd: join(ROOT, 'packages/contracts'),
+        env: process.env,
+        encoding: 'utf8',
+        timeout: 300_000,
+      })
+      if (r.status !== 0) throw new Error(`StressDemo.s.sol exited ${r.status}: ${(r.stderr || r.stdout || '').trim().split('\n').slice(-3).join(' | ')}`)
+      const liqLogs = await pub.getContractEvents({
+        address: d.vault,
+        abi: parseAbi(['event Liquidated(address indexed user, address indexed liquidator, uint256 debtCovered, uint256 collateralSeized)']),
+        eventName: 'Liquidated',
+        fromBlock,
+      })
+      assert(liqLogs.length > 0, 'a Liquidated event was emitted during the stress run')
+      for (const l of liqLogs) {
+        evidence[current].txs[`liquidation ${l.args.user?.slice(0, 8)}`] = txUrl(l.transactionHash!)
+        ok(`liquidated ${l.args.user}: covered ${fmt(l.args.debtCovered!)} xMXN, seized ${fmt(l.args.collateralSeized!)} OUSD  ${C.dim}${txUrl(l.transactionHash!)}${C.x}`)
+      }
+      const [pxAfter] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'peek' })
+      assert(pxAfter === pxBefore, `oracle restored to ${fmt(pxBefore, 8)} (now ${fmt(pxAfter, 8)})`)
+      const deskPaused = await pub
+        .readContract({ address: d.swapDesk, abi: parseAbi(['function paused() view returns (bool)']), functionName: 'paused' })
+        .catch(() => false)
+      assert(!deskPaused, 'swap desk unpaused after the stress run')
+      ok(`oracle back at ${fmt(pxAfter, 8)} MXN/USD, desk unpaused`)
+      const lpRatio = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'collateralRatio', args: [account('LP').address] })
+      ok(`demo LP ratio ${lpRatio === maxUint256 ? 'n/a (no debt)' : `${(Number(lpRatio) / 100).toFixed(1)}%`}, untouched by the stress position`)
+      log('re-running the J0 health check')
+      await healthCheck(d)
     },
   },
 ]
