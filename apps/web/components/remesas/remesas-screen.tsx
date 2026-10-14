@@ -21,6 +21,7 @@ import { personaById } from "@/components/wallet/personas";
 import { useBillPay } from "@/components/billpay/use-bill-pay";
 import { Badge } from "@/components/ui/badge";
 import { PhoneFrame } from "@/components/console";
+import { ONRAMP_LABEL } from "@/lib/remesas/use-onramp";
 import { PhoneApp, STAGE_ES, type Screen } from "./phone-app";
 
 export type RemesasState = ReturnType<typeof useRemesasState>;
@@ -76,7 +77,7 @@ export function RemesasScreen() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
         <div className="-mx-4 sm:mx-0">
           <ConnectGate persona="sender" why="Mercado Remesas runs on the sender's wallet. Use the demo account or connect your own.">
-            <PhoneFrame accent="#ff8a1f" label="Mercado Remesas, Android phone preview">
+            <PhoneFrame accent="#E2603F" onAccent="#0a0a0a" label="Mercado Remesas, Android phone preview">
               <PhoneApp s={s} />
             </PhoneFrame>
           </ConnectGate>
@@ -239,6 +240,9 @@ function Honesty() {
         <Row label="Transfers and payments" sub="Real transactions on Tempo Moderato, each with an explorer link" value={<Badge variant="success">Real</Badge>} />
         <Row label="Telcel and CFE" sub="We take a real payment, but no airtime or bill payment is delivered" value={<Badge variant="mock">SIMULATED</Badge>} />
         <Row label="Exchange rate" sub="A real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle" value={<Badge variant="mock">Admin relay</Badge>} />
+        <Row label="Rate sparkline (phone)" sub="Only the relay's real on-chain setPrice pushes; admin stress overrides (forceSet) are excluded" value={<Badge variant="success">Real</Badge>} />
+        <Row label="Contacts" sub="Mamá, Papá and Ana are demo contacts, each with a real testnet wallet" value={<Badge variant="mock">Demo</Badge>} />
+        <Row label="Add dollars with a card" sub={ONRAMP_LABEL} value={<Badge variant="mock">Simulated</Badge>} />
       </Rows>
     </Panel>
   );

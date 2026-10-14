@@ -90,11 +90,13 @@ export function ConsentSheet({
             <span aria-hidden className="text-[var(--m-on-surface-variant)]">⇄</span>
             <span className="m-display grid size-12 place-items-center rounded-[8px] bg-[var(--m-accent)] text-[20px] text-[var(--m-on-accent)]">M</span>
           </span>
-          <DemoBadge>Demo · consentimiento simulado</DemoBadge>
         </div>
-        <h3 className="m-display text-[28px]">
-          {app} quiere acceder a tu cuenta de {name}
-        </h3>
+        <div className="grid gap-2">
+          <DemoBadge className="w-fit">Demo · consentimiento simulado</DemoBadge>
+          <h3 className="m-display text-[28px]">
+            {app} quiere acceder a tu cuenta de {name}
+          </h3>
+        </div>
         <ul className="grid border-t border-[var(--m-outline-variant)]">
           {scopes.map((s) => (
             <li key={s.es} className="flex items-center gap-3 border-b border-[var(--m-outline-variant)] py-3">
