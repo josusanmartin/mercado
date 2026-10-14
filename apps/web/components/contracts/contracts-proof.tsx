@@ -437,7 +437,7 @@ export function ContractsProof() {
       ],
     },
     {
-      label: "Oráculo y patrocinio",
+      label: "Oracle and sponsorship",
       title: "Oracle and fee sponsor",
       description: "Shared by every product.",
       items: [
@@ -489,8 +489,8 @@ export function ContractsProof() {
   return (
     <SettingsLayout
       title="Every contract, live and verified"
-      statement="Cada contrato, verificado."
-      meta={`${total} contratos con código · verificados en Sourcify, en vivo · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID}${present ? "" : " · Testnet · sin valor real"}`}
+      statement="Every contract, verified."
+      meta={`${total} contracts with source · verified on Sourcify, live · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID}${present ? "" : " · Testnet · no real value"}`}
       purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state. Testnet trust model: one admin key (the deployer), no timelock or multisig. 'No direct sweep' is not 'no control', so the control paths are spelled out per contract."
       list={
         <ListPane

@@ -100,25 +100,25 @@ function Overview() {
     <div className="grid gap-10">
       <Stagger className="grid gap-x-10 gap-y-6 sm:grid-cols-2 xl:grid-cols-4" step={70}>
         <Kpi
-          label="xMXN en circulación"
+          label="xMXN in circulation"
           value={supply === undefined ? "—" : fmtAmount(supply, 0)}
           unit="xMXN"
           sub={`${x(cdp)} minted against collateral${PROTOCOL === "v2" ? ` + ${x(exchange)} issued by the exchange` : ""}`}
         />
         <Kpi
-          label="Colateral bloqueado"
+          label="Collateral locked"
           value={book.totalValueXmxn === undefined ? "—" : fmtAmount(book.totalValueXmxn, 0)}
           unit="xMXN"
           sub={`${book.rows.length} collaterals at live prices, each in its own position`}
         />
         <Kpi
-          label="Respaldo del sistema"
+          label="System backing"
           value={backing === undefined ? "—" : fmtBps(backing, 0)}
           sub="Aggregate CDP coverage; positions have separate liquidation limits"
         />
         {PROTOCOL === "v2" && (
           <Kpi
-            label="Respaldo del intercambio"
+            label="Exchange coverage"
             value={cov === undefined ? "—" : cov > 10_000_000n ? "∞" : fmtBps(cov, 0)}
             sub={`${x(buckets.move?.reserveOusd, "OUSD")} funded reserve against the exchange's xMXN`}
           />
@@ -133,14 +133,14 @@ function Overview() {
           onClick={() => setOpen((o) => !o)}
           className="mx-press mx-sweep meta text-muted-foreground hover:text-foreground flex items-center justify-between gap-3 border-y py-3 text-left"
         >
-          <span>Detalle · collateral mix and supply</span>
+          <span>Detail · collateral mix and supply</span>
           <ChevronDown className={cn("size-4 transition-transform duration-300", open && "rotate-180")} aria-hidden />
         </button>
         <div id={detailId} hidden={!open}>
           {open && (
     <Reveal className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
       <section className="grid content-start gap-3">
-      <SectionLabel index="01">Colateral</SectionLabel>
+      <SectionLabel index="01">Collateral</SectionLabel>
       <Panel
         title="Collateral mix"
         description={
@@ -194,7 +194,7 @@ function Overview() {
       </section>
 
       <section className="grid content-start gap-3">
-      <SectionLabel index="02">Suministro</SectionLabel>
+      <SectionLabel index="02">Supply</SectionLabel>
       <Panel title="Supply" description="Every xMXN in circulation is someone's debt or the exchange's liability.">
         <BigNumber value={supply === undefined ? "…" : <TickerText text={fmtAmount(supply, 0)} />} unit="xMXN" />
         <Rows className="pt-4">
@@ -255,7 +255,7 @@ function Risk() {
       {/* one big idea first: how far the peso would have to move */}
       <Stagger as="section" className="grid gap-6 sm:grid-cols-2" step={90}>
         <div className="grid content-start gap-2">
-          <SectionLabel index="01">Respaldo del intercambio</SectionLabel>
+          <SectionLabel index="01">Exchange coverage</SectionLabel>
           <BigNumber className="text-product" value={<TickerText text={covShown} />} />
           <p className="text-muted-foreground max-w-md text-[15px]">
             Exchange coverage today. It falls to 100% only if the peso strengthens to{" "}
@@ -263,7 +263,7 @@ function Risk() {
           </p>
         </div>
         <div className="grid content-start gap-2">
-          <SectionLabel index="02">Respaldo del sistema</SectionLabel>
+          <SectionLabel index="02">System backing</SectionLabel>
           <BigNumber className="text-product" value={backingBps === undefined ? "…" : <TickerText text={fmtBps(backingBps, 0)} />} />
           <p className="text-muted-foreground max-w-md text-[15px]">
             Aggregate CDP coverage; positions have separate liquidation limits. All collateral ÷ all Mint debt reaches the 135% line only at{" "}
@@ -273,7 +273,7 @@ function Risk() {
       </Stagger>
       <Reveal className="grid gap-10 lg:grid-cols-2 lg:gap-14">
       <section className="grid content-start gap-3">
-      <SectionLabel index="03">Balance del intercambio</SectionLabel>
+      <SectionLabel index="03">Exchange balance sheet</SectionLabel>
       <Panel
         title={v2 ? "Exchange backing (Move)" : "Swap desk inventory"}
         description={
@@ -324,7 +324,7 @@ function Risk() {
       </section>
 
       <section className="grid content-start gap-3">
-      <SectionLabel index="04">Recortes</SectionLabel>
+      <SectionLabel index="04">Haircuts</SectionLabel>
       <Panel title="Collateral haircuts" description="Each collateral has its own mint line (max loan-to-value), liquidation line and penalty.">
         <Rows>
           {book.rows.map((r) => (
@@ -363,7 +363,7 @@ function Risk() {
       </Reveal>
 
       <Reveal as="section" className="grid gap-3">
-        <SectionLabel index="05">Pruebas de estrés</SectionLabel>
+        <SectionLabel index="05">Stress tests</SectionLabel>
         <Panel
           title="Stress tests on-chain"
           description="Each stress run shocks the admin-relayed rate (forceSet), liquidates a dedicated position at the new rate, then restores the real rate. These rows are the real liquidations."
@@ -449,7 +449,6 @@ export function MintDashboard() {
   return (
     <SettingsLayout
       title="Mercado Mint"
-      statement="Crea pesos."
       meta={meta.join(" · ")}
       purpose="Institutions mint xMXN against OUSD and yield-bearing collateral. The collateral keeps its own yield."
       list={<ListPane label="Mint sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}
@@ -458,14 +457,14 @@ export function MintDashboard() {
       {section === "issue" && <MintScreen embedded />}
       {section === "positions" && (
         <section className="grid gap-3">
-          <SectionLabel index="01">Tus posiciones</SectionLabel>
+          <SectionLabel index="01">Your positions</SectionLabel>
           <Positions />
         </section>
       )}
       {section === "risk" && <Risk />}
       {section === "activity" && (
         <section className="grid gap-3">
-          <SectionLabel index="01">Actividad on-chain</SectionLabel>
+          <SectionLabel index="01">On-chain activity</SectionLabel>
           <ActivityTable
             kind="mint"
             title="Issuance activity"
