@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-14T03:13:17.588Z",
+  "mode": "Actual hook with fake paid fetch losing its response; no chain/browser payment",
+  "hash": "b3e3fbc2df07855fc9220c132aba321428025b80c597e1bd848cb4cc22d4921c",
+  "attempts": [
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926"
+    },
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926"
+    }
+  ],
+  "checks": [
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926",
+      "state": "pending"
+    },
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926",
+      "state": "pending"
+    },
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926",
+      "state": "unpaid"
+    },
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926",
+      "state": "unpaid"
+    },
+    {
+      "quoteId": "fixture-quote-1",
+      "idempotencyKey": "4717d9d5-e9bd-44e2-b660-af2570f01926",
+      "state": "settled"
+    }
+  ],
+  "heldAfterReload": true,
+  "resumedSame": true,
+  "recovered": true,
+  "pass": true
+}

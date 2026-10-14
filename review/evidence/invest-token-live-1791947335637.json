@@ -1,0 +1,127 @@
+{
+  "at": "2026-10-14T03:08:51.520Z",
+  "block": "39497983",
+  "mode": "Read-only code, state and eth_call; no broadcasts",
+  "checks": [
+    {
+      "name": "tTBILL reviewed runtime",
+      "pass": true
+    },
+    {
+      "name": "tTBILL faucet and vault gate",
+      "pass": true
+    },
+    {
+      "name": "current faucet rejects",
+      "pass": true,
+      "reason": {
+        "abiItem": {
+          "inputs": [
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "name": "Error",
+          "type": "error"
+        },
+        "args": [
+          "faucet cap"
+        ],
+        "errorName": "Error"
+      }
+    },
+    {
+      "name": "tTBILL-legacy reviewed runtime",
+      "pass": true
+    },
+    {
+      "name": "tTBILL-legacy faucet and vault gate",
+      "pass": true
+    },
+    {
+      "name": "current owners match page single-key claim",
+      "pass": true
+    }
+  ],
+  "tokens": [
+    {
+      "symbol": "tTBILL",
+      "address": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
+      "cap": "0",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+      "mintPaused": false,
+      "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0"
+    },
+    {
+      "symbol": "tTBILL-legacy",
+      "address": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+      "cap": "1000000000",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+      "mintPaused": true,
+      "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0"
+    }
+  ],
+  "owners": [
+    {
+      "name": "vault",
+      "address": "0xc6c63803874d41132CFe437C183Ac401e4aF2577",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "pool",
+      "address": "0xaB32daeF142B442d24589D2161967a843720C6D7",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "card",
+      "address": "0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "desk",
+      "address": "0xD4662343deeE28B4d4a9E4be8E718d9C7d5E4c32",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "amm",
+      "address": "0x9ecD19ebd398E73C2E1C196b8f7845CDD9872b7F",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "factory",
+      "address": "0xC1e0FDFAFBdf14cFa8357095AAae6490CA625E59",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "fx",
+      "address": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "sOUSD",
+      "address": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "tTBILL",
+      "address": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "tTBILL-legacy",
+      "address": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "tTBILL feed",
+      "address": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    },
+    {
+      "name": "tTBILL-legacy feed",
+      "address": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+      "owner": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b"
+    }
+  ]
+}

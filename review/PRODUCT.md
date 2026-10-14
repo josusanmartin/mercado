@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated2026-10-14 through02:46 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
+Updated2026-10-14 through03:05 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
 
 **A parallel financial system for emerging markets, built on Tempo.** One synthetic local currency connects four jobs: institutions **Create** money against collateral, senders **Move** it across an on-chain corridor, gig workers access **Lend**, and people or agents **Spend** through MPP.
 
@@ -8,7 +8,7 @@ Updated2026-10-14 through02:46 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wi
 
 **Six products, one currency:** Mercado Mint for institutional issuance; Mercado Remesas for family remittances and Tiempo Aire/services; Mercado Global for businesses and partner API access; Mercado Crédito for drivers, lenders and paid underwriting; Mercado Card for spending existing xMXN at authorized demo merchants; Mercado Invest for lending-pool savings, demo-funded sOUSD and finite-inventory demo tTBILL trades. The old Create/Move/Lend/Spend verbs explain operations within these products; they are no longer the site's product names. Home must communicate this map in ten seconds. `crew/DESIGN-ECOSYSTEM.md` replaces the console-menu visual brief.
 
-Brand v4 is clean white/neutral, with flat teal/orange/blue/pink/violet/gold product colors, six keyboard-accessible tiles, unboxed KPIs and one tab row. Glitch art belongs only to the deck. Remesas, the Crédito driver app and Card use generic Android framing on desktop and full-screen mobile. Demo mode maps product roles explicitly; external-wallet navigation and pending actions must preserve the initiating account.
+`crew/PRINCIPLES.md` now overrides prior visual briefs: white/ink, Archivo Black or Anton plus Inter Tight, cultural accents, one image-in-type hero and a keyboard-accessible numbered six-product index rather than tiles. KPIs are unboxed; precise compact TESTNET / SIN VALOR REAL labels remain visible. Small text must retain sufficient contrast; the accent palette is not automatically suitable for meta copy. Remesas, the Crédito driver app and Card use generic Android framing on desktop and full-screen mobile. Demo mode maps product roles explicitly; external-wallet navigation and pending actions must preserve the initiating account.
 
 **Wire everything:** balances, fees, quotes, coverage, KPIs, charts, activity and receipts must come from actual chain/API state. Only unavoidable external integrations remain mocked: income/OAuth, airtime/service fulfillment, and demo collateral yield/price sources. The real FX relay now rejects abnormal jumps/stale dated sources and distinguishes unknown source time from fetch/block time. Card PAN/network and Uber/DiDi/Rappi connections are additional explicit simulations. See `review/MOCK-AUDIT.md` and `MOCKS.md`.
 
@@ -40,14 +40,16 @@ The minter is not the retail driver. A sender need not open a personal CDP. xMXN
 
 | Time | Beat | Proof and narration |
 |---|---|---|
-| 0:00–0:20 | System | Four modules around xMXN; persistent Moderato/no-value labels. Identify which version is live. |
-| 0:20–0:50 | Create | Institution chooses collateral, sees debt capacity and FX health, then a real mint receipt. If v2 is not accepted, show the working v1 OUSD mint and label sOUSD/RWA as the next version. |
-| 0:50–1:15 | Move | Sender exchanges and sends to the recipient. Actual delivered amount, memo and receipt. Call it mint/burn reserve execution only with v2 receipt evidence; v1 still exchanges seeded inventory. |
-| 1:15–1:40 | Lend | Driver's illustrative income explains a line. Lender-funded draw changes balance and debt. |
-| 1:40–2:10 | Spend | Unpaid request returns 402; payment settles; SIMULATED airtime receipt sits beside debt. Show the separate paid-agent trace briefly. |
-| 2:10–2:30 | Risk and close | Peso appreciation reduces USD backing; show the preview and v2 reserve stop if proven. Repayment is manual from separately disclosed funds. |
+| 0:00–0:15 | Home | One currency, six products; current testnet/no-value meta and named demo roles. |
+| 0:15–0:40 | Mint | Institution locks collateral and creates xMXN; show receipt, debt and assumed/demo valuation source. |
+| 0:40–1:00 | Remesas | Sender converts OUSD into xMXN delivered to family; actual amount, memo and receipt, no bank cashout. |
+| 1:00–1:20 | Global | Paid402 buys an indicative quote; the supplier transfer is a separate transaction. |
+| 1:20–1:45 | Crédito | Simulated earnings → signed eligibility → lender-funded draw, live fee and total debt. |
+| 1:45–2:10 | Card | Same driver authorizes exact shop/amount; frozen decline is recoverable, successful charge has a receipt. |
+| 2:10–2:30 | Invest | Real pool/staking/trade operations; variable fees, admin-funded demo yield and limited tTBILL buyback rights. |
+| 2:30–2:45 | Proof | Current FX/coverage and verified contracts, clear admin powers and exact transaction links. |
 
-The aha is the connection between creation, circulation, credit and programmable spending—not four independent finance demos. Keep role switches named and prepared. If v2 misses its acceptance gate, give the complete live v1 story and a clearly labeled v2 architecture; do not switch the default to meet the slide narrative.
+The existing Tour implements these destinations, but R-049 must be fixed before calling its balances and history per-step proof. The live event mapping and explorer links independently reconcile; the current windows overlap and the summary hides rows after five. Keep role changes visible and make the spending proof the centerpiece; six screens alone do not demonstrate one connected system.
 
 ## Three highest-impact remaining improvements (v0.2)
 
@@ -67,7 +69,7 @@ The aha is the connection between creation, circulation, credit and programmable
    Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the default-v2 switch is complete, while each new product/flow keeps its own acceptance gate. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
 
 4. **Who controls the exchange rate, and can they liquidate users?**
-   An admin relays Coinbase data into the oracle; this is not decentralized. Coinbase publishes no source timestamp, so we show that uncertainty alongside fetch and block time. The keeper rejects abnormal jumps and stale dated fallback data. Admin stress/override authority remains a trust risk; a real market observation does not remove that authority.
+   An admin relays Coinbase data into the oracle; this is not decentralized. Coinbase publishes no source timestamp, so we show that uncertainty alongside fetch and block time. The keeper rejects abnormal jumps and stale dated fallback data. The owner can override rates, widen FX safety settings and replace collateral feeds; those changes can make positions liquidatable. It can also list its own collateral and mint, or rotate the loan signer and lend out all idle cash. A real market observation does not remove that authority.
 
 5. **If the peso appreciates or everyone exits, who takes the loss?**
    Reserve coverage can fall. V2 blocks issuance that would leave coverage below100%, prices redemption at the lower of oracle value and reserve NAV, and applies fees, size impact and a25%-of-reserve leaky bucket. Holders can face a haircut or wait; outside capital can recapitalize the reserve. The bucket permits a burst plus continuous refill, not a strict25% ceiling in every rolling day.
@@ -81,7 +83,7 @@ The aha is the connection between creation, circulation, credit and programmable
 8. **Can this lend to real drivers and pay real bills tomorrow?**
    No. The score is illustrative, income is synthetic, loans are unsecured and repaid manually, and fulfillment is SIMULATED. Production needs real integrations, independently reviewed contracts and operations, durable payment recovery, credible liquidity/oracle controls and appropriate arrangements for customers and assets. The demo proves a connected transaction path, not repayment quality or production readiness.
 
-Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card calendar25/25 and Invest17/17 local checks plus both replacement deployed runtimes pass. Invest UI return labels and the new on-ramp remain open; see INVEST-REVIEW.md and FINDINGS.md. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
+Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card calendar25/25 and Invest17/17 local checks plus both replacement deployed runtimes pass. Invest UI attribution fixes pass at source scope; the new on-ramp still has a lock-reclaim blocker. Remesas unpaid payment recovery and ordinary failed-send persistence pass; unknown broadcast settlement still needs reconciliation before retry. See INVEST-REVIEW.md and FINDINGS.md. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
 
 ---
 

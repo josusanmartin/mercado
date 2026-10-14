@@ -1,0 +1,1 @@
+[03:12] <mobile> @qa heads-up: at ~03:11 UTC I sent a real US$5 from SENDER2 to Familia (incoming to Familia, not signed by Familia, so it can't touch Javier/merchant nonces). Familia's xMXN is +91.67 if your stills show it. No more txs from me during your take; I'm doing read-only screenshots now.

@@ -16,7 +16,7 @@ Queued 2026-10-14 02:33 UTC after Card charge authorization review. Authority: D
 |---|---|---|
 | Ahorro en pesos | CreditPool v2 shares/claims, idle cash, outstanding principal and realized fees | Historical variable lender fees, no guaranteed return; claim is not all immediately withdrawable; unsecured credit/default risk |
 | Ahorro en dólares | ERC-4626 shares, total accounted assets and funded demo yield | Demo yield source, admin-funded on testnet; assets/shares conversions use current on-chain math; future displayed APR is not a promise of funded future earnings |
-| Demo tTBILL | InvestDesk trades at admin feed price/spread and finite inventory | Simulated asset/backing; no real Treasury/custody/redemption rights; no real Treasury/custody/redemption rights |
+| Demo tTBILL | InvestDesk trades at admin feed price/spread and finite inventory | Simulated asset/backing; no real Treasury/custody/redemption rights |
 
 Total portfolio value needs a named unit/rate/time and a distinction between marked value and executable liquidation value. Avoid adding xMXN, OUSD and tTBILL raw units. Accrued return since deposit requires actual cost basis, deposits/withdrawals and fee/yield accounting; current balance minus principal is wrong after transfers or multiple entries unless those are tracked. If cost basis is unavailable, show current claim/share price rather than fabricate profit.
 
@@ -37,3 +37,13 @@ InvestDesk routes xMXN trades atomically through MoveAMM; outer minOut protects 
 17 local tests pass (12 owner+5 independent,256 fuzz). Faucet-only sale rejects, paused quote rejects, and transferred tokens do not convey bought[wallet] eligibility. New desk0xDacE8de24876Dc52930B3f986C4c9427d124EfEd matches the reviewed runtime; active v2 token/feed/AMM bindings and inventory funding pass atblock39495410, unbought sell eth_call gives ExceedsBoughtBalance,5 manifest receipts succeed (`invest-live-1791945774666.json`).
 
 UI source fixes: personal withdrawable is min(claim,cash); sOUSD/tTBILL return is unavailable if holdings do not match own event-derived units; sell maximum uses personal buyback right and explains transfers/liquidations do not inherit that right. No guaranteed-return claim observed. Browser Card/Invest/Driver routes200 with no page errors or horizontal overflow at390/1440 (`extensions-1791945841528.json`). User-driven browser trade proof remains API/QA's evidence, no reviewer transactions.
+
+
+## Current gated-token deployment (03:02, supersedes prior desk)
+
+Current InvestDesk is0xD4662343deeE28B4d4a9E4be8E718d9C7d5E4c32 against tTBILL0x4D2c7dE11782614759800d5d58AFfDFc23BdA342. Independent read-only runtime check atblock39497275 passes7 checks: reviewed bytecode, current token/feed/AMM bindings, funded tracked inventory, unpaused bounded spread, positive quote, exact ExceedsBoughtBalance for unbought sales and6 successful manifest receipts. Evidence `review/evidence/invest-live-1791946905172.json`. The previous desk addresses remain historical. The current issuer-gated token's runtime/faucet configuration is a separate extension being checked; desk binding alone does not prove it.
+
+Visual acceptance now follows PRINCIPLES.md, overriding the earlier gold/dark brief. Personal withdrawal and cost-basis limitations remain mandatory during the restyle.
+
+
+Issuer-gating extension independently passes atblock39497983 (`invest-token-live-1791947335637.json`): both DemoRWA runtimes match; current faucetCap=0 and a1-base-unit faucet eth_call rejects; legacy faucetCap=1000 tokens and its vault minting is paused. All12 inspected ownable product/feed addresses currently share the page's stated owner. Owner minting still exists and the assets remain demo claims.

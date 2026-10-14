@@ -1,0 +1,1 @@
+{"file":"review/evidence/onramp-lock-race-1791947438471.json","at":"2026-10-14T03:10:38.470Z","mode":"Actual lock module + isolated real files; deterministic writer-resume interleaving at rename, no network","sourceHash":"bf581fbf15e116f3524d2c6577de38d8769c6f8a46dafe457eae2c693ec1144f","writerAResumed":true,"writerBEntered":true,"pass":false}

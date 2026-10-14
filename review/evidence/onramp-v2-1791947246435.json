@@ -1,0 +1,231 @@
+{
+  "at": "2026-10-14T03:07:27.373Z",
+  "mode": "actual route + actual mutex, isolated review ledger and fake wallet; no network/broadcast/key",
+  "sourceSha256": "261123fd99212cceb71ab3ff4a3123daca2bfa61c8ef1cb2347b9e3c25f48dd6",
+  "cases": [
+    {
+      "name": "pending-survives-restart-no-resign",
+      "pass": true,
+      "first": {
+        "status": 202,
+        "body": {
+          "status": "pending",
+          "txHash": "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "explorerUrl": "https://example.invalid/0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "amount": "20000000",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+          },
+          "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+        }
+      },
+      "second": {
+        "status": 202,
+        "body": {
+          "status": "pending",
+          "txHash": "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "explorerUrl": "https://example.invalid/0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "amount": "20000000",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+          },
+          "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+        }
+      },
+      "signs": 1,
+      "broadcasts": 2
+    },
+    {
+      "name": "settled-replay-and-conflict",
+      "pass": true,
+      "third": {
+        "status": 200,
+        "body": {
+          "status": "delivered",
+          "txHash": "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "explorerUrl": "https://example.invalid/0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+          "amount": "20000000",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+          },
+          "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+        }
+      },
+      "conflict": {
+        "status": 409,
+        "body": {
+          "message": "This idempotency key was already used for a different top-up.",
+          "code": "KEY_PAYLOAD_CONFLICT"
+        }
+      },
+      "signs": 1
+    },
+    {
+      "name": "disabled-and-minimum",
+      "pass": true,
+      "off": {
+        "status": 503,
+        "body": {
+          "message": "Top-up is temporarily unavailable.",
+          "code": "ONRAMP_DISABLED"
+        }
+      },
+      "dust": {
+        "status": 400,
+        "body": {
+          "message": "Amount must be in whole cents.",
+          "code": "INVALID_AMOUNT"
+        }
+      },
+      "small": {
+        "status": 400,
+        "body": {
+          "message": "The minimum top-up is US$1.",
+          "code": "BELOW_MIN"
+        }
+      }
+    },
+    {
+      "name": "concurrent-wallet-cap",
+      "pass": true,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "status": "delivered",
+            "txHash": "0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace",
+            "explorerUrl": "https://example.invalid/0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace",
+            "amount": "500000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+            },
+            "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "status": "delivered",
+            "txHash": "0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b",
+            "explorerUrl": "https://example.invalid/0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b",
+            "amount": "500000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+            },
+            "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+          }
+        },
+        {
+          "status": 429,
+          "body": {
+            "message": "Daily top-up limit: US$1000 per wallet (US$1000.00 used today).",
+            "code": "WALLET_DAILY_CAP"
+          }
+        }
+      ]
+    },
+    {
+      "name": "corrupt-ledger-fails-closed",
+      "pass": true,
+      "before": {
+        "status": 200,
+        "body": {
+          "status": "delivered",
+          "txHash": "0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b",
+          "explorerUrl": "https://example.invalid/0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b",
+          "amount": "20000000",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+          },
+          "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+        }
+      },
+      "after": {
+        "status": 503,
+        "body": {
+          "message": "Top-up is unavailable while its ledger is being repaired.",
+          "code": "LEDGER_UNAVAILABLE"
+        }
+      },
+      "newSignatures": 0
+    },
+    {
+      "name": "shared-file-two-process-mutexes",
+      "pass": true,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "status": "delivered",
+            "txHash": "0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0",
+            "explorerUrl": "https://example.invalid/0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+            },
+            "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "status": "delivered",
+            "txHash": "0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0",
+            "explorerUrl": "https://example.invalid/0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+            },
+            "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+          }
+        }
+      ],
+      "newSignatures": 1
+    },
+    {
+      "name": "living-writer-not-evicted-on-age",
+      "pass": false,
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "delivered",
+          "txHash": "0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f",
+          "explorerUrl": "https://example.invalid/0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f",
+          "amount": "20000000",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "SIMULATED card charge: no card is charged. Tempo Wallet's card on-ramp is mainnet-only."
+          },
+          "delivery": "REAL OUSD delivery: a testnet transfer from the Mercado on-ramp float."
+        }
+      },
+      "newSignatures": 1
+    }
+  ]
+}

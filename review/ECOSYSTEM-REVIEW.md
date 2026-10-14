@@ -2,11 +2,11 @@
 
 Started02:09 UTC,14 Oct2026. Authority: `crew/DESIGN-ECOSYSTEM.md` plus josu's02:08 “mock only necessary; wire everything” rule. This supersedes console-menu acceptance as the current UI target. V2 contracts/deployed accounting are checked; ecosystem routes/shell are being rebuilt. No reviewer commits or live broadcasts.
 
-Brand v4 at02:18 supersedes the initial warm/glitch product styling: clean white/neutral canvas, flat product colors, no art bands, unboxed KPIs, six large keyboard-accessible product tiles. The deck remains visually separate.
+PRINCIPLES.md at02:58 supersedes every earlier visual brief: paper/ink, Archivo Black or Anton + Inter Tight, cultural accents, one image-in-type hero and a numbered editorial six-product index. Phone fintech structure stays; Card uses ink/cream. Josu also removed the generic KPI strip: numbers belong beside the relevant action. Compact no-value/simulation labels must remain visible and contrast-safe, including cropped phone views.
 
 ## Home in ten seconds
 
-A judge should immediately see **six named products, one active xMXN** and know where to click: Mint (institutions), Remesas (families), Global (businesses), Crédito (drivers/lenders). Product names and purposes beat internal contract names. The four colors identify destinations; money-flow arrows explain real operations rather than generic decorative motion.
+A judge should immediately see **six named products, one active xMXN** and know where to click: Mint (institutions), Remesas (families), Global (businesses), Crédito (drivers/lenders), Card (spending), Invest (savers). Product names and purposes beat internal contract names. The six product accents identify destinations; money-flow arrows explain real operations rather than generic decorative motion.
 
 Correct flow semantics: Mint/CDP issuance creates supply; Global/Remesas OUSD exchange also mints through the AMM; transfers and credit draws move existing supply. Credit repayment returns xMXN to pool liquidity and does not burn. CDP repayment and AMM xMXN redemption burn. Do not merge the two kinds of repayment into a credit→burn arrow.
 
