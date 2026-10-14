@@ -74,52 +74,76 @@ const platform = (p: string) =>
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const when = (s?: number) => (s ? new Date(s * 1000).toLocaleString() : "—");
 
-/** Lent out ÷ lender claims, with the on-chain cap as a tick. Static bar: no looping motion. */
-function UtilizationBar({
-  bps,
+/**
+ * V6-TASTE #8: the pool's capacity in one bar: lent out (accent) + idle cash (tint) = lender claims, with the
+ * on-chain utilization cap as a tick. Static: no looping motion.
+ */
+export function PoolCapacity({
+  lent,
+  cash,
   capBps,
 }: {
-  bps: number | undefined;
-  capBps: number | undefined;
+  lent: bigint | undefined;
+  cash: bigint | undefined;
+  capBps: bigint | number | undefined;
 }) {
-  const pct = (b: number) => Math.min(100, b / 100);
+  const total =
+    lent !== undefined && cash !== undefined ? lent + cash : undefined;
+  const pct = (x: bigint) =>
+    total && total > 0n ? Number((x * 10_000n) / total) / 100 : 0;
+  const cap = capBps === undefined ? undefined : Number(capBps) / 100;
+  const xm = (x: bigint | undefined) =>
+    x === undefined ? "…" : `${fmtAmount(x, 0)} xMXN`;
   return (
-    <figure className="grid content-start gap-2" aria-label="Pool utilization">
+    <figure className="grid content-start gap-2" aria-label="Pool capacity">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="meta text-muted-foreground">Utilization</span>
+        <span className="meta text-muted-foreground">Pool capacity</span>
         <span className="tabular text-[17px] font-semibold">
-          {bps === undefined ? "…" : `${(bps / 100).toFixed(1)}%`}
+          {lent === undefined || !total ? "…" : `${pct(lent).toFixed(1)}% lent`}
         </span>
       </div>
       <div
         role="img"
         aria-label={
-          bps === undefined
+          total === undefined
             ? "Loading"
-            : `${(bps / 100).toFixed(1)}% of lender claims lent out${capBps ? `, cap ${capBps / 100}%` : ""}`
+            : `Lent ${xm(lent)}, idle cash ${xm(cash)}${cap !== undefined ? `, cap ${cap}% lent` : ""}`
         }
-        className="bg-muted relative h-2.5 w-full overflow-hidden rounded-full"
+        className="relative flex h-2.5 w-full overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,var(--background))]"
       >
-        {bps !== undefined && (
+        {lent !== undefined && total !== undefined && (
           <span
-            className="absolute inset-y-0 left-0 rounded-full bg-[var(--accent)]"
-            style={{ width: `${pct(bps)}%` }}
+            className="h-full bg-[var(--accent)]"
+            style={{ width: `${pct(lent)}%` }}
           />
         )}
-        {capBps !== undefined && capBps < 10_000 && (
+        {cap !== undefined && cap < 100 && (
           <span
             aria-hidden
             className="bg-foreground absolute inset-y-0 w-0.5"
-            style={{ left: `${pct(capBps)}%` }}
+            style={{ left: `${cap}%` }}
           />
         )}
       </div>
-      <p className="text-muted-foreground text-[12px]">
-        Lent out of lender claims
-        {capBps !== undefined
-          ? ` · cap ${(capBps / 100).toFixed(0)}% (on-chain)`
-          : ""}
-      </p>
+      <figcaption className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-0.5 text-[12px]">
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2 rounded-full bg-[var(--accent)]"
+          />
+          Lent <span className="text-foreground tabular">{xm(lent)}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2 rounded-full bg-[color-mix(in_oklab,var(--accent)_22%,var(--background))]"
+          />
+          Idle cash <span className="text-foreground tabular">{xm(cash)}</span>
+        </span>
+        {cap !== undefined && (
+          <span>Cap {cap.toFixed(0)}% lent (on-chain)</span>
+        )}
+      </figcaption>
     </figure>
   );
 }
@@ -184,13 +208,10 @@ export function BackOffice() {
       >
         {/* v6 "show, don't tell": how much of the pool is lent out, and the advances it made */}
         <div className="grid gap-6 pt-2 pb-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <UtilizationBar
-            bps={utilization}
-            capBps={
-              pool.maxUtilizationBps === undefined
-                ? undefined
-                : Number(pool.maxUtilizationBps)
-            }
+          <PoolCapacity
+            lent={pool.outstanding}
+            cash={pool.available}
+            capBps={pool.maxUtilizationBps}
           />
           <AdvanceSpark loans={book.data?.loans} />
         </div>
