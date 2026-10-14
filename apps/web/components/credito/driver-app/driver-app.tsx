@@ -14,7 +14,7 @@ import { useBalances } from "@/lib/contracts";
 import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { LetterReveal, Reveal, Stagger, TickerText } from "@/lib/motion";
+import { LetterReveal, Stagger, TickerText } from "@/lib/motion";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
@@ -183,28 +183,25 @@ function Conectar({ ask }: Props) {
       <AccentField color={ROSA} className="px-5 pt-5 pb-6">
         <Meta mark="#0a0a0a" parts={["Mercado Crédito", H("Testnet · sin valor real"), H("No canjeable")]} />
         <Display as="h1" size={50} className="mt-8">
-          {/* letters are aria-hidden: Chrome would name the heading "A d e l a n t a" from the inline-block spans */}
-          <span className="sr-only">Adelanta lo que ya </span>
-          <span aria-hidden>
-            <LetterReveal text="Adelanta" />
-            <br />
-            <LetterReveal text="lo que ya" />
-            <br />
-          </span>
+          <LetterReveal text="Adelanta" />
+          <br />
+          <LetterReveal text="lo que ya" />
+          <br />
           {/* image-in-type: our own route texture in low-contrast cream, so the word reads clean on rosa even at the
-              desktop 0.7 zoom (public/photos/ruta-cream.webp, art/make_ruta.py; cream on rosa 3.5:1, large type) */}
-          <Reveal as="span" delay={220} className="inline-block">
+              desktop 0.7 zoom (public/photos/ruta-cream.webp, art/make_ruta.py; cream on rosa 3.5:1, large type).
+              Kit m-rise, not <Reveal>: the page's route group owns entrances and switches nested Reveals off. */}
+          <span className="m-rise inline-block" style={{ animationDelay: "220ms" }}>
             <span
               className="bg-clip-text text-transparent"
               style={{ backgroundColor: "#F2E6C9", backgroundImage: "url(/photos/ruta-cream.webp)", backgroundSize: "auto 170%", backgroundPosition: "12% 80%", WebkitBackgroundClip: "text" }}
             >
               ganaste.
             </span>
-          </Reveal>
+          </span>
         </Display>
-        <Reveal delay={320}>
+        <div className="m-rise" style={{ animationDelay: "320ms" }}>
           <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
-        </Reveal>
+        </div>
       </AccentField>
       <div className="grid gap-3 px-5 pt-5" style={washStyle(ROSA)}>
         <p className="m-meta border-b border-[var(--m-on-surface)] pb-2 !text-[var(--m-on-surface)]">Conecta la app con la que trabajas</p>
