@@ -202,7 +202,8 @@ function StatusBar({ bg }: { bg: string }) {
   return (
     <div
       className="relative z-20 hidden h-[34px] shrink-0 items-center justify-between pr-5 pl-6 text-[13.5px] font-medium tracking-[0.01em] text-[var(--m-on-surface)] transition-[background-color] duration-300 sm:flex"
-      style={{ background: bg }}
+      // A colored bar (an app's accent field runs up under it) carries the accent's ink/white, not the theme's text.
+      style={{ background: bg, color: bg === "var(--m-surface)" ? undefined : "var(--m-on-accent)" }}
       aria-hidden
     >
       <span className="m-num min-w-10">{time}</span>

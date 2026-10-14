@@ -227,6 +227,14 @@
   }
 }
 
+/* The balance card leans a few degrees toward a desktop pointer (v5; JS sets --tx/--ty on pointermove). */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .m-tilt {
+    transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+    transition: transform 280ms var(--m-ease-out);
+  }
+}
+
 /* Snackbar. */
 .m-snack {
   animation: m-snack-in 220ms var(--m-ease-emph-decel) both;
