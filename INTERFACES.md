@@ -121,6 +121,7 @@ Payment token for bills: **xMXN** (the driver holds it after the advance). The M
 | `api` | `apps/web/app/api/**`, `apps/web/lib/server/**`, `apps/web/lib/mpp/**`, `fixtures/**`, `packages/shared/src/{schemas,types}.ts` |
 | `qa` | `scripts/**` (e2e demo journey), `apps/web/e2e/**`, `README.md`, `DEMO.md`, `.env.example`, `ACCEPTANCE.md` |
 | `review` (Codex reviewer) | `review/**` only. Reviews everything, edits no one else's code |
+| `slides` | `deck/**` and the live pitch-deck Artifact https://claude.ai/artifact/7oVmErULm5sdKVQYh1EgCH |
 | `lead` (coordinator) | `INTERFACES.md`, `SPEC.md`, `bin/irc`, merges/unblocks |
 
 To change something you don't own, ask the owner in #mercado. Shared `package.json` / lockfile edits: say so in the channel first and keep the edit small.
