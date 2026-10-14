@@ -1,6 +1,6 @@
 <section id="compounds" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
 <img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
-<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">09 — why it compounds</p>
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">10 — why it compounds</p>
 <h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Each product</h2>
 <h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">feeds the others.</h2>
 <hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
@@ -19,7 +19,7 @@ svg{position:absolute;left:0;top:0}
 <path id="s0" d="M350 30 A190 190 0 0 1 540 220" stroke="#00A68A"/>
 <path id="s1" d="M540 220 A190 190 0 0 1 350 410" stroke="#FF8A1F"/>
 <path id="s2" d="M350 410 A190 190 0 0 1 160 220" stroke="#F2357D"/>
-<path id="s3" d="M160 220 A190 190 0 0 1 350 30" stroke="#FFB547"/>
+<path id="s3" d="M160 220 A190 190 0 0 1 350 30" stroke="#7C5CFF"/>
 </g>
 <circle id="dot" r="16" fill="#F2F0EA"/>
 </svg>
@@ -27,7 +27,7 @@ svg{position:absolute;left:0;top:0}
 <div class="r" id="r0" style="top:6px"><b style="color:#00A68A">Mint</b><span>minting creates the supply</span></div>
 <div class="r" id="r1" style="top:108px"><b style="color:#FF8A1F">Remesas · Global</b><span>flows create demand and fees</span></div>
 <div class="r" id="r2" style="top:210px"><b style="color:#F2357D">Crédito</b><span>credit brings in new users</span></div>
-<div class="r" id="r3" style="top:312px"><b style="color:#FFB547">Spend · HTTP 402</b><span>payments give xMXN a use</span></div>
+<div class="r" id="r3" style="top:312px"><b style="color:#9B82FF">Card · HTTP 402</b><span>spending gives xMXN a use</span></div>
 <script>
 var segs=[0,1,2,3].map(function(i){return document.getElementById('s'+i)}),rows=[0,1,2,3].map(function(i){return document.getElementById('r'+i)}),dot=document.getElementById('dot'),t0=0,SEG=1800;
 function f(t){if(!t0)t0=t;var e=(t-t0)%(SEG*4),i=Math.floor(e/SEG),k=(e%SEG)/SEG,p=segs[i],L=p.getTotalLength(),pt=p.getPointAtLength(k*L);
@@ -38,6 +38,6 @@ requestAnimationFrame(f)}
 requestAnimationFrame(f);
 </script></body></html></x-embed>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">09</p>
-<aside>~10s. Why an ecosystem rather than four apps: each product feeds the others. Mint creates the supply of xMXN. Remesas and Global move it across the border, which creates demand for xMXN and fees for the exchange's reserve buffer. Crédito brings in users, drivers who hold and spend xMXN and lenders who earn realized fees. And HTTP 402 payments, bills and paid APIs, give xMXN a use in every product. This is the design thesis; it is not a measured network effect, and we have no usage numbers beyond testnet runs.</aside>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">10</p>
+<aside>~10s. Why an ecosystem rather than four apps: each product feeds the others. Mint creates the supply of xMXN. Remesas and Global move it across the border, which creates demand for xMXN and fees for the exchange's reserve buffer. Crédito brings in users, drivers who hold and spend xMXN and lenders who earn realized fees. And Mercado Card plus HTTP 402 payments for bills and paid APIs give xMXN a use in every product (Card is still being built). This is the design thesis; it is not a measured network effect, and we have no usage numbers beyond testnet runs.</aside>
 </section>

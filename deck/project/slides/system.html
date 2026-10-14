@@ -1,7 +1,7 @@
 <section id="system" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
 <img src="/_blob/43f886d7093f469dc1d8680cd904ef9d" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
 <p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">02 — the ecosystem</p>
-<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Four products.</h2>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Five products.</h2>
 <h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">One currency.</h2>
 <x-embed style="position:absolute;left:128px;top:420px;width:1664px;height:470px"><!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
@@ -21,13 +21,13 @@ svg{position:absolute;left:0;top:0}
 <path id="a2" d="M350 100 C520 100 560 200 668 220" stroke="#00A68A" stroke-opacity=".5"/>
 <path id="a3" d="M350 370 C520 370 560 270 668 250" stroke="#FF8A1F" stroke-opacity=".5"/>
 <path id="a4" d="M852 210 C960 150 1010 80 1110 80" stroke="#5C8BFF" stroke-opacity=".5"/>
-<path id="a5" d="M855 235 L1110 235" stroke="#FFB547" stroke-opacity=".5"/>
+<path id="a5" d="M855 235 L1110 235" stroke="#9B82FF" stroke-opacity=".5"/>
 <path id="a6" d="M852 260 C960 320 1010 390 1110 390" stroke="#F2357D" stroke-opacity=".5"/>
 <path id="a7" d="M1110 405 C1010 420 930 360 845 290" stroke="#F2357D" stroke-opacity=".5" stroke-dasharray="6 8"/>
 <path id="a8" d="M680 170 C600 60 460 40 350 85" stroke="#00A68A" stroke-opacity=".5" stroke-dasharray="6 8"/>
 </g>
 <circle cx="300" cy="100" r="48" fill="#00A68A"/><circle cx="300" cy="370" r="48" fill="#FF8A1F"/>
-<circle cx="1160" cy="80" r="48" fill="#2F6BFF"/><circle cx="1160" cy="235" r="48" fill="none" stroke="#FFB547" stroke-width="2"/><circle cx="1160" cy="390" r="48" fill="#F2357D"/>
+<circle cx="1160" cy="80" r="48" fill="#2F6BFF"/><circle cx="1160" cy="235" r="48" fill="#7C5CFF"/><circle cx="1160" cy="390" r="48" fill="#F2357D"/>
 </svg>
 <div class="src mono" style="left:0;top:58px">collateral<br>OUSD · sOUSD · tTBILL</div>
 <div class="src mono" style="left:0;top:330px">OUSD from a<br>sender in the US</div>
@@ -35,10 +35,10 @@ svg{position:absolute;left:0;top:0}
 <div class="lb" style="left:250px;top:426px;flex-direction:row;gap:14px;align-items:baseline"><b style="color:#FF8A1F">Remesas</b><span class="mono">mint to family</span></div>
 <div id="x">xMXN</div>
 <div class="lb" style="left:1232px;top:52px"><b style="color:#5C8BFF">Global</b><span class="mono">xMXN → OUSD, burned</span></div>
-<div class="lb" style="left:1232px;top:207px"><b style="color:#FFB547">Spend · HTTP 402</b><span class="mono">bills and APIs, every product</span></div>
+<div class="lb" style="left:1232px;top:207px"><b style="color:#9B82FF">Card</b><span class="mono">spend at a shop, in progress</span></div>
 <div class="lb" style="left:1232px;top:362px"><b style="color:#F2357D">Crédito</b><span class="mono">lend → repay to lenders</span></div>
 <script>
-var C=['#00A68A','#FF8A1F','#00A68A','#FF8A1F','#5C8BFF','#FFB547','#F2357D','#F2357D','#00A68A'],T=[0,0,900,900,1900,1900,1900,3200,3600],svg=document.querySelector('svg'),P=[],D=[];
+var C=['#00A68A','#FF8A1F','#00A68A','#FF8A1F','#5C8BFF','#9B82FF','#F2357D','#F2357D','#00A68A'],T=[0,0,900,900,1900,1900,1900,3200,3600],svg=document.querySelector('svg'),P=[],D=[];
 for(var i=0;i<9;i++){P.push(document.getElementById('a'+i));var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r','7');c.setAttribute('fill',C[i]);c.setAttribute('opacity','0');svg.appendChild(c);D.push(c)}
 var t0=0,CY=6000,DUR=1000;
 function f(t){if(!t0)t0=t;var e=(t-t0)%CY;
@@ -47,8 +47,8 @@ var L=P[i].getTotalLength(),pt=P[i].getPointAtLength(k*L);D[i].setAttribute('cx'
 requestAnimationFrame(f)}
 requestAnimationFrame(f);
 </script></body></html></x-embed>
-<p style="position:absolute;left:128px;top:892px;width:1664px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">minting creates xMXN · Mint repayment and Global redemption burn it · Crédito repayments return to lenders</p>
+<p style="position:absolute;left:128px;top:892px;width:1664px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">mint creates · Mint repay and Global redeem burn · Crédito repays lenders · bills and APIs pay over 402</p>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">02</p>
-<aside>~15s. Mercado is a full ecosystem: four products around one synthetic peso, xMXN. Mercado Mint (jade): institutions lock collateral (OUSD, demo staked OUSD, demo tokenized T-bills) and mint xMXN; repaying burns it. Mercado Remesas (marigold): a sender's OUSD is minted straight into xMXN for family in Mexico through the vault's exchange. Mercado Global (cobalt): businesses redeem xMXN back to OUSD, which burns it, using signed indicative quotes. Mercado Crédito (rosa): lenders fund a pool, drivers borrow and repay into the pool, so those repayments return to lenders rather than burning supply. And every product spends through the same HTTP 402 rail on Tempo. All of this ran green on Moderato testnet; testnet OUSD has no real value, the demo tokens' yield and prices are admin-set, and xMXN has no peg or fiat redemption.</aside>
+<aside>~15s. Mercado is a full ecosystem: five products around one synthetic peso, xMXN. Mercado Mint (jade): institutions lock collateral (OUSD, demo staked OUSD, demo tokenized T-bills) and mint xMXN; repaying burns it. Mercado Remesas (marigold): a sender's OUSD is minted straight into xMXN for family in Mexico through the vault's exchange. Mercado Global (cobalt): businesses redeem xMXN back to OUSD, which burns it, using signed indicative quotes. Mercado Crédito (rosa): lenders fund a pool, drivers borrow and repay into the pool, so those repayments return to lenders rather than burning supply. Mercado Card (violet) is where xMXN gets spent at a shop; it is being built now, with a demo card network. And every product pays for bills and APIs through the same HTTP 402 rail on Tempo. All of this ran green on Moderato testnet; testnet OUSD has no real value, the demo tokens' yield and prices are admin-set, and xMXN has no peg or fiat redemption.</aside>
 </section>
