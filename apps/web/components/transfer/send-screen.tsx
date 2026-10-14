@@ -2,10 +2,10 @@
 // Send money: swap testnet OUSD for xMXN on the separately capitalized SwapDesk (oracle-informed
 // quote, spread, minOut) and deliver it to another wallet in one flow. On-chain delivery only.
 import { useEffect, useState } from "react";
-import { isAddress, isAddressEqual, parseEventLogs, type Address, type Log } from "viem";
+import { isAddress, isAddressEqual, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { ArrowDown, Info } from "lucide-react";
-import { ADDR, tokenAbi, readableError, useBalances, useDesk, useMercado, useOracle, useSwapQuote, withSlippage } from "@/lib/contracts";
+import { ADDR, deliveredFromReceipt, MEMO_MAX_BYTES, memoByteLength, readableError, useBalances, useDesk, useMercado, useOracle, useSwapQuote, withSlippage } from "@/lib/contracts";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/shell/page-header";
@@ -22,8 +22,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SLIPPAGE_BPS = 50n;
-const MEMO_MAX_BYTES = 32;
-const memoBytes = (s: string) => new TextEncoder().encode(s).length;
 
 export function SendScreen() {
   const { address } = useConnection();
@@ -59,7 +57,7 @@ export function SendScreen() {
   const recipientName = personaByAddress(recipient);
 
   const toSelf = recipient && address && recipient.toLowerCase() === address.toLowerCase();
-  const memoTooLong = memoBytes(memo) > MEMO_MAX_BYTES;
+  const memoTooLong = memoByteLength(memo) > MEMO_MAX_BYTES;
   const balance = swapping ? bal.ousd : bal.xmxn;
   const overBalance = balance !== undefined && amt > balance;
   const overCap = swapping && desk.remainingDailyCap !== undefined && amt > desk.remainingDailyCap;
@@ -85,7 +83,7 @@ export function SendScreen() {
       : await m.transfer(ADDR.xmxn, recipient, amt, memoArg);
     const last = steps?.at(-1);
     if (last) {
-      setSent({ to: recipient, amount: deliveredTo(last.receipt, recipient), hash: last.hash, memo: memoArg });
+      setSent({ to: recipient, amount: deliveredFromReceipt(last, ADDR.xmxn, recipient).amount, hash: last.hash, memo: memoArg });
       setAmount("");
     }
   }
@@ -192,7 +190,7 @@ export function SendScreen() {
                   <div className="flex items-baseline justify-between">
                     <Label htmlFor="memo">Note (optional)</Label>
                     <span className={cn("text-xs tabular", memoTooLong ? "text-destructive" : "text-muted-foreground")}>
-                      {memoBytes(memo)}/{MEMO_MAX_BYTES} bytes
+                      {memoByteLength(memo)}/{MEMO_MAX_BYTES} bytes
                     </span>
                   </div>
                   <Input
@@ -291,17 +289,6 @@ export function SendScreen() {
       </div>
     </>
   );
-}
-
-/** xMXN credited to `to` in a confirmed transfer receipt (Transfer or TransferWithMemo). */
-function deliveredTo(receipt: { logs: Log[] } | undefined, to: Address): bigint | undefined {
-  if (!receipt) return undefined;
-  const logs = parseEventLogs({ abi: tokenAbi, logs: receipt.logs }).filter(
-    (l) => isAddressEqual(l.address, ADDR.xmxn) && "to" in l.args && isAddressEqual(l.args.to as Address, to),
-  );
-  const amounts = logs.map((l) => (l.args as { amount?: bigint }).amount ?? 0n);
-  // A memo transfer may emit both Transfer and TransferWithMemo for the same amount; count it once.
-  return amounts.length ? amounts.reduce((a, b) => (a > b ? a : b)) : undefined;
 }
 
 function Row({ k, v }: { k: string; v: string }) {
