@@ -27,8 +27,8 @@ export function PageFallback({ product, title, purpose }: { product: ProductId; 
           {p.index} · {p.id === "home" ? "Mercado" : p.name}
         </p>
         <h1 className="display text-[clamp(2.2rem,12.5cqw,4.5rem)] break-words">{title ?? p.short}</h1>
+        <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>
       </div>
-      <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>
       <Connecting />
     </section>
   );
@@ -46,8 +46,7 @@ export function HomeFallback() {
           Six products.
         </h1>
         <p className="max-w-2xl text-xl leading-snug text-pretty">
-          A peso economy on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, shops take it and
-          savers grow it.
+          Create pesos. Send them home. Borrow, spend, and save on Tempo.
         </p>
         <Connecting />
       </section>

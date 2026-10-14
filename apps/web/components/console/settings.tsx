@@ -121,8 +121,9 @@ export function ProductHero({
             </a>
           )}
         </div>
+        {/* lead 05:15: the purpose sits inside the band (on-accent text, ≤2 lines), so the color world is one block. */}
+        {(purpose ?? p.purpose) && <p className={cn("line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg", world && "text-current")}>{purpose ?? p.purpose}</p>}
       </div>
-      {(purpose ?? p.purpose) && <p className="mx-reveal line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg" data-shown>{purpose ?? p.purpose}</p>}
       {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
           numbers belong where the user acts (quote, draw sheet, Risk tab). */}
     </section>

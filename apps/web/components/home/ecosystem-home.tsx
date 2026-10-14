@@ -98,8 +98,7 @@ export function EcosystemHome() {
         </h1>
         <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <p className="max-w-2xl text-xl leading-snug text-pretty">
-            A peso economy on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, shops take
-            it and savers grow it. Every step is a stablecoin payment on Tempo.
+            Create pesos. Send them home. Borrow, spend, and save on Tempo.
           </p>
           <Button size="lg" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
             <Route strokeWidth={1.75} />
@@ -108,9 +107,10 @@ export function EcosystemHome() {
         </div>
       </section>
 
-      <BuiltOnTempo />
-
+      {/* lead 05:15: hero → Demo Tour → the six products in their colors with live numbers → Built on Tempo. */}
       <ProductIndex live={live} />
+
+      <BuiltOnTempo />
 
       <section aria-labelledby="flow-h" className="grid gap-4 border-t pt-4">
         <Meta>Live on Tempo Moderato · updates as transactions land</Meta>
@@ -157,10 +157,10 @@ function ProductIndex({ live }: { live: Live }) {
             >
               <span className="meta text-muted-foreground tabular">{p.index}</span>
               <span className="min-w-0">
+                {/* v5: each row in its color (large display type, ≥3:1). Invest stays ink with a maize mark (R-050). */}
                 <span
-                  className="display block text-[clamp(2.4rem,6vw,5rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] transition-colors duration-150 group-hover:text-[var(--hover)] group-hover:underline group-focus-visible:text-[var(--hover)] group-focus-visible:underline"
-                  // R-050: maize text on white is 2.1:1, so Invest hovers in ink with a maize underline.
-                  style={{ ["--hover" as string]: p.id === "invest" ? "var(--ink)" : p.color, ["--mark" as string]: p.color }}
+                  className="display block text-[clamp(2.4rem,6vw,5rem)] decoration-[var(--mark)] decoration-[0.08em] underline-offset-[0.12em] group-hover:underline group-focus-visible:underline"
+                  style={{ color: p.id === "invest" ? "var(--ink)" : p.color, ["--mark" as string]: p.color }}
                 >
                   {p.short}
                 </span>
