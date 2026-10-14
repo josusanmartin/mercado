@@ -31,3 +31,7 @@ export type OrderHistoryEntry = z.infer<typeof S.OrderHistoryEntrySchema>;
 export type BillOrder = z.infer<typeof S.BillOrderSchema>;
 export type BillPayResponse = z.infer<typeof S.BillPayResponseSchema>;
 export type ApiError = z.infer<typeof S.ApiErrorSchema>;
+
+export type MoveSide = z.infer<typeof S.MoveSideSchema>;
+export type MoveQuoteQuery = z.infer<typeof S.MoveQuoteQuerySchema>;
+export type MoveQuoteResponse = z.infer<typeof S.MoveQuoteResponseSchema>;

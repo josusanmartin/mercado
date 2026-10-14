@@ -264,3 +264,54 @@ export const ApiErrorSchema = z.object({
   code: z.string().optional(),
   details: z.unknown().optional(),
 });
+
+// ---------- /api/move/quote (MOVE module: remittance / cross-border FX quotes) ----------
+
+export const MoveSideSchema = z.enum(["usd_to_mxn", "mxn_to_usd"]);
+
+export const MoveQuoteQuerySchema = z.object({
+  side: MoveSideSchema,
+  /** Input amount in whole/decimal token units (OUSD for usd_to_mxn, xMXN for mxn_to_usd), max 6 dp. */
+  amount: z.string().regex(/^\d+(\.\d{1,6})?$/, "amount must be a decimal with at most 6 decimals"),
+});
+
+export const MoveQuoteResponseSchema = z.object({
+  demo: z.literal(true),
+  side: MoveSideSchema,
+  /** Which venue priced it: the v2 vault-integrated vAMM, or the v1 capped SwapDesk fallback. */
+  source: z.enum(["v2-vamm", "v1-swapdesk"]),
+  venue: AddressSchema,
+  tokenIn: AddressSchema,
+  tokenOut: AddressSchema,
+  symbolIn: z.string(),
+  symbolOut: z.string(),
+  /** Base units (6 dp). */
+  amountIn: UintStringSchema,
+  amountOut: UintStringSchema,
+  /** Fee in output-token base units. */
+  fee: UintStringSchema,
+  /** Output per 1 input at this size, after fee and impact. */
+  rate: z.number(),
+  /** Oracle mid, 8dp integer string (mxnPerUsd) and as a number. */
+  oracleMid: UintStringSchema,
+  oracleMidRate: z.number(),
+  /** Total cost vs the oracle mid, in bps (fee + size impact). */
+  effectiveSpreadBps: z.number(),
+  /** The venue's quoted fee/spread component in bps. */
+  feeBps: z.number(),
+  /** Extra cost from trade size (curve impact), in bps. 0 on the flat v1 desk. */
+  sizeImpactBps: z.number(),
+  /** Suggested minOut for the on-chain swap (50 bps tolerance below amountOut). */
+  minOutSuggested: UintStringSchema,
+  quotedAt: z.number().int(),
+  expiresAt: z.number().int(),
+  /** Indicative: on-chain execution is bound only by the swap's own minOut. */
+  firm: z.literal(false),
+  isMock: z.boolean(),
+  oracleStale: z.boolean(),
+  label: z.string(),
+  /** Partner access only: EIP-191 signature by Mercado's quote key over the canonical quote JSON. */
+  signature: HexSchema.optional(),
+  signer: AddressSchema.optional(),
+  payment: z.object({ txHash: HexSchema, payer: AddressSchema.optional(), tokenSymbol: z.string() }).optional(),
+});

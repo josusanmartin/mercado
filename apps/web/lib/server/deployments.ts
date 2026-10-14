@@ -7,6 +7,9 @@ import { repoRoot } from "./env";
 export type Deployments = Partial<{
   chainId: number;
   dOUSD: `0x${string}`;
+  ousd: `0x${string}`;
+  /** v2 stack (crew/V2-DESIGN.md), deployed alongside v1. */
+  v2: Partial<{ vamm: `0x${string}`; vault: `0x${string}`; xMXN: `0x${string}`; creditPool: `0x${string}` }>;
   xMXN: `0x${string}`;
   factory: `0x${string}`;
   oracle: `0x${string}`;
