@@ -175,7 +175,7 @@ function Conectar({ ask }: Props) {
   return (
     <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
       <Meta mark={ROSA} parts={["Mercado Crédito", H("Testnet · sin valor real"), H("No canjeable")]} />
-      <Display as="h1" size={50} className="mt-10">
+      <Display as="h1" size={50} className="mt-8">
         Adelanta
         <br />
         lo que ya
@@ -189,7 +189,7 @@ function Conectar({ ask }: Props) {
         </span>
       </Display>
       <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
-      <div className="mt-auto grid gap-3 pt-10">
+      <div className="grid gap-3 pt-8">
         <p className="m-meta border-b border-[var(--m-on-surface)] pb-2 !text-[var(--m-on-surface)]">Conecta la app con la que trabajas</p>
         {PLATFORMS.map((p) => (
           <PlatformButton key={p.id} id={p.id} disabled={!address} onClick={() => ask(p.id)} />
