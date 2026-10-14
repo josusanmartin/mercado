@@ -18,23 +18,19 @@ import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
-import { BottomSheet, BrandLogo, ConsentSheet, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessCheck, brandName, fmtMoney } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney } from "@/components/mobile";
 import {
   ActionRow,
   BankRow,
-  BigMoney,
   DayGroups,
   Display,
-  DotNav,
   EdApp,
-  Meta,
   Pill,
   PillChip,
   RoundAction,
   SectionHead,
   SplitStats,
   Flag,
-  edClass,
   hora,
 } from "@/components/mobile/extra/editorial";
 import { PLATFORMS, useAdvance, useDriverData, type Platform } from "./use-driver";
@@ -106,7 +102,7 @@ function DriverAppInner() {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
       <div className="-mx-4 sm:mx-0">
-        <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} statusBar="#ffffff">
+        <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} onAccent="#0a0a0a">
           <EdApp screen={flow === "app" ? `app-${tab}` : flow}>
             <ScreenTransition className="flex-1" id={flow === "app" ? `app-${tab}` : flow} dir={flow === "app" && prev === "app" ? "fade" : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd"}>
               {flow === "conectar" && <Conectar {...props} />}
@@ -196,7 +192,7 @@ function Conectar({ ask }: Props) {
         {PLATFORMS.map((p) => (
           <PlatformButton key={p.id} id={p.id} disabled={!address} onClick={() => ask(p.id)} />
         ))}
-        <Meta className="mt-1 justify-center text-center" parts={["Demo · consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Nunca pedimos tu contraseña"]} />
+        <Meta className="mt-1 justify-center text-center">{"Demo · consentimiento simulado · Sin afiliación con Uber, DiDi ni Rappi · Nunca pedimos tu contraseña"}</Meta>
       </div>
     </div>
   );
@@ -219,7 +215,7 @@ function AppShell(props: Props) {
 /** Outside ScreenTransition: its slide leaves a transform that would trap the nav's position:fixed on phones. */
 function AppNav({ tab, setTab }: Pick<Props, "tab" | "setTab">) {
   return (
-    <DotNav
+    <BottomNav
       value={tab}
       onChange={setTab}
       items={[
@@ -232,16 +228,20 @@ function AppNav({ tab, setTab }: Pick<Props, "tab" | "setTab">) {
   );
 }
 
-function TopMeta({ platform, title }: { platform?: Platform; title: string }) {
+/** Kit AppHeader (■ 04 · CRÉDITO); honesty sits beside the balance (BalanceHead) and in each screen's meta. */
+function TopMeta({ platform, title }: { platform?: Platform; title?: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 px-5 pt-4">
-      <Meta mark={ROSA} parts={[title, "Testnet · sin valor real", "No canjeable"]} />
-      {platform && (
-        <span className="grid h-7 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)] bg-white px-2.5">
-          <BrandLogo id={platform} height={platform === "rappi" ? 13 : 10} />
-        </span>
-      )}
-    </div>
+    <AppHeader
+      index="04"
+      product={title ? `Crédito · ${title}` : "Crédito"}
+      right={
+        platform && (
+          <span className="grid h-7 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)] bg-white px-2.5">
+            <BrandLogo id={platform} height={platform === "rappi" ? 13 : 10} />
+          </span>
+        )
+      }
+    />
   );
 }
 
@@ -259,36 +259,36 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
 
   return (
     <div className="pb-6">
-      <TopMeta platform={platform} title="Crédito" />
+      <TopMeta platform={platform} />
       <p className="px-5 pt-6 text-[15px] font-medium">{name ? `Hola, ${name}` : "Hola"}</p>
 
       {/* the one big number */}
       <section className="px-5 pt-2" aria-live="polite">
         {owing ? (
           <>
-            <p className="m-meta">Debes</p>
-            <BigMoney value={debt} unit="xMXN" size={54} className="mt-2" />
+            <BalanceHead label="Debes" />
+            <Money value={debt} currency="MXN" size={54} className="mt-3" />
             <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
               <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
             </div>
-            <Meta className="mt-2" parts={["Incluye comisión 2%", `${paidPct}% pagado`]} />
+            <Meta className="mt-2" parts={["xMXN · no canjeable", "Incluye comisión 2%", `${paidPct}% pagado`]} />
           </>
         ) : !platform ? (
           <>
-            <p className="m-meta">Disponible ahora</p>
-            <BigMoney value={undefined} size={54} className="mt-2" />
-            <Meta className="mt-2" parts={["Conecta tu plataforma para ver tu línea"]} />
+            <BalanceHead label="Disponible ahora" />
+            <Money value={undefined} size={54} className="mt-3" />
+            <Meta className="mt-2">{"Conecta tu plataforma para ver tu línea"}</Meta>
           </>
         ) : adv.score.isPending || (!s && !adv.score.error) ? (
           <>
-            <p className="m-meta">Analizando tus ganancias…</p>
+            <BalanceHead label="Analizando tus ganancias…" />
             <Skeleton className="mt-3 h-[48px] w-56 rounded-[4px]" />
             <Skeleton className="mt-3 h-3 w-40 rounded-[2px]" />
           </>
         ) : adv.score.error ? (
           <>
-            <p className="m-meta">Disponible ahora</p>
-            <Display size={36} className="mt-2">
+            <BalanceHead label="Disponible ahora" />
+            <Display size={36} className="mt-3">
               Sin conexión
             </Display>
             <button type="button" className="mt-3 text-[14px] font-semibold underline underline-offset-4" onClick={adv.check}>
@@ -297,20 +297,21 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
           </>
         ) : s && !s.eligible ? (
           <>
-            <p className="m-meta">Disponible ahora</p>
-            <Display size={40} className="mt-2">
+            <BalanceHead label="Disponible ahora" />
+            <Display size={40} className="mt-3">
               No disponible
             </Display>
             <Meta className="mt-2" parts={["Aún no cumples el mínimo", "Vuelve en unas semanas"]} />
           </>
         ) : (
           <>
-            <p className="m-meta">Disponible ahora</p>
-            <BigMoney value={adv.available} unit="xMXN" size={54} className="mt-2" />
+            <BalanceHead label="Disponible ahora" />
+            <Money value={adv.available} currency="MXN" size={54} className="mt-3" />
             <Meta
               className="mt-2"
               parts={[
-                s && `Línea ${fmtMoney(BigInt(s.maxAmount), 0)}`,
+                "xMXN · no canjeable",
+                s && `Línea MX${fmtMoney(BigInt(s.maxAmount), 0)}`,
                 s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
               ]}
             />
@@ -338,10 +339,10 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
       <div className="px-5 pt-7">
         <SplitStats
           items={[
-            { label: <><Flag code="mx" /> Tu saldo</>, value: fmtMoney(bal.xmxn), sub: "xMXN en tu wallet" },
+            { label: <><Flag code="mx" /> Tu saldo</>, value: `MX${fmtMoney(bal.xmxn)}`, sub: "xMXN en tu wallet" },
             owing
-              ? { label: "Disponible", value: fmtMoney(adv.available ?? 0n), sub: "para otro adelanto" }
-              : { label: "Debes", value: fmtMoney(debt ?? 0n), sub: "sin adelantos abiertos" },
+              ? { label: "Disponible", value: `MX${fmtMoney(adv.available ?? 0n)}`, sub: "para otro adelanto" }
+              : { label: "Debes", value: `MX${fmtMoney(debt ?? 0n)}`, sub: "sin adelantos abiertos" },
           ]}
         />
       </div>
@@ -422,7 +423,7 @@ function Ganancias({ platform, data, adv }: Props) {
       {!platform ? (
         <div className="px-5 pt-8">
           <Display size={36}>Sin plataforma</Display>
-          <Meta className="mt-3" parts={["Conecta Uber, DiDi o Rappi en Inicio"]} />
+          <Meta className="mt-3">{"Conecta Uber, DiDi o Rappi en Inicio"}</Meta>
         </div>
       ) : !d ? (
         <div className="grid gap-3 px-5 pt-8" aria-busy="true">
@@ -433,8 +434,8 @@ function Ganancias({ platform, data, adv }: Props) {
         <>
           <section className="px-5 pt-6">
             <p className="m-meta">Semana típica · neto</p>
-            <BigMoney value={f?.medianWeeklyNetMxn ?? median(d.weeks.map((w) => w.netMxn))} digits={0} unit="MXN" size={48} className="mt-2" />
-            <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, "Datos sintéticos"]} />
+            <Money value={f?.medianWeeklyNetMxn ?? median(d.weeks.map((w) => w.netMxn))} digits={0} currency="MXN" size={48} className="mt-2" />
+            <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, "Datos sintéticos", "Testnet"]} />
           </section>
           <div className="px-5 pt-6">
             <EarningsBars weeks={d.weeks} />
@@ -470,7 +471,7 @@ function Ganancias({ platform, data, adv }: Props) {
                 ))}
               </ol>
             )}
-            {s && <Meta className="mt-3" parts={[`Puntaje ${fmtNumber(s.score, 0)}/100`, `Mínimo ${s.scoreFloor}`, "Ilustrativo, no es un modelo de crédito"]} />}
+            {s && <Meta className="mt-3">{`Puntaje ${fmtNumber(s.score, 0)}/100 · Mínimo ${s.scoreFloor} · Ilustrativo, no es un modelo de crédito`}</Meta>}
           </div>
         </>
       )}
@@ -536,7 +537,7 @@ function Actividad({ platform }: Props) {
       <TopMeta platform={platform} title="Actividad" />
       <div className="px-5 pt-6">
         <Display size={40}>Actividad</Display>
-        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo testnet"]} />
+        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo testnet", "Sin valor real"]} />
         <div className="pt-3">
           <ActivityList />
         </div>
@@ -560,7 +561,7 @@ function Perfil({ platform, data, disconnect }: Props) {
     <div className="pb-6">
       <TopMeta platform={platform} title="Perfil" />
       <div className="px-5 pt-6">
-        <Display size={48}>{d?.driver.firstName ?? "Chofer"}</Display>
+        <Display size={48} fit>{d?.driver.firstName ?? (personaByAddress(address)?.id === "driver" ? "Javier" : "Chofer")}</Display>
         {d && <Meta className="mt-2" parts={[d.driver.city, `★ ${fmtNumber(d.driver.rating, 2)}`, d.driver.vehicle]} />}
         <dl className="mt-6 border-t border-[var(--m-on-surface)]">
           {rows.map((r) => (
@@ -578,9 +579,7 @@ function Perfil({ platform, data, disconnect }: Props) {
           </div>
         )}
         <Meta
-          className="mt-6"
-          parts={["Consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Ganancias: datos demo sintéticos", "xMXN: token demo sin valor real, no canjeable por pesos"]}
-        />
+          className="mt-6">{"Consentimiento simulado · Sin afiliación con Uber, DiDi ni Rappi · Ganancias: datos demo sintéticos · xMXN: token demo sin valor real, no canjeable por pesos"}</Meta>
       </div>
     </div>
   );
@@ -612,10 +611,13 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
     if (openSheet) setPct(100);
   }, [openSheet]);
   return (
-    <BottomSheet open={openSheet} onClose={close} dismissable={!busy} title={undefined}>
-      <div className={cn(edClass, "grid gap-5 px-6 pb-2")} aria-label="Pedir adelanto">
+    <BottomSheet open={openSheet} onClose={close} dismissable={!busy} ariaLabel="Pedir adelanto">
+      <div className="grid gap-5 px-6 pb-2">
         <Meta mark={ROSA} parts={["Adelanto", feeBps !== undefined ? `Comisión fija ${fmtNumber(Number(feeBps) / 100, 0)}%` : undefined, "Testnet"]} />
-        <BigMoney value={amount} unit="xMXN" size={48} />
+        <div>
+          <Money value={amount} currency="MXN" size={48} />
+          <Meta className="mt-2" parts={["xMXN", "Testnet · sin valor real"]} />
+        </div>
         <div className="flex gap-2">
           {[25, 50, 100].map((p) => (
             <PillChip key={p} selected={pct === p} disabled={busy} onClick={() => setPct(p)}>
@@ -625,8 +627,8 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
         </div>
         <SheetRows
           rows={[
-            { k: "Comisión", v: fee === undefined ? "—" : fmtMoney(fee) },
-            { k: "Total a pagar", v: fee === undefined ? "—" : fmtMoney(amount + fee) },
+            { k: "Comisión", v: fee === undefined ? "—" : `MX${fmtMoney(fee)}` },
+            { k: "Total a pagar", v: fee === undefined ? "—" : `MX${fmtMoney(amount + fee)}` },
             { k: "La oferta vence en", v: mmss(adv.secondsLeft) },
           ]}
         />
@@ -662,15 +664,18 @@ function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openS
   const amount = can ? (bal.xmxn! < debt ? bal.xmxn! : debt) : 0n;
   const partial = amount < debt;
   return (
-    <BottomSheet open={openSheet} onClose={close} dismissable={!busy}>
-      <div className={cn(edClass, "grid gap-5 px-6 pb-2")} aria-label="Pagar adelanto">
+    <BottomSheet open={openSheet} onClose={close} dismissable={!busy} ariaLabel="Pagar adelanto">
+      <div className="grid gap-5 px-6 pb-2">
         <Meta mark={ROSA} parts={["Pagar adelanto", "Testnet"]} />
-        <BigMoney value={amount} unit="xMXN" size={48} />
+        <div>
+          <Money value={amount} currency="MXN" size={48} />
+          <Meta className="mt-2" parts={["xMXN", "Testnet · sin valor real"]} />
+        </div>
         <SheetRows
           rows={[
-            { k: "Debes", v: fmtMoney(debt) },
-            { k: "Tu saldo", v: fmtMoney(bal.xmxn) },
-            { k: "Te quedará por pagar", v: fmtMoney(debt - amount) },
+            { k: "Debes", v: `MX${fmtMoney(debt)}` },
+            { k: "Tu saldo", v: `MX${fmtMoney(bal.xmxn)}` },
+            { k: "Te quedará por pagar", v: `MX${fmtMoney(debt - amount)}` },
           ]}
         />
         {partial && amount > 0n && <Meta parts={["Tu saldo no cubre todo", "Pagas lo que tienes"]} />}
@@ -702,32 +707,31 @@ function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openS
 
 function Receipt({ title, amount, rows, action, adv }: { title: string; amount: bigint | undefined; rows: { k: string; v: ReactNode }[]; action: ReactNode; adv: Props["adv"] }) {
   const last = adv.tx.steps.at(-1);
+  // kit SuccessScreen is min-h-full; let it fill the flex column so the action sits low
   return (
-    <div className="flex flex-1 flex-col px-5 pt-10 pb-6">
-      <SuccessCheck size={72} color={ROSA} />
-      <Display size={46} className="m-rise mt-8" as="h2">
-        {title}
-      </Display>
-      <BigMoney value={amount} unit="xMXN" size={40} className="mt-4" />
-      <Meta className="mt-2" parts={["Confirmado en Tempo", "Testnet · sin valor real"]} />
-      <div className="mt-7">
-        <SheetRows
-          rows={[
-            ...rows,
-            {
-              k: "Comprobante",
-              v: last ? (
-                <a href={last.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline underline-offset-4">
-                  {last.hash.slice(0, 10)}… <ExternalLink className="size-3.5" />
-                </a>
-              ) : (
-                "—"
-              ),
-            },
-          ]}
-        />
-      </div>
-      <div className="mt-auto pt-8">{action}</div>
+    <div className="flex flex-1 flex-col [&>div]:flex-1">
+    <SuccessScreen
+      title={title}
+      amount={amount !== undefined ? `MX${fmtMoney(amount)}` : undefined}
+      caption="xMXN · Confirmado en Tempo · Testnet · sin valor real"
+      action={action}
+    >
+      <SheetRows
+        rows={[
+          ...rows,
+          {
+            k: "Comprobante",
+            v: last ? (
+              <a href={last.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline underline-offset-4">
+                {last.hash.slice(0, 10)}… <ExternalLink className="size-3.5" />
+              </a>
+            ) : (
+              "—"
+            ),
+          },
+        ]}
+      />
+    </SuccessScreen>
     </div>
   );
 }
@@ -738,7 +742,7 @@ function Recibido({ adv, setFlow, setTab }: Props) {
       adv={adv}
       title="Listo. Ya es tuyo."
       amount={adv.pool.loanPrincipal}
-      rows={[{ k: "Debes", v: `${fmtMoney(adv.pool.debt)} · incluye 2%` }]}
+      rows={[{ k: "Debes", v: `MX${fmtMoney(adv.pool.debt)} · incluye 2%` }]}
       action={
         <Pill
           onClick={() => {
@@ -759,7 +763,7 @@ function Pagado({ adv, paid, setFlow, setTab }: Props) {
       adv={adv}
       title={adv.pool.debt === 0n ? "Pagado. No debes nada." : "Pago recibido."}
       amount={paid}
-      rows={[{ k: "Debes ahora", v: fmtMoney(adv.pool.debt) }]}
+      rows={[{ k: "Debes ahora", v: `MX${fmtMoney(adv.pool.debt)}` }]}
       action={
         <Pill
           onClick={() => {

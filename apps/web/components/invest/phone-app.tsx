@@ -5,7 +5,7 @@
 //   Inicio: one huge total (≈ US$, at the oracle rate), USD/MXN split, round actions, the three products as
 //   bank rows · Producto: position + facts + Depositar/Retirar (Comprar/Vender) · Actividad (real logs) · Perfil.
 // Every action is a real on-chain transaction; guards (R-043/R-044) are kept exactly as api wrote them.
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
 import { ArrowDownLeft, ArrowUpRight, Coins, DollarSign, ExternalLink, Home, Landmark, Layers, List, User } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
@@ -14,30 +14,25 @@ import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { BottomSheet, NumericKeypad, ScreenTransition, Skeleton, SuccessCheck, fmtMoney, fmtTyping } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping } from "@/components/mobile";
 import {
   ActionRow,
   BankRow,
   BigMoney,
   DayGroups,
   Display,
-  DotNav,
   EdApp,
   Flag,
-  Meta,
   Pill,
   PillChip,
   RoundAction,
   SectionHead,
   SplitStats,
-  edClass,
   hora,
 } from "@/components/mobile/extra/editorial";
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, useTbillQuote, type InvestActivity } from "./use-invest";
 
 export const MAIZ = "#E5A823";
-/** Ink on maize (PRINCIPLES: Invest gold carries ink text). */
-const ON_MAIZ = { "--m-on-accent": "#0a0a0a" } as CSSProperties;
 
 type Product = "pesos" | "dolares" | "tbills";
 type Mode = "in" | "out";
@@ -61,7 +56,7 @@ export function PhoneApp() {
   const [done, setDone] = useState<Done>();
   const key = done ? "done" : view.product ? `p-${view.product}` : view.tab;
   return (
-    <EdApp style={ON_MAIZ} screen={key}>
+    <EdApp screen={key}>
       <ScreenTransition className="flex-1" id={key} dir={done || view.product ? "fwd" : "fade"}>
         {done ? (
           <Listo done={done} close={() => setDone(undefined)} />
@@ -77,7 +72,7 @@ export function PhoneApp() {
       </ScreenTransition>
       {/* outside ScreenTransition: its slide leaves a transform that would trap position:fixed on phones */}
       {!done && !view.product && (
-        <DotNav
+        <BottomNav
           value={view.tab}
           onChange={(tab) => setView({ tab })}
           items={[
@@ -99,12 +94,9 @@ export function PhoneApp() {
   );
 }
 
-function TopMeta({ title }: { title: string }) {
-  return (
-    <div className="px-5 pt-4">
-      <Meta mark={MAIZ} parts={[title, "Testnet · sin valor real", "No canjeable"]} />
-    </div>
-  );
+/** Kit AppHeader (■ 06 · INVEST); honesty sits beside the balance (BalanceHead) and in each screen's meta. */
+function TopMeta({ title }: { title?: string }) {
+  return <AppHeader index="06" product={title ? `Invest · ${title}` : "Invest"} />;
 }
 
 /* ─────────────────────────────── Inicio ─────────────────────────────── */
@@ -123,17 +115,17 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
   const { p, fx, usdSide, total } = useTotals();
   const deskOpen = !!INVEST.desk && p.desk?.paused === false;
   const rows: { id: Product; sub: string; value: string; unit: string }[] = [
-    { id: "pesos", sub: "Variable · financia choferes", value: fmtMoney(p.pesos.balance), unit: "xMXN" },
-    { id: "dolares", sub: `APR demo ${pct(p.dollars?.aprBps)} · sOUSD`, value: fmtMoney(p.dollars?.value), unit: "OUSD" },
+    { id: "pesos", sub: "Variable · financia choferes", value: `MX${fmtMoney(p.pesos.balance)}`, unit: "xMXN" },
+    { id: "dolares", sub: `APR demo ${pct(p.dollars?.aprBps)} · sOUSD`, value: `US${fmtMoney(p.dollars?.value)}`, unit: "OUSD" },
     { id: "tbills", sub: `Precio ${px(p.tbill?.px8)} · feed admin`, value: p.tbill?.balance === undefined ? "—" : fmtAmount(p.tbill.balance, 4), unit: "tTBILL" },
   ];
   return (
     <div className="pb-6">
-      <TopMeta title="Invest" />
+      <TopMeta />
       <section className="px-5 pt-8" aria-live="polite">
-        <p className="m-meta">Total invertido</p>
-        <BigMoney value={total} prefix="US$" size={50} className="mt-2" />
-        <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, "Pesos al tipo del oráculo demo"]} />
+        <BalanceHead label="Total invertido" />
+        <Money value={total} currency="USD" size={50} className="mt-3" />
+        <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, "Pesos al tipo del oráculo demo", "No canjeable"]} />
       </section>
       <div className="px-4 pt-7">
         <ActionRow>
@@ -146,8 +138,8 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
       <div className="px-5 pt-7">
         <SplitStats
           items={[
-            { label: <><Flag code="us" /> Dólares</>, value: fmtMoney(usdSide), sub: "OUSD + T-bills" },
-            { label: <><Flag code="mx" /> Pesos</>, value: fmtMoney(p.pesos.balance), sub: "xMXN en ahorro" },
+            { label: <><Flag code="us" /> Dólares</>, value: `US${fmtMoney(usdSide)}`, sub: "OUSD + T-bills" },
+            { label: <><Flag code="mx" /> Pesos</>, value: `MX${fmtMoney(p.pesos.balance)}`, sub: "xMXN en ahorro" },
           ]}
         />
       </div>
@@ -190,7 +182,7 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
   const view = {
     pesos: {
       position: p.pesos.balance,
-      meta: ["Variable", "No garantizado"],
+      meta: ["xMXN", "Variable", "No garantizado", "No canjeable"],
       facts: [
         { k: "Retirable ahora", v: `${fmtMoney(p.pesos.withdrawable)} xMXN` },
         { k: "Efectivo libre del pool", v: `${fmtMoney(p.pesos.poolCash, 0)} xMXN` },
@@ -201,7 +193,7 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
     },
     dolares: {
       position: p.dollars?.value,
-      meta: [`APR demo ${pct(p.dollars?.aprBps)}`, "Fondeado por admin"],
+      meta: ["OUSD", `APR demo ${pct(p.dollars?.aprBps)}`, "Fondeado por admin"],
       facts: [
         { k: "Retirable ahora", v: `${fmtMoney(p.dollars?.value)} OUSD` },
         { k: "Reserva de rendimiento", v: `${fmtMoney(p.dollars?.yieldReserve, 0)} OUSD` },
@@ -227,15 +219,17 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
         <button type="button" onClick={back} className="m-press grid size-12 place-items-center rounded-full" aria-label="Atrás">
           <ArrowUpRight className="size-5 -rotate-[135deg]" strokeWidth={2} />
         </button>
-        <Meta mark={MAIZ} parts={["Invest", P.short, "Testnet"]} />
+        <Meta mark={MAIZ} parts={["06", "Invest", P.short]} className="text-[var(--m-on-surface)]" />
       </div>
       <section className="px-5 pt-4">
         <Display size={40}>{P.title}</Display>
-        <p className="m-meta mt-6">Tienes</p>
+        <div className="mt-6">
+          <BalanceHead label="Tienes" />
+        </div>
         {product === "tbills" ? (
-          <BigMoney value={view.position} prefix="" digits={4} unit="tTBILL" size={46} className="mt-2" />
+          <BigMoney value={view.position} prefix="" digits={4} unit="tTBILL" size={46} className="mt-3" />
         ) : (
-          <BigMoney value={view.position} unit={P.unit} size={50} className="mt-2" />
+          <Money value={view.position} currency={product === "pesos" ? "MXN" : "USD"} size={50} className="mt-3" />
         )}
         <Meta className="mt-2" parts={view.meta} />
       </section>
@@ -247,7 +241,7 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
           {P.outLabel}
         </Pill>
       </div>
-      {deskClosed && <Meta className="px-5 pt-2" parts={["Desk en pausa · sin operaciones"]} />}
+      {deskClosed && <Meta className="px-5 pt-2">{"Desk en pausa · sin operaciones"}</Meta>}
       <dl className="mx-5 mt-7 border-t border-[var(--m-on-surface)]">
         {view.facts.map((f) => (
           <div key={f.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
@@ -256,7 +250,8 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
           </div>
         ))}
       </dl>
-      <Meta className="px-5 pt-3" parts={view.note} />
+      {/* plain Meta (children) so long notes wrap; parts stay on one line each */}
+      <Meta className="px-5 pt-3">{view.note.join(" · ")}</Meta>
       <div className="px-5 pt-7">
         <SectionHead>Movimientos</SectionHead>
         <ActivityList product={product} limit={5} />
@@ -319,6 +314,7 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
 
   return (
     <BottomSheet
+      ariaLabel={`${mode === "in" ? P.inLabel : P.outLabel} · ${P.title}`}
       open={!!state}
       onClose={() => {
         if (busy) return;
@@ -328,7 +324,7 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
       }}
       dismissable={!busy}
     >
-      <div className={cn(edClass, "grid gap-4 px-6 pb-2")} style={ON_MAIZ} aria-label={`${mode === "in" ? P.inLabel : P.outLabel} · ${P.title}`}>
+      <div className="grid gap-4 px-6 pb-2">
         <div className="flex gap-2">
           {(Object.keys(PRODUCT) as Product[]).map((id) => (
             <PillChip key={id} selected={product === id} disabled={busy} onClick={() => reset({ product: id, mode })}>
@@ -394,7 +390,7 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
         >
           {busy ? busyLabel(act.tx.status) : mode === "in" ? P.inLabel : P.outLabel}
         </Pill>
-        <Meta className="justify-center" parts={["Transacción real en Tempo testnet", "Sin valor real"]} />
+        <Meta className="justify-center">{"Transacción real en Tempo testnet · Sin valor real"}</Meta>
       </div>
     </BottomSheet>
   );
@@ -406,34 +402,35 @@ function Listo({ done, close }: { done: Done; close: () => void }) {
   const P = PRODUCT[done.product];
   const verb = done.mode === "in" ? (done.product === "tbills" ? "Comprado." : "Depositado.") : done.product === "tbills" ? "Vendido." : "Retirado.";
   const digits = done.symbol === "tTBILL" ? 4 : 2;
+  // kit SuccessScreen paints the amount in the accent; maize on white is 2.1:1, so it stays ink here.
   return (
-    <div className="flex flex-1 flex-col px-5 pt-10 pb-6">
-      <SuccessCheck size={72} color={MAIZ} />
-      <Display size={50} fit className="m-rise mt-8">
-        {verb}
-      </Display>
-      <p className="m-display m-tick m-num mt-4 text-[38px]">
-        {done.symbol === "tTBILL" ? "≈ " : ""}
-        {fmtAmount(done.amount, digits)} <span className="font-[family-name:var(--font-phone)] text-[16px] font-semibold tracking-normal normal-case">{done.symbol}</span>
-      </p>
-      <Meta className="mt-2" parts={[P.title, "Confirmado en Tempo", "Testnet · sin valor real"]} />
-      <dl className="mt-7 border-t border-[var(--m-on-surface)]">
-        <div className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
-          <dt className="text-[14px] text-[var(--m-on-surface-variant)]">Comprobante</dt>
-          <dd>
-            {done.url ? (
-              <a href={done.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline underline-offset-4">
-                {done.hash?.slice(0, 10)}… <ExternalLink className="size-3.5" />
-              </a>
-            ) : (
-              "—"
-            )}
-          </dd>
-        </div>
-      </dl>
-      <div className="mt-auto pt-8">
-        <Pill onClick={close}>Listo</Pill>
-      </div>
+    <div className="flex flex-1 flex-col [&>div]:flex-1">
+      <SuccessScreen
+        title={verb}
+        amount={
+          <span className="text-[var(--m-on-surface)]">
+            {done.symbol === "tTBILL" ? "≈ " : ""}
+            {fmtAmount(done.amount, digits)} <span className="font-[family-name:var(--font-phone)] text-[16px] font-semibold tracking-normal normal-case">{done.symbol}</span>
+          </span>
+        }
+        caption={`${P.title} · Confirmado en Tempo · Testnet · sin valor real`}
+        action={<Pill onClick={close}>Listo</Pill>}
+      >
+        <dl className="border-t border-[var(--m-on-surface)]">
+          <div className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
+            <dt className="text-[14px] text-[var(--m-on-surface-variant)]">Comprobante</dt>
+            <dd>
+              {done.url ? (
+                <a href={done.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline underline-offset-4">
+                  {done.hash?.slice(0, 10)}… <ExternalLink className="size-3.5" />
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
+          </div>
+        </dl>
+      </SuccessScreen>
     </div>
   );
 }
@@ -528,7 +525,7 @@ function Perfil() {
     <div className="pb-6">
       <TopMeta title="Perfil" />
       <div className="px-5 pt-6">
-        <Display size={44}>Ahorrador</Display>
+        <Display size={44} fit>Ahorrador</Display>
         <Meta className="mt-2" parts={["Cuenta demo", "Tempo testnet"]} />
         <dl className="mt-6 border-t border-[var(--m-on-surface)]">
           {rows.map((r) => (
@@ -539,9 +536,7 @@ function Perfil() {
           ))}
         </dl>
         <Meta
-          className="mt-6"
-          parts={["OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables", "Rendimientos variables, no garantizados", "tTBILL: token demo, no es un valor", "Precios: feeds de administrador"]}
-        />
+          className="mt-6">{"OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables · Rendimientos variables, no garantizados · tTBILL: token demo, no es un valor · Precios: feeds de administrador"}</Meta>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import {
 } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
+import { PhonePanel } from "@/components/mobile";
 import { fmtAmount } from "@/lib/format";
 import { PhoneApp } from "./phone-app";
 import { INVEST, useInvestHistory, useInvestPositions } from "./use-invest";
@@ -108,13 +109,14 @@ function InvestV2() {
             persona="saver"
             why="Mercado Invest runs on the saver's wallet. Use the demo account or connect your own."
           >
-            <PhoneFrame label="Mercado Invest on Android" accent="#E5A823">
+            <PhoneFrame label="Mercado Invest on Android" accent="#E5A823" onAccent="#0a0a0a">
               <PhoneApp />
             </PhoneFrame>
           </ConnectGate>
         </div>
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
+        {/* real-phone mode: collapses below the full-screen app (<640px); unchanged on desktop */}
+        <PhonePanel className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
           <Panel
             title="Portfolio"
             description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
@@ -269,7 +271,7 @@ function InvestV2() {
               ))}
             </Rows>
           </Panel>
-        </div>
+        </PhonePanel>
       </div>
     </SettingsLayout>
   );
