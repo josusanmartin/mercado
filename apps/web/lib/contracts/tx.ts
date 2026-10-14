@@ -122,8 +122,10 @@ export function useTx() {
         busy.current = false;
         setStepLabel(undefined);
         await queryClient.invalidateQueries();
-        // the public RPC's "latest" can trail the receipt by a block; refetch once more shortly after
-        setTimeout(() => void queryClient.invalidateQueries(), 2_000);
+        // "latest" can trail the receipt by a block, and /api/rpc caches reads for 1–2 s (CR-08): refetch again at
+        // 1 s and 2.2 s so the new balance is on screen within ~1–2 s of the receipt
+        setTimeout(() => void queryClient.invalidateQueries(), 1_000);
+        setTimeout(() => void queryClient.invalidateQueries(), 2_200);
       }
     },
     [config, write, queryClient],
