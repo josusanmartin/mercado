@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "quotes": {
+    "q_2ee3a43d-522b-4769-b815-d1dacc66e784": {
+      "quoteId": "q_2ee3a43d-522b-4769-b815-d1dacc66e784",
+      "provider": "telcel",
+      "description": "Telcel airtime 100 MXN → 55****5678",
+      "amountMxn": 100,
+      "account": "5512345678",
+      "amount": "100000000",
+      "token": "0x1111111111111111111111111111111111111111",
+      "tokenSymbol": "xMXN",
+      "recipient": "0x2222222222222222222222222222222222222222",
+      "expiresAt": 1791940131,
+      "createdAt": "2026-10-14T00:53:51.310Z"
+    },
+    "q_7f974c64-d9b8-4fc9-aba3-a470818da45f": {
+      "quoteId": "q_7f974c64-d9b8-4fc9-aba3-a470818da45f",
+      "provider": "telcel",
+      "description": "Telcel airtime 100 MXN → 55****5678",
+      "amountMxn": 100,
+      "account": "5512345678",
+      "amount": "100000000",
+      "token": "0x1111111111111111111111111111111111111111",
+      "tokenSymbol": "xMXN",
+      "recipient": "0x2222222222222222222222222222222222222222",
+      "expiresAt": 1,
+      "createdAt": "2026-10-14T00:53:51.320Z"
+    }
+  },
+  "orders": {
+    "ord_5442d97c-19ef-4c67-8e44-c3464d5f92b3": {
+      "orderId": "ord_5442d97c-19ef-4c67-8e44-c3464d5f92b3",
+      "idempotencyKey": "review-recovery-1791939231094-unresolved-after-hold-rpc-failure",
+      "quoteId": "q_2ee3a43d-522b-4769-b815-d1dacc66e784",
+      "provider": "telcel",
+      "description": "Telcel airtime 100 MXN → 55****5678",
+      "amountMxn": 100,
+      "amount": "100000000",
+      "token": "0x1111111111111111111111111111111111111111",
+      "status": "CREATED",
+      "paidButUnfulfilled": false,
+      "history": [
+        {
+          "status": "CREATED",
+          "at": "2026-10-14T00:53:51.313Z"
+        }
+      ],
+      "createdAt": "2026-10-14T00:53:51.313Z",
+      "updatedAt": "2026-10-14T00:53:51.313Z",
+      "simulated": true,
+      "account": "5512345678",
+      "recipient": "0x2222222222222222222222222222222222222222",
+      "pendingAttempts": [
+        {
+          "challengeId": "previous-attempt",
+          "kind": "transaction",
+          "fromBlock": "1",
+          "at": "2026-10-14T00:51:51.316Z",
+          "holdUntil": 1791939171316
+        }
+      ]
+    },
+    "ord_fadfb97d-5956-4d26-ba3c-94a459ddf53d": {
+      "orderId": "ord_fadfb97d-5956-4d26-ba3c-94a459ddf53d",
+      "idempotencyKey": "review-recovery-1791939231094-expired-quote-already-settled",
+      "quoteId": "q_7f974c64-d9b8-4fc9-aba3-a470818da45f",
+      "provider": "telcel",
+      "description": "Telcel airtime 100 MXN → 55****5678",
+      "amountMxn": 100,
+      "amount": "100000000",
+      "token": "0x1111111111111111111111111111111111111111",
+      "status": "FAILED",
+      "paidButUnfulfilled": false,
+      "history": [
+        {
+          "status": "CREATED",
+          "at": "2026-10-14T00:53:51.321Z"
+        },
+        {
+          "status": "FAILED",
+          "at": "2026-10-14T00:53:51.323Z",
+          "note": "Quote expired before payment; nothing was charged."
+        }
+      ],
+      "createdAt": "2026-10-14T00:53:51.321Z",
+      "updatedAt": "2026-10-14T00:53:51.323Z",
+      "simulated": true,
+      "account": "5512345678",
+      "recipient": "0x2222222222222222222222222222222222222222",
+      "pendingAttempts": [
+        {
+          "challengeId": "previous-attempt",
+          "kind": "transaction",
+          "fromBlock": "1",
+          "at": "2026-10-14T00:51:51.322Z",
+          "holdUntil": 1791939171322
+        }
+      ]
+    }
+  },
+  "idempotency": {
+    "review-recovery-1791939231094-unresolved-after-hold-rpc-failure": "ord_5442d97c-19ef-4c67-8e44-c3464d5f92b3",
+    "review-recovery-1791939231094-expired-quote-already-settled": "ord_fadfb97d-5956-4d26-ba3c-94a459ddf53d"
+  },
+  "payments": {}
+}

@@ -1,0 +1,522 @@
+{
+  "at": "2026-10-14T00:52:27.776Z",
+  "head": "991ba802e8be76dbf217aa5724d9945c74f869b3",
+  "deploymentSha256": "4be3d9bae778fc3792368860f981d962ae6253b7ac328b4d6bf96e684fb83cc8",
+  "deployment": {
+    "attestationSigner": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+    "chainId": 42431,
+    "creditPool": "0x0000000000000000000000000000000000000000",
+    "factory": "0xA0da86214453DF9E0FD887646fAAE3bAae387826",
+    "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "oracle": "0xd92Cf2fF953778448F9f89B2656246b60E95440E",
+    "ousd": "0x20c0000000000000000000006a37DA5C996874BE",
+    "swapDesk": "0x0000000000000000000000000000000000000000",
+    "vault": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+    "xMXN": "0x20c000000000000000000000C4bA45544F562ae5",
+    "deployedAt": "2026-10-14T00:45:19.916Z",
+    "txs": {
+      "core.deployFXOracleAdapter": "0x1988b7911b092c0b9a7c86f1edd9604f35a780cc278c2ffeca5fa637746654ca",
+      "core.deployLocalStableFactory": "0x7226ecd4e40c4e05da0d34c52e35949c95b4efea6be70b3aaedbba3cc67a6cab",
+      "core.createMarket": "0xbc5ce272d0ba8125d72fcfb286c6b99212664d4ac068f53972fd7a0ca9541258",
+      "smoke.approve": "0xde921aa9760c3ce92f179cf8c5d64460c491f0490908d342bfe8ef28200b3059",
+      "smoke.depositCollateral": "0x6c8ac24c295701c78ed1e103739445221e116b9e2e25b5e7e242538ccee5ed8a",
+      "smoke.mint": "0x92cbd51363c9c879aae59a2360f30c1531f287b58ed73b0e6fddef75067a4707",
+      "smoke.approve#2": "0x552886f62042f84f33eb881088f8e61b5c7c497ea3173881ab5c2d58925c6e26",
+      "smoke.repayAndBurn": "0x41d8a81b2dc5265eaaa9502017bef930096f42f9ec1b71e5f917f1e00c9f183d",
+      "smoke.withdrawCollateral": "0x50b85a73d421a698cf684b9ac3bc50eb6b4f7ca9084d17e7b23592a6899dbb6b"
+    }
+  },
+  "mode": "read-only RPC/HTTP; no transactions broadcast",
+  "checks": [
+    {
+      "name": "rpc.chainId",
+      "outcome": "observed",
+      "result": 42431
+    },
+    {
+      "name": "rpc.blockNumber",
+      "outcome": "observed",
+      "result": "39484564"
+    },
+    {
+      "name": "code.factory",
+      "outcome": "observed",
+      "result": {
+        "address": "0xA0da86214453DF9E0FD887646fAAE3bAae387826",
+        "bytes": 8898,
+        "sha256": "97fd3b72749cceba32210ce1194486eee9a704f955204c495c1408c12e5c70c4"
+      }
+    },
+    {
+      "name": "code.oracle",
+      "outcome": "observed",
+      "result": {
+        "address": "0xd92Cf2fF953778448F9f89B2656246b60E95440E",
+        "bytes": 2226,
+        "sha256": "96bca270311a92fb08ec2f9be57dc0f138178c00b70643fe209820db7c2bd464"
+      }
+    },
+    {
+      "name": "code.vault",
+      "outcome": "observed",
+      "result": {
+        "address": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+        "bytes": 5182,
+        "sha256": "2cf5043a455aca6fd7233541a829ca98f22802445ed51db73e58643f373890ba"
+      }
+    },
+    {
+      "name": "deployment.swapDesk",
+      "outcome": "not-deployed",
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "name": "deployment.creditPool",
+      "outcome": "not-deployed",
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    {
+      "name": "ousd.decimals",
+      "outcome": "observed",
+      "result": 6
+    },
+    {
+      "name": "oracle.peek",
+      "outcome": "observed",
+      "result": [
+        "2000000000",
+        "1791938822",
+        true
+      ]
+    },
+    {
+      "name": "ousd.symbol",
+      "outcome": "observed",
+      "result": "OUSD"
+    },
+    {
+      "name": "vault.totalCollateral",
+      "outcome": "observed",
+      "result": "0"
+    },
+    {
+      "name": "vault.totalDebt",
+      "outcome": "observed",
+      "result": "0"
+    },
+    {
+      "name": "xMXN.totalSupply",
+      "outcome": "observed",
+      "result": "0"
+    },
+    {
+      "name": "ousd.totalSupply",
+      "outcome": "observed",
+      "result": "774205000000000000"
+    },
+    {
+      "name": "ousd.currency",
+      "outcome": "observed",
+      "result": "USD"
+    },
+    {
+      "name": "xMXN.decimals",
+      "outcome": "observed",
+      "result": 6
+    },
+    {
+      "name": "xMXN.currency",
+      "outcome": "observed",
+      "result": "MXN"
+    },
+    {
+      "name": "oracle.isMock",
+      "outcome": "observed",
+      "result": true
+    },
+    {
+      "name": "xMXN.symbol",
+      "outcome": "observed",
+      "result": "xMXN"
+    },
+    {
+      "name": "xMXN.ISSUER_ROLE",
+      "outcome": "observed",
+      "result": "0x114e74f6ea3bd819998f78687bfcb11b140da08e9b7d222fa9c1f1ba1f2aa122"
+    },
+    {
+      "name": "xMXN.issuer.vault",
+      "outcome": "failed",
+      "error": "The contract function \"hasRole\" reverted with the following signature:\n0xaa4bc69a"
+    },
+    {
+      "name": "xMXN.issuer.factory",
+      "outcome": "failed",
+      "error": "The contract function \"hasRole\" reverted with the following signature:\n0xaa4bc69a"
+    },
+    {
+      "name": "xMXN.issuer.merchant",
+      "outcome": "failed",
+      "error": "The contract function \"hasRole\" reverted with the following signature:\n0xaa4bc69a"
+    },
+    {
+      "name": "receipt.core.deployFXOracleAdapter",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x1988b7911b092c0b9a7c86f1edd9604f35a780cc278c2ffeca5fa637746654ca",
+        "status": "success",
+        "blockNumber": "39483858",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": null,
+        "contractAddress": "0xd92cf2ff953778448f9f89b2656246b60e95440e",
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "2743"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt.core.deployLocalStableFactory",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x7226ecd4e40c4e05da0d34c52e35949c95b4efea6be70b3aaedbba3cc67a6cab",
+        "status": "success",
+        "blockNumber": "39483860",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": null,
+        "contractAddress": "0xa0da86214453df9e0fd887646faae3baae387826",
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "5892"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt.core.createMarket",
+      "outcome": "observed",
+      "result": {
+        "hash": "0xbc5ce272d0ba8125d72fcfb286c6b99212664d4ac068f53972fd7a0ca9541258",
+        "status": "success",
+        "blockNumber": "39483863",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0xa0da86214453df9e0fd887646faae3baae387826",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "6174"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt.smoke.approve",
+      "outcome": "observed",
+      "result": {
+        "hash": "0xde921aa9760c3ce92f179cf8c5d64460c491f0490908d342bfe8ef28200b3059",
+        "status": "success",
+        "blockNumber": "39483936",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x20c0000000000000000000006a37da5c996874be",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "167"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt.smoke.depositCollateral",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x6c8ac24c295701c78ed1e103739445221e116b9e2e25b5e7e242538ccee5ed8a",
+        "status": "success",
+        "blockNumber": "39483942",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000006a37da5c996874be",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+            "eventName": "Deposited",
+            "args": {
+              "user": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "340"
+            }
+          }
+        ],
+        "positionAfter": [
+          "100000000",
+          "0"
+        ],
+        "supplyAfter": "0"
+      }
+    },
+    {
+      "name": "receipt.smoke.mint",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x92cbd51363c9c879aae59a2360f30c1531f287b58ed73b0e6fddef75067a4707",
+        "status": "success",
+        "blockNumber": "39483947",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c000000000000000000000c4ba45544f562ae5",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x0000000000000000000000000000000000000000",
+              "to": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "value": "1000000000"
+            }
+          },
+          {
+            "address": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+            "eventName": "Minted",
+            "args": {
+              "user": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "amount": "1000000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "645"
+            }
+          }
+        ],
+        "positionAfter": [
+          "100000000",
+          "1000000000"
+        ],
+        "supplyAfter": "1000000000"
+      }
+    },
+    {
+      "name": "receipt.smoke.approve#2",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x552886f62042f84f33eb881088f8e61b5c7c497ea3173881ab5c2d58925c6e26",
+        "status": "success",
+        "blockNumber": "39483953",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x20c000000000000000000000c4ba45544f562ae5",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "167"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt.smoke.repayAndBurn",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x41d8a81b2dc5265eaaa9502017bef930096f42f9ec1b71e5f917f1e00c9f183d",
+        "status": "success",
+        "blockNumber": "39483958",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c000000000000000000000c4ba45544f562ae5",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+              "value": "1000000000"
+            }
+          },
+          {
+            "address": "0x20c000000000000000000000c4ba45544f562ae5",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+              "to": "0x0000000000000000000000000000000000000000",
+              "value": "1000000000"
+            }
+          },
+          {
+            "address": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+            "eventName": "Repaid",
+            "args": {
+              "user": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "amount": "1000000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "49"
+            }
+          }
+        ],
+        "positionAfter": [
+          "100000000",
+          "0"
+        ],
+        "supplyAfter": "0"
+      }
+    },
+    {
+      "name": "receipt.smoke.withdrawCollateral",
+      "outcome": "observed",
+      "result": {
+        "hash": "0x50b85a73d421a698cf684b9ac3bc50eb6b4f7ca9084d17e7b23592a6899dbb6b",
+        "status": "success",
+        "blockNumber": "39483963",
+        "from": "0x89416a1f0ee3cb1651cb2ff2882a115b7a0b9d3b",
+        "to": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+        "contractAddress": null,
+        "decoded": [
+          {
+            "address": "0x20c0000000000000000000006a37da5c996874be",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x57BCa50aaE4a4fb8D3B172C1935220a54d63bD9a",
+              "to": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "value": "100000000"
+            }
+          },
+          {
+            "address": "0x57bca50aae4a4fb8d3b172c1935220a54d63bd9a",
+            "eventName": "Withdrawn",
+            "args": {
+              "user": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "amount": "100000000"
+            }
+          },
+          {
+            "address": "0x20c0000000000000000000000000000000000000",
+            "eventName": "Transfer",
+            "args": {
+              "from": "0x89416a1F0ee3Cb1651Cb2fF2882A115B7A0b9D3b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "42"
+            }
+          }
+        ],
+        "positionAfter": [
+          "0",
+          "0"
+        ],
+        "supplyAfter": "0"
+      }
+    },
+    {
+      "name": "http./",
+      "outcome": "observed",
+      "result": {
+        "status": 500,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 6127,
+        "error": "./node_modules/mppx/dist/server/Mppx.js:1839:40\nError: Module not found: Can't resolve '@modelcontextprotocol/sdk/types.js'\n  1837 |             throw new Error('compose() requires at least one handler');\n  1838 |         if ('code' in first) {\n> 1839 |             const { McpError } = await import('@modelcontextprotocol/sdk/types.js');\n       |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  1840 |             return {\n  1841 |                 status: 402,\n  1842 |                 challenge: new McpError(first.code, 'Payment Required', {\n\n\n\nImport trace:\n  App Route:\n    ./node_modules/mppx/dist/server/Mppx.js\n    ./apps/web/lib/mpp/server.ts\n    ./apps/web/lib/server/bills/service.ts\n    ./apps/web/app/api/bills/quote/route.ts\n\nhttps://nextjs.org/docs/messages/module-not-found\n\n",
+        "acceptance": "failed"
+      }
+    },
+    {
+      "name": "http./api/fx",
+      "outcome": "observed",
+      "result": {
+        "status": 500,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 6127,
+        "error": "./node_modules/mppx/dist/server/Mppx.js:1839:40\nError: Module not found: Can't resolve '@modelcontextprotocol/sdk/types.js'\n  1837 |             throw new Error('compose() requires at least one handler');\n  1838 |         if ('code' in first) {\n> 1839 |             const { McpError } = await import('@modelcontextprotocol/sdk/types.js');\n       |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  1840 |             return {\n  1841 |                 status: 402,\n  1842 |                 challenge: new McpError(first.code, 'Payment Required', {\n\n\n\nImport trace:\n  App Route:\n    ./node_modules/mppx/dist/server/Mppx.js\n    ./apps/web/lib/mpp/server.ts\n    ./apps/web/lib/server/bills/service.ts\n    ./apps/web/app/api/bills/quote/route.ts\n\nhttps://nextjs.org/docs/messages/module-not-found\n\n",
+        "acceptance": "failed"
+      }
+    },
+    {
+      "name": "http./api/driver/demo?profile=steady",
+      "outcome": "observed",
+      "result": {
+        "status": 500,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 6145,
+        "error": "./node_modules/mppx/dist/server/Mppx.js:1839:40\nError: Module not found: Can't resolve '@modelcontextprotocol/sdk/types.js'\n  1837 |             throw new Error('compose() requires at least one handler');\n  1838 |         if ('code' in first) {\n> 1839 |             const { McpError } = await import('@modelcontextprotocol/sdk/types.js');\n       |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  1840 |             return {\n  1841 |                 status: 402,\n  1842 |                 challenge: new McpError(first.code, 'Payment Required', {\n\n\n\nImport trace:\n  App Route:\n    ./node_modules/mppx/dist/server/Mppx.js\n    ./apps/web/lib/mpp/server.ts\n    ./apps/web/lib/server/bills/service.ts\n    ./apps/web/app/api/bills/quote/route.ts\n\nhttps://nextjs.org/docs/messages/module-not-found\n\n",
+        "acceptance": "failed"
+      }
+    },
+    {
+      "name": "http./api/driver/score",
+      "outcome": "observed",
+      "result": {
+        "status": 500,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 6127,
+        "error": "./node_modules/mppx/dist/server/Mppx.js:1839:40\nError: Module not found: Can't resolve '@modelcontextprotocol/sdk/types.js'\n  1837 |             throw new Error('compose() requires at least one handler');\n  1838 |         if ('code' in first) {\n> 1839 |             const { McpError } = await import('@modelcontextprotocol/sdk/types.js');\n       |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  1840 |             return {\n  1841 |                 status: 402,\n  1842 |                 challenge: new McpError(first.code, 'Payment Required', {\n\n\n\nImport trace:\n  App Route:\n    ./node_modules/mppx/dist/server/Mppx.js\n    ./apps/web/lib/mpp/server.ts\n    ./apps/web/lib/server/bills/service.ts\n    ./apps/web/app/api/bills/quote/route.ts\n\nhttps://nextjs.org/docs/messages/module-not-found\n\n",
+        "acceptance": "failed"
+      }
+    },
+    {
+      "name": "http./api/bills/quote",
+      "outcome": "observed",
+      "result": {
+        "status": 500,
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 6127,
+        "error": "./node_modules/mppx/dist/server/Mppx.js:1839:40\nError: Module not found: Can't resolve '@modelcontextprotocol/sdk/types.js'\n  1837 |             throw new Error('compose() requires at least one handler');\n  1838 |         if ('code' in first) {\n> 1839 |             const { McpError } = await import('@modelcontextprotocol/sdk/types.js');\n       |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  1840 |             return {\n  1841 |                 status: 402,\n  1842 |                 challenge: new McpError(first.code, 'Payment Required', {\n\n\n\nImport trace:\n  App Route:\n    ./node_modules/mppx/dist/server/Mppx.js\n    ./apps/web/lib/mpp/server.ts\n    ./apps/web/lib/server/bills/service.ts\n    ./apps/web/app/api/bills/quote/route.ts\n\nhttps://nextjs.org/docs/messages/module-not-found\n\n",
+        "acceptance": "failed"
+      }
+    }
+  ]
+}

@@ -1,0 +1,410 @@
+{
+  "at": "2026-10-14T00:57:26.664Z",
+  "deployment": {
+    "attestationSigner": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+    "chainId": 42431,
+    "creditPool": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4",
+    "factory": "0x0F11AbDFa4e0cA43AC9CE075d700FbF33B6B5591",
+    "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "oracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
+    "ousd": "0x20c0000000000000000000006a37DA5C996874BE",
+    "swapDesk": "0x038296fdE32fD87EB89A6113339aD426484abec5",
+    "vault": "0xDB8dF7a0a8cDEB2A125717B4a3f7d292f8241Ca2",
+    "xMXN": "0x20C0000000000000000000002486D8487268a6dd",
+    "deployedAt": "2026-10-14T00:52:45.592Z",
+    "txs": {
+      "core.deployFXOracleAdapter": "0x028c6fb773296dfbb48e6b718318836ce8e7541990f8a78bce99d70ff2c432dd",
+      "core.deployLocalStableFactory": "0xc3a48882db435f90629c0c1cb99f07eee673298149dba212735c12be5363d4cc",
+      "core.createMarket": "0xe79eec15014d0f1817be2b4ccb870fe43788b5291b5c8c01c90c27a78b833a97",
+      "smoke.approve": "0x69441318c2ba9d804060ba3d526f6bd8bcc94ef5f89925d0a7b63a83540c6afe",
+      "smoke.depositCollateral": "0x7463ddaa8fac32980da32f6e5b2f681eb7a9c7282f084cf08933fb6b7a02a6f4",
+      "smoke.mint": "0x8312a0c7221b392b83ef4c56bb2b06e73fefd9d01cf4f0b491fc8d9aff1bbc7a",
+      "smoke.approve#2": "0xa6e7a5a4ac82518bf2ad9d9a318b6969a86fcf92bce84278889de4740a6b9f30",
+      "smoke.repayAndBurn": "0x2e8c0197f4f5302d68745faf5dd552d7ae62cec5501a41782ebfef65f7b7de0d",
+      "smoke.withdrawCollateral": "0x86dc4003aff119081ca17f82dd448bd04af442ae74785b0e7fc3cb4b072c7f74",
+      "swap.deploySwapDesk": "0x7c2ffaa02610dc7b6782270e4cd5f1a0e98877a366653f99e3412940f405f87b",
+      "swap.approve": "0x5779057598d621b720ed801b99944ecad8de7b4987f309a4b913d09b644972ef",
+      "swap.depositCollateral": "0x25fe55e50b75d8b4e531c90d724c2cd7c8db839d098fd256f01722e1e2f5ac0e",
+      "swap.mint": "0x3c9ae8963d499a218124f1f15edd84768b780b88812933130411f88fa027e4f2",
+      "swap.approve#2": "0x87a14286d5d608b18a21f51285e45ba0e815b14b7dc274c16d367cf61f3903bb",
+      "swap.approve#3": "0xe12d10e8be0b4f7ce5b87fac5124e1fa01c1af9b75b4f5304dbe61133f745346",
+      "swap.seed": "0xd39776b627569d09db6bad4056d928be0d05c1b8548b7c75d62ea30dfc5750d3",
+      "credit.deployCreditPool": "0x143e894a2327e35ee1408dc03cb72f1d5d11331fb6340297f56d538839f709d2",
+      "credit.approve": "0xb0d5b2a17598e271f89b37410f98b32accda44264080f451a02d17fe6b424338",
+      "credit.depositCollateral": "0xa286807b251fbf9e4b197da167b86b319cd63b1d56579ebb21e6abbed13341e9",
+      "credit.mint": "0x0602b775980a7eaef5655910327bf2f5ab7200b975fcf029c72ded3c270a8741",
+      "credit.approve#2": "0x98d05499a247be45f7002be65ab39fcdac99d6a7088da600e5fe41396ba30329",
+      "credit.supply": "0x886accd09436c49d907ba657d8c86ee105fedfa286d1852b37dca7dc0c9f29e7",
+      "stress.forceSet": "0xba9fb9af637816734e6dddf7475dfddba372342290a4567242d4543c8e6d0bf0",
+      "stress.pause": "0xfd356d106274c748e10e9b03dafdcf4670adfb30a0c0dcf7cdabcd4d4bae106d",
+      "stress.transfer": "0xeedf84ea8de3f584887f22a0858356397eefb13f3f3fb2edd11e4e50e30087ad",
+      "stress.transfer#2": "0x7afe67bf50e96c92c52c90a19989af11142cf49643dede38fcfceb327d9f0712",
+      "stress.transfer#3": "0x4741d8ed2019dd09956f30bd8b21ef26089621916d849be2f6721fea3557ef71",
+      "stress.approve": "0x8f3d6a9ed33a9fc594b348d1ac7611a10e7e7c034985e0564ecec1bef4df4608",
+      "stress.depositCollateral": "0x754ad006edfbe256d6d6aeb901c84b5522407cd6ae2ca8d6601873e28ab13c12",
+      "stress.mint": "0x948a8741acccb91380a8ab021309401481d5a9a660073e7306d277a9b53a9ff4",
+      "stress.approve#2": "0x9234c6079ac05b0b7e073e0a053027d0a009e7a5f708c530aa182263bdfb4e1c",
+      "stress.depositCollateral#2": "0x49a3ae01d0794152e06d701dfe72f53152d41dc7cacf0aece0b66135d13d6ca5",
+      "stress.mint#2": "0x19284de2762fe8aef4f1524b4fb8affa392cd570df38a7d92251e0794fa6c56d",
+      "stress.forceSet#2": "0x3ed2129b364a71fba111998b82eb72d90572b6361e55c8ce3fb96fe33c946d67",
+      "stress.approve#3": "0x472d944e60a19b42fd6a1ec662d9ed55b791d3f758b5052d2a7b85ca78cf0fe4",
+      "stress.liquidate": "0x6ecd13b888a88503d08cd286514d233258d85ae5f051f982a923986b339e993b",
+      "stress.forceSet#3": "0x8065b826b5ce8f2acec1e06d821b9f75d40542fd977d30177aff03c3d878a47d",
+      "stress.unpause": "0xcac4e03dca237222a4ac8f99394fd28a395116c558f6d92dc800482289d1ab86"
+    }
+  },
+  "mode": "HTTP probes + read-only eth_call; no broadcasts",
+  "checks": [
+    {
+      "name": "score.steady",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "body": {
+          "demo": true,
+          "label": "Demo Uber Data: illustrative score, not a validated credit model",
+          "profile": "steady",
+          "eligible": true,
+          "score": 96.5,
+          "scoreFloor": 50,
+          "features": {
+            "weeksObserved": 12,
+            "activeWeeks": 12,
+            "medianWeeklyNetMxn": 10077.31,
+            "meanWeeklyNetMxn": 10237.1,
+            "netEarningsCv": 0.047,
+            "tripsCv": 0.0386,
+            "medianWeeklyTrips": 114.5,
+            "components": {
+              "income": 35,
+              "stability": 27.7,
+              "activity": 20,
+              "tripConsistency": 13.8
+            }
+          },
+          "explanation": [
+            "Median weekly net earnings: 10,077.31 MXN over 12 weeks (35/35 pts).",
+            "Earnings volatility (CV) 0.05: very steady income (27.7/30 pts).",
+            "Active in 12 of 12 weeks (20/20 pts).",
+            "Trip-count consistency (CV 0.04, median 114.5 trips/week) (13.8/15 pts).",
+            "15% of median weekly net is 1,511.6 MXN, so the 1,500 MXN ceiling applies.",
+            "Score 96.5 ≥ floor 50: credit line of 1,500 xMXN. Illustrative demo heuristic only, not a validated credit model."
+          ],
+          "maxAmount": "1500000000",
+          "availableToBorrow": "1500000000",
+          "capReason": "absolute-cap",
+          "dataHash": "0x1561989507f6f0545b51a1c74751a8a6927e41085d5968264d2e0d3eea7823f7",
+          "attestation": {
+            "borrower": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "maxAmount": "1500000000",
+            "expiry": 1791940347,
+            "nonce": "34244139356931492051064643882264634622258391917077279905119625078477027074417",
+            "dataHash": "0x1561989507f6f0545b51a1c74751a8a6927e41085d5968264d2e0d3eea7823f7",
+            "signature": "0x8a68b31bbe2849ea28341ea9f6dfe39ad6fdc9d0826b5cac87bcc27f469d491278a04cf3450c214f72607a8536eee3b4264fe67ab4326f2567fd99f56e34e65d1b",
+            "signer": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+            "pool": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4",
+            "chainId": 42431
+          }
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "score.new-driver",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "body": {
+          "demo": true,
+          "label": "Demo Uber Data: illustrative score, not a validated credit model",
+          "profile": "new-driver",
+          "eligible": false,
+          "score": 21.3,
+          "scoreFloor": 50,
+          "features": {
+            "weeksObserved": 8,
+            "activeWeeks": 3,
+            "medianWeeklyNetMxn": 0,
+            "meanWeeklyNetMxn": 1988.53,
+            "netEarningsCv": 1.2955,
+            "tripsCv": 0.0412,
+            "medianWeeklyTrips": 65,
+            "components": {
+              "income": 0,
+              "stability": 0,
+              "activity": 7.5,
+              "tripConsistency": 13.8
+            }
+          },
+          "explanation": [
+            "Median weekly net earnings: 0 MXN over 8 weeks (0/35 pts).",
+            "Earnings volatility (CV) 1.30: highly variable income (0/30 pts).",
+            "Active in 3 of 8 weeks (7.5/20 pts).",
+            "Trip-count consistency (CV 0.04, median 65 trips/week) (13.8/15 pts).",
+            "Not eligible: needs at least 6 active weeks of history (has 3); median weekly net is below 1,500 MXN; score 21.3 is below the floor of 50.",
+            "Illustrative demo heuristic only, not a validated credit model."
+          ],
+          "maxAmount": "0",
+          "availableToBorrow": "0",
+          "capReason": "ineligible",
+          "dataHash": "0x457f47f4b1e6cb9df50c9958e8a97f542ed24344c7b24faae9f9339f9dcf52f0"
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "driver.invalid-profile",
+      "ok": true,
+      "result": {
+        "status": 400,
+        "body": {
+          "error": "profile must be steady, irregular or new-driver",
+          "code": "VALIDATION"
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "bills.invalid-amount",
+      "ok": true,
+      "result": {
+        "status": 400,
+        "body": {
+          "error": "Telcel amount must be one of 20, 30, 50, 80, 100, 150, 200, 300, 500 MXN",
+          "code": "QUOTE_REJECTED"
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "bills.quote",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "body": {
+          "quoteId": "q_0166f9af-9579-4f81-822b-5a6ff6a61347",
+          "provider": "telcel",
+          "description": "Telcel airtime 20 MXN → 55****5678",
+          "amountMxn": 20,
+          "amount": "20000000",
+          "token": "0x20C0000000000000000000002486D8487268a6dd",
+          "tokenSymbol": "xMXN",
+          "recipient": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+          "expiresAt": 1791940347,
+          "simulated": true,
+          "label": "SIMULATED fulfillment, no real top-up"
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "bills.unpaid",
+      "ok": true,
+      "result": {
+        "status": 402,
+        "body": {
+          "type": "https://paymentauth.org/problems/payment-required",
+          "title": "Payment Required",
+          "status": 402,
+          "detail": "Payment is required (Telcel airtime 20 MXN → 55****5678).",
+          "hint": "Use a supported wallet to pay for this resource using one of the supported payment methods returned in the WWW-Authenticate header. See https://mpp.dev/tools/wallet.md",
+          "challengeId": "NHG8VP6bamFjrBTBnaq6dWF50CvE-iOm7BgnsZ0pgZo"
+        },
+        "headers": {
+          "cache-control": "no-store",
+          "connection": "keep-alive",
+          "content-type": "application/problem+json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+          "www-authenticate": "Payment id=\"NHG8VP6bamFjrBTBnaq6dWF50CvE-iOm7BgnsZ0pgZo\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIyMDAwMDAwMCIsImN1cnJlbmN5IjoiMHgyMEMwMDAwMDAwMDAwMDAwMDAwMDAwMDAyNDg2RDg0ODcyNjhhNmRkIiwiZXh0ZXJuYWxJZCI6Im9yZF8wMGNmMDgyMy00Njk3LTRmZWEtODVlYS01ZTAwNmU5MGU2ZmEiLCJtZXRob2REZXRhaWxzIjp7ImNoYWluSWQiOjQyNDMxfSwicmVjaXBpZW50IjoiMHg2NzI3MjAzN0IwMmY0RjQ4REFjODM4ODNmOGQxQTI2NGEwYTFkNGQzIn0\", description=\"Telcel airtime 20 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:07:27.105Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4NzNmOTJjNzE2ZDhjOWU0YzdkNzI1OGIxOGVmMGFlNDkyZjFhMDY3MzAyMWM5YjFhNTliMGZkYWExYzdiZDBiOSIsIm9yZGVySWQiOiJvcmRfMDBjZjA4MjMtNDY5Ny00ZmVhLTg1ZWEtNWUwMDZlOTBlNmZhIiwicXVvdGVJZCI6InFfMDE2NmY5YWYtOTU3OS00ZjgxLTgyMmItNWE2ZmY2YTYxMzQ3In0\"",
+          "x-mercado-order-id": "ord_00cf0823-4697-4fea-85ea-5e006e90e6fa"
+        }
+      }
+    },
+    {
+      "name": "bills.challenge-binding",
+      "ok": true,
+      "result": {
+        "description": "Telcel airtime 20 MXN → 55****5678",
+        "expires": "2026-10-14T01:07:27.105Z",
+        "id": "NHG8VP6bamFjrBTBnaq6dWF50CvE-iOm7BgnsZ0pgZo",
+        "intent": "charge",
+        "method": "tempo",
+        "opaque": "eyJfbXBweF9ub25jZSI6IjB4NzNmOTJjNzE2ZDhjOWU0YzdkNzI1OGIxOGVmMGFlNDkyZjFhMDY3MzAyMWM5YjFhNTliMGZkYWExYzdiZDBiOSIsIm9yZGVySWQiOiJvcmRfMDBjZjA4MjMtNDY5Ny00ZmVhLTg1ZWEtNWUwMDZlOTBlNmZhIiwicXVvdGVJZCI6InFfMDE2NmY5YWYtOTU3OS00ZjgxLTgyMmItNWE2ZmY2YTYxMzQ3In0",
+        "realm": "mercado-demo",
+        "request": {
+          "amount": "20000000",
+          "currency": "0x20C0000000000000000000002486D8487268a6dd",
+          "externalId": "ord_00cf0823-4697-4fea-85ea-5e006e90e6fa",
+          "methodDetails": {
+            "chainId": 42431
+          },
+          "recipient": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3"
+        }
+      }
+    },
+    {
+      "name": "bills.same-unpaid-order",
+      "ok": true,
+      "result": {
+        "status": 402,
+        "body": {
+          "type": "https://paymentauth.org/problems/payment-required",
+          "title": "Payment Required",
+          "status": 402,
+          "detail": "Payment is required (Telcel airtime 20 MXN → 55****5678).",
+          "hint": "Use a supported wallet to pay for this resource using one of the supported payment methods returned in the WWW-Authenticate header. See https://mpp.dev/tools/wallet.md",
+          "challengeId": "zixfEfHClYETNYSK8ReX4HWW1abmk5LkzWhxL0NGBDQ"
+        },
+        "headers": {
+          "cache-control": "no-store",
+          "connection": "keep-alive",
+          "content-type": "application/problem+json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+          "www-authenticate": "Payment id=\"zixfEfHClYETNYSK8ReX4HWW1abmk5LkzWhxL0NGBDQ\", realm=\"mercado-demo\", method=\"tempo\", intent=\"charge\", request=\"eyJhbW91bnQiOiIyMDAwMDAwMCIsImN1cnJlbmN5IjoiMHgyMEMwMDAwMDAwMDAwMDAwMDAwMDAwMDAyNDg2RDg0ODcyNjhhNmRkIiwiZXh0ZXJuYWxJZCI6Im9yZF8wMGNmMDgyMy00Njk3LTRmZWEtODVlYS01ZTAwNmU5MGU2ZmEiLCJtZXRob2REZXRhaWxzIjp7ImNoYWluSWQiOjQyNDMxfSwicmVjaXBpZW50IjoiMHg2NzI3MjAzN0IwMmY0RjQ4REFjODM4ODNmOGQxQTI2NGEwYTFkNGQzIn0\", description=\"Telcel airtime 20 MXN \\u2192 55****5678\", expires=\"2026-10-14T01:07:27.701Z\", opaque=\"eyJfbXBweF9ub25jZSI6IjB4MDZlZDBmNmVjMzNlYTNkOWRmZGQwMTA2YjdhMjg4MDVhYjRhMzA0NWI0NTY0ZDU2MDY0OTFkNTgxMjQ5N2QxYiIsIm9yZGVySWQiOiJvcmRfMDBjZjA4MjMtNDY5Ny00ZmVhLTg1ZWEtNWUwMDZlOTBlNmZhIiwicXVvdGVJZCI6InFfMDE2NmY5YWYtOTU3OS00ZjgxLTgyMmItNWE2ZmY2YTYxMzQ3In0\"",
+          "x-mercado-order-id": "ord_00cf0823-4697-4fea-85ea-5e006e90e6fa"
+        }
+      }
+    },
+    {
+      "name": "bills.quote-conflict",
+      "ok": true,
+      "result": {
+        "status": 409,
+        "body": {
+          "error": "This quote already has an order; reuse its idempotencyKey or request a new quote",
+          "code": "QUOTE_USED"
+        },
+        "headers": {
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "bills.order",
+      "ok": true,
+      "result": {
+        "status": 200,
+        "body": {
+          "orderId": "ord_00cf0823-4697-4fea-85ea-5e006e90e6fa",
+          "idempotencyKey": "review-unpaid-1791939447096",
+          "quoteId": "q_0166f9af-9579-4f81-822b-5a6ff6a61347",
+          "provider": "telcel",
+          "description": "Telcel airtime 20 MXN → 55****5678",
+          "amountMxn": 20,
+          "amount": "20000000",
+          "token": "0x20C0000000000000000000002486D8487268a6dd",
+          "status": "CREATED",
+          "paidButUnfulfilled": false,
+          "history": [
+            {
+              "status": "CREATED",
+              "at": "2026-10-14T00:57:27.104Z"
+            }
+          ],
+          "createdAt": "2026-10-14T00:57:27.104Z",
+          "updatedAt": "2026-10-14T00:57:27.104Z",
+          "simulated": true
+        },
+        "headers": {
+          "cache-control": "no-store",
+          "connection": "keep-alive",
+          "content-type": "application/json",
+          "date": "Wed, 14 Oct 2026 00:57:27 GMT",
+          "keep-alive": "timeout=5",
+          "transfer-encoding": "chunked",
+          "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+        }
+      }
+    },
+    {
+      "name": "credit.signature-domain",
+      "ok": true,
+      "result": {
+        "signer": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+        "recovered": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
+        "pool": "0xbda927135f23a96aa0FD8411617F01Ffa9f063A4"
+      }
+    },
+    {
+      "name": "credit.capacity",
+      "ok": true,
+      "result": {
+        "capacity": "1500000000",
+        "api": "1500000000"
+      }
+    },
+    {
+      "name": "credit.live-borrow-simulation",
+      "ok": true,
+      "result": {
+        "amount": "1500000000",
+        "borrower": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+        "onlySimulation": true
+      }
+    },
+    {
+      "name": "swapDesk.reserves",
+      "ok": true,
+      "result": [
+        "1050000000",
+        "19005000000"
+      ]
+    },
+    {
+      "name": "creditPool.availableLiquidity",
+      "ok": true,
+      "result": "10010000000"
+    }
+  ],
+  "sourceHashes": {
+    "apps/web/lib/server/bills/service.ts": "0725e1f5b4e9b9f09854027f7e8e7ee10b49ba157676ffe60fa6ed43bfacd74a",
+    "apps/web/lib/server/credit/index.ts": "caed4f2ff8930e967aff1f76e13173247e44e356432e6a68aaae662e130a4f5c",
+    "apps/web/lib/mpp/reconcile.ts": "bce8bca752f6e1dd0b511b9a746e498490838ab8e0bbc9a8f0a615a06b0b8d64"
+  }
+}

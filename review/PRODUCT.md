@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated 2026-10-14 through 00:47 UTC. Lead approved ideas 1–3 at 00:39 and refined the actual-position stress preview at 00:45. Implementation belongs to the assigned crew owners. Mercado's local server is http://localhost:3100.
+Updated 2026-10-14 through 00:55 UTC. Lead approved ideas 1–3 at 00:39 and refined the actual-position stress preview at 00:45. Implementation belongs to the assigned crew owners. Mercado's local server is http://localhost:3100.
 
 Mercado's strongest demonstration is a driver receiving a small, explainable xMXN advance from a separately funded lender pool, spending it through an actual HTTP 402 payment, and repaying it manually. Show the settled payment and remaining debt together. Keep the simulated airtime outcome visibly distinct from the token settlement.
 
@@ -54,10 +54,26 @@ These are suggested judging priorities inferred from the build's Tempo/MPP scope
 
 ## Current story gaps
 
-The first-pass tree has no reviewed deployed vault/pool/payment journey and no completed dashboard. The story above is a target, not a report of working functionality. Keep those evidence boundaries explicit in README, acceptance records and the tour.
+Independent live review now verifies the provisional core deployment and all nine deployment/smoke receipts, including deposit/mint/burn/withdraw accounting. Current contract source has 67 passing local tests. The shared manifest still has no desk/pool, the app currently returns 500 from an mppx bundling error, and payment recovery has open findings. The full story remains a target; these core receipts do not establish swap, credit, MPP, wallet or stress completion.
 
 Lead changed collateral at 00:39 to **Testnet OUSD (Tempo faucet, no real value)** with deployment key `ousd`. Replace remaining descriptions of an independently deployed dOUSD token consistently, including the spec, diagrams, README, API deployment readers, UI and scripts. Never infer issuer backing or redemption from the faucet token's OpenUSD name.
 
 For Home, prioritize wallet OUSD/xMXN, collateral ratio with mock feed age, loan debt including fees, available lender cash, and latest verified receipt. Avoid an unqualified total-value figure, market peg, generic APY, or a bill-paid badge.
 
 A driver who spends an advance cannot repay principal plus fee from the remaining advance alone. The tour must show a separate source for the repayment funds and label any prepared top-up. The fixture is neither a real Uber payout nor automatic collection.
+
+## Full-deck critique (posted to slides and lead)
+
+The 12-slide draft has the right separation of actual settlement and simulated fulfillment. Its proof slide correctly marks the pending contracts and provisional addresses. Preserve that precision across the journey and honesty slides: “implemented on-chain” and “verified in this deployment” are different claims. Current live failures belong in the evidence status until corrected.
+
+Lead with one driver who needs 100 MXN of airtime before payday. The lender funds the pool, the driver draws, the endpoint demands 402, and the receipt appears next to remaining debt. That sequence gives MPP a clear job. Minting and the sender/family example should support it without requiring four equally long persona tours.
+
+The speaker notes total about 210 seconds before wallet waits. For a 2–3 minute demo, target about 120 seconds of speech; move the detailed architecture, mint formula and six-part roadmap to appendix or shorten them. Keep a few seconds to show the unpaid response and confirmed receipt.
+
+Concrete corrections requested:
+
+- Replace “retries never charge twice” with the narrower settled-order behavior; interrupted payments and push-mode credential loss still need proof (R-009/R-011).
+- Label the score table “Credit line.” Actual drawable amount is `availableToBorrow`, constrained by existing borrower principal, per-user cap, pool utilization and cash. A 1,500 line is not always a 1,500 draw.
+- Change the formula speaker note from “up to 150% collateralization” to “at least 150%.” Keep the 250% demo position and actual-position stress preview.
+- Remove unsourced market-stat placeholders before presenting. A concrete driver scenario can carry the problem slide without invented remittance fees or exclusion statistics.
+- Keep the existing labels: testnet faucet OUSD/no real value/not issuer-backed/not redeemable; Demo Uber Data; mock oracle; SIMULATED top-up; manual repayment from separately disclosed funds.

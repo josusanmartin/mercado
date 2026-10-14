@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-14T00:53:51.324Z",
+  "kind": "local actual service/store; mocked RPC reconciliation, no transfers",
+  "sources": {
+    "apps/web/lib/server/bills/store.ts": "25b4317c05e596332c0f4c99db7ac28eae601aafc4a498c42ba04a4cdfc1b5af",
+    "apps/web/lib/server/bills/providers.ts": "410f7b266bca824ace83c029db3842b27dff58be53fb30968e05b6e2cd9ebcb8",
+    "apps/web/lib/server/bills/lock.ts": "0f33e3377fc4bf8cd0c08a250cb4f3a14e6cac69f7109aea92b051fbd2b336b7",
+    "apps/web/lib/server/bills/service.ts": "b69bd980dc4ecf038e76b9e897895f87f2264fadbfb8d0b6420efddcdd385d7c"
+  },
+  "results": [
+    {
+      "scenario": "unresolved-after-hold-rpc-failure",
+      "pass": false,
+      "charges": 1,
+      "scans": 1,
+      "outcome": {
+        "kind": "challenge",
+        "status": 402
+      },
+      "orderStatus": "CREATED",
+      "history": [
+        {
+          "status": "CREATED",
+          "at": "2026-10-14T00:53:51.313Z"
+        }
+      ]
+    },
+    {
+      "scenario": "expired-quote-already-settled",
+      "pass": false,
+      "charges": 0,
+      "scans": 0,
+      "outcome": {
+        "error": "QUOTE_EXPIRED",
+        "status": 410
+      },
+      "orderStatus": "FAILED",
+      "history": [
+        {
+          "status": "CREATED",
+          "at": "2026-10-14T00:53:51.321Z"
+        },
+        {
+          "status": "FAILED",
+          "at": "2026-10-14T00:53:51.323Z",
+          "note": "Quote expired before payment; nothing was charged."
+        }
+      ]
+    }
+  ]
+}
