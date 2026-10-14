@@ -249,7 +249,7 @@ export function ContractsProof() {
           name: "MultiCollateralVault",
           address: V2.vault,
           purpose: "Per-collateral positions: deposit, mint, repay and burn, withdraw, liquidate. Repay never needs an oracle.",
-          admin: `${OWNER} can add collaterals, set or swap their price feeds, change risk parameters (within enforced bounds), set debt ceilings and pause new minting per collateral. No function moves anyone's collateral, but that is not the same as no control: the owner could list a token and a feed it controls, then mint xMXN against it.`,
+          admin: `${OWNER} can add collaterals, set or swap their price feeds, change risk parameters (within enforced bounds), set debt ceilings and pause new minting per collateral. There is no unrestricted admin sweep, but that is not the same as no control: by changing a feed or risk parameters the owner can make positions liquidatable (and liquidators then seize collateral), and it could list a token and a feed it controls, then mint xMXN against it.`,
           state: `${V2.collaterals.length} collaterals; xMXN debt and ceilings per collateral below`,
         },
         ...V2.collaterals.map<Item>((c) => ({
