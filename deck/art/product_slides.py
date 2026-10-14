@@ -47,6 +47,51 @@ P = [
   notes="~8s. Mercado Invest is the savings product, with three ways to grow money. Peso savings: deposit xMXN into the real Crédito lending pool; the return is the driver fees actually realized, so far 20 xMXN in pool v2, historical and variable, never guaranteed, and only idle cash is withdrawable. Dollar savings: stake OUSD into sOUSD, the real ERC-4626 on v2, whose accrual comes from a demo yield reserve the admin funds on testnet. T-bills: buy and sell the demo tokenized T-bill through a new InvestDesk at the admin feed price plus a spread, then use it as Mint collateral; all three are live on v2 and were verified in the browser: 10 xMXN supplied to the pool, 10 OUSD into sOUSD (demo APR 5%), and 10 OUSD buying 0.09975 tTBILL on the desk at the $100 admin price plus spread. The tTBILL is a demo, not a security; its issuance is gated (no faucet), and the desk only buys back what it sold to you. Never say guaranteed returns."),
 ]
 
+
+from PIL import Image as _Img
+
+def _aspect(key):
+    for d in ("v7/", ""):
+        pth = os.path.join(ROOT, "assets", d + key)
+        if os.path.exists(pth):
+            w, h = _Img.open(pth).size
+            return w / h
+    return 1.6
+
+def _phone(src, left, top, h, n):
+    w = round(h * 720 / 1578)
+    return f'<img data-build-in="fade {n}" src="{src}" alt="" style="position:absolute;left:{left}px;top:{top}px;width:{w}px;height:{h}px;object-fit:contain">\n', w
+
+FRAME = "border-radius:16px;border:1px solid rgba(255,255,255,0.14);box-shadow:0 24px 64px rgba(0,0,0,0.55);background:#0A0A0A"
+
+def _panel(src, key, left, top, maxw, maxh, n, extra="", alt=""):
+    a = _aspect(key)
+    w, h = maxw, round(maxw / a)
+    if h > maxh:
+        h, w = maxh, round(maxh * a)
+    return f'<img data-build-in="fade {n}" src="{src}"{extra} alt="{alt}" style="position:absolute;left:{left}px;top:{top}px;width:{w}px;height:{h}px;object-fit:contain;{FRAME}">\n', w, h
+
+def visuals_html(vs):
+    """vs: list of (kind, key[, poster_key]) with kind in phone|panel|video|strip. Right zone x1112..1792, y200..900."""
+    vs = [v for v in vs if v[1] in assets][:2]
+    kinds = [v[0] for v in vs]
+    out = ""
+    PH = 560
+    if kinds == ["phone"]:
+        out += _phone(assets[vs[0][1]], 1340, 240, PH, 4)[0]
+    elif kinds == ["phone", "phone"]:
+        out += _phone(assets[vs[0][1]], 1180, 240, PH, 4)[0] + _phone(assets[vs[1][1]], 1500, 240, PH, 5)[0]
+    elif kinds == ["panel"]:
+        out += _panel(assets[vs[0][1]], vs[0][1], 1112, 220, 680, 640, 4)[0]
+    elif kinds == ["strip"]:
+        out += _panel(assets[vs[0][1]], vs[0][1], 128, 640, 1664, 260, 4)[0]
+    elif kinds == ["phone", "video"]:
+        ph, w = _phone(assets[vs[0][1]], 1112, 240, PH, 4)
+        mp4, poster = assets[vs[1][1]], assets[vs[1][2]]
+        vh = _panel(poster, vs[1][2], 1112 + w + 40, 330, 1792 - (1112 + w + 40), 400, 5, extra=f' data-video="{mp4}"', alt="Screen recording: Javier draws an advance, his frozen card is declined, he unfreezes it and a tap payment goes through once")[0]
+        out += ph + vh
+    return out
+
 def slide(p):
     prod = p["art"].replace("product-", "").replace("-v4.webp", "")
     key = next((k for k in (f"screen-{prod}-v6.png", f"screen-{prod}-v5.png", f"screen-{prod}-v3.png", f"screen-{prod}-v2live2.png", f"screen-{prod}-v2live.png", f"screen-{prod}-v4.png") if k in assets), None)
@@ -66,7 +111,10 @@ def slide(p):
     big = p.get("number")
     bsize = 96 if big and len(big) <= 16 else 80
     numblock = (f'<p data-build-in="rise 3" style="position:absolute;left:128px;top:700px;width:920px;font-size:{bsize}px;font-weight:500;line-height:1;letter-spacing:-5px;color:{p["tint"]}">{big}</p>\n') if big else ""
-    if kind == "phone":
+    if p.get("visuals") is not None:
+        visual, capline = visuals_html(p["visuals"]), ""
+        numblock = numblock
+    elif kind == "phone":
         visual = (f'<img data-build-in="fade 4" src="{src}" alt="{alt}" style="position:absolute;left:1240px;top:220px;width:552px;height:620px;object-fit:contain">\n')
         capy = 856
     else:
