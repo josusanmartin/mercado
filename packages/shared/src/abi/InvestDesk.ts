@@ -58,6 +58,25 @@ export const investDeskAbi = [
   },
   {
     "type": "function",
+    "name": "bought",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "buy",
     "inputs": [
       {
@@ -757,6 +776,22 @@ export const investDeskAbi = [
     "type": "error",
     "name": "EnforcedPause",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExceedsBoughtBalance",
+    "inputs": [
+      {
+        "name": "bought",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "requested",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

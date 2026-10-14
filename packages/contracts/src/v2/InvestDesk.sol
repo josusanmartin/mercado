@@ -18,6 +18,8 @@ import {MoveAMM} from "./MoveAMM.sol";
 /// @dev Units: OUSD and tTBILL 6dp; feed 8dp USD per tTBILL.
 ///        buy:  tbillOut = ousdIn × 1e8 / px × (1 − spread)      sell: ousdOut = tbillIn × px / 1e8 × (1 − spread)
 ///      Reserves are tracked internally (donations ignored). A stale/paused feed reverts. Max per trade in USD.
+///      Buy-back only (review R-042): the desk buys back at most what each address bought from it (`bought`), so
+///      free faucet tTBILL can't be sold in to drain the OUSD reserve. Quotes revert while paused (R-043).
 contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
@@ -34,6 +36,8 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public maxTradeUsd = 25_000e6;
     uint256 public reserveOusd;
     uint256 public reserveTbill;
+    /// @notice tTBILL each address bought from this desk and hasn't sold back (the most it can sell here)
+    mapping(address => uint256) public bought;
 
     event Bought(address indexed user, bool withXmxn, uint256 payIn, uint256 ousdUsed, uint256 tbillOut, uint256 fee, uint256 px);
     event Sold(address indexed user, bool forXmxn, uint256 tbillIn, uint256 ousdOut, uint256 received, uint256 fee, uint256 px);
@@ -46,6 +50,7 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     error InsufficientInventory(uint256 available, uint256 needed);
     error Slippage(uint256 out, uint256 minOut);
     error InvalidParams();
+    error ExceedsBoughtBalance(uint256 bought, uint256 requested);
 
     constructor(address owner_, IERC20 ousd_, IERC20 tbill_, IERC20 xmxn_, IPriceFeed feed_, MoveAMM amm_) Ownable(owner_) {
         if (feed_.decimals() != 8) revert InvalidParams();
@@ -55,6 +60,7 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     // ---------------------------------------------------------------- quotes (revert like the trade would)
 
     function quoteBuy(uint256 ousdIn) public view returns (uint256 tbillOut, uint256 fee, uint256 px) {
+        if (paused()) revert EnforcedPause();
         if (ousdIn == 0) revert ZeroAmount();
         if (ousdIn > maxTradeUsd) revert TradeTooLarge(ousdIn, maxTradeUsd);
         (px,) = feed.price();
@@ -66,6 +72,7 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function quoteSell(uint256 tbillIn) public view returns (uint256 ousdOut, uint256 fee, uint256 px) {
+        if (paused()) revert EnforcedPause();
         if (tbillIn == 0) revert ZeroAmount();
         (px,) = feed.price();
         uint256 gross = Math.mulDiv(tbillIn, px, PX);
@@ -100,6 +107,7 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
         uint256 px;
         (ousdOut, fee, px) = quoteSell(tbillIn);
         if (ousdOut < minOusdOut) revert Slippage(ousdOut, minOusdOut);
+        _spendBought(tbillIn);
         reserveTbill += tbillIn;
         reserveOusd -= ousdOut;
         tbill.safeTransferFrom(msg.sender, address(this), tbillIn);
@@ -118,6 +126,7 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
     /// @notice Receive xMXN: sold for OUSD, then minted to xMXN through the MoveAMM straight to the seller.
     function sellForXmxn(uint256 tbillIn, uint256 minXmxnOut) external nonReentrant whenNotPaused returns (uint256 xmxnOut) {
         (uint256 ousdOut, uint256 fee, uint256 px) = quoteSell(tbillIn);
+        _spendBought(tbillIn);
         reserveTbill += tbillIn;
         reserveOusd -= ousdOut;
         tbill.safeTransferFrom(msg.sender, address(this), tbillIn);
@@ -133,8 +142,15 @@ contract InvestDesk is Ownable2Step, ReentrancyGuard, Pausable {
         if (tbillOut < minTbillOut) revert Slippage(tbillOut, minTbillOut);
         reserveOusd += ousdIn;
         reserveTbill -= tbillOut;
+        bought[msg.sender] += tbillOut;
         tbill.safeTransfer(msg.sender, tbillOut);
         emit Bought(msg.sender, withXmxn, payIn, ousdIn, tbillOut, fee, px);
+    }
+
+    function _spendBought(uint256 tbillIn) internal {
+        uint256 b = bought[msg.sender];
+        if (tbillIn > b) revert ExceedsBoughtBalance(b, tbillIn);
+        bought[msg.sender] = b - tbillIn;
     }
 
     // ---------------------------------------------------------------- inventory (owner)

@@ -5,6 +5,7 @@ import {BaseV2} from "./utils/BaseV2.t.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {InvestDesk} from "../src/v2/InvestDesk.sol";
 import {AdminPriceFeed} from "../src/v2/AdminPriceFeed.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// InvestDesk: demo tTBILL buy/sell vs OUSD and xMXN (through the real MoveAMM). Real TIP-20 precompiles.
 contract InvestDeskTest is BaseV2 {
@@ -66,16 +67,41 @@ contract InvestDeskTest is BaseV2 {
         assertEq(tbill.totalSupply(), 1_000e6, "the desk never mints tTBILL");
     }
 
-    function test_sellLimitedByOusdReserve() public {
-        vm.startPrank(admin);
-        desk.setParams(25, 1_000_000e6);
-        tbill.mint(bob, 500e6); // $50,000 of tTBILL vs a 10,000 OUSD reserve
-        vm.stopPrank();
+    /// review R-042: free faucet tTBILL can't be sold in to drain the OUSD reserve (buy-back only)
+    function test_faucetTbillCannotDrainDesk() public {
         vm.startPrank(bob);
-        IERC20(address(tbill)).approve(address(desk), 500e6);
-        vm.expectRevert(abi.encodeWithSelector(InvestDesk.InsufficientInventory.selector, 10_000e6, 49_875e6));
-        desk.sell(500e6, 0);
+        tbill.faucet(100e6); // free demo tTBILL
+        IERC20(address(tbill)).approve(address(desk), 100e6);
+        vm.expectRevert(abi.encodeWithSelector(InvestDesk.ExceedsBoughtBalance.selector, 0, 100e6));
+        desk.sell(100e6, 0);
+        vm.expectRevert(abi.encodeWithSelector(InvestDesk.ExceedsBoughtBalance.selector, 0, 100e6));
+        desk.sellForXmxn(100e6, 0);
         vm.stopPrank();
+        (uint256 rO,) = desk.reserves();
+        assertEq(rO, 10_000e6);
+    }
+
+    function test_canSellBackOnlyWhatWasBought() public {
+        uint256 t = _buy(alice, 1_000e6);
+        assertEq(desk.bought(alice), t);
+        vm.prank(admin);
+        tbill.mint(alice, 50e6); // extra tTBILL from elsewhere
+        vm.startPrank(alice);
+        IERC20(address(tbill)).approve(address(desk), type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(InvestDesk.ExceedsBoughtBalance.selector, t, t + 1));
+        desk.sell(t + 1, 0);
+        desk.sell(t, 0);
+        vm.stopPrank();
+        assertEq(desk.bought(alice), 0);
+    }
+
+    function test_quotesRevertWhilePaused() public {
+        vm.prank(admin);
+        desk.pause();
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        desk.quoteBuy(100e6);
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        desk.quoteSell(1e6);
     }
 
     function test_maxTradeAndSlippage() public {

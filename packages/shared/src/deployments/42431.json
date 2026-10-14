@@ -59,7 +59,7 @@
     "creditPool": "0xaB32daeF142B442d24589D2161967a843720C6D7",
     "fxOracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
     "card": "0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6",
-    "investDesk": "0x160Fc9557B28e537ECFe456617004AfA7B2ab73e",
+    "investDesk": "0xDacE8de24876Dc52930B3f986C4c9427d124EfEd",
     "tTBILLFeed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
     "sOUSD": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
     "tTBILL": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
@@ -129,11 +129,11 @@
       "cardStage.deployMercadoCard": "0xac440778e9382e7e491e71e9ed892c04033d1e953ad271a7da5505a8fa6dbb36",
       "cardStage.setMerchant": "0xc492035e9bbc0ac936ab667e24153ca803b7298b54ebb78724ac993cd103082c",
       "cardStage.transfer": "0x1b8aeaba8cfa9712ef5986022d13d398bbcb7e240c862b1f915c67e027a9e15b",
-      "investStage.deployInvestDesk": "0x982722a84b2a0231339d1adb92fbd290d65860f1a87683b9880a3f88cacbb12e",
-      "investStage.mint": "0x5334a59f4e01f97819fad52ad45d7acb88910f9875ce50fd521ebe11595592df",
-      "investStage.approve": "0x8cabc9e0a976ae4f84d7380d0c04daa2ca35344bbf8e8e2df20be23fcfc1672b",
-      "investStage.approve#2": "0xf1aa8d4fed9ba0611d1d0d7f9b6dab70b1d1afd9feb165ecca0d467a0d23d64d",
-      "investStage.seed": "0x6f06a024c902f79af261ef6caa3ec11127674b3ae94497ed82159b4ca2c0d9b8"
+      "investStage.deployInvestDesk": "0x0d6a9dbef132b3b3bfa6df9beb1dc9102aec36371ee4515b8bedcfc6004e3e03",
+      "investStage.mint": "0x7724ae88641e7ecfad2ce57500c2ca8b5f7fb42413dcaf7d078ed5016697d3c3",
+      "investStage.approve": "0xce2cd1584a184c283f539e183956bd14b6313fe77616e00fba59966a17e58346",
+      "investStage.approve#2": "0xf2a77478bf7c574d1e6cd750f816550626de0f8c40f2e25a04afed65784b8136",
+      "investStage.seed": "0x2b4f37697970416b61fe0a076ba7e3ab3d56f98948cff2bdeae527e50a7a2360"
     }
   }
 }
