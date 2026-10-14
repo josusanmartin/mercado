@@ -11,9 +11,24 @@ import { cn } from "@/lib/utils";
 import { phoneDisplay, phoneFont } from "./font";
 import "./mobile.css";
 
-type Snack = { id: number; text: string; action?: { label: string; onClick: () => void }; closing?: boolean };
-type DeviceCtx = { overlay: HTMLElement | null; screen: HTMLElement | null; snack: (text: string, action?: Snack["action"]) => void };
-const Ctx = createContext<DeviceCtx>({ overlay: null, screen: null, snack: () => {} });
+type Snack = {
+  id: number;
+  text: string;
+  action?: { label: string; onClick: () => void };
+  closing?: boolean;
+};
+type DeviceCtx = {
+  overlay: HTMLElement | null;
+  screen: HTMLElement | null;
+  snack: (text: string, action?: Snack["action"]) => void;
+  setBar: (color: string | undefined) => void;
+};
+const Ctx = createContext<DeviceCtx>({
+  overlay: null,
+  screen: null,
+  snack: () => {},
+  setBar: () => {},
+});
 
 /** Where in-phone overlays (bottom sheets, dialogs) portal to. */
 export const useOverlayHost = () => useContext(Ctx).overlay;
@@ -22,6 +37,15 @@ export const useOverlayHost = () => useContext(Ctx).overlay;
  * makes only this inert, so another device on the same page (Card's shop POS) stays usable.
  */
 export const usePhoneScreen = () => useContext(Ctx).screen;
+/** While the calling screen is mounted, the status bar takes `color` (a screen whose top is a color field). */
+export function useStatusBar(color: string | undefined) {
+  const { setBar } = useContext(Ctx);
+  useEffect(() => {
+    if (!color) return;
+    setBar(color);
+    return () => setBar(undefined);
+  }, [color, setBar]);
+}
 /** Show an M3 snackbar at the bottom of the phone screen. */
 export const useSnackbar = () => useContext(Ctx).snack;
 
@@ -46,6 +70,7 @@ export function AndroidDevice({
 }) {
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [screen, setScreen] = useState<HTMLElement | null>(null);
+  const [bar, setBar] = useState<string>();
   const [snacks, setSnacks] = useState<Snack[]>([]);
   const seq = useRef(0);
   const snack = useCallback((text: string, action?: Snack["action"]) => {
@@ -54,7 +79,10 @@ export function AndroidDevice({
     setTimeout(() => setSnacks((s) => s.map((x) => (x.id === id ? { ...x, closing: true } : x))), 3800);
     setTimeout(() => setSnacks((s) => s.filter((x) => x.id !== id)), 4000);
   }, []);
-  const style = { ...(accent && { "--m-accent": accent }), ...(onAccent && { "--m-on-accent": onAccent }) } as CSSProperties;
+  const style = {
+    ...(accent && { "--m-accent": accent }),
+    ...(onAccent && { "--m-on-accent": onAccent }),
+  } as CSSProperties;
   // On a real phone the overlays live on <body> so they cover the site's sticky chrome too.
   const [small, setSmall] = useState(false);
   useEffect(() => {
@@ -124,7 +152,7 @@ export function AndroidDevice({
   );
 
   return (
-    <Ctx.Provider value={{ overlay, screen: small ? null : screen, snack }}>
+    <Ctx.Provider value={{ overlay, screen: small ? null : screen, snack, setBar }}>
       <div ref={frame} className="relative sm:mx-auto sm:w-[360px] sm:pb-1" style={zoom < 1 ? { zoom } : undefined} role="group" aria-label={label}>
         {/* side keys: power + volume rocker on the right edge */}
         <span aria-hidden className="absolute top-[150px] -right-[3px] hidden h-[62px] w-[4px] rounded-r-[3px] bg-gradient-to-b from-[#3b4048] via-[#272a30] to-[#3b4048] sm:block" />
@@ -132,24 +160,21 @@ export function AndroidDevice({
         {/* body: metal rim + black bezel */}
         <div className="sm:rounded-[46px] sm:bg-gradient-to-br sm:from-[#4a4f58] sm:via-[#1b1d22] sm:to-[#3a3e46] sm:p-[2px] sm:shadow-[0_2px_4px_rgb(0_0_0/0.12),0_28px_60px_-24px_rgb(17_20_24/0.55),0_60px_90px_-50px_rgb(17_20_24/0.35)]">
           <div className="sm:rounded-[44px] sm:bg-[#07080a] sm:p-[7px]">
-            <div
-              className={cn(
-                phoneFont.variable,
-                phoneDisplay.variable,
-                "m-root relative flex flex-col overflow-hidden sm:h-[766px] sm:rounded-[37px]",
-              )}
-              style={style}
-              data-theme={theme}
-            >
-              <StatusBar bg={statusBar} />
-              <div ref={setScreen} className="m-scroll relative min-h-0 flex-1 max-sm:min-h-[calc(100dvh-58px)] max-sm:pb-[76px] sm:overflow-y-auto sm:pb-5">{children}</div>
+            <div className={cn(phoneFont.variable, phoneDisplay.variable, "m-root relative flex flex-col overflow-hidden sm:h-[766px] sm:rounded-[37px]")} style={style} data-theme={theme}>
+              <StatusBar bg={bar ?? statusBar} />
+              <div ref={setScreen} className="m-scroll relative min-h-0 flex-1 max-sm:min-h-[calc(100dvh-58px)] max-sm:pb-[76px] sm:overflow-y-auto sm:pb-5">
+                {children}
+              </div>
               {/* gesture navigation handle (edge-to-edge, over the app) */}
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-30 hidden h-5 items-center justify-center sm:flex">
                 <span className="h-[4px] w-[108px] rounded-full bg-[var(--m-on-surface)] opacity-80" />
               </div>
               {!small && layers}
               {/* glass sheen + camera, above everything */}
-              <div aria-hidden className="pointer-events-none absolute inset-0 z-[80] hidden bg-[linear-gradient(118deg,rgb(255_255_255/0.07)_0%,rgb(255_255_255/0.02)_28%,transparent_42%)] mix-blend-screen sm:block" />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-[80] hidden bg-[linear-gradient(118deg,rgb(255_255_255/0.07)_0%,rgb(255_255_255/0.02)_28%,transparent_42%)] mix-blend-screen sm:block"
+              />
               <span
                 aria-hidden
                 className="absolute top-[9px] left-1/2 z-[90] hidden size-[13px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#2c3440_0%,#0b0d10_45%,#000_100%)] shadow-[0_0_0_1.5px_#050506] sm:block"
@@ -176,7 +201,7 @@ function StatusBar({ bg }: { bg: string }) {
   const time = d ? `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}` : "";
   return (
     <div
-      className="relative z-20 hidden h-[34px] shrink-0 items-center justify-between pr-5 pl-6 text-[13.5px] font-medium tracking-[0.01em] text-[var(--m-on-surface)] sm:flex"
+      className="relative z-20 hidden h-[34px] shrink-0 items-center justify-between pr-5 pl-6 text-[13.5px] font-medium tracking-[0.01em] text-[var(--m-on-surface)] transition-[background-color] duration-300 sm:flex"
       style={{ background: bg }}
       aria-hidden
     >

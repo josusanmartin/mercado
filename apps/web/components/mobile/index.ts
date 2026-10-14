@@ -3,7 +3,7 @@
 //   Type: <Display> (Archivo Black, uppercase) for balances/titles, <Meta> for tiny uppercase labels.
 //   Inside: TopAppBar, ListItem, Button, Chip, BottomSheet, NumericKeypad, BottomNav, SuccessScreen, …
 //   useSnackbar()("Copiado") shows a snackbar; ScreenTransition + useNavDirection give M3 motion.
-export { AndroidDevice, InPhone, useOverlayHost, useSnackbar } from "./device";
+export { AndroidDevice, InPhone, useOverlayHost, useSnackbar, useStatusBar } from "./device";
 export {
   AppHeader,
   Avatar,

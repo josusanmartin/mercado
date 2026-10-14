@@ -50,8 +50,10 @@ import {
   haceTiempo,
   useNavDirection,
   useSnackbar,
+  useStatusBar,
   type NavItem,
 } from "@/components/mobile";
+import { AccentField, washStyle } from "@/components/mobile/extra/editorial";
 import { OnrampSheet } from "./onramp-sheet";
 import { useFxHistory, type FxPoint } from "./use-fx-history";
 import type { RemesasState } from "./remesas-screen";
@@ -99,17 +101,22 @@ type AppProps = { s: RemesasState; openOnramp: () => void };
 
 /* ─────────────────────────────── Inicio ─────────────────────────────── */
 
-/** Our own generated art for the image-in-type hero: a papel picado-like cut pattern in the cultural palette. */
+/**
+ * Our own generated art for the image-in-type hero: a papel picado-like cut pattern. v5: the hero sits on the
+ * terracotta field, so the pattern is all dark (ink, jade, cobalt): the word reads as one solid dark shape
+ * at desktop zoom, with the cut pattern visible up close.
+ */
 const PAPEL =
   'url("data:image/svg+xml,' +
   encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><rect width='96' height='96' fill='${TERRACOTTA}'/><path d='M0 0h48L24 24z' fill='#1f3d2b'/><path d='M48 0h48L72 24z' fill='${CREAM}'/><path d='M0 48h48L24 72z' fill='${CREAM}'/><path d='M48 48h48L72 72z' fill='#1f3d2b'/><circle cx='24' cy='40' r='5' fill='#2448c8'/><circle cx='72' cy='88' r='5' fill='#2448c8'/><path d='M60 30l6 6-6 6-6-6z' fill='${INK}'/><path d='M12 78l6 6-6 6-6-6z' fill='${INK}'/></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><rect width='96' height='96' fill='${INK}'/><path d='M0 0h48L24 24z' fill='#1f3d2b'/><path d='M48 0h48L72 24z' fill='#24301f'/><path d='M0 48h48L24 72z' fill='#24301f'/><path d='M48 48h48L72 72z' fill='#1f3d2b'/><circle cx='24' cy='40' r='5' fill='#2448c8'/><circle cx='72' cy='88' r='5' fill='#2448c8'/><path d='M60 30l6 6-6 6-6-6z' fill='#3a1a12'/><path d='M12 78l6 6-6 6-6-6z' fill='#3a1a12'/></svg>`,
   ) +
   '")';
 
 const cdmxTime = (now?: number) => (now ? new Date((now - 6 * 3600) * 1000).toISOString().slice(11, 16) : "--:--");
 
 function Inicio({ s, openOnramp }: AppProps) {
+  useStatusBar(TERRACOTTA);
   const now = useNow(30_000);
   const snack = useSnackbar();
   const fx = useOracle();
@@ -121,7 +128,10 @@ function Inicio({ s, openOnramp }: AppProps) {
   // opens: "Agregar fondos con Tempo Wallet" works there. Same query (and cache) as useOnramp.
   const onramp = useQuery({
     queryKey: ["onramp-status"],
-    queryFn: async () => (await fetch("/api/onramp", { cache: "no-store" })).json() as Promise<{ enabled: boolean }>,
+    queryFn: async () =>
+      (await fetch("/api/onramp", { cache: "no-store" })).json() as Promise<{
+        enabled: boolean;
+      }>,
     staleTime: 30_000,
   });
   const papel: CSSProperties = {
@@ -134,32 +144,40 @@ function Inicio({ s, openOnramp }: AppProps) {
   };
   return (
     <div className="pb-6">
-      <AppHeader
-        index="02"
-        product="Remesas"
-        right={
-          <>
-            <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
-              <Bell className="size-[22px]" strokeWidth={1.75} />
-            </IconButton>
-            <Avatar name="Sender US" size={36}>
-              S
-            </Avatar>
-          </>
-        }
-      />
+      {/* v5 color world: the terracotta field holds the header, the hero and the balance (ink text, 5.6:1 AA);
+          a soft wash carries it into the white canvas for the tiles, actions and contacts. */}
+      <AccentField color={TERRACOTTA} className="pb-6">
+        <AppHeader
+          index="02"
+          product="Remesas"
+          right={
+            <>
+              <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
+                <Bell className="size-[22px]" strokeWidth={1.75} />
+              </IconButton>
+              <Avatar name="Sender US" size={36}>
+                S
+              </Avatar>
+            </>
+          }
+        />
 
-      <div className="px-4">
-        <Display as="h1" size={58} style={papel} className="pt-1">
-          Envía
-          <br />a casa
-        </Display>
-        <Meta className="mt-3">
-          CDMX · {fmtNumber(fx.rate, 2)} MXN/USD · {cdmxTime(now)}
-        </Meta>
+        <div className="px-4">
+          <Display as="h1" size={58} style={papel} className="pt-1">
+            Envía
+            <br />a casa
+          </Display>
+          <Meta className="mt-3">
+            CDMX · {fmtNumber(fx.rate, 2)} MXN/USD · {cdmxTime(now)}
+          </Meta>
+        </div>
+
+        <Balance />
+      </AccentField>
+
+      <div className="px-4 pt-5" style={washStyle(TERRACOTTA)}>
+        <CurrencyTiles />
       </div>
-
-      <Balance />
 
       <div className="mt-6 grid grid-cols-4 px-2">
         <RoundAction icon={<Plus />} label="Agregar" onClick={openOnramp} badge={onramp.data && !onramp.data.enabled ? "Próximamente" : undefined} />
@@ -217,16 +235,24 @@ function Balance() {
       <Money value={total} currency="USD" size={52} className="mt-2" />
       <div className="mt-3 flex items-center gap-3">
         <span className="m-meta text-[var(--m-on-surface)]">
-          1 USD = {fmtNumber(fx.rate, 2)} MXN{change !== undefined && Math.abs(change) >= 0.005 ? ` ${change > 0 ? "▲" : "▼"}${fmtNumber(Math.abs(change), 2)}%` : ""}
+          1 USD = {fmtNumber(fx.rate, 2)} MXN
+          {change !== undefined && Math.abs(change) >= 0.005 ? ` ${change > 0 ? "▲" : "▼"}${fmtNumber(Math.abs(change), 2)}%` : ""}
         </span>
         {pts.length >= 3 && <Sparkline points={pts} />}
       </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-2">
-        <CurrencyBlock flag={<FlagUS />} code="USD" name="Dólares" amount={usd === undefined ? "—" : `US${fmtMoney(usd)}`} sub="OUSD de prueba" style={{ background: INK, color: "#fff" }} />
-        <CurrencyBlock flag={<FlagMX />} code="MXN" name="Pesos" amount={mxn === undefined ? "—" : `MX${fmtMoney(mxn)}`} sub="xMXN demo" style={{ background: CREAM, color: INK }} />
-      </div>
     </section>
+  );
+}
+
+function CurrencyTiles() {
+  const bal = useBalances();
+  const usd = bal.ousd !== undefined ? Number(bal.ousd) / 1e6 : undefined;
+  const mxn = bal.xmxn !== undefined ? Number(bal.xmxn) / 1e6 : undefined;
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <CurrencyBlock flag={<FlagUS />} code="USD" name="Dólares" amount={usd === undefined ? "—" : `US${fmtMoney(usd)}`} sub="OUSD de prueba" style={{ background: INK, color: "#fff" }} />
+      <CurrencyBlock flag={<FlagMX />} code="MXN" name="Pesos" amount={mxn === undefined ? "—" : `MX${fmtMoney(mxn)}`} sub="xMXN demo" style={{ background: CREAM, color: INK }} />
+    </div>
   );
 }
 
@@ -298,8 +324,8 @@ function Sparkline({ points }: { points: FxPoint[] }) {
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="shrink-0 overflow-visible" role="img" aria-label={`Últimas ${points.length} actualizaciones del tipo en cadena`}>
       <title>{`Relay on-chain: ${points.length} pushes · ${fmtNumber(lo, 4)}–${fmtNumber(hi, 4)} MXN`}</title>
-      <path d={d} fill="none" stroke={TERRACOTTA} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lx} cy={ly} r={2.5} fill={TERRACOTTA} />
+      <path d={d} fill="none" stroke={INK} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={lx} cy={ly} r={2.5} fill={INK} />
     </svg>
   );
 }
@@ -315,8 +341,17 @@ function useEntries() {
   const entries = useMemo(() => {
     const sends: Entry[] = feed.rows
       .filter((r) => r.tokenOut === "xMXN" && r.account.toLowerCase() === address?.toLowerCase())
-      .map((r) => ({ kind: "send", at: r.timestamp ?? 0, row: r, contact: contactByAddress(r.to) }));
-    const bills: Entry[] = orders.orders.map((o) => ({ kind: "bill", at: Date.parse(o.createdAt) / 1000, order: o }));
+      .map((r) => ({
+        kind: "send",
+        at: r.timestamp ?? 0,
+        row: r,
+        contact: contactByAddress(r.to),
+      }));
+    const bills: Entry[] = orders.orders.map((o) => ({
+      kind: "bill",
+      at: Date.parse(o.createdAt) / 1000,
+      order: o,
+    }));
     return [...sends, ...bills].sort((a, b) => b.at - a.at);
   }, [feed.rows, orders.orders, address]);
   return { entries, loading: feed.isLoading, error: feed.error };
@@ -394,7 +429,13 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
 const feeLine = (steps: { feePaidBy?: "sponsor" | "you" }[]) =>
   steps.some((st) => st.feePaidBy === "you") ? "Pagada por ti" : steps.every((st) => st.feePaidBy === "sponsor") ? "Cubierta por Mercado" : "—";
 
-const statusEs = (st: string) => ({ CREATED: "pendiente", PAYMENT_VERIFIED: "pagado", FULFILLED_SIMULATED: "pagado", FAILED: "falló" })[st] ?? st;
+const statusEs = (st: string) =>
+  ({
+    CREATED: "pendiente",
+    PAYMENT_VERIFIED: "pagado",
+    FULFILLED_SIMULATED: "pagado",
+    FAILED: "falló",
+  })[st] ?? st;
 
 function PaperPlane() {
   return (
@@ -439,9 +480,40 @@ function Perfil({ openOnramp }: AppProps) {
         </div>
       </div>
       <div className="border-t border-[var(--m-outline-variant)]">
-        <ListItem divider leading={<RowIcon><Wallet /></RowIcon>} headline="Agregar dólares" supporting="Tarjeta (simulada) o Tempo Wallet" onClick={openOnramp} />
-        <ListItem divider leading={<RowIcon><ShieldCheck /></RowIcon>} headline="Red" supporting="Tempo Moderato · testnet" />
-        {address && <ListItem divider leading={<RowIcon><ExternalLink /></RowIcon>} headline="Mi cuenta en el explorador" supporting="explore.testnet.tempo.xyz" href={`https://explore.testnet.tempo.xyz/address/${address}`} />}
+        <ListItem
+          divider
+          leading={
+            <RowIcon>
+              <Wallet />
+            </RowIcon>
+          }
+          headline="Agregar dólares"
+          supporting="Tarjeta (simulada) o Tempo Wallet"
+          onClick={openOnramp}
+        />
+        <ListItem
+          divider
+          leading={
+            <RowIcon>
+              <ShieldCheck />
+            </RowIcon>
+          }
+          headline="Red"
+          supporting="Tempo Moderato · testnet"
+        />
+        {address && (
+          <ListItem
+            divider
+            leading={
+              <RowIcon>
+                <ExternalLink />
+              </RowIcon>
+            }
+            headline="Mi cuenta en el explorador"
+            supporting="explore.testnet.tempo.xyz"
+            href={`https://explore.testnet.tempo.xyz/address/${address}`}
+          />
+        )}
       </div>
       <Meta honesty className="mt-5 px-4">
         Testnet · sin valor real · no canjeable · sin retiro a banco
@@ -575,9 +647,22 @@ function Enviar({ s }: AppProps) {
           {busy && <LinearProgress />}
           <DetailRows
             rows={[
-              { label: "Envías", value: `US${fmtMoney(amt)}`, sub: "OUSD de prueba", subHonesty: true },
-              { label: "Tipo de cambio", value: rate !== undefined ? `${fmtNumber(rate, 4)} MXN` : "—", sub: "comisión incluida" },
-              { label: `${contact?.name} recibe`, value: q.amountOut !== undefined ? `MX${fmtMoney(q.amountOut)}` : "—", sub: "xMXN en su wallet" },
+              {
+                label: "Envías",
+                value: `US${fmtMoney(amt)}`,
+                sub: "OUSD de prueba",
+                subHonesty: true,
+              },
+              {
+                label: "Tipo de cambio",
+                value: rate !== undefined ? `${fmtNumber(rate, 4)} MXN` : "—",
+                sub: "comisión incluida",
+              },
+              {
+                label: `${contact?.name} recibe`,
+                value: q.amountOut !== undefined ? `MX${fmtMoney(q.amountOut)}` : "—",
+                sub: "xMXN en su wallet",
+              },
               { label: "Llega", value: "Al instante", sub: "en la cadena" },
               ...(memo ? [{ label: "Nota", value: `“${memo}”` }] : []),
             ]}
@@ -601,7 +686,10 @@ function StrandedRecovery({ s }: { s: RemesasState }) {
   const name = contactByAddress(send.stranded!.to)?.name ?? shortAddr(send.stranded!.to);
   return (
     <div className="mt-2 grid gap-2">
-      <Banner tone="info">Ya convertimos tus dólares, pero la entrega falló. Tus MX{fmtMoney(send.stranded!.amount)} están a salvo en tu cuenta.</Banner>
+      <Banner tone="info">
+        Ya convertimos tus dólares, pero la entrega falló. Tus MX
+        {fmtMoney(send.stranded!.amount)} están a salvo en tu cuenta.
+      </Banner>
       <Button
         variant="accent"
         loading={busy}
@@ -654,7 +742,10 @@ function Enviado({ s }: AppProps) {
           <DetailRows
             rows={[
               { label: "Enviaste", value: `US${fmtMoney(r.amountIn)}` },
-              { label: "Tipo aplicado", value: `${fmtNumber(Number(r.delivered) / Number(r.amountIn), 4)} MXN` },
+              {
+                label: "Tipo aplicado",
+                value: `${fmtNumber(Number(r.delivered) / Number(r.amountIn), 4)} MXN`,
+              },
               { label: "Comisión de red", value: feeLine(r.steps) },
               {
                 label: "Comprobante",
@@ -710,7 +801,9 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
           </div>
           <DemoBadge>Simulado</DemoBadge>
         </div>
-        <Meta honesty className="-mt-2">Simulado: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega</Meta>
+        <Meta honesty className="-mt-2">
+          Simulado: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega
+        </Meta>
         <label className="grid gap-1">
           <Meta>{airtime ? "Número Telcel · 10 dígitos" : "Número de servicio · 12 dígitos"}</Meta>
           <span className="flex h-14 items-center gap-3 border-b-2 border-[var(--m-outline)] focus-within:border-[var(--m-accent)]">
@@ -811,7 +904,11 @@ function PaidReceipt({ s }: { s: RemesasState }) {
     >
       <DetailRows
         rows={[
-          { label: "Proveedor", value: <BrandLogo id={telcel ? "telcel" : "cfe"} height={telcel ? 13 : 22} />, sub: "Simulado: no se entrega" },
+          {
+            label: "Proveedor",
+            value: <BrandLogo id={telcel ? "telcel" : "cfe"} height={telcel ? 13 : 22} />,
+            sub: "Simulado: no se entrega",
+          },
           {
             label: "Pago",
             value: (
@@ -821,7 +918,14 @@ function PaidReceipt({ s }: { s: RemesasState }) {
             ),
             sub: "Real · MPP 402",
           },
-          ...(r.fulfillment ? [{ label: "Referencia", value: <span className="font-mono">{r.fulfillment.reference}</span> }] : []),
+          ...(r.fulfillment
+            ? [
+                {
+                  label: "Referencia",
+                  value: <span className="font-mono">{r.fulfillment.reference}</span>,
+                },
+              ]
+            : []),
         ]}
       />
     </SuccessScreen>
