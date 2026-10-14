@@ -2,9 +2,9 @@
 // Mercado Mint: institutional xMXN issuance dashboard. Every number is a live contract read or an event log.
 // v1 (default): OUSD only in CollateralVault. v2: MultiCollateralVault (OUSD · sOUSD demo · tTBILL demo) plus
 // the Move exchange's issued supply. Protocol comes from activeAddresses() (crew/V2-SWITCH.md).
-import { useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
-import { Activity, Gauge, Layers, PlusCircle, ShieldAlert } from "lucide-react";
+import { Activity, ChevronDown, Gauge, Layers, PlusCircle, ShieldAlert } from "lucide-react";
 import { explorerAddress } from "@mercado/shared";
 import { BigNumber, ListPane, Panel, Row, Rows, SectionLabel, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
@@ -21,6 +21,8 @@ import {
   type CollateralBookRow,
 } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { Reveal, Stagger, TickerText } from "@/lib/motion";
 import { ActivityTable } from "./activity-table";
 import { useMintMeta } from "./use-mint-meta";
 
@@ -54,14 +56,89 @@ function DemoOnlyNote({ symbol }: { symbol: string }) {
   ) : null;
 }
 
+/** Rows that fade up one after another; each row keeps its hairline (the wrapper carries it). */
+function StaggerRows({ children }: { children: ReactNode[] }) {
+  return (
+    <Stagger className="grid">
+      {children.map((c, i) => (
+        <div key={i} className="mx-sweep border-b last:border-b-0 [&>div]:border-b-0">
+          {c}
+        </div>
+      ))}
+    </Stagger>
+  );
+}
+
+/** One big live figure: meta label, a ticking number in the product color, one plain line. */
+function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub: ReactNode }) {
+  return (
+    <div className="grid min-w-0 content-start gap-1.5 border-t pt-3">
+      <span className="meta text-muted-foreground">
+        {label}
+        {unit && <> · {unit}</>}
+      </span>
+      <p className="display text-product text-[clamp(2rem,2.5vw,3.25rem)] leading-none tabular">
+        <TickerText text={value} />
+      </p>
+      <span className="text-muted-foreground text-[13px] text-pretty">{sub}</span>
+    </div>
+  );
+}
+
+/** Overview (v5): four big live figures first; the collateral mix and supply detail fold away below. */
 function Overview() {
   const book = useCollateralBook();
   const buckets = useThreeBuckets();
+  const [open, setOpen] = useState(false);
+  const detailId = useId();
   const supply = buckets.xmxnSupply;
   const cdp = book.totalDebt;
   const exchange = buckets.move?.liabilityXmxn;
+  const cov = buckets.move?.coverageBps;
+  const backing = book.totalValueXmxn !== undefined && cdp ? (book.totalValueXmxn * 10_000n) / cdp : undefined;
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
+    <div className="grid gap-10">
+      <Stagger className="grid gap-x-10 gap-y-6 sm:grid-cols-2 xl:grid-cols-4" step={70}>
+        <Kpi
+          label="xMXN en circulación"
+          value={supply === undefined ? "—" : fmtAmount(supply, 0)}
+          unit="xMXN"
+          sub={`${x(cdp)} minted against collateral${PROTOCOL === "v2" ? ` + ${x(exchange)} issued by the exchange` : ""}`}
+        />
+        <Kpi
+          label="Colateral bloqueado"
+          value={book.totalValueXmxn === undefined ? "—" : fmtAmount(book.totalValueXmxn, 0)}
+          unit="xMXN"
+          sub={`${book.rows.length} collaterals at live prices, each in its own position`}
+        />
+        <Kpi
+          label="Respaldo del sistema"
+          value={backing === undefined ? "—" : fmtBps(backing, 0)}
+          sub="Aggregate CDP coverage; positions have separate liquidation limits"
+        />
+        {PROTOCOL === "v2" && (
+          <Kpi
+            label="Respaldo del intercambio"
+            value={cov === undefined ? "—" : cov > 10_000_000n ? "∞" : fmtBps(cov, 0)}
+            sub={`${x(buckets.move?.reserveOusd, "OUSD")} funded reserve against the exchange's xMXN`}
+          />
+        )}
+      </Stagger>
+
+      <div className="grid gap-6">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={detailId}
+          onClick={() => setOpen((o) => !o)}
+          className="mx-press mx-sweep meta text-muted-foreground hover:text-foreground flex items-center justify-between gap-3 border-y py-3 text-left"
+        >
+          <span>Detalle · collateral mix and supply</span>
+          <ChevronDown className={cn("size-4 transition-transform duration-300", open && "rotate-180")} aria-hidden />
+        </button>
+        <div id={detailId} hidden={!open}>
+          {open && (
+    <Reveal className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
       <section className="grid content-start gap-3">
       <SectionLabel index="01">Colateral</SectionLabel>
       <Panel
@@ -72,7 +149,7 @@ function Overview() {
             : "Testnet OUSD locked in the vault (valued at an assumed $1.00). Multi-collateral issuance is the v2 vault."
         }
       >
-        <Rows>
+        <StaggerRows>
           {book.rows.map((r) => {
             const share = pct(r.valueXmxn, book.totalValueXmxn);
             const ceilingUse = r.debtCeiling ? pct(r.debt, r.debtCeiling) : undefined;
@@ -112,14 +189,14 @@ function Overview() {
               />
             );
           })}
-        </Rows>
+        </StaggerRows>
       </Panel>
       </section>
 
       <section className="grid content-start gap-3">
       <SectionLabel index="02">Suministro</SectionLabel>
       <Panel title="Supply" description="Every xMXN in circulation is someone's debt or the exchange's liability.">
-        <BigNumber value={supply === undefined ? "…" : fmtAmount(supply, 0)} unit="xMXN" />
+        <BigNumber value={supply === undefined ? "…" : <TickerText text={fmtAmount(supply, 0)} />} unit="xMXN" />
         <Rows className="pt-4">
           <Row label="Minted against collateral" sub="Mint (CDP) debt" value={x(cdp)} />
           {PROTOCOL === "v2" && (
@@ -141,6 +218,10 @@ function Overview() {
         </Rows>
       </Panel>
       </section>
+    </Reveal>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -172,10 +253,10 @@ function Risk() {
   return (
     <div className="grid gap-12">
       {/* one big idea first: how far the peso would have to move */}
-      <section className="grid gap-6 sm:grid-cols-2">
+      <Stagger as="section" className="grid gap-6 sm:grid-cols-2" step={90}>
         <div className="grid content-start gap-2">
           <SectionLabel index="01">Respaldo del intercambio</SectionLabel>
-          <BigNumber value={covShown} />
+          <BigNumber className="text-product" value={<TickerText text={covShown} />} />
           <p className="text-muted-foreground max-w-md text-[15px]">
             Exchange coverage today. It falls to 100% only if the peso strengthens to{" "}
             <span className="text-foreground font-semibold">{covBreak === undefined ? "—" : `${covBreak.toFixed(2)} MXN/USD`}</span>.
@@ -183,14 +264,14 @@ function Risk() {
         </div>
         <div className="grid content-start gap-2">
           <SectionLabel index="02">Respaldo del sistema</SectionLabel>
-          <BigNumber value={backingBps === undefined ? "…" : fmtBps(backingBps, 0)} />
+          <BigNumber className="text-product" value={backingBps === undefined ? "…" : <TickerText text={fmtBps(backingBps, 0)} />} />
           <p className="text-muted-foreground max-w-md text-[15px]">
             Aggregate CDP coverage; positions have separate liquidation limits. All collateral ÷ all Mint debt reaches the 135% line only at{" "}
             <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>.
           </p>
         </div>
-      </section>
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+      </Stagger>
+      <Reveal className="grid gap-10 lg:grid-cols-2 lg:gap-14">
       <section className="grid content-start gap-3">
       <SectionLabel index="03">Balance del intercambio</SectionLabel>
       <Panel
@@ -279,9 +360,9 @@ function Risk() {
         </Rows>
       </Panel>
       </section>
-      </div>
+      </Reveal>
 
-      <section className="grid gap-3">
+      <Reveal as="section" className="grid gap-3">
         <SectionLabel index="05">Pruebas de estrés</SectionLabel>
         <Panel
           title="Stress tests on-chain"
@@ -306,7 +387,7 @@ function Risk() {
             </Rows>
           )}
         </Panel>
-      </section>
+      </Reveal>
     </div>
   );
 }
@@ -321,7 +402,7 @@ function Positions() {
         ) : open.length === 0 ? (
           <p className="text-muted-foreground py-4 text-sm">No open positions yet. Use Issue &amp; manage to deposit collateral and mint.</p>
         ) : (
-          <Rows>
+          <StaggerRows>
             {positions
               .filter((p) => open.includes(p))
               .map((p) => (
@@ -344,7 +425,7 @@ function Positions() {
                   }
                 />
               ))}
-          </Rows>
+          </StaggerRows>
         )}
       </ConnectGate>
     </Panel>

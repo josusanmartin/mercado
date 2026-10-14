@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useReadContracts } from "wagmi";
-import { BadgeCheck, ExternalLink, History, Layers, Loader2, XCircle } from "lucide-react";
+import { ExternalLink, History, Layers, Loader2, XCircle } from "lucide-react";
 import type { Abi, Address } from "viem";
 import {
   activeAddresses,
@@ -26,12 +26,13 @@ import {
   TEMPO_MODERATO_CHAIN_ID,
   tip20Abi,
 } from "@mercado/shared";
-import { ListPane, Panel, Row, Rows, SectionLabel, SettingsLayout } from "@/components/console";
+import { ListPane, Panel, Row, SectionLabel, SettingsLayout } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { usePresent } from "@/components/console/present";
+import { Reveal, Stagger, SuccessCheck } from "@/lib/motion";
 
 const V2 = activeAddresses("v2");
 const V1 = activeAddresses("v1");
@@ -151,12 +152,29 @@ function Verified({ address, precompile, keyOnly }: { address?: string; precompi
     );
   return v.data?.match === "exact_match" ? (
     <a href={SOURCIFY(address)} target="_blank" rel="noreferrer" className="text-success inline-flex items-center gap-1 text-sm font-medium hover:underline">
-      <BadgeCheck className="size-4" /> Verified ✓ exact match
+      {/* the signature success motion: the check draws itself once the live Sourcify check comes back */}
+      <span aria-hidden className="inline-grid">
+        <SuccessCheck size={16} />
+      </span>{" "}
+      Verified ✓ exact match
     </a>
   ) : (
     <span className="text-destructive inline-flex items-center gap-1 text-sm">
       <XCircle className="size-4" /> {v.data?.match ? `partial (${v.data.match})` : "not verified"}
     </span>
+  );
+}
+
+/** Contract rows fade up one after another; the wrapper carries the hairline and the hover sweep. */
+function ContractRows({ items }: { items: Item[] }) {
+  return (
+    <Stagger className="grid" step={45}>
+      {items.map((it) => (
+        <div key={it.name} className="mx-sweep border-b last:border-b-0 [&>div]:border-b-0">
+          <ContractRow it={it} />
+        </div>
+      ))}
+    </Stagger>
   );
 }
 
@@ -490,34 +508,27 @@ export function ContractsProof() {
       {section === "v2" && (
         <div className="grid gap-14">
           {groups.map((g, i) => (
-            <section key={g.title} className="grid gap-3">
+            <Reveal as="section" key={g.title} className="grid gap-3">
               <SectionLabel index={String(i + 1).padStart(2, "0")}>{g.label}</SectionLabel>
               <Panel title={g.title} description={g.description}>
-                <Rows data-nav="list">
-                  {g.items.map((it) => (
-                    <ContractRow key={it.name} it={it} />
-                  ))}
-                </Rows>
+                <ContractRows items={g.items} />
               </Panel>
-            </section>
+            </Reveal>
           ))}
         </div>
       )}
       {section === "v1" && (
         <Panel title="Legacy v1 (still deployed)" description="The first version, before the switch to v2. Still on-chain and verified; the app no longer uses it.">
-          <Rows data-nav="list">
-            {legacy.map((it) => (
-              <ContractRow key={it.name} it={it} />
-            ))}
-          </Rows>
+          <ContractRows items={legacy} />
         </Panel>
       )}
       {section === "history" && (
         <Panel title="Deployment history" description="Every deployment and setup transaction, linked to the explorer.">
-          <Rows>
+          <Stagger className="grid" step={20}>
             {txs.map(({ k, h }) => (
               <Row
                 key={k}
+                className="mx-sweep"
                 label={<span className="font-mono text-sm">{k}</span>}
                 value={
                   <a href={explorerTx(h)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-xs hover:underline">
@@ -526,7 +537,7 @@ export function ContractsProof() {
                 }
               />
             ))}
-          </Rows>
+          </Stagger>
         </Panel>
       )}
     </SettingsLayout>
