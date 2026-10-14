@@ -4,12 +4,15 @@
 // prefers-reduced-motion collapses everything to the final state (the CSS does it; Ticker jumps).
 // Nothing here delays a primary action: elements are clickable while they animate, and nothing shifts layout.
 // Nothing ever RESTS hidden: every entrance is a CSS animation that ends visible without JS.
-import { Children, isValidElement, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { Children, createContext, isValidElement, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const EASE = "cubic-bezier(.2,.8,.2,1)";
+
+/** V6-TASTE #6: true only on the tab's first page; after a client-side navigation titles render whole (no letters). */
+export const FreshLanding = createContext(true);
 export const DUR = { fast: 180, base: 280, slow: 420 } as const;
 
 const RM = "(prefers-reduced-motion: reduce)";
@@ -174,37 +177,90 @@ export function Pulse({ value, children, className }: { value: unknown; children
 }
 
 export type FlowNode = { label: ReactNode; value?: ReactNode; sub?: ReactNode };
+export type FlowState = "idle" | "quoted" | "pending" | "confirmed" | "failed";
+
+/** Pauses CSS loops while the element is offscreen (data-offscreen); no-op without IntersectionObserver. */
+function useOffscreen<T extends Element>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => el.toggleAttribute("data-offscreen", !e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return ref;
+}
 
 /**
- * <FlowPath nodes active>: a horizontal money flow A → B → C. Nodes sit on one accent track; while `active`, a
- * dot travels along it (transform only, loops). Inactive: the track is dashed and quiet. Labels wrap under each node.
+ * <FlowPath nodes state>: a horizontal money flow A → B → C whose motion describes STATE (V6-TASTE #2):
+ *   idle      dashed, quiet (nothing chosen yet)
+ *   quoted    a still, solid path (a quote moves no money)
+ *   pending   a marker travels at constant speed (linear) while the transfer is in flight; paused offscreen
+ *   confirmed one ~450ms arrival (shared ease-out), then still at the destination
+ *   failed    the path stops at `failedAt` (node index) with a failure mark
+ * Reduced motion shows each state's final frame. `active` is the v6 alias for "pending" (kept for callers).
  */
-export function FlowPath({ nodes, active = false, className, label }: { nodes: FlowNode[]; active?: boolean; className?: string; label?: string }) {
+export function FlowPath({
+  nodes,
+  state,
+  active,
+  failedAt,
+  className,
+  label,
+}: {
+  nodes: FlowNode[];
+  state?: FlowState;
+  /** @deprecated use state="pending" */
+  active?: boolean;
+  failedAt?: number;
+  className?: string;
+  label?: string;
+}) {
+  const st: FlowState = state ?? (active ? "pending" : "idle");
+  const ref = useOffscreen<HTMLElement>();
   const n = Math.max(nodes.length, 2);
   const inset = `${50 / n}%`;
+  const solid = st !== "idle";
+  const stop = st === "failed" ? Math.min(Math.max(failedAt ?? 0, 0), n - 1) : n - 1;
+  const reach = n > 1 ? stop / (n - 1) : 1; // share of the track that is lit
   return (
-    <figure className={cn("grid gap-3", className)} aria-label={label}>
+    <figure ref={ref} data-state={st} className={cn("grid gap-3", className)} aria-label={label}>
       <div className="relative h-4" aria-hidden>
-        <span className={cn("absolute top-1/2 h-0.5 -translate-y-1/2", active ? "bg-[var(--accent)]" : "border-t-2 border-dashed border-current/30")} style={{ left: inset, right: inset }} />
-        {active && (
-          <span className="mx-flow-track absolute inset-y-0 overflow-hidden" style={{ left: inset, right: inset }}>
-            <span data-loop className="mx-flow-dot absolute inset-y-0 left-0 w-full">
+        <span className="absolute top-1/2 -translate-y-1/2 border-t-2 border-dashed border-current/25" style={{ left: inset, right: inset }} />
+        {solid && (
+          <span
+            className="absolute top-1/2 h-0.5 origin-left -translate-y-1/2 bg-[var(--accent)]"
+            style={{ left: inset, right: inset, transform: `translateY(-50%) scaleX(${reach})` }}
+          />
+        )}
+        {(st === "pending" || st === "confirmed") && (
+          <span className="absolute inset-y-0 overflow-hidden" style={{ left: inset, right: inset }}>
+            <span data-loop={st === "pending" || undefined} className={cn("absolute inset-y-0 left-0 w-full", st === "pending" ? "mx-flow-dot" : "mx-flow-arrive")}>
               <span className="absolute top-1/2 right-0 size-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-[var(--accent)] ring-4 ring-[color-mix(in_oklab,var(--accent)_25%,transparent)]" />
             </span>
           </span>
         )}
-        {nodes.map((_, i) => (
-          <span
-            key={i}
-            className={cn("absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2", active ? "border-[var(--accent)] bg-background" : "border-current/40 bg-background")}
-            style={{ left: `${((i + 0.5) / n) * 100}%` }}
-          />
-        ))}
+        {nodes.map((_, i) => {
+          const lit = solid && i <= stop;
+          const failedHere = st === "failed" && i === stop;
+          const arrived = st === "confirmed" && i === n - 1;
+          return (
+            <span
+              key={i}
+              className={cn(
+                "absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2",
+                failedHere ? "border-[var(--destructive)] bg-[var(--destructive)]" : arrived ? "border-[var(--accent)] bg-[var(--accent)]" : lit ? "border-[var(--accent)] bg-background" : "border-current/40 bg-background",
+              )}
+              style={{ left: `${((i + 0.5) / n) * 100}%` }}
+            />
+          );
+        })}
       </div>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
         {nodes.map((node, i) => (
           <div key={i} className="grid min-w-0 justify-items-center gap-0.5 text-center">
-            <span className="meta text-muted-foreground">{node.label}</span>
+            <span className="text-muted-foreground text-[13px]">{node.label}</span>
             {node.value !== undefined && <span className="text-[17px] leading-tight font-semibold tabular">{node.value}</span>}
             {node.sub !== undefined && <span className="text-muted-foreground text-[12px] leading-snug">{node.sub}</span>}
           </div>
@@ -232,7 +288,6 @@ export function Stepper({ steps, current, className, label = "Progress" }: { ste
           <li key={i} aria-current={state === "current" ? "step" : undefined} className="relative grid justify-items-center gap-1 text-center">
             <span
               aria-hidden
-              data-loop={state === "current" || undefined}
               className={cn(
                 "relative z-10 size-4 rounded-full border-2",
                 state === "done" && "border-[var(--accent)] bg-[var(--accent)]",
@@ -268,10 +323,24 @@ export function Spark({ values, className, label }: { values: number[]; classNam
   );
 }
 
-/** <CopyAddress address>: the short address and a copy icon; click copies it and toasts "Copied". */
+/**
+ * <CopyAddress address>: the short address and a copy icon. V6-TASTE #12: a 44px touch target on phones, a
+ * stable-width check for 1.4s, a "Copied" toast; if the clipboard is unavailable, the FULL address appears
+ * selected so it can be copied by hand (the shortened one can't be). The explorer link stays separate.
+ */
 export function CopyAddress({ address, className, label }: { address: string; className?: string; label?: string }) {
   const [done, setDone] = useState(false);
+  const [manual, setManual] = useState(false);
+  const full = useRef<HTMLSpanElement>(null);
   const short = address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
+  useEffect(() => {
+    if (!manual || !full.current) return;
+    const range = document.createRange();
+    range.selectNodeContents(full.current);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }, [manual]);
   async function copy() {
     try {
       await navigator.clipboard.writeText(address);
@@ -279,19 +348,30 @@ export function CopyAddress({ address, className, label }: { address: string; cl
       toast.success("Copied", { description: short, duration: 1600 });
       setTimeout(() => setDone(false), 1400);
     } catch {
-      toast.error("Couldn't copy. Select the address instead.");
+      setManual(true);
+      toast.error("Couldn't copy. The full address is selected: copy it by hand.");
     }
   }
   return (
-    <button
-      type="button"
-      onClick={copy}
-      title={address}
-      aria-label={`Copy ${label ?? "address"} ${address}`}
-      className={cn("hover:text-foreground inline-flex items-center gap-1.5 rounded-[4px] font-mono text-[13px] tabular transition-colors", className)}
-    >
-      {short}
-      {done ? <Check className="size-3.5 text-[var(--success)]" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
-    </button>
+    <span className={cn("inline-flex flex-wrap items-center gap-x-1.5", className)}>
+      <button
+        type="button"
+        onClick={copy}
+        title={address}
+        aria-label={`Copy ${label ?? "address"} ${address}`}
+        className="hover:text-foreground focus-visible:text-foreground inline-flex min-h-11 items-center gap-1.5 rounded-[4px] font-mono text-[13px] tabular transition-colors sm:min-h-0"
+      >
+        {short}
+        {/* Fixed 14px slot: the icon swaps without changing the width. */}
+        <span className="inline-grid size-3.5 place-items-center" aria-hidden>
+          {done ? <Check className="size-3.5 text-[var(--success)]" /> : <Copy className="size-3.5" />}
+        </span>
+      </button>
+      {manual && (
+        <span ref={full} className="font-mono text-[12px] break-all select-all">
+          {address}
+        </span>
+      )}
+    </span>
   );
 }

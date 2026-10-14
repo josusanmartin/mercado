@@ -262,9 +262,12 @@
 }
 /* Text on a product fill. Light: white on jade (11:1), cobalt (7.4:1), ink; ink on terracotta (5.64), rosa (4.56),
    maize (9.39). Dark: every accent is a light tint, so ink everywhere. Card's hero field is cream with ink. */
+/* V6-TASTE #4: text/accent vs SURFACE tokens. --accent stays the text/focus/chart color; the hero band and the
+   wash use --accent-surface (the same color unless a theme needs a richer fill behind white type). */
 [data-product] {
   --on-accent: #ffffff;
-  --hero-bg: var(--accent);
+  --accent-surface: var(--accent);
+  --hero-bg: var(--accent-surface);
   --hero-fg: var(--on-accent);
 }
 [data-product="remesas"],
@@ -279,11 +282,16 @@
 .dark [data-product] {
   --on-accent: #0a0a0a;
 }
+/* Dark Global: #8EA8FF stays for small numbers/focus; the hero is the rich cobalt with white type (7.4:1). */
+.dark [data-product="global"] {
+  --accent-surface: #2448c8;
+  --hero-fg: #ffffff;
+}
 
 /* Soft accent wash under the hero (the one place a gradient is allowed besides image-in-type). */
 .mx-wash {
   /* lead 05:15: a visible ~10% tint behind and just under the band, fading out over ~240px below it. */
-  background-image: linear-gradient(to bottom, color-mix(in oklab, var(--accent) 10%, transparent) 0, color-mix(in oklab, var(--accent) 10%, transparent) 200px, transparent 440px);
+  background-image: linear-gradient(to bottom, color-mix(in oklab, var(--accent-surface, var(--accent)) 10%, transparent) 0, color-mix(in oklab, var(--accent-surface, var(--accent)) 10%, transparent) 200px, transparent 440px);
   background-repeat: no-repeat;
 }
 
@@ -310,7 +318,7 @@
 @keyframes mx-enter {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -345,7 +353,8 @@
    fill-mode BACKWARDS (lead 06:32): nothing is held after it ends, so the wrapper never keeps a transform and
    never becomes the containing block for position:fixed (the phones' bottom navs stay on screen). */
 .mx-enter {
-  animation: mx-enter 220ms var(--ease-out) backwards;
+  /* V6-TASTE #6: one crossfade of the content group, ≤160ms, 4px. */
+  animation: mx-enter 160ms var(--ease-out) backwards;
 }
 /* First paint only: nested entrances present when the page arrives don't replay inside the route entrance.
    When it ends, the shell marks those nodes data-settled and the group data-entered, so anything that mounts
@@ -392,10 +401,11 @@
 }
 /* Sidebar: the accent pill glides between rows. */
 .mx-pill {
+  /* V6-TASTE #6: the one active marker moves to the new row in 180ms. */
   transition:
-    transform var(--dur) var(--ease-out),
-    height var(--dur) var(--ease-out),
-    background-color var(--dur) var(--ease-out);
+    transform 180ms var(--ease-out),
+    height 180ms var(--ease-out),
+    background-color 180ms var(--ease-out);
 }
 /* Rows: an accent sweep from the left on hover/focus. */
 /* Transform-driven (no background repaint): a tinted layer scales in from the left behind the row. */
@@ -471,8 +481,15 @@
     transform: translateX(0);
   }
 }
+/* V6-TASTE #2: pending = constant-speed travel (linear), paused offscreen; confirmed = ONE ~450ms arrival. */
 .mx-flow-dot {
-  animation: mx-flow-k 1.8s var(--ease-out) infinite;
+  animation: mx-flow-k 1.6s linear infinite;
+}
+[data-offscreen] .mx-flow-dot {
+  animation-play-state: paused;
+}
+.mx-flow-arrive {
+  animation: mx-flow-k 450ms var(--ease-out) both;
 }
 @keyframes mx-ring-k {
   0%,
@@ -484,7 +501,8 @@
   }
 }
 .mx-step-current {
-  animation: mx-ring-k 1.6s var(--ease-out) infinite;
+  /* 3 pulses, then still (lead 09:17). */
+  animation: mx-ring-k 600ms var(--ease-out) 3;
 }
 .mx-step-bar,
 .mx-tab-line {
@@ -494,8 +512,12 @@
 @media (prefers-reduced-motion: reduce) {
   .mx-pulse-flash,
   .mx-flow-dot,
+  .mx-flow-arrive,
   .mx-step-current {
     animation: none !important;
+  }
+  .mx-flow-arrive {
+    transform: none !important;
   }
   .mx-pulse-flash {
     opacity: 0 !important;
