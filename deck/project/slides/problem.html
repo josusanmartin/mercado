@@ -1,26 +1,38 @@
-<section id="problem" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
-<div style="display:flex;flex-direction:column;gap:20px">
+<section id="problem" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:20px">
 <p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">The problem</p>
-<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">A driver needs 100 MXN of airtime before payday</h2>
-</div>
-<div style="display:flex;gap:32px">
-<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:20px;padding:40px">
-<x-icon name="Clock" style="color:#A64B0A;width:56px;height:56px"></x-icon>
-<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;line-height:1.1;color:#13241F">Paid weekly, unevenly</h3>
-<p style="font-size:32px;line-height:1.4;color:#4B5A54">Earnings swing from week to week, so small gaps land before payday.</p>
-</div>
-<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:20px;padding:40px">
-<x-icon name="Chat" style="color:#A64B0A;width:56px;height:56px"></x-icon>
-<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;line-height:1.1;color:#13241F">The bill is in pesos</h3>
-<p style="font-size:32px;line-height:1.4;color:#4B5A54">Airtime keeps the driver's phone, and the ride app, online. It's priced in pesos.</p>
-</div>
-<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBF8F2;border:1px solid #E2DACB;border-radius:20px;padding:40px">
-<x-icon name="Lightbulb" style="color:#A64B0A;width:56px;height:56px"></x-icon>
-<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;line-height:1.1;color:#13241F">Credit that explains itself</h3>
-<p style="font-size:32px;line-height:1.4;color:#4B5A54">The driver sees why an advance was offered, what it costs and how to repay it.</p>
-</div>
-</div>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F;width:1400px">A driver needs 100 MXN of airtime before payday</h2>
+<x-embed style="position:absolute;left:128px;top:400px;width:1664px;height:450px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#F5F0E6;color:#13241F;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+#bars{position:absolute;left:0;bottom:56px;height:340px;display:flex;align-items:flex-end;gap:28px}
+.col{width:100px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.v{font-size:24px;color:#4B5A54;opacity:0;transition:opacity .4s}
+.bar{width:100px;height:0;background:#13241F;border-radius:8px 8px 0 0;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.zero .bar{background:#A64B0A}
+.wk{position:absolute;bottom:0;font-size:24px;color:#5B6963;width:100px;text-align:center}
+.on{opacity:1!important}
+#call{position:absolute;font-size:24px;font-weight:700;color:#F5F0E6;background:#A64B0A;padding:8px 16px;border-radius:999px;opacity:0;transform:translateY(10px);transition:all .5s}
+#call.on{transform:none}
+#need{position:absolute;right:0;top:40px;width:300px;display:flex;flex-direction:column;gap:8px;padding:32px;border-radius:24px;background:#13241F;color:#F5F0E6;opacity:0;transform:translateX(20px);transition:all .6s}
+#need.on{transform:none}
+#need b{font-size:88px;line-height:1;color:#F2A54A}
+#need span{font-size:28px}
+</style></head><body>
+<div id="bars"></div>
+<div id="call">A 0 MXN week</div>
+<div id="need"><span>Airtime</span><b>100</b><span>MXN, needed now</span></div>
+<script>
+var W=[3906,5308,4044,0,6745,3307,3773,3778,5191,6060],M=6745,H=280,B=document.getElementById('bars'),cols=[];
+W.forEach(function(w,i){var c=document.createElement('div');c.className='col'+(w===0?' zero':'');c.innerHTML='<div class="v">'+w.toLocaleString('en-US')+'</div><div class="bar"></div>';B.appendChild(c);cols.push(c);
+var l=document.createElement('div');l.className='wk';l.style.left=(i*128)+'px';l.textContent='W'+(i+1);document.body.appendChild(l);});
+var call=document.getElementById('call'),need=document.getElementById('need');
+call.style.left=(3*128-60)+'px';call.style.bottom='120px';
+function run(){cols.forEach(function(c){c.querySelector('.bar').style.height='0';c.querySelector('.v').classList.remove('on')});call.classList.remove('on');need.classList.remove('on');
+cols.forEach(function(c,i){setTimeout(function(){var w=W[i];c.querySelector('.bar').style.height=(w===0?6:Math.round(w/M*H))+'px';c.querySelector('.v').classList.add('on')},300+i*220)});
+setTimeout(function(){call.classList.add('on')},2800);setTimeout(function(){need.classList.add('on')},3800);}
+run();setInterval(run,9000);
+</script></body></html></x-embed>
+<p data-build-in="fade" style="position:absolute;left:128px;top:880px;width:640px;font-size:24px;font-weight:600;color:#A64B0A">Weekly net pay · Demo Uber Data, synthetic</p>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">02</p>
-<aside>~12s. One person carries the whole pitch: a gig driver who needs 100 MXN of airtime before payday. This is our demo scenario, not market data, so don't add statistics. Everything that follows is one xMXN flow: a lender funds a pool, the driver draws a small advance, and pays for the top-up over HTTP 402.</aside>
+<aside>~12s. One person carries the whole pitch: a gig driver who needs 100 MXN of airtime before payday. The bars are the "irregular" Demo Uber Data profile, which is synthetic, weekly net pay in MXN; week 4 earned nothing. This is our demo scenario, not market data, so don't add statistics. Everything that follows is one xMXN flow: a lender funds a pool, the driver draws a small advance, and pays for the top-up over HTTP 402.</aside>
 </section>
