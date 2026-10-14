@@ -176,11 +176,14 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
           CONNECT_SLOT,
         )}
       >
-        Paying from{" "}
-        {p.address && address?.toLowerCase() === p.address.toLowerCase()
-          ? p.name
-          : "your wallet"}
-        {address && ` · ${shortAddr(address)}`}
+        {/* present mode (deck captures) hides the demo-account line; the row keeps its height */}
+        <Honesty>
+          Paying from{" "}
+          {p.address && address?.toLowerCase() === p.address.toLowerCase()
+            ? p.name
+            : "your wallet"}
+          {address && ` · ${shortAddr(address)}`}
+        </Honesty>
       </p>
     );
   const connecting = status === "connecting" || status === "reconnecting";
