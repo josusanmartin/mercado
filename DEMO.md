@@ -30,12 +30,12 @@ Follows the deck's main flow: cover → problem → system map → **spending pr
 ### 3 · 0:35 System map: all six products (30 s)
 
 Optional live: **/** shows "ONE CURRENCY. SIX PRODUCTS." with live numbers.
-- *"One synthetic peso, xMXN, on Tempo. Mint creates it, Remesas and Global move it, Crédito lends it, Card spends it, Invest saves it. Balances, transfers, and debt reconcile to Tempo. A separate HTTP 402 call shows software paying for an API response."*
+- *"One synthetic peso, xMXN, on Tempo. Mint creates it, Remesas and Global move it, Crédito lends it, Card spends it, Invest saves it. Balances, transfers, and debt reconcile to Tempo."*
 
 ### ★ · 1:05 The spending proof: one person, one peso (45 s)
 
 Play `deck/assets/hero-spend-final.mp4` (41 s, all real txs). Live alternative: **/card?holder=driver** → **Congelar** on → **Tienda Doña Mary** **150** → **Cobrar con Mercado Card** → **Aprobar** → "Tarjeta congelada" → **Cerrar** → **Congelar** off → **150** → **Cobrar** → **Aprobar** → "Cobrado · Charged 150.00 xMXN".
-- *"Javier drives for a gig platform. He gets an advance funded by lenders, freezes his card, and the shop's charge is declined: nothing moves. He unfreezes, and the retry is charged exactly once, signed by Javier for that amount and that shop."*
+- *"Javier drives for a gig platform. He gets an advance funded by lenders, freezes his card, and the shop's charge is declined: nothing moves. He unfreezes, and the retry is charged exactly once, signed by Javier for that amount and that shop. A separate HTTP 402 call shows software paying for an API response."*
 
 ### 5 · 1:50 Why it compounds, and the risk (30 s)
 
