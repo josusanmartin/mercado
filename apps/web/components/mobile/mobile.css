@@ -19,6 +19,7 @@
   --m-inverse: #0a0a0a;
   --m-on-inverse: #ffffff;
   --m-cream: #f2e6c9;
+  --m-ink-tile: #0a0a0a;
   --m-jade: #1f3d2b;
   --m-terracotta: #e2603f;
   --m-error: #b42318;
@@ -39,7 +40,12 @@
   color-scheme: light;
   -webkit-tap-highlight-color: transparent;
 }
-.m-root[data-theme="ink"] {
+/* Dark (#7, V5-TASTE): one theme contract. Paper phones follow the site theme (html.dark) onto the same
+   ink token set Card always uses, so there's no white app under dark chrome. Card stays ink in both. */
+.m-root[data-theme="ink"],
+.dark .m-root[data-theme="paper"] {
+  --m-jade: #4f8f68; /* 5.1:1 on #0a0a0a (the paper jade is ~1.6:1 there) */
+  --m-ink-tile: #1d1d1b; /* an ink block must still read as a block on an ink canvas */
   --m-accent-container: color-mix(in oklab, var(--m-accent) 22%, #0a0a0a);
   --m-on-accent-container: color-mix(in oklab, var(--m-accent) 45%, white);
   --m-surface: #0a0a0a;

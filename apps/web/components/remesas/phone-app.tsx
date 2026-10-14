@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
 import { TELCEL_AMOUNTS, useRecentOrders, type RecentOrder } from "@/components/billpay/use-bill-pay";
 import {
+  AccentField,
   AppHeader,
   Avatar,
   BalanceHead,
@@ -51,9 +52,9 @@ import {
   useNavDirection,
   useSnackbar,
   useStatusBar,
+  washStyle,
   type NavItem,
 } from "@/components/mobile";
-import { AccentField, washStyle } from "@/components/mobile/extra/editorial";
 import { OnrampSheet } from "./onramp-sheet";
 import { useFxHistory, type FxPoint } from "./use-fx-history";
 import type { RemesasState } from "./remesas-screen";
@@ -250,7 +251,14 @@ function CurrencyTiles() {
   const mxn = bal.xmxn !== undefined ? Number(bal.xmxn) / 1e6 : undefined;
   return (
     <div className="grid grid-cols-2 gap-2">
-      <CurrencyBlock flag={<FlagUS />} code="USD" name="Dólares" amount={usd === undefined ? "—" : `US${fmtMoney(usd)}`} sub="OUSD de prueba" style={{ background: INK, color: "#fff" }} />
+      <CurrencyBlock
+        flag={<FlagUS />}
+        code="USD"
+        name="Dólares"
+        amount={usd === undefined ? "—" : `US${fmtMoney(usd)}`}
+        sub="OUSD de prueba"
+        style={{ background: "var(--m-ink-tile)", color: "#fff" }}
+      />
       <CurrencyBlock flag={<FlagMX />} code="MXN" name="Pesos" amount={mxn === undefined ? "—" : `MX${fmtMoney(mxn)}`} sub="xMXN demo" style={{ background: CREAM, color: INK }} />
     </div>
   );
@@ -735,7 +743,7 @@ function Enviado({ s }: AppProps) {
       {r && (
         <div className="grid gap-4">
           {r.memo && (
-            <p className="w-fit rounded-[8px] px-3 py-2 text-[15px]" style={{ background: CREAM }}>
+            <p className="w-fit rounded-[8px] px-3 py-2 text-[15px]" style={{ background: CREAM, color: INK }}>
               “{r.memo}”
             </p>
           )}

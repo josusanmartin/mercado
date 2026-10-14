@@ -46,3 +46,5 @@ export { NumericKeypad, nextAmount } from "./keypad";
 export { BrandLogo, BrandTile, ConsentSheet, PlatformButton, brandName, type BrandId } from "./brands";
 export { fmtMoney, fmtTyping, haceTiempo, haptic, initials } from "./format";
 export { PhonePanel } from "./phone-panel";
+// Product color field + wash under it (v5 color worlds), shared by every phone (V5-TASTE #7).
+export { AccentField, washStyle } from "./extra/editorial";
