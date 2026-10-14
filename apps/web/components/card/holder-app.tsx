@@ -25,6 +25,8 @@ import {
   Display,
   ListHeader,
   ListHeaderAction,
+  EmptyState,
+  PullToRefresh,
   DIVIDER,
   ListItem,
   LinearProgress,
@@ -35,6 +37,7 @@ import {
   SuccessCheck,
   Switch,
   useNavDirection,
+  useNewKeys,
   useStatusBar,
   fmtMoney,
   haceTiempo,
@@ -74,6 +77,7 @@ export function HolderApp({
   const busy = a.tx.isBusy;
   const [limitOpen, setLimitOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("tarjeta");
+  const [flipped, setFlipped] = useState(false);
   const dir = useNavDirection(tab, TAB_ORDER);
   useStatusBar(CARD_CREAM);
 
@@ -98,7 +102,7 @@ export function HolderApp({
         )}
         {tab === "perfil" && <Perfil who={who} holder={holder} last4={card?.last4} />}
         {tab === "tarjeta" && (
-          <>
+          <PullToRefresh>
             {isLoading ? (
               <div className="mt-6 px-4">
                 <Skeleton className="aspect-[1.586] w-full rounded-[8px]" />
@@ -113,10 +117,26 @@ export function HolderApp({
             ) : (
               <>
                 <div className="mt-6 px-4">
-                  <CardFront last4={card.last4} frozen={card.frozen} name={who.onCard} />
-                  <Meta honesty className="mt-2">
-                    Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo
-                  </Meta>
+                  <CardFront
+                    last4={card.last4}
+                    frozen={card.frozen}
+                    name={who.onCard}
+                    limit={card.dailyLimit}
+                    back={flipped}
+                    onFlip={() => setFlipped((f) => !f)}
+                    shine={pending?.status === "done" ? pending.tap.merchantRef : undefined}
+                  />
+                  <div className="mt-2 flex items-start justify-between gap-3">
+                    <Meta honesty>Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo</Meta>
+                    <button
+                      type="button"
+                      aria-pressed={flipped}
+                      onClick={() => setFlipped((f) => !f)}
+                      className="m-tap m-meta -my-3 h-10 shrink-0 text-[var(--m-on-surface)] underline underline-offset-4"
+                    >
+                      {flipped ? "Ver frente" : "Ver reverso"}
+                    </button>
+                  </div>
                 </div>
 
                 <section className="mt-6 px-4" aria-label="Saldo">
@@ -200,7 +220,7 @@ export function HolderApp({
                 />
               </>
             )}
-          </>
+          </PullToRefresh>
         )}
       </ScreenTransition>
       <BottomNav items={TABS} value={tab} onChange={setTab} />
@@ -260,43 +280,92 @@ const RowGlyph = ({ children }: { children: string }) => (
 );
 
 /**
- * The card: flat cream, ink type, Mercado wordmark, no network marks. v5: a subtle tilt toward the pointer on
- * hover (desktop pointers only, ≤4°, transform only; none under reduced motion, see mobile.css .m-tilt).
+ * The card: flat cream, ink type, Mercado wordmark, no network marks. v5: it leans toward a desktop pointer
+ * (≤4°, .m-tilt). v6: a tap flips it to the back (last 4 + daily limit; "Ver reverso" does the same for
+ * keyboards and screen readers), and one light sweep crosses it when a payment is approved (`shine` = the tap).
  */
-function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; name: string }) {
+function CardFront({
+  last4,
+  frozen,
+  name,
+  limit,
+  back,
+  onFlip,
+  shine,
+}: {
+  last4: number;
+  frozen: boolean;
+  name: string;
+  limit: bigint;
+  back: boolean;
+  onFlip: () => void;
+  shine?: string;
+}) {
   const tilt = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--tx", `${(((e.clientY - r.top) / r.height - 0.5) * -6).toFixed(2)}deg`);
     e.currentTarget.style.setProperty("--ty", `${(((e.clientX - r.left) / r.width - 0.5) * 8).toFixed(2)}deg`);
   };
+  const l4 = String(last4).padStart(4, "0");
   return (
     <div
-      className="m-tilt relative aspect-[1.586] overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]"
+      className="m-tilt relative aspect-[1.586] cursor-pointer [perspective:1000px]"
       onPointerMove={tilt}
       onPointerLeave={(e) => (e.currentTarget.style.removeProperty("--tx"), e.currentTarget.style.removeProperty("--ty"))}
-      style={{ background: CARD_CREAM }}
-      role="img"
-      aria-label={`Tarjeta Mercado terminación ${last4}${frozen ? ", congelada" : ""}`}
+      onClick={onFlip}
     >
-      <span aria-hidden className="absolute -right-10 -bottom-16 size-52 rounded-full border-[18px] border-[#e2603f]/80" />
-      <span aria-hidden className="absolute -right-2 -bottom-8 size-28 rounded-full bg-[#1f3d2b]" />
-      <div className="relative flex items-start justify-between">
-        <span className="m-display text-[26px]">Mercado</span>
-        <span data-honesty className="rounded-[2px] border border-[#0a0a0a]/40 px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
-          Demo
-        </span>
-      </div>
-      <p className="m-num absolute bottom-12 left-5 text-[18px] font-medium tracking-[0.14em]">5x•• •••• •••• {String(last4).padStart(4, "0")}</p>
-      <div className="absolute bottom-4 left-5 text-[11.5px] font-semibold tracking-[0.08em] uppercase">{name}</div>
-      <div className="absolute right-5 bottom-4 text-[11.5px] font-semibold tracking-[0.08em] text-[#f2e6c9] uppercase">xMXN</div>
-      {frozen && (
-        <div className="absolute inset-0 grid place-items-center bg-[#0a0a0a]/70">
-          <span className="m-display flex items-center gap-2 text-[22px] text-[#f2e6c9]">
-            <Snowflake className="size-6" /> Congelada
+      <div className="m-flip absolute inset-0" data-flipped={back || undefined}>
+        <div
+          className="m-face overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]"
+          style={{ background: CARD_CREAM }}
+          role="img"
+          aria-label={`Tarjeta Mercado terminación ${last4}${frozen ? ", congelada" : ""}`}
+          aria-hidden={back || undefined}
+        >
+          <span aria-hidden className="absolute -right-10 -bottom-16 size-52 rounded-full border-[18px] border-[#e2603f]/80" />
+          <span aria-hidden className="absolute -right-2 -bottom-8 size-28 rounded-full bg-[#1f3d2b]" />
+          <div className="relative flex items-start justify-between">
+            <span className="m-display text-[26px]">Mercado</span>
+            <span data-honesty className="rounded-[2px] border border-[#0a0a0a]/40 px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+              Demo
+            </span>
+          </div>
+          <p className="m-num absolute bottom-12 left-5 text-[18px] font-medium tracking-[0.14em]">5x•• •••• •••• {l4}</p>
+          <div className="absolute bottom-4 left-5 text-[11.5px] font-semibold tracking-[0.08em] uppercase">{name}</div>
+          <div className="absolute right-5 bottom-4 text-[11.5px] font-semibold tracking-[0.08em] text-[#f2e6c9] uppercase">xMXN</div>
+          {frozen && (
+            <div className="absolute inset-0 grid place-items-center bg-[#0a0a0a]/70">
+              <span className="m-display flex items-center gap-2 text-[22px] text-[#f2e6c9]">
+                <Snowflake className="size-6" /> Congelada
+              </span>
+            </div>
+          )}
+          {shine && <span key={shine} aria-hidden className="m-shine" />}
+        </div>
+        <div
+          className="m-face m-face-back overflow-hidden rounded-[8px] text-[#0a0a0a]"
+          style={{ background: CARD_CREAM }}
+          role="img"
+          aria-label={`Reverso: terminación ${l4}, límite diario MX${fmtMoney(limit, 0)}`}
+          aria-hidden={!back || undefined}
+        >
+          <div aria-hidden className="mt-5 h-9 bg-[#1f3d2b]" />
+          <div className="grid gap-3 px-5 pt-4">
+            <div className="flex items-end justify-between gap-3">
+              <span className="m-meta !text-[#0a0a0a]">Terminación</span>
+              <span className="m-display text-[28px]">{l4}</span>
+            </div>
+            <div className="flex items-end justify-between gap-3 border-t border-[#0a0a0a]/20 pt-2">
+              <span className="m-meta !text-[#0a0a0a]">Límite diario</span>
+              <span className="m-num text-[16px] font-semibold">MX{fmtMoney(limit, 0)}</span>
+            </div>
+          </div>
+          <span data-honesty className="absolute right-5 bottom-3 text-[10.5px] font-semibold tracking-[0.08em] uppercase opacity-60">
+            Número demo
           </span>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -305,6 +374,7 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
   const feed = useActivityFeed("card", { account: holder, limit: 40 });
   const now = useNow(30_000) ?? 0;
   const rows = feed.rows.filter((r) => r.event === "CardCharged" || r.event === "CardRefunded");
+  const fresh = useNewKeys("card-activity", feed.isLoading ? [] : rows.map((r) => r.txHash + r.logIndex));
   if (feed.isLoading && rows.length === 0)
     return (
       <div className="grid gap-3 px-4 py-2">
@@ -312,29 +382,46 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
         <Skeleton className="h-10 w-full" />
       </div>
     );
-  if (rows.length === 0) return <p className="px-4 py-5 text-[14px] text-[var(--m-on-surface-variant)]">Aún no hay cobros con esta tarjeta</p>;
+  if (rows.length === 0) return <EmptyState icon={<NoChargesArt />} size={88} hint="Aún no hay cobros con esta tarjeta" />;
   return (
     <Stagger>
       {rows.slice(0, limit).map((r) => {
         const refund = r.event === "CardRefunded";
         return (
-          <ListItem
-            key={r.txHash + r.logIndex}
-            divider
-            href={r.url}
-            leading={
-              <span className="grid size-10 shrink-0 place-items-center rounded-full" style={{ background: CARD_CREAM, color: "#0a0a0a" }}>
-                <Store className="size-5" strokeWidth={1.75} />
-              </span>
-            }
-            headline={refund ? "Reembolso" : merchantName.split(" · ")[0]}
-            supporting={`${refund ? merchantName.split(" · ")[0] : "Compra con tarjeta"} · ${r.timestamp ? haceTiempo(r.timestamp, now) : "en la cadena"}`}
-            trailing={`${refund ? "+" : "−"}MX${fmtMoney(r.amount)}`}
-            trailingTone={refund ? "in" : undefined}
-          />
+          <div key={r.txHash + r.logIndex} className={fresh.has(r.txHash + r.logIndex) ? "m-new" : undefined}>
+            <ListItem
+              divider
+              href={r.url}
+              leading={
+                <span className="grid size-10 shrink-0 place-items-center rounded-full" style={{ background: CARD_CREAM, color: "#0a0a0a" }}>
+                  <Store className="size-5" strokeWidth={1.75} />
+                </span>
+              }
+              headline={refund ? "Reembolso" : merchantName.split(" · ")[0]}
+              supporting={`${refund ? merchantName.split(" · ")[0] : "Compra con tarjeta"} · ${r.timestamp ? haceTiempo(r.timestamp, now) : "en la cadena"}`}
+              trailing={`${refund ? "+" : "−"}MX${fmtMoney(r.amount)}`}
+              trailingTone={refund ? "in" : undefined}
+            />
+          </div>
         );
       })}
     </Stagger>
+  );
+}
+
+/** Empty card activity (v6): the cream card over a store awning, the card floating a little. */
+function NoChargesArt() {
+  return (
+    <svg viewBox="0 0 96 80" fill="none" aria-hidden>
+      <path d="M10 46h76l-6-14H16Z" fill="var(--m-accent)" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M16 46v26h64V46" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M40 72V58h16v14" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <g className="m-float">
+        <rect x="30" y="6" width="40" height="26" rx="3" fill="var(--m-accent)" stroke="currentColor" strokeWidth="2.5" />
+        <path d="M30 14h40" stroke="currentColor" strokeWidth="4" />
+        <circle cx="60" cy="25" r="3" fill="#e2603f" />
+      </g>
+    </svg>
   );
 }
 
