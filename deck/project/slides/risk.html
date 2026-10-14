@@ -22,8 +22,8 @@ html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"S
 .mk{position:absolute;top:310px;height:50px;width:0;border-left:1px solid #666}
 .mk p{position:absolute;top:58px;left:-110px;width:220px;margin:0;text-align:center;font-size:24px;color:#999}
 </style></head><body>
-<div id="pos" class="mono">1,000 testnet OUSD locked → 8,000 xMXN minted</div>
-<div class="ctr" style="left:0"><small class="mono">mock oracle, MXN per USD</small><b id="fx">20.00</b></div>
+<div id="pos" class="mono">1,000 testnet OUSD locked → 7,348 xMXN minted</div>
+<div class="ctr" style="left:0"><small class="mono">USD/MXN, relayed from Coinbase</small><b id="fx">18.37</b></div>
 <div class="ctr" style="left:560px"><small class="mono">collateral ratio</small><b id="ratio">250%</b></div>
 <div id="state" class="mono"><span id="dot"></span><span id="st">healthy</span></div>
 <div id="track"><div id="fill"></div></div>
@@ -33,15 +33,15 @@ html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"S
 var LO=100,HI=260,Wt=1664;function px(r){return (r-LO)/(HI-LO)*Wt}
 document.getElementById('m150').style.left=px(150)+'px';document.getElementById('m135').style.left=px(135)+'px';
 var fx=document.getElementById('fx'),ra=document.getElementById('ratio'),fi=document.getElementById('fill'),st=document.getElementById('st'),dot=document.getElementById('dot');
-function show(f){var r=250*f/20;fx.textContent=f.toFixed(2);ra.textContent=Math.round(r)+'%';fi.style.width=Math.max(0,px(r))+'px';
+function show(f){var r=250*f/18.37;fx.textContent=f.toFixed(2);ra.textContent=Math.round(r)+'%';fi.style.width=Math.max(0,px(r))+'px';
 var bad=r<135;[ra,fi,dot].forEach(function(e){e.classList.toggle('bad',bad)});st.textContent=bad?'liquidatable':(r<150?'below mint floor':'healthy');}
 var t0=0,D=5200,HOLD=2600,PRE=1200;
 function frame(t){if(!t0)t0=t;var e=(t-t0)%(PRE+D+HOLD),f;
-if(e<PRE)f=20;else if(e<PRE+D){var k=(e-PRE)/D;k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;f=20-10*k}else f=10;
+if(e<PRE)f=18.37;else if(e<PRE+D){var k=(e-PRE)/D;k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;f=18.37-9.17*k}else f=9.2;
 show(f);requestAnimationFrame(frame)}
-show(20);requestAnimationFrame(frame);
+show(18.37);requestAnimationFrame(frame);
 </script></body></html></x-embed>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">10</p>
-<aside>~8s. Every xMXN is a peso debt backed by dollar-valued collateral, so a stronger peso is the core risk. On a 250% position, the ratio crosses the 135% liquidation line near 10.8 MXN/USD (the dollar falling 46% against the peso); demo tokens have their own ratios (the T-bill liquidates below 170%). The animation is a preview only; the link is a real v1 liquidation on Moderato (the v2 stress step is still pending) of a dedicated 160% position, with the mock oracle force-set from 20 to 13 and then restored. The exchange has its own reserve, bounded redemptions and an equity buffer; those limits are enforced on-chain, and they reduce, not remove, the risk. Testnet OUSD has no real value.</aside>
+<aside>~8s. Every xMXN is a peso debt backed by dollar-valued collateral, so a stronger peso is the core risk. On a 250% position, starting from the real rate, USD/MXN 18.37 admin-relayed from Coinbase, a 250% position (1,000 OUSD, 7,348 xMXN) crosses the 135% liquidation line near 9.92 MXN/USD, the dollar falling 46% against the peso; demo tokens have their own ratios (the T-bill liquidates below 170%). The animation is a preview only; the link is a real v1 liquidation on Moderato (the v2 stress step is still pending) of a dedicated 160% position, made earlier with the old mock oracle force-set from 20 to 13 and then restored. The exchange has its own reserve, bounded redemptions and an equity buffer; those limits are enforced on-chain, and they reduce, not remove, the risk. Testnet OUSD has no real value.</aside>
 </section>
