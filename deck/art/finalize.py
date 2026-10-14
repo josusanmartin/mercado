@@ -2,7 +2,7 @@
 import json, os, re, subprocess, sys
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 a = json.load(open(os.path.join(ROOT, "assets.json")))
-url = a.get("crop-mint-risk.png")
+url = a.get("crop-mint-risk-en.png")
 if not url:
     sys.exit("crop-mint-risk.png not uploaded yet")
 subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "build_slides.py")], check=True, stdout=subprocess.DEVNULL)
