@@ -204,7 +204,14 @@ export type InvestActivity = {
   txHash: `0x${string}`;
   block: bigint;
   logIndex: number;
+  /** Unix seconds, from the log's blockTimestamp (Tempo RPC returns it; no getBlock per row). */
+  timestamp?: number;
 };
+
+const ts = (l: { blockTimestamp?: unknown }) =>
+  l.blockTimestamp === undefined || l.blockTimestamp === null
+    ? undefined
+    : Number(BigInt(l.blockTimestamp as string | bigint | number));
 
 const CHUNK = 50_000n;
 
@@ -288,6 +295,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
         for (const l of w) {
@@ -300,6 +308,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
         for (const l of dep) {
@@ -313,6 +322,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
         for (const l of wd) {
@@ -326,6 +336,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
         for (const l of b) {
@@ -339,6 +350,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
         for (const l of so) {
@@ -352,6 +364,7 @@ export function useInvestHistory() {
             txHash: l.transactionHash,
             block: l.blockNumber,
             logIndex: l.logIndex,
+            timestamp: ts(l),
           });
         }
       }

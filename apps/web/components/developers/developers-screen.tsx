@@ -278,7 +278,7 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
         {endpoint.needsQuote && (
           <p className="text-muted-foreground mt-3 text-[13px]">
             {t.pending
-              ? "A previous run ended without a clear answer. This re-checks that order with the same idempotency key (never pays twice) and resumes it only if nothing was paid."
+              ? "A previous run ended without a clear answer. This re-checks that order with the same idempotency key (the check itself sends no payment) and resumes the same order only if no payment for it is found on-chain."
               : `Each run buys a new demo top-up (a new order for ${QUOTE_BODY.amountMxn} xMXN; fulfillment is SIMULATED).`}
           </p>
         )}

@@ -54,7 +54,7 @@ export const ENDPOINTS: PaidEndpoint[] = [
     returns:
       "order · on-chain receipt · SIMULATED fulfillment reference (no real top-up)",
     summary:
-      "Pay a quoted Telcel top-up or CFE bill. Get a free quote first (POST /api/bills/quote), then pay it here; retries with the same idempotency key never pay twice. Fulfillment is SIMULATED.",
+      "Pay a quoted Telcel top-up or CFE bill. Get a free quote first (POST /api/bills/quote), then pay it here. A retry with the same idempotency key returns the same order instead of opening a new one (a payment already broadcast when the client crashed is reconciled against the chain). Fulfillment is SIMULATED.",
     needsQuote: true,
     body: ({ quoteId, idempotencyKey }) => ({
       quoteId: quoteId ?? "q_…",
@@ -74,7 +74,7 @@ export function curlFor(e: PaidEndpoint, origin: string, borrower: string) {
       `# 1) free quote`,
       `Q=$(curl -s -X POST "${origin}/api/bills/quote" -H 'content-type: application/json' \\`,
       `  -d '${JSON.stringify(QUOTE_BODY)}' | jq -r .quoteId)`,
-      `KEY=$(uuidgen)  # keep it: a retry with the same key never pays twice`,
+      `KEY=$(uuidgen)  # keep it: a retry with the same key returns the same order`,
       `# 2) pay it: the API answers 402 with the MPP challenge`,
       `curl -i -X POST "${url}" -H 'content-type: application/json' \\`,
       `  -d "{\\"quoteId\\":\\"$Q\\",\\"idempotencyKey\\":\\"$KEY\\"}"`,
@@ -96,7 +96,7 @@ export function snippetFor(e: PaidEndpoint, origin: string, borrower: string) {
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify(${JSON.stringify(QUOTE_BODY)}),
 })).json();
-const idempotencyKey = crypto.randomUUID(); // reuse it on retry: never pays twice
+const idempotencyKey = crypto.randomUUID(); // reuse it on retry: the server returns the same order
 const res = await mppx.fetch("${origin}${e.path}", {
   method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ quoteId: q.quoteId, idempotencyKey }),
