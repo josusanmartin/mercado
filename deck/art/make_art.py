@@ -247,14 +247,14 @@ def tile(rng):
 # Product hero art for the app (DESIGN-ECOSYSTEM.md): one signature color each.
 # Run: python3 deck/art/make_art.py products  -> apps/web/public/art/*.png
 # ---------------------------------------------------------------------------
-APP_OUT = os.path.join(os.path.dirname(__file__), "..", "..", "apps", "web", "public", "art")
+APP_OUT = os.environ.get("ART_OUT", os.path.join(os.path.dirname(__file__), "..", "..", "apps", "web", "public", "art"))
 INK = (21, 17, 14)
 CREAM = (245, 239, 228)
 PRODUCTS = {
-    "mint": ((14, 124, 102), ["xMXN · Mercado Mint", "OUSD  sOUSD  tTBILL", "mint 13,333.33 xMXN", "ratio 250% · liq 135%"]),
-    "remesas": ((240, 140, 0), ["Mercado Remesas", "50 OUSD → 995 xMXN", "para mamá · Guadalajara", "Tiempo Aire 100 MXN"]),
-    "global": ((30, 79, 214), ["Mercado Global", "USD ⇄ MXN · oracle mid", "quote 250 → 4,975 xMXN", "402 · partner API"]),
-    "credito": ((228, 0, 124), ["Mercado Crédito", "score 96.5 · line 1,500", "draw 300 · owed 306", "EIP-712 · nonce burned"]),
+    "mint": ((0, 166, 138), ["xMXN · Mercado Mint", "OUSD  sOUSD  tTBILL", "mint 13,333.33 xMXN", "ratio 250% · liq 135%"]),
+    "remesas": ((255, 138, 31), ["Mercado Remesas", "50 OUSD → 995 xMXN", "para mamá · Guadalajara", "Tiempo Aire 100 MXN"]),
+    "global": ((47, 107, 255), ["Mercado Global", "USD ⇄ MXN · oracle mid", "quote 250 → 4,975 xMXN", "402 · partner API"]),
+    "credito": ((242, 53, 125), ["Mercado Crédito", "score 96.5 · line 1,500", "draw 300 · owed 306", "EIP-712 · nonce burned"]),
 }
 
 
