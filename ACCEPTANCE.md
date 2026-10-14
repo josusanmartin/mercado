@@ -47,6 +47,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | # | Check | Owner | Status | Evidence |
 |---|---|---|---|---|
 | M1 | Mock only what's necessary: every remaining mock is listed in `MOCKS.md` (what / why / where labeled) and `scripts/check-mocks.ts` passes | qa / all | 🟡 | Check passes (no unlisted mocks). Open gaps G1–G4 in MOCKS.md §C: hardcoded per-driver cap, static recorded agent trace, OUSD=$1 not shown in UI, FX relay timestamps |
+| IX | Activity indexer (getLogs) is complete and correct | contracts / qa | ✅ | `scripts/check-indexer.ts` on v1 and v2: minted − burned == totalSupply (68,650 / 745,661.61), Σ Borrowed == totalBorrowed, lent − repaid + fees == outstanding, sampled txs succeeded, no duplicate rows |
 | V2 | `PROTOCOL=v2` journey green end to end (V2-SWITCH gate) | qa / contracts / api | 🟡 | `scripts/demo-journey-v2.ts` V0–V7 green live: Create (sOUSD 250%, tTBILL 300%), Move (OUSD → xMXN v2 minted to the recipient in one tx; redeem burns), Lend/Spend/Repay on pool v2 via in-process api services; supply identity asserted after each mint/burn (`scripts/evidence/v2-run-*.json`). Pending: v2 stress step (needs a contracts script), HTTP path after the flip |
 
 ## C. Pass D robustness (UI / ops)
