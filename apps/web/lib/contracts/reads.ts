@@ -296,8 +296,9 @@ export function useThreeBuckets() {
     vault: {
       /** OUSD collateral only (other collaterals are in their own units; see collateralValueXmxn) */
       collateralOusd: ousdIdx >= 0 ? totals[ousdIdx]?.[0] : undefined,
-      debtXmxn: sum(totals.map((t) => t?.[1])),
-      collateralValueXmxn: sum((values.data ?? []).map((r) => ok<bigint>(r))),
+      // failed/empty reads stay undefined (renders "—"), never a fake 0
+      debtXmxn: totals.length === n ? sum(totals.map((t) => t?.[1])) : undefined,
+      collateralValueXmxn: values.data?.length === n ? sum(values.data.map((r) => ok<bigint>(r))) : undefined,
     },
     /** v2 has no swap desk: always-undefined fields (use `move`) */
     desk: { ousd: undefined, xmxn: undefined } as { ousd?: bigint; xmxn?: bigint },

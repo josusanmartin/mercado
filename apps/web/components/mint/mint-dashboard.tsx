@@ -44,6 +44,16 @@ function DemoBadge({ r }: { r: Pick<CollateralBookRow, "demo" | "symbol"> }) {
   return r.demo ? <Badge variant="mock">Demo token</Badge> : r.symbol === "OUSD" ? <Badge variant="mock">Testnet</Badge> : null;
 }
 
+/** tTBILL / mIDX: admin-priced demo assets with no desk obligation to buy back what a liquidation seizes. */
+const DEMO_RWA = (symbol: string) => /^(tTBILL|mIDX)/.test(symbol);
+function DemoOnlyNote({ symbol }: { symbol: string }) {
+  return DEMO_RWA(symbol) ? (
+    <span data-honesty className="text-muted-foreground block text-xs">
+      Demo-only collateral: seized tokens have no automatic desk buyback right
+    </span>
+  ) : null;
+}
+
 function Overview() {
   const book = useCollateralBook();
   const buckets = useThreeBuckets();
@@ -85,6 +95,7 @@ function Overview() {
                       {r.mintPaused ? " · minting paused" : ""}
                     </span>
                     <Bar value={share} />
+                    <DemoOnlyNote symbol={r.symbol} />
                     {r.debtCeiling !== undefined && (
                       <span>
                         Debt {x(r.debt)} of {x(r.debtCeiling)} ceiling ({ceilingUse === undefined ? "…" : `${ceilingUse.toFixed(1)}%`})
@@ -124,7 +135,7 @@ function Overview() {
           )}
           <Row
             label="Collateral backing"
-            sub="Collateral value ÷ CDP debt, at live prices"
+            sub="Aggregate CDP coverage; positions have separate liquidation limits"
             value={book.totalValueXmxn !== undefined && cdp ? fmtBps((book.totalValueXmxn * 10_000n) / cdp, 0) : "…"}
           />
         </Rows>
@@ -150,6 +161,14 @@ function Risk() {
   const covShown = cov === undefined ? "…" : cov > 10_000_000n ? "∞ (nothing issued)" : fmtBps(cov, 0);
   const covBreak = cov !== undefined && cov < 10_000_000n ? fxAt(cov) : undefined;
   const backBreak = fxAt(backingBps, 13_500);
+  const e2 = ex as { reserveOusd?: bigint; bucketUsedOusd?: bigint; bucketCapOusd?: bigint; depthUsd?: bigint };
+  const redeemNow =
+    e2.reserveOusd === undefined || e2.bucketUsedOusd === undefined || e2.bucketCapOusd === undefined
+      ? undefined
+      : (() => {
+          const left = e2.bucketCapOusd > e2.bucketUsedOusd ? e2.bucketCapOusd - e2.bucketUsedOusd : 0n;
+          return left < e2.reserveOusd ? left : e2.reserveOusd;
+        })();
   return (
     <div className="grid gap-12">
       {/* one big idea first: how far the peso would have to move */}
@@ -166,9 +185,8 @@ function Risk() {
           <SectionLabel index="02">Respaldo del sistema</SectionLabel>
           <BigNumber value={backingBps === undefined ? "…" : fmtBps(backingBps, 0)} />
           <p className="text-muted-foreground max-w-md text-[15px]">
-            All collateral ÷ all Mint debt. The system as a whole reaches the 135% line only at{" "}
-            <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>. Individual
-            positions are liquidated earlier, one at a time, at their own lines.
+            Aggregate CDP coverage; positions have separate liquidation limits. All collateral ÷ all Mint debt reaches the 135% line only at{" "}
+            <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>.
           </p>
         </div>
       </section>
@@ -186,10 +204,20 @@ function Risk() {
         <Rows>
           {v2 ? (
             <>
-              <Row label="Reserve" sub="OUSD held by the exchange" value={x((ex as { reserveOusd?: bigint }).reserveOusd, "OUSD")} />
+              <Row label="Funded reserve" sub="OUSD the exchange actually holds" value={x(e2.reserveOusd, "OUSD")} />
+              <Row
+                label="Available to redeem now"
+                sub="Redemption capacity left in the rolling bucket, capped by the reserve"
+                value={x(redeemNow, "OUSD")}
+              />
               <Row label="Issued xMXN" sub="The exchange's liability" value={x((ex as { liabilityXmxn?: bigint }).liabilityXmxn)} />
               <Row label="Equity buffer" sub="First-loss OUSD, adds reserve without liability" value={x((ex as { equityOusd?: bigint }).equityOusd, "OUSD")} />
               <Row label="Coverage" sub="reserve × FX ÷ issued" value={covShown} />
+              <Row
+                label="Virtual pricing depth, not reserves"
+                sub="Sets the size spread on the oracle mid: a pricing parameter, no funds behind it"
+                value={x(e2.depthUsd, "USD")}
+              />
               <Row
                 label="Redemptions, rolling 24h"
                 sub={`Leaky bucket: up to ${(ex as { redeemCapBps?: bigint }).redeemCapBps === undefined ? "…" : fmtBps((ex as { redeemCapBps?: bigint }).redeemCapBps, 0)} of the reserve at once, refilling over 24h`}
@@ -226,13 +254,18 @@ function Risk() {
                   {r.symbol} <DemoBadge r={r} />
                 </span>
               }
-              sub={`Liquidation below ${r.liqRatioBps ? fmtBps(r.liqRatioBps, 0) : "…"} · penalty ${r.penaltyBps ? fmtBps(r.penaltyBps, 0) : "…"}`}
+              sub={
+                <>
+                  {`Liquidation below ${r.liqRatioBps ? fmtBps(r.liqRatioBps, 0) : "…"} · penalty ${r.penaltyBps ? fmtBps(r.penaltyBps, 0) : "…"}`}
+                  <DemoOnlyNote symbol={r.symbol} />
+                </>
+              }
               value={r.mintRatioBps ? `max LTV ${((10_000 / r.mintRatioBps) * 100).toFixed(0)}%` : "…"}
             />
           ))}
           <Row
             label="System backing"
-            sub="All collateral value ÷ all Mint debt"
+            sub="Aggregate CDP coverage; positions have separate liquidation limits"
             value={backingBps === undefined ? "…" : fmtBps(backingBps, 0)}
           />
           <Row
