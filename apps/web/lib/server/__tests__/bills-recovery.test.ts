@@ -102,6 +102,7 @@ describe("R-009 interrupted settlement recovery", () => {
     });
     const fresh = await pay({ quoteId, idempotencyKey: k });
     expect(fresh.status).toBe(402);
+    expect(await withStore((db) => db.orders[orderId].pendingAttempts)).toEqual([]);
   });
 
   it("an attempt that settles after verification failed is still applied", async () => {
@@ -126,6 +127,23 @@ describe("R-009 interrupted settlement recovery", () => {
     const orderId = (await order(k)).body.orderId;
     const { readStore } = await import("../bills/store");
     expect(await readStore((db) => db.orders[orderId].pendingAttempts ?? [])).toEqual([]);
+  });
+  it("stays blocked while the chain can't be checked, even after the hold lapses", async () => {
+    const quoteId = await newQuote();
+    const k = key();
+    expect((await pay({ quoteId, idempotencyKey: k }, "Payment cred:transaction:chal-G")).status).toBe(409);
+    const orderId = (await order(k)).body.orderId;
+    await withStore((db) => {
+      for (const a of db.orders[orderId].pendingAttempts ?? []) a.holdUntil = 0;
+    });
+    findSettled.mockRejectedValue(new Error("RPC down"));
+    chargeStub.mockClear();
+    const blocked = await pay({ quoteId, idempotencyKey: k });
+    expect(blocked.status).toBe(409);
+    expect((await blocked.json()).code).toBe("SETTLEMENT_PENDING");
+    expect(chargeStub).not.toHaveBeenCalled();
+    findSettled.mockResolvedValue(null);
+    expect((await pay({ quoteId, idempotencyKey: k })).status).toBe(402);
   });
 });
 

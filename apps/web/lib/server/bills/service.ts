@@ -267,11 +267,20 @@ async function recoverAttempts(order: StoredOrder): Promise<PayResult | null> {
       attempts: order.pendingAttempts,
     });
   } catch (err) {
+    // Can't prove the earlier attempt didn't settle: stay blocked (no new charge) until a scan succeeds.
     console.warn("[bills] reconciliation scan failed:", (err as Error).message.split("\n")[0]);
-    if (holdActive(order)) throw settlementPending();
+    throw settlementPending("could not check the chain for an earlier payment attempt");
+  }
+  if (!found) {
+    // A successful scan with nothing found: attempts past their hold can't settle any more (pull txs
+    // carry validBefore ≤ 25s; push txs were already mined when presented), so drop them.
+    if (!holdActive(order))
+      await withStore((db) => {
+        const o = db.orders[order.orderId];
+        o.pendingAttempts = (o.pendingAttempts ?? []).filter((a) => a.holdUntil > Date.now());
+      });
     return null;
   }
-  if (!found) return null;
   let o = await recordPayment(order.orderId, { txHash: found.txHash, payer: found.payer }, "Recovered: payment found on-chain for an interrupted attempt");
   o = await fulfill(o.orderId);
   return { kind: "ok", body: toBody(o), receiptHeader: undefined };
