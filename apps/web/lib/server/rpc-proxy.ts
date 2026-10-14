@@ -72,9 +72,11 @@ const isRateLimit = (status: number, body: RpcResponse | undefined) =>
   status === 429 ||
   body?.error?.code === -32005 ||
   /rate.?limit|too many/i.test(body?.error?.message ?? "");
-/** Also transient for READS (403 from the edge, 5xx, network): retrying a read is always harmless. */
+/** Also transient for READS (edge 403 / 5xx WITHOUT a JSON-RPC answer, network): retrying a read is harmless.
+ *  A 403/5xx that carries a JSON-RPC error is the node's final answer (e.g. account_getOperation →
+ *  403 + -32601 "method not allowed") and is returned at once. */
 const isTransient = (status: number, body: RpcResponse | undefined) =>
-  isRateLimit(status, body) || status === 403 || status >= 500 || !body;
+  isRateLimit(status, body) || !body || ((status === 403 || status >= 500) && !body.error && body.result === undefined);
 /** Writes: a 5xx or dropped connection may have been processed, so never resend those. */
 const WRITES = new Set(["eth_sendRawTransaction", "eth_sendRawTransactionSync", "eth_sendTransaction"]);
 
