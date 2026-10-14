@@ -41,9 +41,10 @@ node script/export.mjs   # → packages/shared/src/{abi,deployments}
 
 forge script script/ReseedDesk.s.sol  --rpc-url moderato --broadcast --slow   # top desk back up (LP inventory)
 forge script script/StressDemo.s.sol  --rpc-url moderato --broadcast --slow   # FX 20→14, liquidate, restore
-script/oracle.sh price | set 19.5 | force 13 | refresh | keeper [secs]       # mock oracle admin
+script/oracle.sh price | set 19.5 | force 13                                  # mock oracle admin (manual)
+node script/fx-relay.mjs [--loop 600]                                       # relay a REAL USD/MXN rate (Coinbase intraday → open.er-api daily)
 script/verify.sh                                                            # verify sources on contracts.tempo.xyz (Sourcify): all 5 exact_match
 node script/sponsor-check.mjs                                               # live /api/sponsor check (needs :3100)
 ```
 
-The oracle goes stale after 1h. Keep `script/oracle.sh keeper` running during demos.
+The oracle goes stale after 1h. Keep `node script/fx-relay.mjs --loop 600` running: it relays a real public USD/MXN rate (admin-relayed, not a decentralized oracle) and writes cache/fx-relay.json for the /api/fx label.
