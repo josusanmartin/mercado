@@ -1,5 +1,7 @@
 """Generate the four product slides (dark editorial template) for the ecosystem deck."""
 import json, os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+from principles import apply as principles
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 TX = "https://explore.testnet.tempo.xyz/tx/"
 M = "'DM Mono', 'Courier New', monospace"
@@ -80,5 +82,5 @@ if __name__ == "__main__":
     for p in P:
         if p["id"] == "j3-advance" and "--keep-credito" in sys.argv:
             continue
-        open(os.path.join(ROOT, "project", "slides", p["id"] + ".html"), "w").write(slide(p))
+        open(os.path.join(ROOT, "project", "slides", p["id"] + ".html"), "w").write(principles(slide(p)))
         print(p["id"], "ok", "art url" if p["art"] in assets else "ART PLACEHOLDER")
