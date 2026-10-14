@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createWalletClient, http, parseEventLogs, type Abi, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { useConnection, usePublicClient } from "wagmi";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ExternalLink, Loader2, Lock, Snowflake, Store, X } from "lucide-react";
 import { activeAddresses, explorerTx, mercadoCardAbi, tempoModerato, TEMPO_RPC_URL } from "@mercado/shared";
 import {
@@ -104,6 +104,7 @@ function CardDemo({ holderId }: { holderId: HolderId }) {
   const [pending, setPending] = useState<Pending>();
   const terminal = useTerminal();
   const actions = useCardActions();
+  const qc = useQueryClient();
   const busy = !!pending && (pending.status === "signing" || pending.status === "charging");
   useReportBusy(busy || actions.tx.isBusy);
 
@@ -115,6 +116,9 @@ function CardDemo({ holderId }: { holderId: HolderId }) {
       setPending((p) => p && { ...p, status: "charging" });
       const r = await terminal.charge(pending.tap, sig);
       setPending((p) => p && { ...p, status: "done", hash: r.hash, chargeId: r.chargeId });
+      // The charge is confirmed: refresh card activity, limits and balances right away (lead).
+      await qc.invalidateQueries();
+      setTimeout(() => void qc.invalidateQueries(), 2_500); // the public RPC can lag a block
     } catch (e) {
       setPending((p) => p && { ...p, status: "error", error: e instanceof Error ? e.message : String(e) });
     }
@@ -414,6 +418,7 @@ function Terminal({
   const [amount, setAmount] = useState("");
   const [refunding, setRefunding] = useState(false);
   const [refundResult, setRefundResult] = useState<{ hash?: Hex; error?: string }>();
+  const qc = useQueryClient();
   const amt = toUnits(amount);
   const live = pending && (pending.status === "asking" || pending.status === "signing" || pending.status === "charging");
 
@@ -439,19 +444,19 @@ function Terminal({
           </div>
         </div>
       </div>
-      <div className="grid gap-5 rounded-[20px] bg-[#f4f5f7] p-5 sm:grid-cols-[1fr_15rem] dark:bg-[#1a1d23]">
+      <div className="bg-well grid gap-5 rounded-[8px] p-5 sm:grid-cols-[1fr_15rem]">
         <div className="grid content-start gap-3">
           <p className="text-muted-foreground text-[13px]">Total a cobrar · amount</p>
           <p className="text-[2.6rem] leading-none font-semibold tabular">
             {amount || "0"} <span className="text-muted-foreground text-lg font-medium">xMXN</span>
           </p>
-          <Button size="lg" disabled={!card || amt === 0n || !!live} onClick={charge} style={{ background: VIOLET }} className="text-white">
+          <Button size="lg" disabled={!card || amt === 0n || !!live} onClick={charge}>
             {live ? <Loader2 className="animate-spin" /> : null}
             {live ? "Esperando al cliente · waiting for the tap" : "Cobrar con Mercado Card"}
           </Button>
           {!card && <p className="text-muted-foreground text-[13px]">The customer needs a card first (issue one on the phone).</p>}
           {pending?.status === "done" && pending.hash && (
-            <div className="grid gap-2 rounded-[14px] bg-white p-3 text-[15px] dark:bg-[#0f1115]">
+            <div className="bg-background grid gap-2 rounded-[6px] border p-3 text-[15px]">
               <p className="flex items-center gap-2 font-semibold">
                 <Check className="text-success size-4" /> Cobrado · Charged {fmtAmount(pending.tap.amount)} xMXN
               </p>
@@ -469,6 +474,9 @@ function Terminal({
                     try {
                       const r = await refund(pending.chargeId!, pending.tap.amount);
                       setRefundResult({ hash: r.hash });
+                      await qc.invalidateQueries();
+                      setTimeout(() => void qc.invalidateQueries(), 2_500);
+      setTimeout(() => void qc.invalidateQueries(), 2_500); // the public RPC can lag a block
                     } catch (e) {
                       setRefundResult({ error: e instanceof Error ? e.message : String(e) });
                     } finally {
