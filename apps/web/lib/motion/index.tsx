@@ -328,7 +328,24 @@ export function Spark({ values, className, label }: { values: number[]; classNam
  * stable-width check for 1.4s, a "Copied" toast; if the clipboard is unavailable, the FULL address appears
  * selected so it can be copied by hand (the shortened one can't be). The explorer link stays separate.
  */
-export function CopyAddress({ address, className, label }: { address: string; className?: string; label?: string }) {
+export function CopyAddress({
+  address,
+  className,
+  label,
+  locale,
+  onCopied,
+  onFailed,
+}: {
+  address: string;
+  className?: string;
+  label?: string;
+  /** "es": Spanish name/fallback for the in-phone apps (Spanish only). Default English. */
+  locale?: "es";
+  /** Replaces the "Copied" toast (e.g. the phone's own snackbar). */
+  onCopied?: (short: string) => void;
+  /** Replaces the error toast; the full address is still shown selected. */
+  onFailed?: () => void;
+}) {
   const [done, setDone] = useState(false);
   const [manual, setManual] = useState(false);
   const full = useRef<HTMLSpanElement>(null);
@@ -345,11 +362,13 @@ export function CopyAddress({ address, className, label }: { address: string; cl
     try {
       await navigator.clipboard.writeText(address);
       setDone(true);
-      toast.success("Copied", { description: short, duration: 1600 });
+      if (onCopied) onCopied(short);
+      else toast.success("Copied", { description: short, duration: 1600 });
       setTimeout(() => setDone(false), 1400);
     } catch {
       setManual(true);
-      toast.error("Couldn't copy. The full address is selected: copy it by hand.");
+      if (onFailed) onFailed();
+      else toast.error(locale === "es" ? "No se pudo copiar. La dirección completa está seleccionada: cópiala a mano." : "Couldn't copy. The full address is selected: copy it by hand.");
     }
   }
   return (
@@ -358,7 +377,7 @@ export function CopyAddress({ address, className, label }: { address: string; cl
         type="button"
         onClick={copy}
         title={address}
-        aria-label={`Copy ${label ?? "address"} ${address}`}
+        aria-label={locale === "es" ? `Copiar ${label ?? "dirección"} ${address}` : `Copy ${label ?? "address"} ${address}`}
         className="hover:text-foreground focus-visible:text-foreground inline-flex min-h-11 items-center gap-1.5 rounded-[4px] font-mono text-[13px] tabular transition-colors sm:min-h-0"
       >
         {short}
