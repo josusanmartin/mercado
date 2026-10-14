@@ -126,8 +126,14 @@ test('card: Javier pays MX$450 at Tienda Doña Mary (one real charge) → phone 
   await expect(sheet).toBeVisible({ timeout: 30_000 })
   await page.waitForTimeout(800)
   await shootPhone(page, 'phone-card-approve') // the tap prompt: "Tienda Doña Mary te cobra"
+  const saldo = async () => ((await phone.getByLabel('Saldo').innerText().catch(() => '')) || '').replace(/\s+/g, '')
+  const before = (await saldo()).match(/MX\$[\d,]+/)?.[0]
   await sheet.getByRole('button', { name: /Aprobar/ }).click()
   await expect(pos.getByText(/Cobrado · Charged/)).toBeVisible({ timeout: 120_000 })
+  // CR-08 freshness: POS receipt → the phone's balance changes (target ≤ 2 s)
+  const t0 = Date.now()
+  await expect.poll(async () => (await saldo()).match(/MX\$[\d,]+/)?.[0], { timeout: 30_000, intervals: [50] }).not.toBe(before)
+  console.log(`[freshness] POS receipt → phone balance ${before} → ${(await saldo()).match(/MX\$[\d,]+/)?.[0]}: ${Date.now() - t0} ms`)
   await expect(phone.getByText(/Aún no hay cobros con esta tarjeta/)).toBeHidden({ timeout: 30_000 })
   await page.waitForTimeout(3500) // paid sheet auto-closes; Movimientos shows the charge
   await shootPhone(page, 'phone-card-holder')

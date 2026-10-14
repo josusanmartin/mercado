@@ -92,6 +92,25 @@ const APIS: [string, (b: any) => string | undefined][] = [
   ['/api/mpp/pricing', () => undefined],
   ['/api/driver/demo', () => undefined],
 ]
+// CR-08: every browser read now goes through the caching /api/rpc proxy; the 402 panels use /api/mpp/challenge
+await safe('api', 'POST /api/rpc', 'eth_blockNumber', async () => {
+  const t0 = Date.now()
+  const res = await fetch(BASE + '/api/rpc', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }),
+    signal: AbortSignal.timeout(15_000),
+  })
+  const b = (await res.json().catch(() => ({}))) as { result?: string; error?: { message: string } }
+  const ok = res.status === 200 && !!b.result
+  add('api', 'POST /api/rpc', ok ? `block ${Number(b.result)} in ${((Date.now() - t0) / 1000).toFixed(1)}s` : `HTTP ${res.status} ${b.error?.message ?? ''}`.trim(), 'eth_blockNumber (browser read path)', ok ? 'GREEN' : 'RED')
+})
+await safe('api', 'GET /api/mpp/challenge', 'live 402 challenge', async () => {
+  const r = await get('/api/mpp/challenge?product=move-quote&side=usd_to_mxn&amount=100')
+  const b = JSON.parse(r.body)
+  const ok = r.status === 200 && b.status === 402 && !!b.wwwAuthenticate
+  add('api', 'GET /api/mpp/challenge', ok ? `402 challenge in ${(r.ms / 1000).toFixed(1)}s` : `HTTP ${r.status}, inner ${b.status}`, 'inner 402 + WWW-Authenticate', ok ? 'GREEN' : 'RED')
+})
 let sponsorAddr: Address | undefined
 for (const [p, check] of APIS) {
   await safe('api', `GET ${p.split('?')[0]}`, '200 + body', async () => {
@@ -178,7 +197,7 @@ if (driver) {
     ])
     add('Javier', 'advance owed', `${fmt(n6(debt))} xMXN`, '0 (fresh Crédito beat)', gate(debt === 0n, true))
     add('Javier', 'xMXN balance', `${fmt(n6(bal))}`, `≥ ${CHARGE} (live card proof)`, gate(n6(bal) >= CHARGE, true))
-    add('Javier', 'card allowance', `${fmt(n6(allow))}`, `≥ ${CHARGE}`, gate(n6(allow) >= CHARGE))
+    add('Javier', 'card allowance', `${fmt(n6(allow))}`, `≥ ${CHARGE * 2} (each charge spends it)`, gate(n6(allow) >= CHARGE * 2, n6(allow) >= CHARGE))
     if (!ids.length) return add('Javier', 'card', 'no card', 'active card', 'RED')
     const c = await read<{ frozen: boolean; dailyLimit: bigint; spentToday: bigint; availableToday: bigint; last4: number; resetsAt: bigint }>(A.card, cardAbi, 'getCard', [ids.at(-1)])
     add('Javier', `card #${ids.at(-1)} (…${c.last4})`, c.frozen ? 'FROZEN' : 'active', 'active (the beat freezes it on stage)', gate(!c.frozen))
