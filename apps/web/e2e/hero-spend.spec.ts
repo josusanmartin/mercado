@@ -34,77 +34,83 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   await hideDevOverlay(page)
   mkdirSync(OUT, { recursive: true })
 
-  // 1) Crédito · driver app: connect a platform (simulated consent) → draw a real advance
-  await page.goto('/credito?tab=drivers', { waitUntil: 'domcontentloaded' })
-  const phone = page.getByLabel('Driver app, Android phone preview')
+  // 1) Crédito · driver app (restyled): connect Uber (simulated consent) → draw an advance (25% ≈ 375 xMXN)
+  await page.goto('/credito?tab=driver', { waitUntil: 'domcontentloaded' })
+  const phone = page.getByLabel(/Driver app/)
   await expect(phone).toBeVisible({ timeout: 90_000 })
-  await pause(1500)
+  await pause(1200)
   const connect = phone.getByRole('button', { name: /Continuar con Uber/i })
   if (await connect.isVisible().catch(() => false)) {
     await connect.click()
-    await pause(1800) // simulated consent sheet: "Demo connection … never asks your password"
+    await pause(1500) // simulated consent sheet
     await phone.getByRole('button', { name: /Permitir/i }).click()
   }
-  await expect(phone.getByText(/Disponible ahora/i)).toBeVisible({ timeout: 60_000 })
-  await pause(2000) // earnings + credit line
-  await phone.getByRole('button', { name: /^Recibir .* xMXN/ }).click()
-  await expect(phone.getByText(/Debes · You owe/)).toBeVisible({ timeout: 120_000 })
+  await expect(phone.getByText(/Disponible ahora/i).first()).toBeVisible({ timeout: 60_000 })
+  await pause(1500)
+  await phone.getByRole('button', { name: /^Adelanto$/ }).click()
+  const sheetA = page.getByLabel('Pedir adelanto')
+  await expect(sheetA).toBeVisible({ timeout: 15_000 })
+  await sheetA.getByRole('button', { name: /^25%$/ }).click()
+  await pause(1000)
+  await sheetA.getByRole('button', { name: /^Recibir .* xMXN/ }).click()
+  await expect(page.getByText(/Ya es tuyo/)).toBeVisible({ timeout: 120_000 })
+  await pause(1200)
+  await page.getByRole('button', { name: /Ver mi adelanto/ }).click()
+  await expect(phone.getByText(/^Debes$/i).first()).toBeVisible({ timeout: 30_000 })
   await top(page)
   await pause(1500)
-  await page.screenshot({ path: join(OUT, 'hero-spend-advance.png') })
+  await page.screenshot({ path: join(OUT, 'hero-spend-final-advance.png') })
 
-  // 2) Mercado Card as Javier, at Tienda Doña Mary
+  // 2) Mercado Card as Javier at Tienda Doña Mary
   await page.goto('/card?holder=driver', { waitUntil: 'domcontentloaded' })
-  await expect(page.getByText(/Hola, Javier/)).toBeVisible({ timeout: 90_000 })
   const holderPhone = page.getByLabel('Cardholder phone, Android preview')
-  const pos = page.getByRole('region', { name: 'Shop terminal' }).or(page.getByLabel('Shop terminal'))
-  const freeze = holderPhone.getByRole('switch')
-  await pause(1500)
+  await expect(holderPhone.getByText(/Hola, Javier/i)).toBeVisible({ timeout: 90_000 })
+  const pos = page.getByLabel('Shop terminal')
+  const freeze = holderPhone.getByRole('switch', { name: /Congelar/ })
+  // the tap sheet inside the phone (target by role + its Aprobar/Rechazar/Cerrar content, not by name)
+  const sheet = holderPhone.getByRole('dialog').first()
+  await pause(1200)
 
-  // 2a) freeze → the tap is declined, nothing charged
+  // 2a) frozen → the tap is declined, nothing charged → Cerrar
   if ((await freeze.getAttribute('aria-checked')) !== 'true') await freeze.click()
   await expect(freeze).toHaveAttribute('aria-checked', 'true', { timeout: 60_000 })
-  await pause(1500)
-  for (const k of CHARGE) await pos.getByRole('button', { name: k, exact: true }).click()
   await pause(800)
+  for (const k of CHARGE) await pos.getByRole('button', { name: k, exact: true }).click()
   await pos.getByRole('button', { name: /Cobrar con Mercado Card/ }).click()
-  const sheet = page.getByRole('dialog', { name: 'Approve card payment' })
   await expect(sheet).toBeVisible({ timeout: 30_000 })
-  await pause(1500)
+  await pause(1000)
   await sheet.getByRole('button', { name: /Aprobar/ }).click()
-  // the friendly decline copy (contracts' readableError: 'Tarjeta congelada · Card is frozen')
-  await expect(sheet.getByText(/Tarjeta congelada|Card is frozen/i)).toBeVisible({ timeout: 60_000 })
+  await expect(sheet.getByText(/Tarjeta congelada|Card is frozen|Rechazado/i).first()).toBeVisible({ timeout: 60_000 })
   await top(page)
   await pause(1500)
-  await page.screenshot({ path: join(OUT, 'hero-spend-declined.png') })
-  // close the sheet so the freeze toggle is reachable (no waiting out the tap deadline)
-  const close = sheet.getByRole('button', { name: /Cerrar|Close|Listo|OK/i })
-  if (await close.isVisible().catch(() => false)) await close.click()
+  await page.screenshot({ path: join(OUT, 'hero-spend-final-declined.png') })
+  await sheet.getByRole('button', { name: /^Cerrar$/ }).first().click()
   await expect(sheet).toBeHidden({ timeout: 10_000 })
 
   // 2b) unfreeze → retry once → charged exactly once
   await freeze.click()
   await expect(freeze).toHaveAttribute('aria-checked', 'false', { timeout: 60_000 })
-  await pause(1500)
-  for (const k of CHARGE) await pos.getByRole('button', { name: k, exact: true }).click()
   await pause(800)
+  for (const k of CHARGE) await pos.getByRole('button', { name: k, exact: true }).click()
   await pos.getByRole('button', { name: /Cobrar con Mercado Card/ }).click()
   await expect(sheet).toBeVisible({ timeout: 30_000 })
-  await pause(1500)
+  await pause(1000)
   await sheet.getByRole('button', { name: /Aprobar/ }).click()
-  // the paid sheet auto-closes after 2.5s, so gate on the POS's persistent receipt
-  await expect(pos.getByText(/Cobrado · Charged/)).toBeVisible({ timeout: 120_000 })
-  // wait for the live reads to reflect the charge before the final still: left-today drops by 150 and the
-  // charge shows up in Card activity (CardCharged event)
-  await expect(page.getByText(/No charges on this card yet/)).toBeHidden({ timeout: 60_000 })
-  await expect(holderPhone.getByText(/^\d+ \/ 1,000 gastado$/).filter({ hasNotText: /^0 \// })).toBeVisible({ timeout: 60_000 }).catch(() => {})
+  await expect(pos.getByText(/Cobrado · Charged/)).toBeVisible({ timeout: 120_000 }) // paid sheet auto-closes
+  await expect(holderPhone.getByText(/Aún no hay cobros con esta tarjeta/)).toBeHidden({ timeout: 60_000 }) // Movimientos shows the charge
+  await top(page)
+  await pause(2000)
+  await page.screenshot({ path: join(OUT, 'hero-spend-final-paid.png') })
+  await pause(2000) // receipts on both sides + 'Adelanto pendiente'
+
+  // 3) back to Crédito: the advance is still owed (spending didn't touch the debt)
+  await page.goto('/credito?tab=driver', { waitUntil: 'domcontentloaded' })
+  await expect(page.getByLabel(/Driver app/).getByText(/^Debes$/i).first()).toBeVisible({ timeout: 60_000 })
   await top(page)
   await pause(2500)
-  await page.screenshot({ path: join(OUT, 'hero-spend-paid.png') })
-  await pause(4000) // receipts on both sides + remaining debt
 
   expect(errors, 'page errors during the take').toEqual([])
   const video = page.video()
   await page.close()
-  if (video) copyFileSync(await video.path(), join(OUT, 'hero-spend.webm'))
+  if (video) copyFileSync(await video.path(), join(OUT, 'hero-spend-final.webm'))
 })
