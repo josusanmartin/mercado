@@ -36,7 +36,7 @@ Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately 
 
   Use them as solid fills on product tiles and icons, as the active-tab underline, and for key numbers. Text on fills is white. Everything else stays neutral (ink `#111418`, secondary `#5B6270`, hairline `#E6E8EC`).
 - **Home = the Switch row:** four big rounded-square product tiles (≈260px, radius 20px, solid product color, white line icon, product name, one live number), selected with the cyan-teal focus ring (`#00C3E3`, 4px, offset 4px, gentle pulse) and keyboard arrows + Enter. Above the row: "Mercado: one currency, four products" in big clean type. Below: the "How money moves" map, redrawn flat (thin colored lines, small dots, live numbers, no boxes).
-- **Product pages:** a simple header (colored icon chip + product name + one-line purpose), then the 3 KPIs as big numbers on white with **no box**, then ONE underline tab row, then content laid out with whitespace: an action column (one card) and lists/rows separated by hairlines.
+- **Product pages:** a simple header (colored icon chip + product name + one-line purpose), then ONE underline tab row (NO KPI strip under the header; josu 03:02), then content laid out with whitespace: an action column (one card) and lists/rows separated by hairlines.
 - **Type:** Instrument Sans 400/500/600. Display 40–56px, numbers 32–48px tabular, body 15–16px, nothing under 13px. DM Mono only for hashes/addresses/API.
 - **Icons:** one consistent line set (lucide), 1.75px stroke.
 - **Motion:** quick 120–180ms. Tile scale 1.03 + ring on focus. Number tick-ups.

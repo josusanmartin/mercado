@@ -18,3 +18,6 @@ Reference: thefutureinblack.com, a "cultural intelligence studio". It's **inspir
 - **Deck:** already editorial and dark. Align it: Archivo Black/Anton for statements, the cultural palette, at least one image-in-type statement slide, and small meta labels on every slide.
 
 Owners: `web` (shared tokens, components/console, Home, shell) FIRST, then `mobile` (kit + Remesas + Card), `mobile2` (Crédito + Invest), `api`/`contracts` (their pages via shared components), `slides` (the deck). `review` checks labels/contrast (terracotta on white for small text fails AA, so use it for large text and blocks only).
+
+## Header rule (josu, 03:02)
+**No KPI strip under product headers, on any page.** The three-number band ('USD/MXN 18.37 · Exchange backing 270% · Familia balance 4,066', 'Available to lend · Advances out · Fees paid') is useless there. A number only appears where the user needs it to act (e.g. the rate inside the send quote, 'available' inside the draw sheet, coverage inside the Risk tab).
