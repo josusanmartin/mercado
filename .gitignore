@@ -11,3 +11,5 @@ broadcast/*/31337/
 .DS_Store
 .npm.lock
 .data/
+review/out/
+review/cache/

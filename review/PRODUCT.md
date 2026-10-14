@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated 2026-10-14 after the first review pass. Lead approved ideas 1–3 in #mercado at 00:39 UTC; implementation belongs to the assigned crew owners.
+Updated 2026-10-14 through 00:47 UTC. Lead approved ideas 1–3 at 00:39 and refined the actual-position stress preview at 00:45. Implementation belongs to the assigned crew owners. Mercado's local server is http://localhost:3100.
 
 Mercado's strongest demonstration is a driver receiving a small, explainable xMXN advance from a separately funded lender pool, spending it through an actual HTTP 402 payment, and repaying it manually. Show the settled payment and remaining debt together. Keep the simulated airtime outcome visibly distinct from the token settlement.
 
@@ -41,7 +41,7 @@ Prepare accounts, allowances and sufficient fee-token balances before recording.
 | 5 | Clear lender story: cash available, principal lent, own claim, realized fees and no guaranteed APY | Medium–high: gives the funding side a reason to exist | Small once views exist | Extend idea 3 after core integration |
 | 6 | Optional paid score endpoint for third-party demo underwriting | Medium: a second native MPP API use | Medium–large: another paid path and idempotency boundary | Defer until bill flow is proven |
 
-Stress example: 1,000 OUSD collateral, 10,000 xMXN debt and 20 MXN/USD means 200% collateralization. At 13 MXN/USD it is 130%, below the 135% liquidation threshold. This is a mock scenario, not a forecast or current quotation. UI preview must not write to the shared oracle.
+Current approved stress preview: keep the live demo LP at least 250% collateralized; 1,000 OUSD and 8,000 xMXN debt at 20 MXN/USD gives 250%. The slider uses the viewer's actual position across 8–25 and marks its calculated liquidation boundary: 10.8 MXN/USD in this example (135% exactly, liquidation below it). A move from 20 to 10.8 is a 46% decline in USD/MXN; expressed as peso appreciation it is about 85%. Avoid calling it 46% peso appreciation. This is a mock scenario, not a forecast or current quotation. Preview never writes the shared oracle. Real liquidation proof belongs to a separate stress position; restoration and desk pause/unpause need transaction evidence.
 
 ## What to make legible to judges
 

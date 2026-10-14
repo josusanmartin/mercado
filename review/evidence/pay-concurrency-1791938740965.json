@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T00:45:40.965Z",
+  "kind": "local orchestration probe, settlement mocked",
+  "sources": {
+    "apps/web/lib/server/bills/store.ts": "09f9aefffe7fe55f2f3f40d06ac28edc56bc41cee188b6ac0fb13d0f647ce4dd",
+    "apps/web/lib/server/bills/providers.ts": "410f7b266bca824ace83c029db3842b27dff58be53fb30968e05b6e2cd9ebcb8",
+    "apps/web/lib/server/bills/lock.ts": "0f33e3377fc4bf8cd0c08a250cb4f3a14e6cac69f7109aea92b051fbd2b336b7",
+    "apps/web/lib/server/bills/service.ts": "cc1b01f9c2738e741ae1e7aa28f6aa73cc5df9af2e047ed4dc7d443adf1a19c0"
+  },
+  "settlements": 1,
+  "orderIds": [
+    "ord_f0c42f20-74a0-404b-b63e-2deef9dd4572",
+    "ord_f0c42f20-74a0-404b-b63e-2deef9dd4572"
+  ],
+  "recordedReceipts": [
+    "0x0000000000000000000000000000000000000000000000000000000000000001",
+    "0x0000000000000000000000000000000000000000000000000000000000000001"
+  ],
+  "receiptHeaders": [
+    "mock-receipt-1",
+    "mock-receipt-1"
+  ],
+  "pass": true
+}
