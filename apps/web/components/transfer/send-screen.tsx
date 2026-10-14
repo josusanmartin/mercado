@@ -1,11 +1,11 @@
 "use client";
 // Send money: swap testnet OUSD for xMXN on the separately capitalized SwapDesk (oracle-informed
 // quote, spread, minOut) and deliver it to another wallet in one flow. On-chain delivery only.
-import { useEffect, useRef, useState } from "react";
-import { isAddress, type Address } from "viem";
+import { useEffect, useState } from "react";
+import { isAddress, isAddressEqual, parseEventLogs, type Address, type Log } from "viem";
 import { useConnection } from "wagmi";
 import { ArrowDown, Info } from "lucide-react";
-import { ADDR, readableError, useBalances, useDesk, useMercado, useOracle, useSwapQuote, withSlippage } from "@/lib/contracts";
+import { ADDR, tokenAbi, readableError, useBalances, useDesk, useMercado, useOracle, useSwapQuote, withSlippage } from "@/lib/contracts";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/shell/page-header";
@@ -34,7 +34,8 @@ export function SendScreen() {
   const [amount, setAmount] = useState("");
   const [to, setTo] = useState<string>("");
   const [memo, setMemo] = useState("");
-  const [sent, setSent] = useState<{ to: Address; before?: bigint; amountHint?: bigint; memo?: string }>();
+  // Frozen at confirmation from the transfer log, so later edits or unrelated deposits can't change it.
+  const [sent, setSent] = useState<{ to: Address; amount?: bigint; hash: string; memo?: string }>();
 
   useEffect(() => {
     if (prefill.amount) setAmount(prefill.amount);
@@ -54,8 +55,8 @@ export function SendScreen() {
   const quoteError = quote.error ? readableError(quote.error) : undefined;
 
   const recipient = isAddress(to) ? (to as Address) : undefined;
-  const recipientBal = useBalances(recipient ?? sent?.to);
-  const recipientName = personaByAddress(recipient ?? sent?.to);
+  const recipientBal = useBalances(recipient);
+  const recipientName = personaByAddress(recipient);
 
   const toSelf = recipient && address && recipient.toLowerCase() === address.toLowerCase();
   const memoTooLong = memoBytes(memo) > MEMO_MAX_BYTES;
@@ -75,21 +76,20 @@ export function SendScreen() {
     blockedFx ||
     (swapping && (quote.amountOut === undefined || !!quote.error));
 
-  // Remember the recipient's balance right before sending, to show what arrived.
-  const beforeRef = useRef<bigint | undefined>(undefined);
   async function onSend() {
     if (!recipient) return;
-    beforeRef.current = recipientBal.xmxn;
+    setSent(undefined);
     const memoArg = memo.trim() || undefined;
-    const ok = swapping
+    const steps = swapping
       ? await m.swapAndSend(amt, quote.amountOut!, recipient, memoArg, SLIPPAGE_BPS)
       : await m.transfer(ADDR.xmxn, recipient, amt, memoArg);
-    if (ok) {
-      setSent({ to: recipient, before: beforeRef.current, amountHint: swapping ? minOut : amt, memo: memoArg });
+    const last = steps?.at(-1);
+    if (last) {
+      setSent({ to: recipient, amount: deliveredTo(last.receipt, recipient), hash: last.hash, memo: memoArg });
       setAmount("");
     }
   }
-  const arrived = sent && sent.before !== undefined && recipientBal.xmxn !== undefined ? recipientBal.xmxn - sent.before : undefined;
+  const arrived = sent && recipient && isAddressEqual(sent.to, recipient) ? sent.amount : undefined;
 
   return (
     <>
@@ -230,7 +230,7 @@ export function SendScreen() {
                   <div className="border-success/30 bg-success/5 grid gap-1 rounded-lg border p-4 text-sm">
                     <p className="font-medium">
                       Delivered{" "}
-                      <span className="tabular">{arrived !== undefined && arrived > 0n ? fmtAmount(arrived) : `≥ ${fmtAmount(sent.amountHint)}`}</span>{" "}
+                      <span className="tabular">{sent.amount !== undefined ? fmtAmount(sent.amount) : ""}</span>{" "}
                       xMXN to {personaByAddress(sent.to)?.name ?? shortAddr(sent.to)}
                       {sent.memo && <> with the note &ldquo;{sent.memo}&rdquo;</>}.
                     </p>
@@ -248,15 +248,15 @@ export function SendScreen() {
           <Card>
             <CardHeader>
               <CardTitle>{recipientName ? `${recipientName.name}'s wallet` : "Recipient"}</CardTitle>
-              <CardDescription>{recipient || sent ? shortAddr(recipient ?? sent?.to, 6) : "Pick who you're sending to"}</CardDescription>
+              <CardDescription>{recipient ? shortAddr(recipient, 6) : "Pick who you're sending to"}</CardDescription>
             </CardHeader>
             <CardContent>
-              {recipient || sent ? (
+              {recipient ? (
                 <dl className="grid grid-cols-2 gap-4">
                   <Stat
                     label="xMXN balance"
                     value={fmtAmount(recipientBal.xmxn)}
-                    sub={arrived !== undefined && arrived > 0n ? <span className="text-success">+{fmtAmount(arrived)} just arrived</span> : "live from Tempo"}
+                    sub={arrived !== undefined ? <span className="text-success">+{fmtAmount(arrived)} from your transfer</span> : "live from Tempo"}
                   />
                 </dl>
               ) : (
@@ -291,6 +291,17 @@ export function SendScreen() {
       </div>
     </>
   );
+}
+
+/** xMXN credited to `to` in a confirmed transfer receipt (Transfer or TransferWithMemo). */
+function deliveredTo(receipt: { logs: Log[] } | undefined, to: Address): bigint | undefined {
+  if (!receipt) return undefined;
+  const logs = parseEventLogs({ abi: tokenAbi, logs: receipt.logs }).filter(
+    (l) => isAddressEqual(l.address, ADDR.xmxn) && "to" in l.args && isAddressEqual(l.args.to as Address, to),
+  );
+  const amounts = logs.map((l) => (l.args as { amount?: bigint }).amount ?? 0n);
+  // A memo transfer may emit both Transfer and TransferWithMemo for the same amount; count it once.
+  return amounts.length ? amounts.reduce((a, b) => (a > b ? a : b)) : undefined;
 }
 
 function Row({ k, v }: { k: string; v: string }) {
