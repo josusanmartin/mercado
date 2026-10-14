@@ -69,3 +69,17 @@ Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately 
 - **Underwriting API**: the MPP pay-per-report panel and bot trace.
 
 Owners: **`web` builds the Driver app** (phone frame, connect + consent screens, credit line, draw, your advance, Tiempo Aire shortcut) in `components/credito/driver-app/**`. **`api` builds the Back office** plus the API side: DemoDidiProvider + DemoRappiProvider fixtures, `/api/driver/*` accepting `platform`, and the platform carried into the attestation dataHash. api owns the `/credito` page shell and mounts web's DriverApp.
+
+## 6. Mercado Card (josu, 02:28): spend xMXN. Fifth product, color violet `#7C5CFF`
+The ecosystem becomes **five products**: Mint · Remesas · Global · Crédito · **Card**. Home headline: "Mercado: one currency, five products." The money map adds Card as the spending edge.
+
+**Wire what we can (real), simulate only the card network:**
+- **Real (contracts):** `MercadoCard.sol` (v2 xMXN). The holder issues a virtual card with a **spend limit** (via xMXN approve to the card contract plus an on-chain per-card daily limit), and can **freeze/unfreeze** it. An authorized **merchant terminal** calls `charge(cardId, amount, merchantRef)`, which moves xMXN from holder to merchant **on-chain**, checking frozen / limit / daily window / allowlisted merchant, and emits `CardCharged`. Optional: the holder's per-charge EIP-712 signature (tap-to-pay) so the terminal can't charge arbitrarily. Real refunds via `refund(chargeId)` from the merchant. Tests: frozen, over-limit, daily window, replay, non-merchant.
+- **Simulated + labeled:** the card network and PAN. The card shows a demo number like `5x•• •••• •••• 4821`, labeled "Demo virtual card: not a Visa/Mastercard, works only at Mercado demo merchants". No physical card, no ATM.
+
+**UI (`/card`, violet):**
+- **Cardholder view inside the Android phone** (same PhoneFrame): the virtual card front (clean violet, "Mercado" wordmark, no network logos), xMXN balance, a **freeze toggle (real)**, a **spend limit slider (real)**, and the **transactions list (real CardCharged/refund events)**.
+- **Merchant terminal** beside the phone (desktop): a simple POS ("Tienda Doña Mary · CDMX": generic demo merchant, no real brand). Enter an amount → "Cobrar con Mercado Card" → the phone shows a tap/approve prompt → a real on-chain charge → receipt on both sides with an explorer link.
+- Live KPIs: cards issued, xMXN spent through Card, merchants.
+
+**Owners:** `contracts` builds MercadoCard.sol + tests + deploy (alongside v2, address under deployments.v2.card) + hooks in lib/contracts. `web` builds /card UI after DriverApp. `slides` adds Card to the ecosystem (5 products). `qa` adds a card journey step. `review` does an adversarial pass on the charge authorization.
