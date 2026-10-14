@@ -48,4 +48,5 @@ Findings from `qa`'s contract and API review. Each one is posted to the owner in
 
 | ID | Area | Finding | Owner | Status |
 |---|---|---|---|---|
-| | | | | |
+| Q-001 | api `lib/server/fx.ts` | FX fallback reports `updatedAt=now` when the on-chain oracle is stale/paused, so it looks fresh | api | open (P2) |
+| Q-002 | api `/api/driver/score` | Caller chooses profile for any borrower, so any wallet can claim "steady". Mitigated by borrower binding + 1,500 per-user cap; demo-acceptable, disclosed | api / qa | accepted (P3) |
