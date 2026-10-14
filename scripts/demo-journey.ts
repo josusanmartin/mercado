@@ -57,9 +57,9 @@ const ONLY = (() => {
 
 // Demo amounts (6dp)
 const AMT = {
-  lpDeposit: parseUnits('1000', 6), // dOUSD
+  lpDeposit: parseUnits('1000', 6), // OUSD
   lpMintTargetRatioBps: 30000n, // mint so the LP sits at ~300%
-  senderSwapIn: parseUnits('50', 6), // dOUSD → xMXN
+  senderSwapIn: parseUnits('50', 6), // OUSD → xMXN
   slippageBps: 50n, // minOut = quote − 0.5%
   borrowCap: parseUnits('500', 6), // draw at most this much (or the attested max)
   billMxn: 100, // Telcel airtime, MXN
@@ -67,7 +67,7 @@ const AMT = {
 
 type Deployments = {
   chainId: number
-  dOUSD: Address
+  ousd: Address // Tempo testnet OpenUSD (faucet), the vault collateral
   xMXN: Address
   oracle: Address
   vault: Address
@@ -81,7 +81,9 @@ type Deployments = {
 function loadDeployments(): Deployments {
   const f = join(ROOT, 'packages/shared/src/deployments/42431.json')
   if (!existsSync(f)) throw new Error(`deployments not found at ${f}. Has contracts deployed yet?`)
-  return JSON.parse(readFileSync(f, 'utf8'))
+  const d = JSON.parse(readFileSync(f, 'utf8'))
+  d.ousd ??= d.dOUSD // fallback token, if contracts ever has to deploy dOUSD
+  return d
 }
 
 function account(role: string): PrivateKeyAccount {
@@ -169,17 +171,14 @@ async function approveIfNeeded(acct: PrivateKeyAccount, token: Address, spender:
   await send(`approve ${label}`, acct, { address: token, abi: erc20, functionName: 'approve', args: [spender, amount] })
 }
 
-/** Make sure `who` holds `need` dOUSD; mints from the deployer (dOUSD issuer) if short. */
-async function ensureDousd(d: Deployments, who: Address, need: bigint, whoLabel: string) {
-  const have = await bal(d.dOUSD, who)
+/** Make sure `who` holds `need` testnet OUSD; tops up from the Tempo faucet if short. */
+async function ensureOusd(d: Deployments, who: Address, need: bigint, whoLabel: string) {
+  const have = await bal(d.ousd, who)
   if (have >= need) return
-  warn(`${whoLabel} has ${fmt(have)} dOUSD, needs ${fmt(need)}; minting test dOUSD from the deployer`)
-  await send(`mint ${fmt(need - have)} dOUSD → ${whoLabel}`, account('DEPLOYER'), {
-    address: d.dOUSD,
-    abi: erc20,
-    functionName: 'mint',
-    args: [who, need - have],
-  })
+  warn(`${whoLabel} has ${fmt(have)} OUSD, needs ${fmt(need)}; calling the faucet (tempo_fundAddress)`)
+  await pub.request({ method: 'tempo_fundAddress' as any, params: [who] as any })
+  for (let i = 0; i < 20 && (await bal(d.ousd, who)) < need; i++) await new Promise((r) => setTimeout(r, 1000))
+  assert((await bal(d.ousd, who)) >= need, `${whoLabel} still short of OUSD after faucet`)
 }
 
 async function api(path: string, init?: RequestInit) {
@@ -210,7 +209,7 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const id = await pub.getChainId()
       assert(id === 42431, `chain id ${id} != 42431`)
       ok(`connected to Tempo Moderato (chain ${id}) via ${RPC}`)
-      for (const k of ['dOUSD', 'xMXN', 'oracle', 'vault', 'swapDesk', 'creditPool'] as const) {
+      for (const k of ['ousd', 'xMXN', 'oracle', 'vault', 'swapDesk', 'creditPool'] as const) {
         const code = await pub.getCode({ address: d[k] })
         if (!code || code === '0x') warn(`${k} ${d[k]} has no code`)
         else log(`${k.padEnd(10)} ${d[k]}  ${C.dim}${EXPLORER}/address/${d[k]}${C.x}`)
@@ -223,16 +222,16 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
   },
   {
     id: 'J1',
-    title: 'LP deposits dOUSD collateral into the vault',
+    title: 'LP deposits OUSD collateral into the vault',
     async run({ d }) {
       const lp = account('LP')
-      await ensureDousd(d, lp.address, AMT.lpDeposit, 'LP')
+      await ensureOusd(d, lp.address, AMT.lpDeposit, 'LP')
       const before = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'getPosition', args: [lp.address] })
-      await approveIfNeeded(lp, d.dOUSD, d.vault, AMT.lpDeposit, 'dOUSD → vault')
-      await send(`depositCollateral ${fmt(AMT.lpDeposit)} dOUSD`, lp, { address: d.vault, abi: vaultAbi, functionName: 'depositCollateral', args: [AMT.lpDeposit] })
+      await approveIfNeeded(lp, d.ousd, d.vault, AMT.lpDeposit, 'OUSD → vault')
+      await send(`depositCollateral ${fmt(AMT.lpDeposit)} OUSD`, lp, { address: d.vault, abi: vaultAbi, functionName: 'depositCollateral', args: [AMT.lpDeposit] })
       const after = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'getPosition', args: [lp.address] })
       assert(after.collateral - before.collateral === AMT.lpDeposit, 'position collateral increased by deposit')
-      ok(`LP position: ${fmt(after.collateral)} dOUSD collateral, ${fmt(after.debt)} xMXN debt`)
+      ok(`LP position: ${fmt(after.collateral)} OUSD collateral, ${fmt(after.debt)} xMXN debt`)
     },
   },
   {
@@ -269,20 +268,20 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
   },
   {
     id: 'J3',
-    title: 'Sender swaps dOUSD→xMXN on the SwapDesk and sends to Recipient',
+    title: 'Sender swaps OUSD→xMXN on the SwapDesk and sends to Recipient',
     async run({ d }) {
       const sender = account('SENDER')
       const recipient = process.env.RECIPIENT_ADDRESS as Address
-      await ensureDousd(d, sender.address, AMT.senderSwapIn, 'Sender')
+      await ensureOusd(d, sender.address, AMT.senderSwapIn, 'Sender')
       const [rO, rX] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'reserves' })
-      log(`desk reserves: ${fmt(rO)} dOUSD / ${fmt(rX)} xMXN (separately seeded)`)
-      const vaultCollBefore = await bal(d.dOUSD, d.vault)
+      log(`desk reserves: ${fmt(rO)} OUSD / ${fmt(rX)} xMXN (separately seeded)`)
+      const vaultCollBefore = await bal(d.ousd, d.vault)
       const [out, fee] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'quote', args: [true, AMT.senderSwapIn] })
       const minOut = out - (out * AMT.slippageBps) / 10_000n
-      log(`quote: ${fmt(AMT.senderSwapIn)} dOUSD → ${fmt(out)} xMXN (fee ${fmt(fee)}), minOut ${fmt(minOut)}`)
-      await approveIfNeeded(sender, d.dOUSD, d.swapDesk, AMT.senderSwapIn, 'dOUSD → desk')
+      log(`quote: ${fmt(AMT.senderSwapIn)} OUSD → ${fmt(out)} xMXN (fee ${fmt(fee)}), minOut ${fmt(minOut)}`)
+      await approveIfNeeded(sender, d.ousd, d.swapDesk, AMT.senderSwapIn, 'OUSD → desk')
       const xBefore = await bal(d.xMXN, sender.address)
-      await send(`swapOusdForXmxn ${fmt(AMT.senderSwapIn)} dOUSD`, sender, {
+      await send(`swapOusdForXmxn ${fmt(AMT.senderSwapIn)} OUSD`, sender, {
         address: d.swapDesk,
         abi: deskAbi,
         functionName: 'swapOusdForXmxn',
@@ -290,7 +289,7 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       })
       const got = (await bal(d.xMXN, sender.address)) - xBefore
       assert(got >= minOut, `received ${got} >= minOut ${minOut}`)
-      assert((await bal(d.dOUSD, d.vault)) === vaultCollBefore, 'vault dOUSD collateral untouched by the swap')
+      assert((await bal(d.ousd, d.vault)) === vaultCollBefore, 'vault OUSD collateral untouched by the swap')
       ok(`sender received ${fmt(got)} xMXN; vault collateral untouched`)
 
       const rBefore = await bal(d.xMXN, recipient)

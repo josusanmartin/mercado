@@ -4,10 +4,10 @@
 
 > ⚠️ **Testnet prototype.** Mercado runs only on **Tempo Moderato testnet (chain 42431)**. It is not a real financial product, not a credit product, and not a redeemable fiat stablecoin. Read the [disclosures](#disclosures) before demoing it.
 
-Mercado lets a liquidity provider lock a USD test token in an overcollateralized vault and mint **xMXN**, a 6-decimal synthetic peso (TIP-20). Others can then use xMXN:
+Mercado lets a liquidity provider lock testnet USD in an overcollateralized vault and mint **xMXN**, a 6-decimal synthetic peso (TIP-20). Others can then use xMXN:
 
-1. **Create pesos:** an LP deposits **dOUSD** (a demo USD test token) into the `CollateralVault` and mints xMXN at ≥150% collateralization.
-2. **Send money:** a sender swaps dOUSD for xMXN on a **separately capitalized** `SwapDesk` and sends it to another wallet (on-chain delivery only, no SPEI cash-out).
+1. **Create pesos:** an LP deposits **Testnet OUSD** (Tempo's faucet OpenUSD, no real value) into the `CollateralVault` and mints xMXN at ≥150% collateralization.
+2. **Send money:** a sender swaps testnet OUSD for xMXN on a **separately capitalized** `SwapDesk` and sends it to another wallet (on-chain delivery only, no SPEI cash-out).
 3. **Get an advance:** a driver imports **Demo Uber Data**. The backend computes an illustrative score and signs a short-lived EIP-712 attestation, and the driver draws xMXN from a **separately funded** `CreditPool`.
 4. **Pay bills:** the driver buys a mock Telcel airtime top-up through a real **MPP HTTP 402** payment flow, settled in xMXN on Tempo. Fulfillment is **SIMULATED**.
 5. **Repay and earn:** the driver repays, and the lender sees the repayment and realized fees.
@@ -19,7 +19,7 @@ The demo must keep all of these visible:
 - **Testnet prototype.** Everything runs on Tempo Moderato testnet with throwaway keys. Tokens have no monetary value.
 - **Not a credit product.** The advance is a demo of on-chain mechanics. Scoring is an illustrative heuristic on synthetic data, not a validated credit model. Repayment is manual, and nothing is automatically deducted from Uber payouts.
 - **Not redeemable fiat.** xMXN is a synthetic, collateral-backed testnet token. It can't be redeemed for Mexican pesos, isn't issuer-backed, and has **no guaranteed peg** or market depth.
-- **dOUSD is not Open USD.** Collateral is "Demo OUSD (testnet, not Open USD)", a test token we deploy ourselves. It isn't issued by Bridge or backed by anything. (The Moderato faucet also distributes an "OUSD" test asset; we don't use it as collateral in v0.)
+- **Testnet OUSD only.** The collateral is **"Testnet OUSD (Tempo faucet, no real value)"**: the OpenUSD token instance on Moderato, which anyone can get from the faucet. Testnet balances have no real value and can't be redeemed. Mercado never claims its collateral is issuer-backed. (A self-deployed `dOUSD` test token is kept as a fallback.)
 - **Demo data.** Driver earnings are fixtures labeled **"Demo Uber Data"**. No Uber account is connected, and Mercado never asks for Uber credentials.
 - **Simulated fulfillment.** Telcel/CFE top-ups are **SIMULATED**. The MPP payment is real on testnet, but no airtime is delivered and no bill is paid.
 - **Mock oracle.** The MXN/USD price comes from an admin-controlled testnet feed (`isMock() == true`), not a verified market feed.
@@ -30,7 +30,7 @@ The demo must keep all of these visible:
 ```
 Next.js app (apps/web) ── wagmi/viem ──► Tempo Moderato (42431)
    │                                       ├─ xMXN (TIP-20 via TIP20Factory; vault holds ISSUER_ROLE)
-   │                                       ├─ dOUSD (demo collateral TIP-20)
+   │                                       ├─ OUSD (Tempo testnet OpenUSD, faucet-funded collateral)
    │                                       ├─ FXOracleAdapter (mxnPerUsd 8dp, maxAge, sanity band, pause)
    │                                       ├─ CollateralVault (deposit/mint/repayAndBurn/withdraw/liquidate)
    │                                       ├─ SwapDesk (own finite reserves, spread, minOut)
@@ -64,7 +64,8 @@ Protocol parameters (demo-only) are in [INTERFACES.md](INTERFACES.md#protocol-pa
 | Chain | Tempo Moderato testnet, chain ID `42431` |
 | RPC | `https://rpc.moderato.tempo.xyz` |
 | Explorer | https://explore.testnet.tempo.xyz |
-| Faucet | `cast rpc tempo_fundAddress <address> --rpc-url https://rpc.moderato.tempo.xyz` |
+| Faucet | `cast rpc tempo_fundAddress <address> --rpc-url https://rpc.moderato.tempo.xyz` (pathUSD, AlphaUSD, BetaUSD, ThetaUSD, OUSD) |
+| Collateral | Testnet OUSD `0x20c0000000000000000000006a37da5c996874be` |
 | Fees | Paid in a USD TIP-20 stablecoin (Tempo has no native gas token) |
 
 ## Deployed addresses

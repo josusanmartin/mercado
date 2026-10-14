@@ -10,9 +10,9 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
 | # | Step | Owner | Status | Evidence |
 |---|---|---|---|---|
-| J1 | LP deposits dOUSD into CollateralVault | contracts / qa | ⬜ | |
+| J1 | LP deposits testnet OUSD into CollateralVault | contracts / qa | ⬜ | |
 | J2 | Vault mints xMXN to LP (6dp TIP-20) | contracts / qa | ⬜ | |
-| J3 | Sender swaps dOUSD→xMXN on SwapDesk and transfers xMXN to Recipient | contracts / qa | ⬜ | |
+| J3 | Sender swaps OUSD→xMXN on SwapDesk and transfers xMXN to Recipient | contracts / qa | ⬜ | |
 | J4 | Driver loads Demo Uber Data, gets a signed, expiring attestation, borrows from CreditPool | api / contracts / qa | ⬜ | |
 | J5 | Driver pays Telcel airtime via a real MPP 402 flow in xMXN; response is SIMULATED and carries a receipt | api / qa | ⬜ | |
 | J6 | Driver repays; pool shows the repayment and realized fees | contracts / qa | ⬜ | |
@@ -40,7 +40,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | D1 | Playwright smoke test covers every tab | qa / web | ⬜ | |
 | D2 | Mobile layout (~390px) usable on every tab | web | ⬜ | |
 | D3 | Readable errors: insufficient liquidity, stale oracle, wrong network, revert reasons | web | ⬜ | |
-| D4 | Persistent "testnet prototype" banner; mock-oracle and dOUSD ≠ Open USD labels visible | web | ⬜ | |
+| D4 | Persistent "testnet prototype" banner; mock-oracle and "Testnet OUSD (no real value)" labels visible | web | ⬜ | |
 
 ## D. Adversarial review log
 
