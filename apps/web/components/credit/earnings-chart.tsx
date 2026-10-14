@@ -64,7 +64,7 @@ export function EarningsChart({
                 width={width}
                 height={Math.max(0, y(0) - y(w.netMxn))}
                 rx={2}
-                className="fill-primary"
+                className="fill-product"
               />
               {i % 2 === 0 && (
                 <text
@@ -103,7 +103,7 @@ export function EarningsChart({
       </svg>
       <figcaption className="mt-1 flex gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="inline-block size-2.5 rounded-sm bg-primary" /> net
+          <span className="inline-block size-2.5 rounded-sm bg-product" /> net
           (after Uber fee)
         </span>
         <span className="flex items-center gap-1">

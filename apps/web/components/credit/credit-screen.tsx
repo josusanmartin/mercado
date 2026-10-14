@@ -207,8 +207,8 @@ export function CreditScreen() {
                 onClick={() => pick(p.id)}
                 disabled={drawTx.tx.isBusy}
                 className={cn(
-                  "hover:bg-accent rounded-[12px] border p-4 text-left transition-colors duration-150",
-                  profile === p.id && "border-foreground bg-accent",
+                  "bg-muted/60 hover:bg-muted rounded-[16px] p-4 text-left transition-colors duration-150",
+                  profile === p.id && "ring-product bg-product-soft ring-2",
                 )}
               >
                 <div className="font-medium">{p.title}</div>
@@ -598,7 +598,7 @@ function DriverSteps({
     <ol
       aria-label="Driver steps"
       data-nav="row"
-      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+      className="grid grid-cols-2 gap-x-6 border-b sm:grid-cols-4"
     >
       {items.map((it, i) => {
         const on = it.id === value;
@@ -610,31 +610,36 @@ function DriverSteps({
               aria-current={on ? "step" : undefined}
               onClick={() => onChange(it.id)}
               className={cn(
-                "flex w-full items-center gap-3 rounded-[12px] border p-3 text-left transition-colors duration-150",
+                "-mb-px flex w-full items-center gap-3 border-b-2 py-3 text-left transition-colors duration-150",
                 on
-                  ? "border-product bg-product-soft"
-                  : "bg-card hover:bg-accent",
+                  ? "border-product"
+                  : "hover:border-border border-transparent",
               )}
             >
               <span
                 className={cn(
-                  "flex size-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
-                  it.done
-                    ? "bg-product border-product text-white"
-                    : on
-                      ? "border-product text-product"
-                      : "text-muted-foreground",
+                  "flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                  it.done || on
+                    ? "bg-product text-white"
+                    : "bg-muted text-muted-foreground",
                 )}
               >
                 {it.done ? "✓" : i + 1}
               </span>
               <span className="min-w-0">
-                <span className="block text-[15px] font-medium">
+                <span
+                  className={cn(
+                    "block text-[15px]",
+                    on ? "font-semibold" : "font-medium",
+                  )}
+                >
                   {it.label}
                 </span>
-                <span className="text-muted-foreground block truncate text-xs">
-                  {it.hint ?? "\u00a0"}
-                </span>
+                {it.hint && (
+                  <span className="text-muted-foreground block truncate text-[13px]">
+                    {it.hint}
+                  </span>
+                )}
               </span>
             </button>
           </li>

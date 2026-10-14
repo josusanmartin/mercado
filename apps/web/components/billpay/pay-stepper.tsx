@@ -70,14 +70,14 @@ export function PayStepper({
         return (
           <li key={s.id} className="flex gap-3 text-sm">
             <span
-              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${
+              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] ${
                 isFailedStep
-                  ? "border-destructive text-destructive"
+                  ? "bg-destructive text-white"
                   : state === "done"
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "bg-product text-white"
                     : state === "active"
-                      ? "animate-pulse border-primary text-primary"
-                      : "text-muted-foreground"
+                      ? "animate-pulse bg-product-soft text-product"
+                      : "bg-muted text-muted-foreground"
               }`}
             >
               {isFailedStep ? "!" : state === "done" ? "✓" : i + 1}
