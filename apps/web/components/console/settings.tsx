@@ -87,7 +87,9 @@ export function ProductHero({
   return (
     // Size container: the statement is fit to the content column, not the viewport (which includes the
     // sidebar). 12.5cqw keeps an 11-letter word ("VERIFICADO.", ~7.7em in Archivo Black) whole.
-    <section data-phone-hide className="grid min-w-0 gap-6 [container-type:inline-size]">
+    // CR-04: capped at 80px and the whole block kept ≤170px at 1440x900, so the product's phone and primary
+    // action fit in the first screen (the giant title made products non-actionable above the fold).
+    <section data-phone-hide className="grid min-w-0 gap-3 [container-type:inline-size]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
         <Meta>
           <span className="mr-1.5 inline-block size-2 align-baseline" style={{ background: p.id === "home" ? "var(--ink)" : p.color }} aria-hidden />
@@ -95,19 +97,20 @@ export function ProductHero({
         </Meta>
         {meta ? <Meta>{meta}</Meta> : <LiveMeta />}
       </div>
-      <div className="grid gap-4">
-        <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,8rem)] break-words" style={p.id === "home" || p.id === "invest" ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1, so Invest's statement is ink */}>
-          {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
-        </h1>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          {(purpose ?? p.purpose) && <p className="max-w-2xl text-lg leading-snug text-pretty sm:text-xl">{purpose ?? p.purpose}</p>}
+      <div className="grid gap-2">
+        {/* CR-04: the demo account sits on the title row, so it never costs a line of its own. */}
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
+          <h1 className="display text-product text-[clamp(2.2rem,12.5cqw,5rem)] break-words" style={p.id === "home" || p.id === "invest" ? { color: "var(--ink)" } : undefined /* R-050: maize on white is 2.1:1, so Invest's statement is ink */}>
+            {statement ?? (p.id === "home" ? (title ?? p.name) : p.short)}
+          </h1>
           {persona && (
-            <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className="meta text-muted-foreground hover:text-foreground" title="Testnet demo key, no real value">
+            <a href={address ? explorerAddress(address) : undefined} target="_blank" rel="noreferrer" className="meta text-muted-foreground hover:text-foreground pb-2" title="Testnet demo key, no real value">
               Demo account · <span className="text-foreground">{persona.name}</span>
               {address && persona.address?.toLowerCase() === address.toLowerCase() && <> · {shortAddr(address)}</>}
             </a>
           )}
         </div>
+        {(purpose ?? p.purpose) && <p className="line-clamp-2 max-w-5xl text-base leading-snug text-pretty sm:text-lg">{purpose ?? p.purpose}</p>}
       </div>
       {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
           numbers belong where the user acts (quote, draw sheet, Risk tab). */}
