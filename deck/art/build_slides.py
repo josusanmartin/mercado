@@ -62,16 +62,17 @@ def build_proof():
     v7 = os.path.join(ps.ROOT, "assets", "v7")
     dw, dh = Image.open(os.path.join(v7, "panel-developers-402.png")).size
     cw, ch = Image.open(os.path.join(v7, "panel-contracts-verified.png")).size
-    DH = 660; DW = round(DH * dw / dh)
-    CW = 1164; CH = round(CW * ch / cw)
+    # v6: the permissions graph (wide) on the left, the 402 FlowPath panel on the right
+    CW = 1060; CH = round(CW * ch / cw)
+    DW = 552; DH = round(DW * dh / dw)
     s = f'''<section id="proof" data-transition="fade" style="background:#0A0A0A;color:#FFFFFF;{I};padding:128px 128px 160px">
 <p style="position:absolute;left:128px;top:128px;width:900px;{I};font-size:24px;color:#B3B3B3;{META}">■ A14 · appendix: proof</p>
 <h2 data-build-in="rise 1" style="position:absolute;left:128px;top:180px;width:1100px;{A};font-size:96px;font-weight:400;line-height:0.95;letter-spacing:-1px;text-transform:uppercase;color:#FFFFFF">Follow the money.<br><span style="color:#E5A823">Check the receipt.</span></h2>
 <p data-build-in="rise 2" style="position:absolute;left:128px;top:390px;width:1100px;font-size:36px;font-weight:500;line-height:1.3;color:#C9C9C9">Open the payment trail, contract code, and paid API responses.</p>
-<img data-build-in="fade 3" src="{a['panel-contracts-verified.png']}" alt="Mercado Contracts page: each contract with its source verified, exact match" style="position:absolute;left:128px;top:560px;width:{CW}px;height:{CH}px;object-fit:contain;{FRAME}">
-<img data-build-in="fade 4" src="{a['panel-developers-402.png']}" alt="Mercado Developers page: an HTTP 402 payment challenge, raw and decoded" style="position:absolute;left:{1792 - DW}px;top:220px;width:{DW}px;height:{DH}px;object-fit:contain;{FRAME}">
+<img data-build-in="fade 3" src="{a['panel-contracts-verified.png']}" alt="Mercado Contracts page: the permissions graph (owner key, factory, vault, exchange, FX oracle, xMXN and the products that use it), verified 17 of 17 on Sourcify" style="position:absolute;left:128px;top:520px;width:{CW}px;height:{CH}px;object-fit:contain;{FRAME}">
+<img data-build-in="fade 4" src="{a['panel-developers-402.png']}" alt="Mercado Developers page: the HTTP 402 flow, request, 402 challenge for 2.00 xMXN, payment on Tempo, 200 with Payment-Receipt" style="position:absolute;left:{1792 - DW}px;top:520px;width:{DW}px;height:{DH}px;object-fit:contain;{FRAME}">
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;{I};font-size:24px;color:#8A8A8A;{META}">Mercado</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;{I};font-size:24px;text-align:right;color:#8A8A8A;{META}">13</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;{I};font-size:24px;text-align:right;color:#8A8A8A;{META}">A14</p>
 <aside>Open a demonstrated payment, follow its receipt, and inspect the contract and its admin powers. The paid API trace separately shows the request, payment challenge, and returned response; we are showing inspectable execution, not a production security certification.</aside>
 </section>
 '''
