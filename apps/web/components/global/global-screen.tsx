@@ -8,7 +8,6 @@ import {
   ArrowDownUp,
   Building2,
   Landmark,
-  Loader2,
   Plug,
   Receipt,
   Wallet,
@@ -197,6 +196,7 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
               : `Not connected: ${why}.`}
           </span>
           <Button
+            pending={connecting}
             size="sm"
             variant="outline"
             disabled={!p.privateKey || connecting}
@@ -206,7 +206,6 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
               )
             }
           >
-            {connecting && <Loader2 className="animate-spin" />}
             Use {p.name}
           </Button>
         </>
@@ -257,7 +256,7 @@ function PaySupplier() {
   const payId = "pay-amount";
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
       <Panel variant="card">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-4 pt-2">
           {/* You pay: the big editable amount */}
@@ -417,6 +416,8 @@ function PaySupplier() {
         <PanelActions>
           <Button
             size="lg"
+            className="h-auto min-h-12 max-w-full py-2 whitespace-normal"
+            pending={m.tx.isBusy}
             disabled={!canPay}
             onClick={() =>
               q &&
@@ -489,7 +490,7 @@ function Redeem() {
     !!q && secondsLeft !== 0 && amountIn > 0n && !insufficient && !m.tx.isBusy;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <Panel
         variant="card"
         title="Redeem xMXN → OUSD"
@@ -516,6 +517,7 @@ function Redeem() {
           <PanelActions>
             <Button
               size="lg"
+              pending={m.tx.isBusy}
               disabled={!canRedeem}
               onClick={() =>
                 q && m.exchangeMxnToUsd(amountIn, BigInt(q.amountOut))

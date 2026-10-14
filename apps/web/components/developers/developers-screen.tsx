@@ -275,7 +275,12 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
         why="The live call is paid by the API partner demo account (or your own wallet)."
       >
         <PanelActions>
-          <Button size="lg" onClick={t.run} disabled={!t.ready || t.busy}>
+          <Button
+            size="lg"
+            onClick={t.run}
+            pending={t.busy}
+            disabled={!t.ready || t.busy}
+          >
             {t.busy
               ? "Calling…"
               : t.pending
