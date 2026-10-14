@@ -83,7 +83,7 @@ The existing Tour implements these destinations, but R-049 must be fixed before 
 8. **Can this lend to real drivers and pay real bills tomorrow?**
    No. The score is illustrative, income is synthetic, loans are unsecured and repaid manually, and fulfillment is SIMULATED. Production needs real integrations, independently reviewed contracts and operations, durable payment recovery, credible liquidity/oracle controls and appropriate arrangements for customers and assets. The demo proves a connected transaction path, not repayment quality or production readiness.
 
-Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card calendar25/25 and Invest17/17 local checks plus both replacement deployed runtimes pass. Invest UI attribution fixes pass at source scope; the new on-ramp still has a lock-reclaim blocker. Remesas unpaid payment recovery and ordinary failed-send persistence pass; unknown broadcast settlement still needs reconciliation before retry. See INVEST-REVIEW.md and FINDINGS.md. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
+Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card calendar25/25 and Invest17/17 local checks plus both replacement deployed runtimes pass. Invest UI attribution fixes pass at source scope; the on-ramp stays disabled by lead decision and its latest lock fix is not independently accepted. Remesas unpaid payment recovery and ordinary failed-send persistence pass; unknown broadcast settlement still needs reconciliation before retry. See INVEST-REVIEW.md and FINDINGS.md. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
 
 ---
 
@@ -216,3 +216,8 @@ Evidence pointers: `review/FINDINGS.md` separates independent checks from owner-
 ## Current review delta (02:56)
 
 Phone direction is now Spanish-only, dark-first per crew/mobile.md; detailed explanations can move out of the phone but essential Testnet/Demo/Simulado disclosures must stay visible on mobile. Source verification is not a security audit. Card calendar and latest gated-token InvestDesk deployments pass bounded independent checks. On-ramp stays disabled pending durable-store/multi-writer fixes, and sponsor first-draw eligibility needs attestation validation before claiming invented senders are refused.
+
+
+## Deck simplification handoff (03:44)
+
+Current stage copy lives in `review/DECK-COPY.md`: fourteen simple action slides, one short subline and at most one number, bounded two-sentence speaker notes. It supersedes the longer pitch wording above for the deck. Invest is now dollars (sOUSD), pesos (sxMXN), and the demo equity-index token (mIDX); lending remains Crédito's back office. New deployed-instance and counter acceptance is queued separately. No T-bill pitch or unsupported Mint millions appear. The approved close states: “Built and running end-to-end on Tempo testnet.” Default app honesty requirements remain.

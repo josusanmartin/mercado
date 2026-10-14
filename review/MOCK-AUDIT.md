@@ -6,7 +6,7 @@ Started02:10 UTC against josu's02:08 rule. `MOCKS.md` was posted by qa at02:12 a
 
 Current InvestDesk/tTBILL gating is independently verified: current token faucetCap0, legacy public faucet cap1000 tokens with legacy vault minting paused, both runtimes match. Desk buyback remains limited to purchases by this account. See INVEST-REVIEW.md. R-048 admin economic-control omissions were corrected in /contracts source. QA reopened OUSD $1-assumption wording on /mint at03:07; track that owner fix rather than treating a prior mock-marker scan as acceptance.
 
-PRINCIPLES has replaced older visual guidance. No generic KPI strips; compact honest metadata stays. Remesas/Crédito/Invest phone no-value labels are visible at390px and>6:1 in the03:12 snapshot. Card lacks an in-phone no-value statement (R-051). On-ramp remains simulated checkout plus real testnet delivery, disabled pending R-046 lock-race fix. Demo Tour uses real transfers but its per-step accounting is not accepted (R-049). /developers bill recovery fix passes a local actual-hook recheck, not a reviewer live payment.
+PRINCIPLES has replaced older visual guidance. No generic KPI strips; compact honest metadata stays. Remesas/Crédito/Invest phone no-value labels are visible at390px and>6:1 in the03:12 snapshot. Card lacks an in-phone no-value statement (R-051). On-ramp remains simulated checkout plus real testnet delivery, disabled by lead03:16 decision; latest no-auto-reclaim fix remains independently unaccepted. Demo Tour uses real transfers but its per-step accounting is not accepted (R-049). /developers bill recovery fix passes a local actual-hook recheck, not a reviewer live payment.
 
 ## Inventory / current evidence
 
