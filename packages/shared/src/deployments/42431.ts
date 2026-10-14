@@ -60,6 +60,10 @@ export const deployment42431 = {
     "creditPool": "0xaB32daeF142B442d24589D2161967a843720C6D7",
     "fxOracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
     "card": "0x7Fb945ee8BC4A80A37F0c5d95BbEC26976a36A70",
+    "investDesk": "0x160Fc9557B28e537ECFe456617004AfA7B2ab73e",
+    "tTBILLFeed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+    "sOUSD": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
+    "tTBILL": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
     "collaterals": [
       {
         "symbol": "OUSD",
@@ -128,7 +132,12 @@ export const deployment42431 = {
       "cardStage.transfer": "0x9ac6c4e5395a98d3ec8e782868c28a9cfcc9333986f73b71a4f17b97bbcdffb6",
       "cardStage.approve": "0x93378319ac4ac26b93c160265cc5de0502b46e9a30a49ec79ffffe8bbddce07f",
       "cardStage.issueCard": "0x8eeb5203cae0d8d5c4c458ba964e892ab2fbe56c9bf15caf6469394495c9a162",
-      "cardStage.charge": "0xe6150c1adf26ae563bfa67f57b8d06e959f3b3f0e9eee151b973333b13e9ad93"
+      "cardStage.charge": "0xe6150c1adf26ae563bfa67f57b8d06e959f3b3f0e9eee151b973333b13e9ad93",
+      "investStage.deployInvestDesk": "0x982722a84b2a0231339d1adb92fbd290d65860f1a87683b9880a3f88cacbb12e",
+      "investStage.mint": "0x5334a59f4e01f97819fad52ad45d7acb88910f9875ce50fd521ebe11595592df",
+      "investStage.approve": "0x8cabc9e0a976ae4f84d7380d0c04daa2ca35344bbf8e8e2df20be23fcfc1672b",
+      "investStage.approve#2": "0xf1aa8d4fed9ba0611d1d0d7f9b6dab70b1d1afd9feb165ecca0d467a0d23d64d",
+      "investStage.seed": "0x6f06a024c902f79af261ef6caa3ec11127674b3ae94497ed82159b4ca2c0d9b8"
     }
   }
 } as const;

@@ -19,6 +19,7 @@ const CONTRACTS_V2 = [
   ["AdminPriceFeed", "priceFeed"],
   ["MercadoFactoryV2", "mercadoFactoryV2"],
   ["MercadoCard", "mercadoCard"],
+  ["InvestDesk", "investDesk"],
 ];
 const EXTRA = [["ITIP20", "tip20"]]; // Tempo TIP-20 precompile interface (from tempo-std)
 
@@ -76,7 +77,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
     const v2txs = {};
     let v2At;
     let v2Start;
-    for (const stage of ["core", "seed", "credit", "cardStage"]) {
+    for (const stage of ["core", "seed", "credit", "cardStage", "investStage"]) {
       const f = join(root, "broadcast", "DeployV2.s.sol", chainId, `${stage}-latest.json`);
       if (!existsSync(f)) continue;
       const run = JSON.parse(readFileSync(f, "utf8"));
@@ -96,6 +97,8 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
     out.v2 = {
       xMXN: a.xMXN, factory: a.factory, vault: a.vault, vamm: a.vamm, creditPool: a.creditPool, fxOracle: a.fxOracle,
       card: a.card && a.card !== "0x0000000000000000000000000000000000000000" ? a.card : undefined,
+      investDesk: a.investDesk && a.investDesk !== "0x0000000000000000000000000000000000000000" ? a.investDesk : undefined,
+      tTBILLFeed: a.tTBILLFeed, sOUSD: a.sOUSD, tTBILL: a.tTBILL,
       collaterals: [
         { symbol: "OUSD", token: a.ousd, feed: a.ousdFeed, demo: false, label: "Testnet OUSD (Tempo faucet, no real value)" },
         { symbol: "sOUSD", token: a.sOUSD, feed: a.sOUSDFeed, demo: true, label: "Demo staked OUSD (mock yield, testnet)" },

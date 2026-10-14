@@ -15,6 +15,7 @@ import {MultiCollateralVault} from "../src/v2/MultiCollateralVault.sol";
 import {MoveAMM} from "../src/v2/MoveAMM.sol";
 import {MercadoFactoryV2} from "../src/v2/MercadoFactoryV2.sol";
 import {MercadoCard} from "../src/v2/MercadoCard.sol";
+import {InvestDesk} from "../src/v2/InvestDesk.sol";
 
 /// @notice v2 deployment ALONGSIDE v1 (v1 untouched). Writes deployments/<chainId>.v2.json; export.mjs merges it
 ///         into packages/shared under the "v2" key.
@@ -38,6 +39,7 @@ contract DeployV2 is Script {
     address tbill;
     address tbillFeed;
     address card;
+    address investDesk;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -58,6 +60,7 @@ contract DeployV2 is Script {
             tbill = _a(j, ".tTBILL");
             tbillFeed = _a(j, ".tTBILLFeed");
             card = _a(j, ".card");
+            investDesk = _a(j, ".investDesk");
         }
     }
 
@@ -177,6 +180,21 @@ contract DeployV2 is Script {
         _save();
     }
 
+    /// Mercado Invest: InvestDesk for demo tTBILL, seeded with 2,000 tTBILL + 20,000 OUSD of finite inventory.
+    function investStage() external {
+        uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPk);
+        vm.startBroadcast(deployerPk);
+        InvestDesk d = new InvestDesk(deployer, IERC20(ousd), IERC20(tbill), IERC20(xmxn), IPriceFeed(tbillFeed), MoveAMM(vamm));
+        investDesk = address(d);
+        DemoRWA(tbill).mint(deployer, 2_000e6);
+        IERC20(tbill).approve(investDesk, 2_000e6);
+        IERC20(ousd).approve(investDesk, 20_000e6);
+        d.seed(20_000e6, 2_000e6);
+        vm.stopBroadcast();
+        _save();
+    }
+
     function _save() internal {
         string memory k = "v2";
         vm.serializeAddress(k, "factory", factory);
@@ -191,6 +209,7 @@ contract DeployV2 is Script {
         vm.serializeAddress(k, "sOUSDFeed", sousdFeed);
         vm.serializeAddress(k, "tTBILL", tbill);
         vm.serializeAddress(k, "card", card);
+        vm.serializeAddress(k, "investDesk", investDesk);
         string memory out = vm.serializeAddress(k, "tTBILLFeed", tbillFeed);
         vm.writeJson(out, path);
         console.log("wrote", path);
