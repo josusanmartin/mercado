@@ -4,7 +4,7 @@
 // (lead 04:53) or the page's primary action inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
 // Motion (v6): no animation > 2 s after settle unless it's an intentional loop (live counters/tickers; [data-loop] only on Home, lead 09:21; FlowPath
 // dots must be still at arrival, lead 09:12 V6 #2),
-// and nothing long or infinite under reduced motion. CLS on arrival ≤ 0.05 (desktop gate).
+// and nothing long or infinite under reduced motion. CLS on arrival ≤ 0.05 (desktop + 390 gate, lead 09:33).
 // Headings: h1/h2 accessible names must be words, not spaced letters (lead 06:11).
 // v6: product pages keep ≥1 visible data-honesty label in normal mode (gate); 'walls' = paragraphs > 30 words in the
 // desktop panels outside phones/closed <details> (informational: v6 should drive it toward 0).
@@ -150,7 +150,7 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
           if (bad.length) row.notes.push(`animation > 2 s not marked data-loop: ${bad.slice(0, 2).map((l) => `${l.name}@${l.el}`).join(', ')}`)
           const cls = await page.evaluate(() => window.__cls ?? 0)
           row.fold += ` · CLS ${cls.toFixed(3)}`
-          if (w >= 1000 && cls > 0.05) row.notes.push(`CLS ${cls.toFixed(3)} > 0.05 on arrival`)
+          if (cls > 0.05) row.notes.push(`CLS ${cls.toFixed(3)} > 0.05 on arrival`) // desktop + 390 (lead 09:33)
         }
         if (motion === 'reduce') {
           // anything still animating 1.5s after settle, longer than 1s and not a 1-frame tick, is a reduced-motion leak
