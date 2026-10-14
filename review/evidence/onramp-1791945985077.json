@@ -1,0 +1,231 @@
+{
+  "at": "2026-10-14T02:46:25.077Z",
+  "mode": "actual route with isolated fake wallet/receipts; no key loaded, no network or broadcast",
+  "sourceSha256": "93305868784a9056bf0023c5c9f3f90e8a44734f6cb7b32b246e7418e03b985c",
+  "cases": [
+    {
+      "name": "unknown-settlement-retry",
+      "responses": [
+        {
+          "status": 502,
+          "body": {
+            "message": "receipt timeout after broadcast",
+            "code": "TRANSFER_FAILED"
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000002",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        }
+      ],
+      "sends": [
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "20000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "20000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000002"
+        }
+      ]
+    },
+    {
+      "name": "process-reload",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000001",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000002",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        }
+      ],
+      "sends": [
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "20000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "20000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000002"
+        }
+      ]
+    },
+    {
+      "name": "same-key-different-intent",
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000001",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000001",
+            "amount": "20000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            },
+            "replay": true
+          }
+        }
+      ],
+      "sends": [
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "20000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        }
+      ]
+    },
+    {
+      "name": "fractional-cent-rounds-to-zero",
+      "response": {
+        "status": 200,
+        "body": {
+          "txHash": "0x0000000000000000000000000000000000000000000000000000000000000001",
+          "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000001",
+          "amount": "0",
+          "token": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "simulatedCharge": {
+            "last4": "4242",
+            "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+          }
+        }
+      },
+      "sends": [
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "0",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        }
+      ]
+    },
+    {
+      "name": "failed-reservation-wipes-newer-spend",
+      "responses": [
+        {
+          "status": 502,
+          "body": {
+            "message": "pre-confirmation failure",
+            "code": "TRANSFER_FAILED"
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000002",
+            "amount": "500000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000003",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000003",
+            "amount": "500000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "txHash": "0x0000000000000000000000000000000000000000000000000000000000000004",
+            "explorerUrl": "https://example.invalid/0x0000000000000000000000000000000000000000000000000000000000000004",
+            "amount": "500000000",
+            "token": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "simulatedCharge": {
+              "last4": "4242",
+              "label": "Simulated card payment: no card is charged. Tempo Wallet's card on-ramp is mainnet-only. The OUSD delivery is a real testnet transfer."
+            }
+          }
+        }
+      ],
+      "sends": [
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "500000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000001"
+        },
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "500000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000002"
+        },
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "500000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000003"
+        },
+        {
+          "to": "0x2222222222222222222222222222222222222222",
+          "amount": "500000000",
+          "hash": "0x0000000000000000000000000000000000000000000000000000000000000004"
+        }
+      ]
+    }
+  ]
+}

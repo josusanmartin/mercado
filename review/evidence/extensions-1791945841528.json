@@ -1,0 +1,151 @@
+{
+  "at": "2026-10-14T02:44:01.528Z",
+  "routes": [
+    {
+      "route": "/",
+      "width": 1440,
+      "url": "http://localhost:3100/",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest\nContracts\nDark theme\nModerato 42431\nDemo mode\nConnect wallet\nMercado: one currency, six products.\n\nA parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.\n\nxMXN in circulation\n766,023\neach backed by a debt position or the exchange reserve\nCollateral locked\n2,071,714\nxMXN of collateral locked\nLent to drivers\n0\n10,030 xMXN available\n\nMercado Mint\n\n2,071,714\nxMXN of collateral locked\nMint\n22,405\nxMXN issued by the exchange\nRemesas\n298%\nexchange backing\nGlobal\n10,030\nxMXN available to lend\nCrédito\n—\nspent with Card (runs on v2)\nCard\n10,030\nxMXN saved by lenders\nInvest\nHow money moves\n\nLive on Tempo Moderato. Numbers update as transactions land.\n\nStart the Demo Tour\n\nxMXN\n\n766,023\n\nin circulation\n\nMint\n2,071,714\nxMXN of collateral locked\n· collateral in, xMXN minted\nRemesas\n22,405\nxMXN issued by the exchange\n· dollars in, pesos delivered home\nGlobal\n298%\nexchange backing\n· MXN↔USD for businesses\nCrédito\n10,030\nxMXN available to lend\n· advances out, repaid with fees\nCard\n—\nspent with Card (runs on v2)\n· xMXN spent at shops\nInvest\n10,030\nxMXN saved by lenders\n· savings in, yield out\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado: one currency, six products.",
+        "How money moves"
+      ]
+    },
+    {
+      "route": "/card",
+      "width": 1440,
+      "url": "http://localhost:3100/card",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest\nContracts\nDark theme\nModerato 42431\nDemo mode\nFamilia (MX) · 0x2D94…9700\nMercado Card\n\nSpend xMXN at the corner store with a virtual card.\n\nDemo account · Familia (MX) · 0x2D94…9700\nCards issued\n2\nvirtual, on-chain\nSpent with Card\n145\nxMXN · 3 charges\nMerchants\n1\nallowlisted demo terminals\n02:44\n\nMi tarjeta · My card\n\nHola, Familia (MX)\n\nMercado\nDemo\n\n5x•• •••• •••• 3064\n\nFamilia (MX)\nxMXN\n\nDemo virtual card: not a Visa/Mastercard, works only at Mercado demo merchants.\n\nSaldo · balance\n\n4,066.21 xMXN\n\nDisponible hoy · left today\n\n915.00 xMXN\n\n85 / 1,000 gastado\n\nCongelar · Freeze\nBlocks every charge until you unfreeze\nLímite diario · Daily limit\nSe reinicia a medianoche (CDMX) · resets at midnight CDMX\n1,000 xMXN\nPermitido gastar · spending allowance: 1,905 xMXN\nAjustar\nTienda Dona Mary · CDMX (demo merchant)\n\nDemo merchant terminal 0x6727…d4d3 · allowlisted on MercadoCard\n\nTotal a cobrar · amount\n\n0 xMXN\n\nCobrar con Mercado Card\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nCard activity\n\nRead from CardCharged and CardRefunded events on Tempo.\n\nRefund of #2\nCard 1 · Tienda Doña Mary\n+10.00 xMXN\nCharge #2\nCard 1 · Tienda Doña Mary\n−50.00 xMXN\nCharge #1\nCard 1 · Tienda Doña Mary\n−45.00 xMXN\nWhat's real here\nCharges, refunds, limit, freeze\nMercadoCard on Tempo; every charge needs the holder's signed tap for its exact amount and shop\nReal\nCard network and number\nDemo virtual card: not a Visa/Mastercard, works only at Mercado demo merchants\nSimulated\nMoney\nTestnet xMXN, no real value; not redeemable for pesos\nTestnet\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Card",
+        "Tienda Dona Mary · CDMX (demo merchant)",
+        "Card activity",
+        "What's real here"
+      ]
+    },
+    {
+      "route": "/invest",
+      "width": 1440,
+      "url": "http://localhost:3100/invest",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest\nContracts\nDark theme\nModerato 42431\nDemo mode\nSaver · 0xD5eB…136D\nMercado Invest\n\nThree real ways to save on Tempo: lend pesos to the driver-advance pool, earn on dollars with sOUSD, or buy a demo tokenized T-bill. Returns are variable or demo-sourced, never guaranteed.\nDemo yield sources on testnet\ntTBILL: not a security\n\nDemo account · Saver · 0xD5eB…136D\nSaved in pesos (all lenders)\n10,030 xMXN\nCredit pool lender claims\nsOUSD demo APR\n5.00%\nAdmin-set, funded from a demo reserve\ntTBILL price\n$100.00\nAdmin price feed (demo)\n02:44\n\nMercado Invest\n\nHaz crecer tu dinero\n\nGrow your money · testnet demo\n\nAhorro en pesos\nPeso savings · funds driver advances\n0.00 xMXN\nRendimiento variable: comisiones reales de choferes\nAhorro en dólares\nDollar savings · sOUSD\n0.00 OUSD\nAPR demo 5.00% · fondeado por admin\nT-bills (CETES-style)\nDemo tokenized T-bill · tTBILL\n0.0000 tTBILL\nPrecio $100.00 · feed admin\n\nActividad · Activity\n\nLeyendo la cadena…\n\nPortfolio\n\nYour positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades.\n\nAhorro en pesos · peso savings\n\nBalance\nYour share of the pool: principal plus realized fees\n0.00 xMXN\nEarned since deposit\nSource: fees drivers actually paid on repaid advances. Variable, not guaranteed.\n…\nWithdrawable now\nOnly idle pool cash; lent funds return as drivers repay\n10,030.00 xMXN\n\nAhorro en dólares · sOUSD\n\nValue\n0.00 sOUSD shares\n0.00 OUSD\nEarned since deposit\nSource: admin-funded demo yield reserve (1,000 OUSD left), APR 5.00%\n…\n\nT-bills · tTBILL\n\nHolding\nWorth 0.00 OUSD at the feed price\n0.0000 tTBILL\nGain / loss vs cost\nIncludes the desk's spread. Demo admin price feed, not a security.\n…\nUse as collateral\nMint xMXN against tTBILL →\nInvest Desk\n\nWhere T-bills are bought and sold: finite inventory, a small spread around the admin price feed, per-trade cap.\n\nInventory\n2,000.00 tTBILL · 20,000 OUSD\nSpread\n0.25%\nMax per trade\n25,000 USD\nStatus\nOpen\nActivity\n\nYour deposits, withdrawals and trades, read from the chain.\n\nReading the chain…\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Invest",
+        "Haz crecer tu dinero",
+        "Haz crecer tu dinero",
+        "Portfolio",
+        "Invest Desk",
+        "Activity"
+      ]
+    },
+    {
+      "route": "/credito",
+      "width": 1440,
+      "url": "http://localhost:3100/credito?tab=driver",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest\nContracts\nDark theme\nModerato 42431\nDemo mode\nDriver · 0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,030 xMXN\nIdle pool cash\nAdvances out\n0 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n30.00 xMXN\nFrom repaid advances\nDriver app\nAdvances on gig income\nBack office\nLoan book · lenders · API\n02:44\n\nObtén un adelanto de lo que ya ganaste\n\nGet an advance on what you've already earned. Connect the app you drive or deliver with.\n\nContinuar con Uber\nViajes\nContinuar con DiDi\nViajes\nContinuar con Rappi\nEntregas\n\nDemo connection: simulated consent, not affiliated with Uber, DiDi or Rappi. We never ask for your password.\n\nWhat just happened\n\nEach step of the advance, and what is real.\n\nConnected a work platform\n\nSimulated consent; nothing is read from a real account\n\nDemo\n\nLoad demo earnings\n\nSynthetic fixtures\n\nDemo\n\nScore the earnings\n\nIllustrative rule, not a credit model\n\nSigned an eligibility attestation\n\nBound to this wallet, this pool and this chain\n\nThe pool behind it\n\nAdvances come from lenders' xMXN in the credit pool, never from the mint vault.\n\nAvailable to lend\n10,030 xMXN\nLent out\n0 xMXN\nYour debt\n0x871a…cC63\n0.00 xMXN\nFees paid to lenders\nRealized only when advances are repaid\n30.00 xMXN\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Crédito",
+        "What just happened",
+        "The pool behind it"
+      ]
+    },
+    {
+      "route": "/remesas?screen=enviar",
+      "width": 1440,
+      "url": "http://localhost:3100/remesas?screen=enviar",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest\nContracts\nDark theme\nModerato 42431\nDemo mode\nSender (US) · 0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nadmin-relayed from Coinbase · on-chain 02:40 UTC\nExchange backing\n298%\nOUSD reserve vs xMXN issued\nFamilia (MX) balance\n4,066\nxMXN in 0x2D94…9700\n02:44\n\nEnviar a México\n\nSend money home\n\nEnvías · You send\n\n$0\n\nUSD (testnet OUSD) · saldo $999,518.89\n\nMamá recibe · receives about\n\n0.00 MXN\n\nCotización en vivo · live quote\n\nM\n\nMamá · Guadalajara\n\nFamilia (MX), demo wallet · 0x2D94…9700\n\nNota · Note (on-chain, public)\n0/32\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nEnviar $0 · Send\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nMercado exchange (vAMM)\n\nmint\n\nOUSD into the reserve, xMXN minted\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed from Coinbase · on-chain 02:40 UTC\n—\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nSize impact\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ]
+    },
+    {
+      "route": "/",
+      "width": 390,
+      "url": "http://localhost:3100/",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\nConnect\nMercado: one currency, six products.\n\nA parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.\n\nxMXN in circulation\n766,023\neach backed by a debt position or the exchange reserve\nCollateral locked\n2,071,714\nxMXN of collateral locked\nLent to drivers\n0\n10,030 xMXN available\n\nMercado Mint\n\n2,071,714\nxMXN of collateral locked\nMint\n22,405\nxMXN issued by the exchange\nRemesas\n298%\nexchange backing\nGlobal\n10,030\nxMXN available to lend\nCrédito\n—\nspent with Card (runs on v2)\nCard\n10,030\nxMXN saved by lenders\nInvest\nHow money moves\n\nLive on Tempo Moderato. Numbers update as transactions land.\n\nStart the Demo Tour\n\nMint\n\ncollateral in, xMXN minted\n\n2,071,714\n\nxMXN of collateral locked\n\nRemesas\n\ndollars in, pesos delivered home\n\n22,405\n\nxMXN issued by the exchange\n\nGlobal\n\nMXN↔USD for businesses\n\n298%\n\nexchange backing\n\nCrédito\n\nadvances out, repaid with fees\n\n10,030\n\nxMXN available to lend\n\nCard\n\nxMXN spent at shops\n\n—\n\nspent with Card (runs on v2)\n\nInvest\n\nsavings in, yield out\n\n10,030\n\nxMXN saved by lenders\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado: one currency, six products.",
+        "How money moves"
+      ]
+    },
+    {
+      "route": "/card",
+      "width": 390,
+      "url": "http://localhost:3100/card",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x2D94…9700\nMercado Card\n\nSpend xMXN at the corner store with a virtual card.\n\nDemo account · Familia (MX) · 0x2D94…9700\nCards issued\n2\nvirtual, on-chain\nSpent with Card\n145\nxMXN · 3 charges\nMerchants\n1\nallowlisted demo terminals\n\nMi tarjeta · My card\n\nHola, Familia (MX)\n\nMercado\nDemo\n\n5x•• •••• •••• 3064\n\nFamilia (MX)\nxMXN\n\nDemo virtual card: not a Visa/Mastercard, works only at Mercado demo merchants.\n\nSaldo · balance\n\n4,066.21 xMXN\n\nDisponible hoy · left today\n\n915.00 xMXN\n\n85 / 1,000 gastado\n\nCongelar · Freeze\nBlocks every charge until you unfreeze\nLímite diario · Daily limit\nSe reinicia a medianoche (CDMX) · resets at midnight CDMX\n1,000 xMXN\nPermitido gastar · spending allowance: 1,905 xMXN\nAjustar\nTienda Dona Mary · CDMX (demo merchant)\n\nDemo merchant terminal 0x6727…d4d3 · allowlisted on MercadoCard\n\nTotal a cobrar · amount\n\n0 xMXN\n\nCobrar con Mercado Card\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nCard activity\n\nRead from CardCharged and CardRefunded events on Tempo.\n\nRefund of #2\nCard 1 · Tienda Doña Mary\n+10.00 xMXN\nCharge #2\nCard 1 · Tienda Doña Mary\n−50.00 xMXN\nCharge #1\nCard 1 · Tienda Doña Mary\n−45.00 xMXN\nWhat's real here\nCharges, refunds, limit, freeze\nMercadoCard on Tempo; every charge needs the holder's signed tap for its exact amount and shop\nReal\nCard network and number\nDemo virtual card: not a Visa/Mastercard, works only at Mercado demo merchants\nSimulated\nMoney\nTestnet xMXN, no real value; not redeemable for pesos\nTestnet\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Card",
+        "Tienda Dona Mary · CDMX (demo merchant)",
+        "Card activity",
+        "What's real here"
+      ]
+    },
+    {
+      "route": "/invest",
+      "width": 390,
+      "url": "http://localhost:3100/invest",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0xD5eB…136D\nMercado Invest\n\nThree real ways to save on Tempo: lend pesos to the driver-advance pool, earn on dollars with sOUSD, or buy a demo tokenized T-bill. Returns are variable or demo-sourced, never guaranteed.\nDemo yield sources on testnet\ntTBILL: not a security\n\nDemo account · Saver · 0xD5eB…136D\nSaved in pesos (all lenders)\n10,030 xMXN\nCredit pool lender claims\nsOUSD demo APR\n5.00%\nAdmin-set, funded from a demo reserve\ntTBILL price\n$100.00\nAdmin price feed (demo)\n\nMercado Invest\n\nHaz crecer tu dinero\n\nGrow your money · testnet demo\n\nAhorro en pesos\nPeso savings · funds driver advances\n0.00 xMXN\nRendimiento variable: comisiones reales de choferes\nAhorro en dólares\nDollar savings · sOUSD\n0.00 OUSD\nAPR demo 5.00% · fondeado por admin\nT-bills (CETES-style)\nDemo tokenized T-bill · tTBILL\n0.0000 tTBILL\nPrecio $100.00 · feed admin\n\nActividad · Activity\n\nLeyendo la cadena…\n\nPortfolio\n\nYour positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades.\n\nAhorro en pesos · peso savings\n\nBalance\nYour share of the pool: principal plus realized fees\n0.00 xMXN\nEarned since deposit\nSource: fees drivers actually paid on repaid advances. Variable, not guaranteed.\n…\nWithdrawable now\nOnly idle pool cash; lent funds return as drivers repay\n10,030.00 xMXN\n\nAhorro en dólares · sOUSD\n\nValue\n0.00 sOUSD shares\n0.00 OUSD\nEarned since deposit\nSource: admin-funded demo yield reserve (1,000 OUSD left), APR 5.00%\n…\n\nT-bills · tTBILL\n\nHolding\nWorth 0.00 OUSD at the feed price\n0.0000 tTBILL\nGain / loss vs cost\nIncludes the desk's spread. Demo admin price feed, not a security.\n…\nUse as collateral\nMint xMXN against tTBILL →\nInvest Desk\n\nWhere T-bills are bought and sold: finite inventory, a small spread around the admin price feed, per-trade cap.\n\nInventory\n2,000.00 tTBILL · 20,000 OUSD\nSpread\n0.25%\nMax per trade\n25,000 USD\nStatus\nOpen\nActivity\n\nYour deposits, withdrawals and trades, read from the chain.\n\nReading the chain…\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Invest",
+        "Haz crecer tu dinero",
+        "Haz crecer tu dinero",
+        "Portfolio",
+        "Invest Desk",
+        "Activity"
+      ]
+    },
+    {
+      "route": "/credito",
+      "width": 390,
+      "url": "http://localhost:3100/credito?tab=driver",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,030 xMXN\nIdle pool cash\nAdvances out\n0 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n30.00 xMXN\nFrom repaid advances\nDriver app\nAdvances on gig income\nBack office\nLoan book · lenders · API\n\nObtén un adelanto de lo que ya ganaste\n\nGet an advance on what you've already earned. Connect the app you drive or deliver with.\n\nContinuar con Uber\nViajes\nContinuar con DiDi\nViajes\nContinuar con Rappi\nEntregas\n\nDemo connection: simulated consent, not affiliated with Uber, DiDi or Rappi. We never ask for your password.\n\nWhat just happened\n\nEach step of the advance, and what is real.\n\nConnected a work platform\n\nSimulated consent; nothing is read from a real account\n\nDemo\n\nLoad demo earnings\n\nSynthetic fixtures\n\nDemo\n\nScore the earnings\n\nIllustrative rule, not a credit model\n\nSigned an eligibility attestation\n\nBound to this wallet, this pool and this chain\n\nThe pool behind it\n\nAdvances come from lenders' xMXN in the credit pool, never from the mint vault.\n\nAvailable to lend\n10,030 xMXN\nLent out\n0 xMXN\nYour debt\n0x871a…cC63\n0.00 xMXN\nFees paid to lenders\nRealized only when advances are repaid\n30.00 xMXN\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Crédito",
+        "What just happened",
+        "The pool behind it"
+      ]
+    },
+    {
+      "route": "/remesas?screen=enviar",
+      "width": 390,
+      "url": "http://localhost:3100/remesas?screen=enviar",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0xE37B…8C9F\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0xE37B…8C9F\nUSD/MXN\n18.37\nadmin-relayed from Coinbase · on-chain 02:40 UTC\nExchange backing\n298%\nOUSD reserve vs xMXN issued\nFamilia (MX) balance\n4,066\nxMXN in 0x2D94…9700\n\nEnviar a México\n\nSend money home\n\nEnvías · You send\n\n$0\n\nUSD (testnet OUSD) · saldo $1,250.00\n\nMamá recibe · receives about\n\n0.00 MXN\n\nCotización en vivo · live quote\n\nM\n\nMamá · Guadalajara\n\nFamilia (MX), demo wallet · 0x2D94…9700\n\nNota · Note (on-chain, public)\n0/32\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nEnviar $0 · Send\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0xE37B…8C9F\n\nMercado exchange (vAMM)\n\nmint\n\nOUSD into the reserve, xMXN minted\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed from Coinbase · on-chain 02:40 UTC\n—\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nSize impact\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard\nInvest",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ]
+    }
+  ]
+}

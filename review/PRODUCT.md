@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated2026-10-14 through02:35 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
+Updated2026-10-14 through02:46 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
 
 **A parallel financial system for emerging markets, built on Tempo.** One synthetic local currency connects four jobs: institutions **Create** money against collateral, senders **Move** it across an on-chain corridor, gig workers access **Lend**, and people or agents **Spend** through MPP.
 
@@ -18,9 +18,11 @@ Money-flow diagrams must distinguish credit repayment (returns tokens to lenders
 
 ## Current evidence boundary
 
-The working default remains **v1 on Moderato**: OUSD CDPs, a separately funded SwapDesk, the unsecured advance pool, and actual xMXN settlement through MPP with simulated bill fulfillment. The console screens are live; the latest review verifies navigation, offer-to-draw navigation, quote invalidation, keyboard/dialog behavior and mobile disclosures without broadcasting transactions.
+**V2 is live in the default app on Moderato** following lead's02:37 flip and QA's02:41 post-flip HTTP/MPP checks. Independent review verifies the shared gate, core contract runtimes/accounting, API binding, sponsor policy and rebuilt screen rendering. Original v1 journeys remain historical evidence for that version.
 
-**V2 is deployed alongside v1, but the default app has not switched.** Independent review atblock39491154 confirms35 successful deployment/seed receipts,9 reviewed runtime matches, correct issuer/pool token bindings, funded reserve/yield and aggregate supply accounting. Local solvency tests pass. Multi-collateral sOUSD/tTBILL and mint/burn exchange are therefore deployed testnet contracts; the complete v2 browser/MPP journey and atomic switch remain pending. No demo token is a real staking product, Treasury claim, equity claim or source of real yield. Distinguish deployment from the configured app and completed journey.
+Card's calendar-day replacement passes25 local tests and deployed runtime/digest/receipt checks. InvestDesk's replacement passes17 tests, deployed inventory/token/feed bindings and rejection of unbought sales. Its buyback rights stay with the purchasing address; owning transferred/faucet tTBILL alone does not grant desk redemption. Those rights do not follow seized Mint collateral. UI return attribution and personal withdrawability need the R-044/R-045 fixes.
+
+The new simulated card on-ramp has **not passed acceptance**: R-046/R-047 identify duplicate-delivery/idempotency and budget defects. Remesas send-recovery persistence is being rechecked. Test assets/yield/fulfillment are still explicitly simulated; live transaction plumbing is not production financial readiness.
 
 ## People and their jobs (v0.2)
 
@@ -62,7 +64,7 @@ The aha is the connection between creation, circulation, credit and programmable
    It is a synthetic MXN-denominated testnet token. Institutions create collateralized debt; the exchange creates reserve liabilities; drivers borrow existing tokens. There is no bank cashout, SPEI integration or guaranteed peso peg. OUSD has no real value and is valued at an assumed $1 for this demo.
 
 3. **What is real, and what is still mocked?**
-   Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the rebuilt six-product UI and default-v2 switch are separate acceptance gates. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
+   Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the default-v2 switch is complete, while each new product/flow keeps its own acceptance gate. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
 
 4. **Who controls the exchange rate, and can they liquidate users?**
    An admin relays Coinbase data into the oracle; this is not decentralized. Coinbase publishes no source timestamp, so we show that uncertainty alongside fetch and block time. The keeper rejects abnormal jumps and stale dated fallback data. Admin stress/override authority remains a trust risk; a real market observation does not remove that authority.
@@ -74,12 +76,12 @@ The aha is the connection between creation, circulation, credit and programmable
    sOUSD accrual comes from an owner-funded demo reserve, not real investment income. Reviewed accounting ignores direct donations and does not credit unfunded past yield. CDP collateral, exchange OUSD reserves and lender xMXN are separately accounted. Credit-pool repayment returns lender funds; it does not burn xMXN. Lending carries default risk and no guaranteed APY.
 
 7. **Can a merchant charge me without approval, or a retry charge twice?**
-   Card is newly assigned, not yet accepted: the required design binds each holder tap to the merchant, amount, card, nonce, expiry, chain and deployed contract. Allowance alone must not authorize a charge, and refunds must not revive used signatures. We will test that boundary before claiming it works. Existing MPP bill settlement uses a stable order key, verified payment and unpaid recovery; a transfer to the merchant alone is only an inflow, not proof of MPP attribution.
+   Card local and deployed checks verify that each holder tap to the merchant, amount, card, nonce, expiry, chain and deployed contract. Allowance alone must not authorize a charge, and refunds must not revive used signatures. The bounded tests cover replay, merchant substitution and capped refunds; they are not a comprehensive security audit. Existing MPP bill settlement uses a stable order key, verified payment and unpaid recovery; a transfer to the merchant alone is only an inflow, not proof of MPP attribution.
 
 8. **Can this lend to real drivers and pay real bills tomorrow?**
    No. The score is illustrative, income is synthetic, loans are unsecured and repaid manually, and fulfillment is SIMULATED. Production needs real integrations, independently reviewed contracts and operations, durable payment recovery, credible liquidity/oracle controls and appropriate arrangements for customers and assets. The demo proves a connected transaction path, not repayment quality or production readiness.
 
-Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card local auth tests23/23 pass; deployed runtime/receipt check is underway. Invest is newly assigned and queued in INVEST-REVIEW.md; no trade or return claim is accepted yet. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
+Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card calendar25/25 and Invest17/17 local checks plus both replacement deployed runtimes pass. Invest UI return labels and the new on-ramp remain open; see INVEST-REVIEW.md and FINDINGS.md. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
 
 ---
 

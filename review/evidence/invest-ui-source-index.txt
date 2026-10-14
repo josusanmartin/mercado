@@ -1,0 +1,36 @@
+apps/web/components/invest/use-invest.ts:3://   Ahorro en pesos   → CreditPool supply / withdrawAvailable (yield = realized driver fees, variable)
+apps/web/components/invest/use-invest.ts:4://   Ahorro en dólares → sOUSD (ERC-4626 over OUSD; accrual from an admin-funded demo yield reserve)
+apps/web/components/invest/use-invest.ts:5://   T-bills           → InvestDesk buy/sell of the demo tTBILL at its admin price feed ± spread
+apps/web/components/invest/use-invest.ts:6:// Positions' cost basis and accrued yield come from the account's own on-chain events.
+apps/web/components/invest/use-invest.ts:22:  priceFeedAbi,
+apps/web/components/invest/use-invest.ts:49:  tTBILLFeed: tTBILL?.feed,
+apps/web/components/invest/use-invest.ts:84:            functionName: "yieldReserve",
+apps/web/components/invest/use-invest.ts:103:            abi: priceFeedAbi,
+apps/web/components/invest/use-invest.ts:141:        yieldReserve: next<bigint>(),
+apps/web/components/invest/use-invest.ts:153:            priceAt: peek?.[1],
+apps/web/components/invest/use-invest.ts:154:            priceValid: peek?.[2],
+apps/web/components/invest/use-invest.ts:202:const bought = parseAbiItem(
+apps/web/components/invest/use-invest.ts:273:                event: bought,
+apps/web/components/invest/use-invest.ts:369:        /** Net amounts put in (deposits − withdrawals), for "earned since deposit". */
+apps/web/components/invest/phone-app.tsx:51:      rate: "Rendimiento variable: comisiones reales de choferes",
+apps/web/components/invest/phone-app.tsx:59:      rate: `APR demo ${pct(p.dollars?.aprBps)} · fondeado por admin`,
+apps/web/components/invest/phone-app.tsx:67:      rate: `Precio $${p.tbill?.px8 === undefined ? "…" : (Number(p.tbill.px8) / 1e8).toFixed(2)} · feed admin`,
+apps/web/components/invest/phone-app.tsx:94:              <span className="block text-[13px] text-[#5B6270]">{c.rate}</span>
+apps/web/components/invest/phone-app.tsx:179:      note: `sOUSD acumula rendimiento de una reserva demo fondeada por el administrador (APR ${pct(p.dollars?.aprBps)}). Demo yield source, admin-funded on testnet.`,
+apps/web/components/invest/phone-app.tsx:192:      note: "Demo tokenized T-bill: not a security, admin price feed. Se compra y vende contra el inventario finito del Invest Desk, con un spread pequeño. También sirve como colateral en Mercado Mint.",
+apps/web/components/invest/invest-screen.tsx:57:  const earnedPesos =
+apps/web/components/invest/invest-screen.tsx:61:  const earnedDol =
+apps/web/components/invest/invest-screen.tsx:77:          Returns are variable or demo-sourced, never guaranteed.
+apps/web/components/invest/invest-screen.tsx:79:            <Badge variant="mock">Demo yield sources on testnet</Badge>
+apps/web/components/invest/invest-screen.tsx:91:          label: "sOUSD demo APR",
+apps/web/components/invest/invest-screen.tsx:96:          label: "tTBILL price",
+apps/web/components/invest/invest-screen.tsx:102:            p.tbill?.priceValid === false
+apps/web/components/invest/invest-screen.tsx:104:              : "Admin price feed (demo)",
+apps/web/components/invest/invest-screen.tsx:123:            description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
+apps/web/components/invest/invest-screen.tsx:136:                value={signed(earnedPesos, "xMXN")}
+apps/web/components/invest/invest-screen.tsx:137:                sub="Source: fees drivers actually paid on repaid advances. Variable, not guaranteed."
+apps/web/components/invest/invest-screen.tsx:156:                value={signed(earnedDol, "OUSD")}
+apps/web/components/invest/invest-screen.tsx:157:                sub={`Source: admin-funded demo yield reserve (${v(p.dollars?.yieldReserve, "OUSD", 0)} left), APR ${pct(p.dollars?.aprBps)}`}
+apps/web/components/invest/invest-screen.tsx:167:                sub={`Worth ${v(p.tbill?.value, "OUSD")} at the feed price`}
+apps/web/components/invest/invest-screen.tsx:172:                sub="Includes the desk's spread. Demo admin price feed, not a security."
+apps/web/components/invest/invest-screen.tsx:190:            description="Where T-bills are bought and sold: finite inventory, a small spread around the admin price feed, per-trade cap."

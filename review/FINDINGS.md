@@ -2,7 +2,7 @@
 
 Last reviewed commit: `f81cadb` plus v2 switch/UI WIP through02:04 UTC; deployment snapshot atblock39491154. Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
 
-Current status: SIX-PRODUCT ECOSYSTEM: Card auth review active; Invest pricing/inventory/copy queued (02:35). Read review/CARD-REVIEW.md first for the new assignment. Card source/local auth tests23/23 pass; deployed check underway. Invest source pending. No full Card/Invest journey acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
+Current status: SIX-PRODUCT ECOSYSTEM: Card auth review active; Invest pricing/inventory/copy queued (02:35). Read review/CARD-REVIEW.md first for the new assignment. Card calendar25 tests and replacement runtime pass; Invest17 tests and replacement runtime pass. On-ramp R-046/R-047 block that new route acceptance; Invest UI R-044/R-045 need correction. No full new on-ramp acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
 
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -314,7 +314,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-041 — P1 honesty/policy — contracts / web — Card daily labels describe a refill bucket as actual daily spend
 
-- Status: LOCALLY REPRODUCED02:34; contracts/lead notified. Charge authorization remains intact.
+- Status: LOCAL/DEPLOYED FIX VERIFIED02:42. Lead chose calendar day fixedUTC−6;25 local tests pass and new0x052081… runtime matches atblock39495229 (`card-live-1791945663477.json`). Same-day refund restores spend capacity, old-day refund does not; nonce stays consumed.
 - Location: `packages/contracts/src/v2/MercadoCard.sol:getCard`,`:MAX_DAILY_LIMIT`, `:_spentNow`; `apps/web/lib/contracts/card.ts:CardView`.
 - Scenario: card dailyLimit1000 charges1000, then500 twelve hours later. totalSpent=1500 while spentToday=1000; remaining capacity is not actual remaining daily budget. Owner tests intentionally implement leaky refill, but UI/source names1000 perday / spentToday imply a calendar or rolling-day spend total.
 - Evidence: `ReviewCard.test_reviewBucketIsNotStrictRollingDailySpend`, passed in `card-review-tests2.log`.
@@ -322,7 +322,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-042 — P1 demo liquidity — contracts — Free tTBILL faucet drains InvestDesk OUSD inventory
 
-- Status: LOCALLY REPRODUCED02:38; contracts/lead notified. Testnet only; no real-value theft or live exploit claimed.
+- Status: LOCAL/DEPLOYED FIX VERIFIED02:43: desk tracks bought[wallet] and limits buyback accordingly.17 local tests pass; replacement0xDacE8d… matches runtime, inventory funded, live unbought sell eth_call rejects ExceedsBoughtBalance atblock39495410 (`invest-live-1791945774666.json`). Nontransferable buyback eligibility is a material UI/liquidation-liquidity limitation sent to owners.
 - Location: `packages/contracts/src/v2/DemoRWA.sol:faucet`; `packages/contracts/src/v2/InvestDesk.sol:sell`.
 - Scenario: a fresh wallet with zero OUSD calls unrestricted faucet(100e6), approves the desk, sells100 tTBILL at the demo$100 price and25bps spread, and receives9975 OUSD from the10000 seeded reserve. The mint cap is per call and cannot limit repeated/Sybil draining. Desk does not mint assets itself, but accepts free-minted assets as consideration.
 - Evidence: actual-contract local `ReviewInvest.test_reviewPublicFaucetCanEmptyFundedInventory`, passed in invest-review-tests.log. No network broadcasts.
@@ -330,11 +330,41 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-043 — P2 — contracts / api — Paused InvestDesk still returns trade-ready quotes
 
-- Status: LOCALLY REPRODUCED02:38; owners notified.
+- Status: LOCAL/DEPLOYED FIX VERIFIED02:43: quoteBuy/quoteSell call pause guard, independent quote/trade rejection passes in invest-fixes-recheck.log; replacement runtime matches.
 - Location: `packages/contracts/src/v2/InvestDesk.sol:quoteBuy`,`:quoteSell`.
 - Scenario: desk.pause() then quoteBuy(100 OUSD) returns positive tTBILL output, while buy reverts EnforcedPause. Source comment says quotes revert as the trade would; view guard omits desk pause (feed pause is correctly enforced).
 - Evidence: ReviewInvest.test_reviewPausedDeskStillQuotesExecutableLookingTrade in invest-review-tests.log; failed trade leaves input funds unchanged.
 - Fix: pause guard on quote entrypoints or an explicit paused-state UI gate. Never present a currently paused trade as executable.
+
+### R-044 — P1 — api — Invest personal withdrawable value shows whole-pool cash
+
+- Status: SOURCE VERIFIED02:44; owner notified.
+- Location: `apps/web/components/invest/invest-screen.tsx:139`.
+- Scenario: Portfolio displays p.pesos.poolCash as Withdrawable now for a wallet with no lender claim. Whole-pool liquidity is not that wallet's withdrawable amount. The phone's actual maxOut already computes min(user claim,pool cash), so transaction guard and displayed claim disagree.
+- Fix: use the same minimum in the portfolio; label aggregate pool cash separately. Unknown either read means unavailable, not zero/default.
+
+### R-045 — P1 — api — Invest attributes transferred assets or collateral movement to earned return
+
+- Status: SOURCE VERIFIED02:44; owner notified.
+- Location: `apps/web/components/invest/invest-screen.tsx:61`,`:65`; `use-invest.ts:useInvestHistory`.
+- Scenario: receiving100 sOUSD by Transfer with no ERC4626 Deposit event creates100 OUSD Earned since deposit. Moving purchased sOUSD/tTBILL into Mint makes wallet value fall while deposit/trade basis remains, producing a false loss. Faucet tTBILL likewise looks like investment profit. History scans deposit/withdraw/buy/sell events but not transfers or posted collateral.
+- Fix: track basis and custody movements, or withhold return when scope/basis is incomplete. Current wallet mark is not an investment yield calculation. Keep actual share value/holdings visible with honest source labels.
+
+### R-046 — P0 new-route acceptance — web — On-ramp idempotency is lost on restart or uncertain settlement
+
+- Status: LOCALLY REPRODUCED02:46; owner/lead notified, on-ramp acceptance held.
+- Location: `apps/web/app/api/onramp/route.ts:27`,`:36`,`:56`,`:72` (initial82-line implementation).
+- Scenario: successful writeContract then receipt timeout returns502, deletes inflight and releases quota; same key retries a new transfer. Fresh process also loses the done Map and re-sends a completed key. Same key with different address/amount returns the original success rather than409. This violates lead's durable one-delivery/key requirement.
+- Evidence: actual route under local fake wallet/receipts, `onramp-1791945985077.json`: timeout statuses502/200 with2 writes; restart200/200 with2 writes; conflict200 instead of409. No real key, network or broadcast.
+- Fix: durable payload-bound intent, atomic per-key claim/locking, persist the signed transaction/hash before broadcasting, reconcile uncertain settlement by hash without a second transfer, and replay only identical intent. Preserve failure/unknown outcomes across process restart.
+
+### R-047 — P1 — web — On-ramp quota rollback clobbers concurrent spend and zero-cent top-ups pay gas
+
+- Status: LOCALLY REPRODUCED02:46; owner/lead notified.
+- Location: `apps/web/app/api/onramp/route.ts:43`,`:53`,`:75`.
+- Scenario: A reserves500 then waits; B reserves and completes500; A fails and sets spend back to its captured old value0, erasing B. C and D then each complete500, totaling1500 despite1000 daily cap. Positive0.001 input rounds to0 and executes a zero-value transfer without consuming any daily budget.
+- Evidence: local route probe `onramp-1791945985077.json`: race responses502/200/200/200; fractional-cent200 with amount0. No live abuse attempted.
+- Fix: integer-cent minimum>=1 before reservation; durable reservation identities/atomic increments and releases, retaining uncertain broadcasts; global delivery/gas budget for the public test-card-funded float. A cap per arbitrary wallet is not a global spend cap.
 
 ## Pass 11 — ecosystem IA and mock/data audit (from02:07 UTC)
 
@@ -476,3 +506,10 @@ New Brand v4 browser snapshot ecosystem-1791945070347.json: Global now200; all18
 - Sponsor actual-source probe expanded for Card user charge/approval versus owner allowlist:18 boundaries pass,7 protocol-gate cases pass (sponsor-card-recheck-summary.txt). R-016 unsigned quota/ingress residual unchanged.
 - InvestDesk source landed;14 tests pass (10 owner+4 independent),256 round-trip fuzz cases. Fixed-price round trips lose only spread/rounding and cannot profit; xMXN buy minOut failure rolls back the entire AMM redemption and inventory transfer. New concrete R-042 faucet/inventory and R-043 paused-quote findings posted. Deployed InvestDesk/complete UI not yet independently accepted.
 - Latest mobile brief now permits real Uber/DiDi/Rappi logos with source attribution, simulated Mercado consent and no password entry. This supersedes the earlier no-logo instruction; no affiliation claim is authorized.
+
+## Pass14 — deployed extensions, Invest UI and new on-ramp (02:41–02:46)
+
+- Card calendar replacement runtime and3 manifest receipts pass; Invest replacement runtime/token/feed/AMM bindings/inventory and5 receipts pass. Both preserve local source acceptance boundaries. Invest no-purchase sell simulation returns the exact expected ExceedsBoughtBalance. Sponsor source now passes21 user/admin/approval boundaries plus7 protocol gate cases.
+- Post-flip extensions snapshot extensions-1791945841528.json: Home/Card/Invest/Crédito/Remesas-send all200 at1440 and390, no page errors, all exactviewport width. R-033 send overflow fixed. Typecheck-six-products.txt is empty (tsc exit0 at this snapshot). No button-driven transfer by review.
+- New Invest UI financial-copy issues R-044/R-045 posted. New simulated on-ramp assignment from lead received02:44; actual route inspected, R-046/P0 and R-047/P1 locally reproduced with fake wallet/receipt adapters. Reviewer probe initial syntax error corrected before execution; no product error or real transaction involved.
+- Remesas R-039 owner added persisted state plus fresh-send guards; source looks improved, independent updated-hook probe still needed. Prior failed-recovery reproduction remains preserved.

@@ -1,0 +1,118 @@
+{
+  "at": "2026-10-14T02:42:51.702Z",
+  "block": "39495410",
+  "desk": "0xDacE8de24876Dc52930B3f986C4c9427d124EfEd",
+  "checks": [
+    {
+      "name": "reviewed-runtime-match",
+      "pass": true
+    },
+    {
+      "name": "active-v2-token-and-contract-bindings",
+      "pass": true
+    },
+    {
+      "name": "tracked-inventory-funded",
+      "pass": true
+    },
+    {
+      "name": "desk-live-with-bounded-spread",
+      "pass": true
+    },
+    {
+      "name": "live-quote-positive",
+      "pass": true
+    },
+    {
+      "name": "unbought-sale-rejected",
+      "pass": true
+    },
+    {
+      "name": "manifest-invest-receipts-success",
+      "pass": true
+    }
+  ],
+  "state": {
+    "ousd": "0x20c0000000000000000000006a37DA5C996874BE",
+    "tbill": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+    "xmxn": "0x20C0000000000000000000004fE3A8219136ca54",
+    "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+    "amm": "0x9ecD19ebd398E73C2E1C196b8f7845CDD9872b7F",
+    "reserves": [
+      "20000000000",
+      "2000000000"
+    ],
+    "balances": [
+      "20000000000",
+      "2000000000"
+    ],
+    "paused": false,
+    "spread": "25",
+    "max": "25000000000"
+  },
+  "quote": [
+    "997500",
+    "2500",
+    "10000000000"
+  ],
+  "rejectedSale": {
+    "abiItem": {
+      "type": "error",
+      "name": "ExceedsBoughtBalance",
+      "inputs": [
+        {
+          "name": "bought",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "requested",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    "args": [
+      "0",
+      "1000000"
+    ],
+    "errorName": "ExceedsBoughtBalance"
+  },
+  "receipts": [
+    {
+      "name": "investStage.deployInvestDesk",
+      "hash": "0x0d6a9dbef132b3b3bfa6df9beb1dc9102aec36371ee4515b8bedcfc6004e3e03",
+      "status": "success",
+      "to": null,
+      "contractAddress": "0xdace8de24876dc52930b3f986c4c9427d124efed"
+    },
+    {
+      "name": "investStage.mint",
+      "hash": "0x7724ae88641e7ecfad2ce57500c2ca8b5f7fb42413dcaf7d078ed5016697d3c3",
+      "status": "success",
+      "to": "0xd2a09becebd7bd9e23b0fc6fe1e89616d413b33b",
+      "contractAddress": null
+    },
+    {
+      "name": "investStage.approve",
+      "hash": "0xce2cd1584a184c283f539e183956bd14b6313fe77616e00fba59966a17e58346",
+      "status": "success",
+      "to": "0xd2a09becebd7bd9e23b0fc6fe1e89616d413b33b",
+      "contractAddress": null
+    },
+    {
+      "name": "investStage.approve#2",
+      "hash": "0xf2a77478bf7c574d1e6cd750f816550626de0f8c40f2e25a04afed65784b8136",
+      "status": "success",
+      "to": "0x20c0000000000000000000006a37da5c996874be",
+      "contractAddress": null
+    },
+    {
+      "name": "investStage.seed",
+      "hash": "0x2b4f37697970416b61fe0a076ba7e3ab3d56f98948cff2bdeae527e50a7a2360",
+      "status": "success",
+      "to": "0xdace8de24876dc52930b3f986c4c9427d124efed",
+      "contractAddress": null
+    }
+  ]
+}
