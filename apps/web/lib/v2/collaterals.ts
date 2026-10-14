@@ -1,12 +1,12 @@
 "use client";
 // Collateral catalogue for Create (SPEC v0.2: institutions mint against yield-bearing collateral).
 // v1 (default): one live collateral, testnet OUSD in CollateralVault; the v2 options are listed as
-// "coming". v2 (NEXT_PUBLIC_PROTOCOL=v2 and deployed): read from MultiCollateralVault on chain,
+// "coming". v2 (ACTIVE_PROTOCOL from packages/shared/src/protocol.ts): read from MultiCollateralVault,
 // so risk params and prices are never hard-coded here.
 import type { Address } from "viem";
 import { ADDR } from "@/lib/contracts";
 import { V1_LINES, type Lines } from "@/lib/vault-math";
-import { USE_V2 } from "./addresses";
+import { USE_V2, V2 } from "./addresses";
 import { useCollateralsV2, type CollateralV2 } from "./reads";
 
 export type Collateral = {
@@ -43,8 +43,11 @@ const V1_LIST: Collateral[] = [
 ];
 
 function fromChain(c: CollateralV2): Collateral {
-  const symbol = c.symbol ?? "…";
-  const known = KNOWN[symbol] ?? { name: c.name ?? symbol, yieldSource: "Unknown", demo: true, label: `${symbol} (testnet)` };
+  // Labels come from the deployment manifest (owned by contracts); yield wording from KNOWN.
+  const manifest = V2.collaterals.find((m) => m.token.toLowerCase() === c.token.toLowerCase());
+  const symbol = c.symbol ?? manifest?.symbol ?? "…";
+  const base = KNOWN[symbol] ?? { name: c.name ?? symbol, yieldSource: "Not specified", demo: true, label: `${symbol} (testnet)` };
+  const known = manifest ? { ...base, demo: manifest.demo, label: manifest.label } : base;
   const p = c.params;
   return {
     id: c.token,
