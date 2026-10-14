@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-14T01:00:53.867Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J7"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J7": {
+      "status": "pass",
+      "txs": {
+        "liquidation 0x1eAA1d": "https://explore.testnet.tempo.xyz/tx/0x85d0e1c9db14b55490c2525ecb3ca0170ccbc7d8efe33baad509e94073e4f67e"
+      },
+      "notes": []
+    }
+  }
+}

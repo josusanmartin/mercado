@@ -123,6 +123,10 @@ const oracleAbi = parseAbi([
   'function peek() view returns (uint256 mxnPerUsd, uint256 updatedAt, bool valid)',
   'function paused() view returns (bool)',
   'function setPrice(uint256)',
+  'error InvalidPrice()',
+  'error PriceOutOfBand(uint256 price, uint256 minPrice, uint256 maxPrice)',
+  'error PriceJumpTooLarge(uint256 previous, uint256 next, uint256 maxJumpBps)',
+  'error OwnableUnauthorizedAccount(address account)',
 ])
 const vaultAbi = parseAbi([
   'function depositCollateral(uint256)',
@@ -331,6 +335,15 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const mock = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'isMock' })
       ok(`oracle: ${fmt(px, 8)} MXN/USD, updated ${Math.round(Date.now() / 1000 - Number(at))}s ago${mock ? ' (MOCK admin feed, labeled)' : ''}`)
       note(`mxnPerUsd=${px} isMock=${mock}`)
+
+      // oracle sanity rails, simulated as the real owner (no state change): zero, out-of-band and outlier
+      // jumps are rejected, and only the owner can push prices
+      const owner = account('DEPLOYER')
+      const o = { address: d.oracle, abi: oracleAbi, functionName: 'setPrice' } as const
+      await expectRevert('oracle setPrice(0)', { ...o, args: [0n], account: owner }, ['InvalidPrice'])
+      await expectRevert('oracle setPrice(60 MXN/USD), outside the 5–50 band', { ...o, args: [60n * 10n ** 8n], account: owner }, ['PriceOutOfBand'])
+      await expectRevert('oracle setPrice(+30% outlier jump)', { ...o, args: [(px * 13n) / 10n], account: owner }, ['PriceJumpTooLarge'])
+      await expectRevert('oracle setPrice by a non-owner', { ...o, args: [px], account: account('SENDER') }, ['OwnableUnauthorizedAccount'])
     },
   },
   {

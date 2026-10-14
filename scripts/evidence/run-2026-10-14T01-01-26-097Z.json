@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-14T01:01:26.096Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J0"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    }
+  }
+}
