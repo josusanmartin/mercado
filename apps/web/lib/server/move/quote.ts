@@ -2,8 +2,8 @@
 // Prices from the v2 vault-integrated vAMM when v2 is the active protocol (lib/server/protocol.ts), otherwise
 // from the v1 capped SwapDesk at the (mock admin) oracle price. Quotes are indicative: on-chain execution is bound only by
 // the swap's own minOut. No comparison against real-world remittance pricing is made here.
-import { BaseError, ContractFunctionRevertedError, formatUnits, parseAbi, parseUnits, type Address } from "viem";
-import { TEMPO_MODERATO_CHAIN_ID, fxOracleAdapterAbi, swapDeskAbi } from "@mercado/shared";
+import { BaseError, ContractFunctionRevertedError, formatUnits, parseUnits, type Address } from "viem";
+import { TEMPO_MODERATO_CHAIN_ID, fxOracleAdapterAbi, moveAmmAbi, swapDeskAbi } from "@mercado/shared";
 import type { MoveQuoteResponse, MoveSide } from "@mercado/shared";
 import { publicClient } from "../chain";
 import { getDeployments } from "../deployments";
@@ -13,10 +13,8 @@ export const QUOTE_TTL_SECONDS = 30;
 const SLIPPAGE_BPS = 50n;
 const BPS = 10_000;
 
-/** Proposed v2 view (see #mercado, coordinated with contracts). */
-const vammAbi = parseAbi([
-  "function quote(bool usdToMxn, uint256 amountIn) view returns (uint256 amountOut, uint256 fee, uint256 midPrice, uint256 impactBps)",
-]);
+/** v2 MoveAMM ABI (quote view + its custom errors), plus the oracle's errors that can bubble up through it. */
+const vammAbi = [...moveAmmAbi, ...fxOracleAdapterAbi.filter((x) => x.type === "error")] as const;
 
 export class MoveQuoteError extends Error {
   constructor(
@@ -37,6 +35,13 @@ const REASONS: Record<string, string> = {
   PriceOutOfBand: "The FX price is outside the sanity band.",
   ZeroAmount: "Amount is too small.",
   EnforcedPause: "The venue is paused for a moment (FX stress demo). Try again shortly.",
+  // v2 MoveAMM solvency and rate limits (crew/V2-DESIGN.md)
+  InsufficientReserve: "The exchange's OUSD reserve can't cover that redemption right now.",
+  CoverageTooLow: "That would push the exchange's reserve coverage below its safety floor, so it's refused.",
+  ExceedsLiability: "That's more xMXN than the exchange itself issued; CDP-minted xMXN can't redeem against its buffer.",
+  LiabilityCeiling: "That would exceed the exchange's xMXN issuance ceiling.",
+  RedeemCapExceeded: "That's above the exchange's current redemption rate limit. Try a smaller amount or later.",
+  Slippage: "Price moved beyond your limit.",
 };
 
 function revertName(err: unknown): string | undefined {
