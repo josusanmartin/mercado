@@ -5,13 +5,19 @@ import { Mppx, tempo } from "mppx/client";
 import { Receipt } from "mppx";
 import { createClient, http, type Account, type Client } from "viem";
 import { TEMPO_MODERATO_CHAIN_ID, tempoModerato } from "@mercado/shared";
-import type { BillOrder, BillPayResponse, BillQuoteRequest, BillQuoteResponse } from "@mercado/shared";
+import type {
+  BillOrder,
+  BillPayResponse,
+  BillQuoteRequest,
+  BillQuoteResponse,
+} from "@mercado/shared";
 
-export type PayStage = "requesting" | "challenge" | "signing" | "verifying" | "done";
+export type PayStage =
+  "requesting" | "challenge" | "signing" | "verifying" | "done";
 
 export interface PayBillParams {
   quoteId: string;
-  /** Reuse the same key when retrying: the server returns the same order and never charges twice. */
+  /** Reuse the same key when retrying: the server returns the same order instead of starting a new payment. */
   idempotencyKey?: string;
   /** "" in the browser (same origin); e.g. "http://localhost:3100" from scripts. */
   baseUrl?: string;
@@ -43,14 +49,22 @@ export class BillPaymentError extends Error {
 }
 
 /** POST /api/bills/quote */
-export async function quoteBill(req: BillQuoteRequest, baseUrl = ""): Promise<BillQuoteResponse> {
+export async function quoteBill(
+  req: BillQuoteRequest,
+  baseUrl = "",
+): Promise<BillQuoteResponse> {
   const res = await fetch(`${baseUrl}/api/bills/quote`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
   const body = await res.json();
-  if (!res.ok) throw new BillPaymentError(body.error ?? "Quote failed", res.status, body.code);
+  if (!res.ok)
+    throw new BillPaymentError(
+      body.error ?? "Quote failed",
+      res.status,
+      body.code,
+    );
   return body;
 }
 
@@ -72,8 +86,16 @@ export function payBill(params: PayBillParams): Promise<PayBillResult> {
 }
 
 async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
-  const { quoteId, baseUrl = "", walletClient, account, onStage, mode } = params;
-  if (!walletClient && !account) throw new Error("payBill needs a walletClient or an account");
+  const {
+    quoteId,
+    baseUrl = "",
+    walletClient,
+    account,
+    onStage,
+    mode,
+  } = params;
+  if (!walletClient && !account)
+    throw new Error("payBill needs a walletClient or an account");
   const idempotencyKey = params.idempotencyKey ?? crypto.randomUUID();
 
   const mppx = Mppx.create({
@@ -84,8 +106,20 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
         ...(mode ? { mode } : {}),
         // Local accounts get a client on the shared chain, whose default fee token is a USD TIP-20:
         // xMXN can't pay Tempo fees (FeeTokenNotUsdError).
-        ...(account ? { account, getClient: () => createClient({ chain: tempoModerato, transport: http(), account }) } : {}),
-        ...(walletClient ? { getClient: () => walletClient, account: walletClient.account } : {}),
+        ...(account
+          ? {
+              account,
+              getClient: () =>
+                createClient({
+                  chain: tempoModerato,
+                  transport: http(),
+                  account,
+                }),
+            }
+          : {}),
+        ...(walletClient
+          ? { getClient: () => walletClient, account: walletClient.account }
+          : {}),
       }),
     ],
   });
@@ -111,8 +145,17 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
     body = { error: text };
   }
   if (!res.ok) {
-    const b = body as { error?: string; detail?: string; title?: string; code?: string };
-    throw new BillPaymentError(b.error ?? b.detail ?? b.title ?? `Payment failed (${res.status})`, res.status, b.code);
+    const b = body as {
+      error?: string;
+      detail?: string;
+      title?: string;
+      code?: string;
+    };
+    throw new BillPaymentError(
+      b.error ?? b.detail ?? b.title ?? `Payment failed (${res.status})`,
+      res.status,
+      b.code,
+    );
   }
   let receipt: PayBillResult["receipt"] = null;
   try {
@@ -125,9 +168,54 @@ async function payBillOnce(params: PayBillParams): Promise<PayBillResult> {
 }
 
 /** GET /api/bills/orders/:id (orderId or idempotencyKey). */
-export async function getBillOrder(id: string, baseUrl = ""): Promise<BillOrder> {
-  const res = await fetch(`${baseUrl}/api/bills/orders/${encodeURIComponent(id)}`, { cache: "no-store" });
+export async function getBillOrder(
+  id: string,
+  baseUrl = "",
+): Promise<BillOrder> {
+  const res = await fetch(
+    `${baseUrl}/api/bills/orders/${encodeURIComponent(id)}`,
+    { cache: "no-store" },
+  );
   const body = await res.json();
-  if (!res.ok) throw new BillPaymentError(body.error ?? "Order lookup failed", res.status, body.code);
+  if (!res.ok)
+    throw new BillPaymentError(
+      body.error ?? "Order lookup failed",
+      res.status,
+      body.code,
+    );
   return body;
+}
+
+export type SettlementCheck =
+  | { state: "settled"; order: BillPayResponse }
+  | { state: "unpaid" } // no payment found on-chain for this order's challenges; a 402 was issued
+  | { state: "pending"; message: string } // an attempt is still unresolved; check again shortly
+  | { state: "closed"; message: string }; // expired/closed without payment
+
+/**
+ * Re-checks an order by retrying POST /api/bills/pay with the SAME idempotency key and NO credential.
+ * The server first reconciles every challenge it issued for the order against the chain (so a wallet
+ * payment whose credential was lost is applied), and only then answers 402. Never pays anything.
+ */
+export async function checkBillSettlement(
+  quoteId: string,
+  idempotencyKey: string,
+  baseUrl = "",
+): Promise<SettlementCheck> {
+  const res = await fetch(`${baseUrl}/api/bills/pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quoteId, idempotencyKey }),
+  });
+  if (res.status === 402) return { state: "unpaid" };
+  const body = await res.json().catch(() => ({}));
+  if (res.ok) return { state: "settled", order: body as BillPayResponse };
+  if (body.code === "SETTLEMENT_PENDING")
+    return { state: "pending", message: body.error };
+  if (res.status === 410) return { state: "closed", message: body.error };
+  throw new BillPaymentError(
+    body.error ?? `Check failed (${res.status})`,
+    res.status,
+    body.code,
+  );
 }

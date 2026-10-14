@@ -3,13 +3,30 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
-import type { DriverDemoResponse, DriverProfileId, DriverScoreResponse } from "@mercado/shared";
+import type {
+  DriverDemoResponse,
+  DriverProfileId,
+  DriverScoreResponse,
+} from "@mercado/shared";
 
-export const PROFILES: { id: DriverProfileId; title: string; blurb: string }[] = [
-  { id: "steady", title: "Steady driver", blurb: "12 weeks, consistent full-time earnings" },
-  { id: "irregular", title: "Irregular driver", blurb: "10 weeks, part-time and variable" },
-  { id: "new-driver", title: "New driver", blurb: "Only 3 active weeks so far" },
-];
+export const PROFILES: { id: DriverProfileId; title: string; blurb: string }[] =
+  [
+    {
+      id: "steady",
+      title: "Steady driver",
+      blurb: "12 weeks, consistent full-time earnings",
+    },
+    {
+      id: "irregular",
+      title: "Irregular driver",
+      blurb: "10 weeks, part-time and variable",
+    },
+    {
+      id: "new-driver",
+      title: "New driver",
+      blurb: "Only 3 active weeks so far",
+    },
+  ];
 
 async function json<T>(res: Response): Promise<T> {
   const body = await res.json();
@@ -22,14 +39,23 @@ export function useDriverDemo(profile: DriverProfileId | undefined) {
     queryKey: ["driver-demo", profile],
     enabled: !!profile,
     staleTime: Infinity,
-    queryFn: () => fetch(`/api/driver/demo?profile=${profile}`).then((r) => json<DriverDemoResponse>(r)),
+    queryFn: () =>
+      fetch(`/api/driver/demo?profile=${profile}`).then((r) =>
+        json<DriverDemoResponse>(r),
+      ),
   });
 }
 
 /** Requests the score + signed attestation for (borrower, profile). Re-request when it expires. */
 export function useEligibility() {
   return useMutation({
-    mutationFn: ({ borrower, profile }: { borrower: Address; profile: DriverProfileId }) =>
+    mutationFn: ({
+      borrower,
+      profile,
+    }: {
+      borrower: Address;
+      profile: DriverProfileId;
+    }) =>
       fetch("/api/driver/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
