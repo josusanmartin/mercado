@@ -20,7 +20,7 @@ import { ConnectGate } from "@/components/shell/connect-gate";
 import { Honesty, usePresent } from "@/components/console/present";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
-import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney, useNavDirection } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, EmptyState, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney, useNavDirection } from "@/components/mobile";
 import {
   AccentField,
   ActionRow,
@@ -29,9 +29,10 @@ import {
   Display,
   EdApp,
   Pill,
-  PillChip,
   RoundAction,
+  Ring,
   SectionHead,
+  SnapSlider,
   SplitStats,
   Flag,
   hora,
@@ -300,10 +301,13 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
             <>
               <BalanceHead label="Debes" />
               <Money value={debt} currency="MXN" size={54} className="mt-3" />
-              <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
-                <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
+              {/* v6: the repayment ring fills as you pay */}
+              <div className="mt-4 flex items-center gap-3">
+                <Ring value={paidPct / 100} label={`${paidPct}% pagado`} size={48} stroke={5}>
+                  <TickerText text={`${paidPct}%`} className="text-[12px] font-semibold" />
+                </Ring>
+                <Meta parts={["xMXN", H("No canjeable"), "Incluye comisión 2%", <TickerText key="pagado" text={`${paidPct}% pagado`} />]} />
               </div>
-              <Meta className="mt-2" parts={["xMXN", H("No canjeable"), "Incluye comisión 2%", <TickerText key="pagado" text={`${paidPct}% pagado`} />]} />
             </>
           ) : !platform ? (
             <>
@@ -334,6 +338,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
                 No disponible
               </Display>
               <Meta className="mt-2" parts={["Aún no cumples el mínimo", "Vuelve en unas semanas"]} />
+              <ScoreRing score={s.score} floor={s.scoreFloor} />
             </>
           ) : (
             <>
@@ -348,6 +353,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
                   s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
                 ]}
               />
+              {s && <ScoreRing score={s.score} floor={s.scoreFloor} />}
             </>
           )}
         </section>
@@ -405,6 +411,23 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
           </SectionHead>
           <ActivityList limit={3} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** v6: the onboarding result's score as a ring gauge that fills on arrival, the floor as a white tick. */
+function ScoreRing({ score, floor }: { score: number; floor: number }) {
+  const H = useH();
+  return (
+    <div className="mt-4 flex items-center gap-3">
+      <Ring value={score / 100} marker={floor / 100} markerColor="#fff" label={`Puntaje ${fmtNumber(score, 0)} de 100`} size={52} stroke={5}>
+        <TickerText text={fmtNumber(score, 0)} className="m-display text-[15px]" />
+      </Ring>
+      <div className="min-w-0">
+        <p className="text-[14px] font-semibold">Puntaje {fmtNumber(score, 0)}/100</p>
+        {/* children (not parts) so the long disclaimer wraps instead of running off the phone */}
+        <Meta>{[`Mínimo ${floor}`, H("Ilustrativo, no es un modelo de crédito")].filter(Boolean).join(" · ")}</Meta>
       </div>
     </div>
   );
@@ -553,7 +576,7 @@ function ActivityList({ limit }: { limit?: number }) {
         ))}
       </div>
     );
-  if (!rows.length) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Sin movimientos todavía.</p>;
+  if (!rows.length) return <EmptyState icon={<HandCoins strokeWidth={1.5} />} title="Sin movimientos todavía." />;
   return (
     <>
       {feed.isRefetchError && <StaleLine updatedAt={feed.dataUpdatedAt} now={now} onRetry={() => feed.refetch()} />}
@@ -682,17 +705,23 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
           <Money value={amount} currency="MXN" size={48} />
           <Meta className="mt-2" parts={["xMXN", H("Testnet · sin valor real")]} />
         </div>
-        <div className="flex gap-2">
-          {[25, 50, 100].map((p) => (
-            <PillChip key={p} selected={pct === p} disabled={busy} onClick={() => setPct(p)}>
-              {p === 100 ? "Todo" : `${p}%`}
-            </PillChip>
-          ))}
-        </div>
+        {/* v6: snap slider (25 · 50 · Todo); the amount, fee and total glide with it */}
+        <SnapSlider
+          label="Monto del adelanto"
+          color={ROSA}
+          value={pct}
+          onChange={setPct}
+          disabled={busy}
+          stops={[
+            { value: 25, label: "25%" },
+            { value: 50, label: "50%" },
+            { value: 100, label: "Todo" },
+          ]}
+        />
         <SheetRows
           rows={[
-            { k: "Comisión", v: fee === undefined ? "—" : `MX${fmtMoney(fee)}` },
-            { k: "Total a pagar", v: fee === undefined ? "—" : `MX${fmtMoney(amount + fee)}` },
+            { k: "Comisión", v: fee === undefined ? "—" : <TickerText text={`MX${fmtMoney(fee)}`} /> },
+            { k: "Total a pagar", v: fee === undefined ? "—" : <TickerText text={`MX${fmtMoney(amount + fee)}`} /> },
             { k: "La oferta vence en", v: mmss(adv.secondsLeft) },
           ]}
         />

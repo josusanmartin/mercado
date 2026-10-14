@@ -4,7 +4,7 @@
 //   <ActionRow>/<RoundAction> 56px round actions · <BankRow> + <DayGroups> bank-style lists
 //   <Pill> black pill button · <SplitStats> side-by-side figures on hairlines · <DotNav> bottom nav
 // Built for Crédito + Invest (mobile2) on the kit's paper theme; generic enough for mobile to promote into the kit.
-import { isValidElement, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Stagger } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
  */
 export function AccentField({ color, children, className }: { color: string; children: ReactNode; className?: string }) {
   const ink = "#0a0a0a";
-  const tokens = { "--m-on-surface": ink, "--m-on-surface-variant": ink, "--m-accent": ink, "--m-on-accent": color, "--m-surface-3": "rgba(10,10,10,.16)" };
+  const tokens = { "--m-on-surface": ink, "--m-on-surface-variant": ink, "--m-accent": ink, "--m-on-accent": color, "--m-surface-3": "rgba(10,10,10,.16)", "--m-glow": "rgba(255,255,255,.7)" };
   return (
     <div className={cn("text-[#0a0a0a]", className)} style={{ background: color, ...tokens } as CSSProperties}>
       {children}
@@ -133,7 +133,7 @@ export function SplitStats({ items }: { items: { label: ReactNode; value: ReactN
           <>
             <span className="m-meta block">{it.label}</span>
             {/* fit: a half-width column can't hold "MX$1,125.00" at 24px; shrink instead of clipping */}
-            <KitDisplay fit as="span" size={24} className="mt-2 block">
+            <KitDisplay fit as="span" size={24} className="mt-2 block !whitespace-nowrap">
               {it.value}
             </KitDisplay>
             {it.sub && <span className="mt-1 block text-[12.5px] text-[var(--m-on-surface-variant)]">{it.sub}</span>}
@@ -443,3 +443,273 @@ export function StaleLine({ updatedAt, now, onRetry }: { updatedAt: number; now:
     </p>
   );
 }
+
+/* ─────────────────────────────── v6 visuals (show, don't tell) ─────────────────────────────── */
+
+const EASE = "cubic-bezier(.2,.8,.2,1)";
+
+/** Starts at 0 and follows `value` one frame later, so CSS transitions animate the first fill too. */
+function useFromZero(value: number) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(value));
+    return () => cancelAnimationFrame(id);
+  }, [value]);
+  return shown;
+}
+
+/**
+ * Ring gauge: `value` 0..1 fills clockwise from 12 o'clock, from 0 on mount and between values (the kit's
+ * reduced-motion rule makes it instant). `marker` (0..1) draws a tick, e.g. a score floor. The ring is one
+ * role="img" with `label`; whatever sits in the middle is decorative.
+ */
+export function Ring({
+  value,
+  label,
+  size = 56,
+  stroke = 5,
+  color = "var(--m-on-surface)",
+  track = "var(--m-surface-3)",
+  marker,
+  markerColor = "var(--m-surface)",
+  children,
+  className,
+}: {
+  value: number;
+  label: string;
+  size?: number;
+  stroke?: number;
+  color?: string;
+  track?: string;
+  marker?: number;
+  markerColor?: string;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const shown = useFromZero(Math.max(0, Math.min(1, value)));
+  const c = size / 2;
+  const r = (size - stroke) / 2;
+  const len = 2 * Math.PI * r;
+  const m = marker === undefined ? undefined : 2 * Math.PI * Math.max(0, Math.min(1, marker));
+  return (
+    <span role="img" aria-label={label} className={cn("relative inline-grid shrink-0 place-items-center", className)} style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx={c} cy={c} r={r} fill="none" stroke={track} strokeWidth={stroke} />
+        <circle
+          cx={c}
+          cy={c}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={len}
+          strokeDashoffset={len * (1 - shown)}
+          strokeOpacity={shown > 0 ? 1 : 0}
+          style={{ transition: `stroke-dashoffset 900ms ${EASE}` }}
+        />
+        {m !== undefined && (
+          <line
+            x1={c + Math.cos(m) * (r - stroke)}
+            y1={c + Math.sin(m) * (r - stroke)}
+            x2={c + Math.cos(m) * (r + stroke)}
+            y2={c + Math.sin(m) * (r + stroke)}
+            stroke={markerColor}
+            strokeWidth={2}
+            strokeLinecap="round"
+          />
+        )}
+      </svg>
+      <span aria-hidden className="relative">
+        {children}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Snap slider: a native range input (keyboard, screen readers, drag) laid over a drawn track. It snaps to
+ * `stops`; the fill and thumb glide between them, and each snap gives a tick (haptic + a small thumb pulse).
+ * The stop labels under it are buttons too.
+ */
+export function SnapSlider<T extends string | number>({
+  stops,
+  value,
+  onChange,
+  label,
+  disabled,
+  color = "var(--m-accent)",
+}: {
+  stops: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  label: string;
+  disabled?: boolean;
+  color?: string;
+}) {
+  const n = stops.length;
+  const i = Math.max(0, stops.findIndex((s) => s.value === value));
+  const at = (k: number) => (n > 1 ? k / (n - 1) : 0);
+  const set = (k: number) => {
+    if (disabled || k === i || !stops[k]) return;
+    haptic(6);
+    onChange(stops[k].value);
+  };
+  const glide = `transform 280ms ${EASE}`;
+  return (
+    <div className={cn("grid gap-1", disabled && "opacity-50")}>
+      <div className="relative h-11">
+        <span aria-hidden className="absolute inset-x-[14px] top-1/2 h-[4px] -translate-y-1/2 rounded-full bg-[var(--m-surface-3)]">
+          <span className="absolute inset-0 origin-left rounded-full" style={{ background: color, transform: `scaleX(${at(i)})`, transition: glide }} />
+          {stops.map((s, k) => (
+            <span
+              key={String(s.value)}
+              className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ left: `${at(k) * 100}%`, background: k <= i ? color : "var(--m-surface-3)", boxShadow: "0 0 0 2px var(--m-surface)" }}
+            />
+          ))}
+          <span className="absolute inset-0" style={{ transform: `translateX(${at(i) * 100}%)`, transition: glide }}>
+            <span key={i} className="m-ed-snap absolute top-1/2 left-0 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[var(--m-surface)]" style={{ background: color }} />
+          </span>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={n - 1}
+          step={1}
+          value={i}
+          disabled={disabled}
+          aria-label={label}
+          aria-valuetext={stops[i]?.label}
+          onChange={(e) => set(Number(e.target.value))}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
+        />
+      </div>
+      <div className="relative mx-[14px] h-9">
+        {stops.map((s, k) => (
+          <button
+            key={String(s.value)}
+            type="button"
+            aria-pressed={k === i}
+            disabled={disabled}
+            onClick={() => set(k)}
+            className={cn(
+              "absolute top-0 h-9 -translate-x-1/2 rounded-full px-3 text-[14px] transition-colors",
+              k === i ? "font-semibold text-[var(--m-on-surface)]" : "font-medium text-[var(--m-on-surface-variant)]",
+            )}
+            style={{ left: `${at(k) * 100}%` }}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Donut: `parts` as arcs of one ring (a 2px gap between them), growing in from 0 on mount and gliding when the
+ * values move. One role="img" with `label`; the middle is decorative. All-zero parts leave the bare track.
+ */
+export function Donut({
+  parts,
+  label,
+  size = 88,
+  stroke = 12,
+  track = "var(--m-surface-2)",
+  children,
+}: {
+  parts: { key: string; value: number; color: string }[];
+  label: string;
+  size?: number;
+  stroke?: number;
+  track?: string;
+  children?: ReactNode;
+}) {
+  const k = useFromZero(1);
+  const c = size / 2;
+  const r = (size - stroke) / 2;
+  const len = 2 * Math.PI * r;
+  const total = parts.reduce((t, p) => t + Math.max(0, p.value), 0);
+  const visible = parts.filter((p) => p.value > 0).length;
+  const gap = visible > 1 ? 2 : 0;
+  let start = 0;
+  return (
+    <span role="img" aria-label={label} className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx={c} cy={c} r={r} fill="none" stroke={track} strokeWidth={stroke} />
+        {total > 0 &&
+          parts.map((p) => {
+            const arc = (Math.max(0, p.value) / total) * len * k;
+            const seg = Math.max(0, arc - gap);
+            const off = -start;
+            start += arc;
+            return (
+              <circle
+                key={p.key}
+                cx={c}
+                cy={c}
+                r={r}
+                fill="none"
+                stroke={p.color}
+                strokeWidth={stroke}
+                strokeDasharray={`${seg} ${len}`}
+                strokeDashoffset={off}
+                style={{ transition: `stroke-dasharray 700ms ${EASE}, stroke-dashoffset 700ms ${EASE}` }}
+              />
+            );
+          })}
+      </svg>
+      <span aria-hidden className="relative">
+        {children}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Sparkline: a step line through `points` (x = time, y = value) that draws itself in, with a soft area under
+ * it. Decorative by default; pass `label` to make it one role="img". Needs ≥2 points.
+ */
+export function Sparkline({
+  points,
+  label,
+  height = 44,
+  color = "var(--m-on-surface)",
+  fill = "currentColor",
+  className,
+}: {
+  points: { t: number; v: number }[];
+  label?: string;
+  height?: number;
+  color?: string;
+  fill?: string;
+  className?: string;
+}) {
+  if (points.length < 2) return null;
+  const W = 300;
+  const t0 = points[0].t;
+  const t1 = points.at(-1)!.t;
+  const vmax = Math.max(...points.map((p) => p.v), 0);
+  const vmin = Math.min(...points.map((p) => p.v), 0);
+  const x = (t: number) => (t1 > t0 ? ((t - t0) / (t1 - t0)) * W : 0);
+  const y = (v: number) => (vmax > vmin ? 2 + (1 - (v - vmin) / (vmax - vmin)) * (height - 4) : height / 2);
+  let d = `M ${x(points[0].t).toFixed(1)} ${y(points[0].v).toFixed(1)}`;
+  for (let k = 1; k < points.length; k++) d += ` H ${x(points[k].t).toFixed(1)} V ${y(points[k].v).toFixed(1)}`;
+  const area = `${d} V ${height} H 0 Z`;
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${height}`}
+      preserveAspectRatio="none"
+      className={cn("block w-full overflow-visible", className)}
+      style={{ height }}
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
+      <path d={area} fill={fill} fillOpacity={0.12} stroke="none" className="m-ed-fade" />
+      <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pathLength={1} className="m-ed-draw" />
+    </svg>
+  );
+}
+
