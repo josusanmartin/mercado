@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { LetterReveal, Stagger, TickerText } from "@/lib/motion";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
+import { Honesty, usePresent } from "@/components/console/present";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
 import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney, useNavDirection } from "@/components/mobile";
@@ -845,21 +846,25 @@ function Pagado({ adv, paid, setFlow, setTab }: Props) {
 
 /* ─────────────────────────────── Desktop panel ─────────────────────────────── */
 
+/** Present mode (?present=1, deck captures only) hides this sentence; the app always shows it. */
+const HEURISTIC_NOTE = "Illustrative demo heuristic only, not a validated credit model.";
+
 function WhatHappened({ flow, platform, data, adv }: Props) {
   const { address } = useConnection();
+  const present = usePresent();
   const name = PLATFORMS.find((p) => p.id === platform)?.name;
   const s = adv.score.data;
   const steps = [
     {
       done: !!platform && flow !== "conectar",
       label: `Connected ${name ?? "a work platform"}`,
-      sub: "Simulated consent; nothing is read from a real account. Not affiliated with Uber, DiDi or Rappi; the app never asks for a password.",
+      sub: <Honesty>Simulated consent; nothing is read from a real account. Not affiliated with Uber, DiDi or Rappi; the app never asks for a password.</Honesty>,
       badge: "Demo",
     },
     {
       done: !!data.data,
-      label: data.data ? `Loaded ${data.data.label}` : "Load demo earnings",
-      sub: data.data ? `${data.data.weeks.length} weeks of synthetic payouts, kept off-chain` : "Synthetic fixtures",
+      label: data.data ? (present ? `Loaded ${name ?? "platform"} earnings` : `Loaded ${data.data.label}`) : "Load demo earnings",
+      sub: <Honesty>{data.data ? `${data.data.weeks.length} weeks of synthetic payouts, kept off-chain` : "Synthetic fixtures"}</Honesty>,
       badge: "Demo",
     },
     {
@@ -867,7 +872,7 @@ function WhatHappened({ flow, platform, data, adv }: Props) {
       label: s ? `Scored ${fmtNumber(s.score, 1)} / 100` : "Score the earnings",
       sub: s
         ? `Floor ${s.scoreFloor}; credit line capped by ${s.capReason === "absolute-cap" ? "the 1,500 xMXN ceiling" : s.capReason === "income-share" ? "15% of median weekly earnings" : "eligibility"}`
-        : "Illustrative rule, not a credit model",
+        : <Honesty>Illustrative rule, not a credit model</Honesty>,
     },
     {
       done: !!adv.att,
@@ -905,15 +910,30 @@ function WhatHappened({ flow, platform, data, adv }: Props) {
         </ol>
       </Panel>
       {(s || adv.score.error) && (
-        <Panel title="Why this credit line" description="The scoring rule's own explanation. Illustrative demo heuristic only, not a validated credit model.">
+        <Panel
+          title="Why this credit line"
+          description={
+            <>
+              The scoring rule&apos;s own explanation.<Honesty> {HEURISTIC_NOTE}</Honesty>
+            </>
+          }
+        >
           {adv.score.error && <p className="text-destructive text-[14px]">{(adv.score.error as Error).message}</p>}
           {s && (
             <ul className="grid gap-1.5 text-[14px]">
-              {s.explanation.map((e) => (
-                <li key={e} className="text-muted-foreground">
-                  · {e}
-                </li>
-              ))}
+              {s.explanation.map((e) => {
+                const rest = e.replace(HEURISTIC_NOTE, "").trim();
+                return rest ? (
+                  <li key={e} className="text-muted-foreground">
+                    · {rest}
+                    {e.includes(HEURISTIC_NOTE) && <Honesty> {HEURISTIC_NOTE}</Honesty>}
+                  </li>
+                ) : (
+                  <li key={e} data-honesty className="text-muted-foreground">
+                    · {e}
+                  </li>
+                );
+              })}
               {s.attestationWithheld && <li className="text-destructive">· No offer right now: {s.attestationWithheld}</li>}
             </ul>
           )}
