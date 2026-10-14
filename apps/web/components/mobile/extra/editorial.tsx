@@ -20,7 +20,7 @@ export const edClass = cn(archivo.variable, interTight.variable, "m-ed");
 
 export function EdApp({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   return (
-    <div className={cn(edClass, "flex min-h-full flex-col bg-white text-[#0a0a0a]", className)} style={style}>
+    <div className={cn(edClass, "flex min-h-full flex-1 flex-col bg-white text-[#0a0a0a]", className)} style={style}>
       {children}
     </div>
   );
@@ -34,8 +34,8 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
       {mark && <span aria-hidden className="inline-block size-[7px]" style={{ background: mark }} />}
       {items.map((p, i) => (
         <span key={i} className="whitespace-nowrap">
-          {i > 0 && <span aria-hidden className="mr-1.5">·</span>}
           {p}
+          {i < items.length - 1 && <span aria-hidden className="ml-1.5">·</span>}
         </span>
       ))}
     </p>
@@ -326,7 +326,7 @@ export function DotNav<T extends string>({ items, value, onChange }: { items: Do
   return (
     <nav
       aria-label="Navegación"
-      className="relative z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-white sm:sticky sm:bottom-0 sm:-mb-5 sm:h-[88px] sm:pb-5"
+      className="relative z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-white sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[88px] sm:pb-5"
     >
       {items.map((it) => {
         const on = it.id === value;
@@ -348,5 +348,27 @@ export function DotNav<T extends string>({ items, value, onChange }: { items: Do
         );
       })}
     </nav>
+  );
+}
+
+/** Tiny flat flags (no emoji: headless/desktop Linux has no emoji font). Simplified, no coat of arms. */
+export function Flag({ code, className }: { code: "mx" | "us"; className?: string }) {
+  return code === "mx" ? (
+    <svg viewBox="0 0 15 10" className={cn("inline-block h-[10px] w-[15px] align-[-1px]", className)} aria-label="México" role="img">
+      <rect width="5" height="10" fill="#006847" />
+      <rect x="5" width="5" height="10" fill="#fff" />
+      <rect x="10" width="5" height="10" fill="#ce1126" />
+      <circle cx="7.5" cy="5" r="1.2" fill="#8c6b2f" />
+      <rect width="15" height="10" fill="none" stroke="#0a0a0a" strokeOpacity="0.15" strokeWidth="0.6" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 15 10" className={cn("inline-block h-[10px] w-[15px] align-[-1px]", className)} aria-label="Estados Unidos" role="img">
+      <rect width="15" height="10" fill="#fff" />
+      {[0, 2, 4, 6, 8, 10, 12].map((i) => (
+        <rect key={i} y={(i * 10) / 13} width="15" height={10 / 13} fill="#b22234" />
+      ))}
+      <rect width="6.5" height={70 / 13} fill="#3c3b6e" />
+      <rect width="15" height="10" fill="none" stroke="#0a0a0a" strokeOpacity="0.15" strokeWidth="0.6" />
+    </svg>
   );
 }

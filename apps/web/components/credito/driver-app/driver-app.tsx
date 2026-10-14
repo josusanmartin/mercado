@@ -1,48 +1,52 @@
 "use client";
-// Mercado Crédito driver app (crew/DESIGN-ECOSYSTEM.md §5): inside the Android PhoneFrame on desktop,
-// full-screen on phones, with a "what just happened" panel beside it. Spanish first, mobile kit (M3).
-//   Connect a work platform (real logos; simulated consent sheet) → Demo earnings → credit line + why →
-//   real draw on the CreditPool → Tu adelanto with real repay → shortcut to pay Tiempo Aire.
+// Mercado Crédito driver app (crew/DESIGN-ECOSYSTEM.md §5, restyled per crew/PRINCIPLES.md on the mobile.md v2
+// fintech structure): white canvas, Archivo Black balance, tiny uppercase meta, black pills, hairlines.
+//   Conectar (real logos, simulated consent sheet) → Inicio: one huge "Disponible ahora" / "Debes", round actions,
+//   activity · Ganancias (demo earnings + why this line) · Actividad (real Borrowed/Repaid logs) · Perfil.
+//   Draw and repay run in bottom sheets; both end on a success screen.
+// Spanish only inside the phone; the English explanations live in the "What just happened" panel beside it.
 // Mocked and labeled: the platform connection/consent and the earnings data (Demo … Data).
-// Real: the attestation signature, the borrow and the repayment on Tempo.
-import { useEffect, useState } from "react";
+// Real: the attestation signature, the borrow, the repayment and the activity list (Tempo logs).
+import { useEffect, useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
-import { ExternalLink, Info, Smartphone, Star, Wallet } from "lucide-react";
-import { useBalances } from "@/lib/contracts";
+import { ArrowDownLeft, ArrowUpRight, BarChart3, ExternalLink, HandCoins, Home, List, Smartphone, Star, User, Wallet } from "lucide-react";
+import { useActivityFeed, useBalances } from "@/lib/contracts";
 import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
+import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
+import { BottomSheet, BrandLogo, ConsentSheet, PlatformButton, ScreenTransition, Skeleton, SuccessCheck, brandName, fmtMoney } from "@/components/mobile";
 import {
-  Avatar,
-  Banner,
-  BrandLogo,
-  Button,
-  Chip,
-  ConsentSheet,
-  DemoBadge,
-  DetailRows,
-  HonestyNote,
-  LinearProgress,
-  ListItem,
-  PlatformButton,
-  ScreenTransition,
-  Skeleton,
-  SuccessScreen,
-  TopAppBar,
-  fmtMoney,
-  useNavDirection,
-} from "@/components/mobile";
+  ActionRow,
+  BankRow,
+  BigMoney,
+  DayGroups,
+  Display,
+  DotNav,
+  EdApp,
+  Meta,
+  Pill,
+  PillChip,
+  RoundAction,
+  SectionHead,
+  SplitStats,
+  Flag,
+  edClass,
+  hora,
+} from "@/components/mobile/extra/editorial";
 import { PLATFORMS, useAdvance, useDriverData, type Platform } from "./use-driver";
 
-const PINK = "#f2357d";
-type Screen = "conectar" | "ingresos" | "recibido" | "adelanto";
-const ORDER: Screen[] = ["conectar", "ingresos", "recibido", "adelanto"];
+const ROSA = "#D93A7A";
+type Flow = "conectar" | "app" | "recibido" | "pagado";
+type Tab = "inicio" | "ganancias" | "actividad" | "perfil";
+type Sheet = "adelanto" | "pagar";
+const FLOW: Flow[] = ["conectar", "app", "recibido", "pagado"];
 const SCOPES = [
-  { es: "Perfil", en: "Profile: name, city, rating" },
-  { es: "Viajes", en: "Trips: how many and when" },
-  { es: "Ganancias", en: "Earnings: weekly payouts" },
+  { es: "Perfil", en: "Nombre, ciudad y calificación" },
+  { es: "Viajes", en: "Cuántos y cuándo" },
+  { es: "Ganancias", en: "Tus pagos semanales" },
 ];
 
 export function DriverApp() {
@@ -55,36 +59,58 @@ export function DriverApp() {
 
 function DriverAppInner() {
   const { address } = useConnection();
-  const [screen, setScreen] = useState<Screen>("conectar");
+  const [flow, setFlow] = useState<Flow>("conectar");
+  const [tab, setTab] = useState<Tab>("inicio");
+  const [sheet, setSheet] = useState<Sheet>();
   const [platform, setPlatform] = useState<Platform>();
   const [asking, setAsking] = useState<Platform>();
-  const data = useDriverData(screen === "conectar" ? undefined : platform);
+  const data = useDriverData(platform);
   const adv = useAdvance(address, platform);
   const debt = adv.pool.debt;
-  const dir = useNavDirection(screen, ORDER);
+  const prev = useFlowDirection(flow);
 
-  // Someone with an open advance lands on it.
+  // Someone with an open advance lands straight on the app (Debes), even before reconnecting a platform.
   useEffect(() => {
-    if (debt !== undefined && debt > 0n && screen === "conectar") setScreen("adelanto");
+    if (debt !== undefined && debt > 0n && flow === "conectar") setFlow("app");
   }, [debt]); // eslint-disable-line react-hooks/exhaustive-deps
   // A different wallet means a different driver: start over (R-014).
   useEffect(() => {
-    setScreen("conectar");
+    setFlow("conectar");
+    setTab("inicio");
+    setSheet(undefined);
     setPlatform(undefined);
     adv.score.reset();
   }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const props = { screen, setScreen, platform, setPlatform, data, adv, ask: setAsking };
+  const props: Props = {
+    flow,
+    setFlow,
+    tab,
+    setTab,
+    platform,
+    data,
+    adv,
+    ask: setAsking,
+    open: setSheet,
+    disconnect: () => {
+      setPlatform(undefined);
+      adv.score.reset();
+      setTab("inicio");
+      setFlow(debt !== undefined && debt > 0n ? "app" : "conectar");
+    },
+  };
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
       <div className="-mx-4 sm:mx-0">
-        <PhoneFrame label="Driver app, Android phone preview" accent={PINK}>
-          <ScreenTransition id={screen} dir={dir}>
-            {screen === "conectar" && <Conectar {...props} />}
-            {screen === "ingresos" && <Ingresos {...props} />}
-            {screen === "recibido" && <Recibido {...props} />}
-            {screen === "adelanto" && <Adelanto {...props} />}
-          </ScreenTransition>
+        <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} statusBar="#ffffff">
+          <EdApp>
+            <ScreenTransition className="flex-1" id={flow === "app" ? `app-${tab}` : flow} dir={flow === "app" && prev === "app" ? "fade" : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd"}>
+              {flow === "conectar" && <Conectar {...props} />}
+              {flow === "app" && <AppShell {...props} />}
+              {flow === "recibido" && <Recibido {...props} />}
+              {flow === "pagado" && <Pagado {...props} />}
+            </ScreenTransition>
+          </EdApp>
           <ConsentSheet
             open={!!asking}
             platform={asking}
@@ -96,9 +122,12 @@ function DriverAppInner() {
               setPlatform(asking);
               if (address) adv.score.mutate({ borrower: address, platform: asking });
               setAsking(undefined);
-              setScreen("ingresos");
+              setTab("inicio");
+              setFlow("app");
             }}
           />
+          <AdelantoSheet {...props} openSheet={sheet === "adelanto"} close={() => setSheet(undefined)} />
+          <PagarSheet {...props} openSheet={sheet === "pagar"} close={() => setSheet(undefined)} />
         </PhoneFrame>
       </div>
       <WhatHappened {...props} />
@@ -106,306 +135,638 @@ function DriverAppInner() {
   );
 }
 
+/** Previous flow step (for the slide direction). */
+function useFlowDirection(flow: Flow) {
+  const [hist, setHist] = useState<{ cur: Flow; prev?: Flow }>({ cur: flow });
+  if (hist.cur !== flow) setHist({ cur: flow, prev: hist.cur });
+  return hist.prev;
+}
+
 type Props = {
-  screen: Screen;
-  setScreen: (s: Screen) => void;
+  flow: Flow;
+  setFlow: (f: Flow) => void;
+  tab: Tab;
+  setTab: (t: Tab) => void;
   platform?: Platform;
-  setPlatform: (p: Platform) => void;
   data: ReturnType<typeof useDriverData>;
   adv: ReturnType<typeof useAdvance>;
   ask: (p: Platform) => void;
+  open: (s: Sheet) => void;
+  disconnect: () => void;
 };
+
+const mmss = (s: number | undefined) => (s === undefined ? "…" : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
+const firstName = (d: Props["data"]["data"]) => d?.driver.firstName;
 
 /* ─────────────────────────────── Conectar ─────────────────────────────── */
 
 function Conectar({ ask }: Props) {
   const { address } = useConnection();
   return (
-    <div className="flex min-h-full flex-col px-5 pb-6">
-      <div className="pt-8">
-        <span className="grid size-12 place-items-center rounded-[14px] text-[20px] font-semibold text-white" style={{ background: PINK }} aria-hidden>
-          M
-        </span>
-        <p className="mt-5 text-[28px] leading-[1.15] tracking-[-0.01em]">Obtén un adelanto de lo que ya ganaste</p>
-        <p className="mt-2 text-[15px] text-[var(--m-on-surface-variant)]">Get an advance on what you&apos;ve already earned. Connect the app you drive or deliver with.</p>
-      </div>
-      <div className="mt-6 flex flex-wrap gap-2">
-        <DemoBadge tone="accent">Sin buró · no credit bureau</DemoBadge>
-        <DemoBadge tone="accent">Comisión fija 2%</DemoBadge>
-      </div>
-      <div className="mt-auto grid gap-3 pt-8">
+    <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
+      <Meta mark={ROSA} parts={["Mercado Crédito", "Testnet · sin valor real"]} />
+      <Display as="h1" size={50} className="mt-10">
+        Adelanta
+        <br />
+        lo que ya
+        <br />
+        <span style={{ color: ROSA }}>ganaste.</span>
+      </Display>
+      <Meta className="mt-5" parts={["Sin buró", "Comisión fija 2%", "Pagas cuando quieras"]} />
+      <div className="mt-auto grid gap-3 pt-10">
+        <p className="m-meta border-b border-[var(--m-on-surface)] pb-2 !text-[var(--m-on-surface)]">Conecta la app con la que trabajas</p>
         {PLATFORMS.map((p) => (
           <PlatformButton key={p.id} id={p.id} disabled={!address} onClick={() => ask(p.id)} />
         ))}
-        <p className="mt-1 text-center text-[13px] leading-snug text-[var(--m-on-surface-variant)]">
-          Demo connection: simulated consent, not affiliated with Uber, DiDi or Rappi. We never ask for your password.
-        </p>
+        <Meta className="mt-1 justify-center text-center" parts={["Demo · consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Nunca pedimos tu contraseña"]} />
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────── Ingresos ─────────────────────────────── */
+/* ─────────────────────────────── App shell + tabs ─────────────────────────────── */
 
-function EarningsChart({ weeks }: { weeks: { weekStart: string; netMxn: number }[] }) {
+function AppShell(props: Props) {
+  const { tab, setTab } = props;
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="flex-1">
+        {tab === "inicio" && <Inicio {...props} />}
+        {tab === "ganancias" && <Ganancias {...props} />}
+        {tab === "actividad" && <Actividad {...props} />}
+        {tab === "perfil" && <Perfil {...props} />}
+      </div>
+      <DotNav
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: "inicio", label: "Inicio", icon: <Home strokeWidth={1.75} /> },
+          { id: "ganancias", label: "Ganancias", icon: <BarChart3 strokeWidth={1.75} /> },
+          { id: "actividad", label: "Actividad", icon: <List strokeWidth={1.75} /> },
+          { id: "perfil", label: "Perfil", icon: <User strokeWidth={1.75} /> },
+        ]}
+      />
+    </div>
+  );
+}
+
+function TopMeta({ platform, title }: { platform?: Platform; title: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 px-5 pt-4">
+      <Meta mark={ROSA} parts={[title, "Testnet · sin valor real"]} />
+      {platform && (
+        <span className="grid h-7 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)] bg-white px-2.5">
+          <BrandLogo id={platform} height={platform === "rappi" ? 13 : 10} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
+  const bal = useBalances();
+  const s = adv.score.data;
+  const debt = adv.pool.debt;
+  const owing = debt !== undefined && debt > 0n;
+  const owed = adv.pool.loanPrincipal !== undefined && adv.pool.loanFee !== undefined ? adv.pool.loanPrincipal + adv.pool.loanFee : undefined;
+  const paidPct = owing && owed && owed > 0n ? Math.max(0, Math.min(100, Number(((owed - debt!) * 100n) / owed))) : 0;
+  const canDraw = !!adv.att && !adv.expired && (adv.available ?? 0n) > 0n;
+  const name = firstName(data.data);
+
+  return (
+    <div className="pb-6">
+      <TopMeta platform={platform} title="Crédito" />
+      <p className="px-5 pt-6 text-[15px] font-medium">{name ? `Hola, ${name}` : "Hola"}</p>
+
+      {/* the one big number */}
+      <section className="px-5 pt-2" aria-live="polite">
+        {owing ? (
+          <>
+            <p className="m-meta">Debes</p>
+            <BigMoney value={debt} unit="xMXN" size={54} className="mt-2" />
+            <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
+              <div className="h-full bg-[var(--m-ink)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
+            </div>
+            <Meta className="mt-2" parts={["Incluye comisión 2%", `${paidPct}% pagado`]} />
+          </>
+        ) : !platform ? (
+          <>
+            <p className="m-meta">Disponible ahora</p>
+            <BigMoney value={undefined} size={54} className="mt-2" />
+            <Meta className="mt-2" parts={["Conecta tu plataforma para ver tu línea"]} />
+          </>
+        ) : adv.score.isPending || (!s && !adv.score.error) ? (
+          <>
+            <p className="m-meta">Analizando tus ganancias…</p>
+            <Skeleton className="mt-3 h-[48px] w-56 rounded-[4px]" />
+            <Skeleton className="mt-3 h-3 w-40 rounded-[2px]" />
+          </>
+        ) : adv.score.error ? (
+          <>
+            <p className="m-meta">Disponible ahora</p>
+            <Display size={36} className="mt-2">
+              Sin conexión
+            </Display>
+            <button type="button" className="mt-3 text-[14px] font-semibold underline underline-offset-4" onClick={adv.check}>
+              Reintentar
+            </button>
+          </>
+        ) : s && !s.eligible ? (
+          <>
+            <p className="m-meta">Disponible ahora</p>
+            <Display size={40} className="mt-2">
+              No disponible
+            </Display>
+            <Meta className="mt-2" parts={["Aún no cumples el mínimo", "Vuelve en unas semanas"]} />
+          </>
+        ) : (
+          <>
+            <p className="m-meta">Disponible ahora</p>
+            <BigMoney value={adv.available} unit="xMXN" size={54} className="mt-2" />
+            <Meta
+              className="mt-2"
+              parts={[
+                s && `Línea ${fmtMoney(BigInt(s.maxAmount), 0)}`,
+                s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
+              ]}
+            />
+          </>
+        )}
+      </section>
+
+      {!owing && platform && adv.att && adv.expired && (
+        <div className="px-5 pt-5">
+          <Pill variant="line" onClick={adv.check} loading={adv.score.isPending}>
+            Actualizar oferta
+          </Pill>
+        </div>
+      )}
+
+      <div className="px-4 pt-7">
+        <ActionRow>
+          <RoundAction primary icon={<HandCoins strokeWidth={1.75} />} label="Adelanto" onClick={() => open("adelanto")} disabled={!canDraw} />
+          <RoundAction icon={<ArrowUpRight strokeWidth={1.75} />} label="Pagar" onClick={() => open("pagar")} disabled={!owing} />
+          <RoundAction icon={<Smartphone strokeWidth={1.75} />} label="Tiempo Aire" href="/remesas?screen=aire" />
+          <RoundAction icon={<BarChart3 strokeWidth={1.75} />} label="Ganancias" onClick={() => setTab("ganancias")} />
+        </ActionRow>
+      </div>
+
+      <div className="px-5 pt-7">
+        <SplitStats
+          items={[
+            { label: <><Flag code="mx" /> Tu saldo</>, value: fmtMoney(bal.xmxn), sub: "xMXN en tu wallet" },
+            owing
+              ? { label: "Disponible", value: fmtMoney(adv.available ?? 0n), sub: "para otro adelanto" }
+              : { label: "Debes", value: fmtMoney(debt ?? 0n), sub: "sin adelantos abiertos" },
+          ]}
+        />
+      </div>
+
+      {!platform && (
+        <div className="px-5 pt-6">
+          <SectionHead>Conecta para otro adelanto</SectionHead>
+          <div className="grid gap-2 pt-3">
+            {PLATFORMS.map((p) => (
+              <PlatformButton key={p.id} id={p.id} onClick={() => ask(p.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="px-5 pt-7">
+        <SectionHead
+          action={
+            <button type="button" className="text-[13px] font-semibold" onClick={() => setTab("actividad")}>
+              Ver todo
+            </button>
+          }
+        >
+          Actividad
+        </SectionHead>
+        <ActivityList limit={3} />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────── Ganancias ─────────────────────────────── */
+
+function EarningsBars({ weeks, height = 112 }: { weeks: { weekStart: string; netMxn: number }[]; height?: number }) {
   const max = Math.max(...weeks.map((w) => w.netMxn), 1);
-  const sorted = [...weeks.map((w) => w.netMxn)].sort((a, b) => a - b);
-  const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
   const last = weeks.length - 1;
   return (
     <figure className="grid gap-2">
-      <div className="flex items-baseline justify-between">
-        <p className="m-num text-[32px] leading-none">{fmtMoney(median, 0)}</p>
-        <p className="text-[13px] text-[var(--m-on-surface-variant)]">mediana por semana · MXN</p>
-      </div>
-      <div className="relative flex h-28 items-end gap-[3px]" aria-label="Ganancias netas por semana, MXN">
+      <div className="flex items-end gap-[3px]" style={{ height }} aria-label="Ganancias netas por semana, MXN">
         {weeks.map((w, i) => (
           <span
             key={w.weekStart}
-            className="m-rise flex-1 rounded-t-[4px]"
-            style={{ height: `${(w.netMxn / max) * 100}%`, background: PINK, opacity: i === last ? 1 : 0.55, animationDelay: `${i * 18}ms` }}
+            className="m-rise flex-1"
+            style={{ height: `${(w.netMxn / max) * 100}%`, background: i === last ? ROSA : "#0a0a0a", animationDelay: `${i * 22}ms` }}
             title={`${w.weekStart}: ${fmtNumber(w.netMxn, 0)} MXN`}
           />
         ))}
-        <span className="absolute inset-x-0 border-t border-dashed border-[#15171b]/40" style={{ bottom: `${(median / max) * 100}%` }} aria-hidden />
       </div>
-      <figcaption className="flex justify-between text-[13px] text-[var(--m-on-surface-variant)]">
-        <span>hace {weeks.length} semanas</span>
-        <span>esta semana</span>
+      <figcaption className="m-meta flex justify-between">
+        <span>Hace {weeks.length} semanas</span>
+        <span>Esta semana</span>
       </figcaption>
     </figure>
   );
 }
 
-function Ingresos({ data, adv, setScreen, platform }: Props) {
+function Ganancias({ platform, data, adv }: Props) {
   const d = data.data;
   const s = adv.score.data;
-  const [pct, setPct] = useState(100);
-  const available = adv.available;
-  const amount = available !== undefined ? (available * BigInt(pct)) / 100n : 0n;
-  const busy = adv.tx.isBusy;
-
+  const f = s?.features;
+  const cv = f?.netEarningsCv;
+  const why = f
+    ? [
+        { t: `Ganas ${fmtMoney(f.medianWeeklyNetMxn, 0)} por semana`, sub: `Mediana de ${f.weeksObserved} semanas` },
+        { t: `Activo ${f.activeWeeks} de ${f.weeksObserved} semanas`, sub: `${fmtNumber(f.medianWeeklyTrips, 0)} viajes por semana` },
+        { t: cv! < 0.15 ? "Ingreso muy estable" : cv! < 0.35 ? "Ingreso algo variable" : "Ingreso muy variable", sub: "Semana a semana" },
+        s?.eligible
+          ? {
+              t: s.capReason === "absolute-cap" ? "Tu línea llega al tope de $1,500" : "Tu línea es 15% de tu semana típica",
+              sub: `Línea de ${fmtMoney(BigInt(s.maxAmount), 0)} xMXN`,
+            }
+          : { t: "Aún no alcanzas el mínimo", sub: `Puntaje ${fmtNumber(s!.score, 0)} de ${s!.scoreFloor} necesarios` },
+      ]
+    : [];
   return (
-    <div className="flex min-h-full flex-col">
-      <TopAppBar
-        title="Tus ganancias"
-        sub="Your earnings"
-        onBack={busy ? undefined : () => setScreen("conectar")}
-        actions={platform && <span className="mr-3 grid h-9 place-items-center rounded-full border border-[var(--m-outline-variant)] bg-white px-3"><BrandLogo id={platform} height={platform === "rappi" ? 16 : 12} /></span>}
-      />
-      {(busy || adv.score.isPending) && <LinearProgress className="rounded-none" />}
-      <div className="grid gap-5 px-4 pt-1 pb-5">
-        {data.isLoading || !d ? (
-          <div className="grid gap-3" aria-busy="true">
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-10 rounded-full" />
-              <Skeleton className="h-4 w-40" />
-            </div>
-            <Skeleton className="h-28 w-full" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-3">
-              <Avatar name={d.driver.firstName} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[16px]">
-                  {d.driver.firstName} · {d.driver.city}
-                </p>
-                <p className="flex items-center gap-1 text-[13px] text-[var(--m-on-surface-variant)]">
-                  <Star className="size-3.5 fill-current" /> {fmtNumber(d.driver.rating, 2)} · {d.driver.vehicle}
-                </p>
-              </div>
-              <DemoBadge>{d.label}</DemoBadge>
-            </div>
-            <EarningsChart weeks={d.weeks} />
-          </>
-        )}
-
-        {adv.score.isPending && (
-          <div className="grid gap-2 rounded-[24px] bg-[var(--m-surface-1)] p-5" aria-busy="true">
-            <p className="text-[14px] text-[var(--m-on-surface-variant)]">Calculando tu línea · scoring…</p>
-            <Skeleton className="h-9 w-44" />
-          </div>
-        )}
-        {adv.score.error && <Banner tone="error">{(adv.score.error as Error).message}</Banner>}
-        {s && (
-          <section className="relative overflow-hidden rounded-[28px] p-5 text-white" style={{ background: s.eligible ? PINK : "#5b6270" }}>
-            <span aria-hidden className="absolute -top-14 -right-10 size-44 rounded-full bg-white/10" />
-            <span aria-hidden className="absolute -right-16 -bottom-20 size-48 rounded-full bg-black/10" />
-            <div className="relative">
-              <p className="text-[14px] text-white/90">Tu línea de crédito · your credit line</p>
-              <p className="m-num mt-1 text-[40px] leading-none font-medium">{s.eligible ? `${fmtAmount(BigInt(s.maxAmount), 0)} xMXN` : "No disponible"}</p>
-              <ul className="mt-3 grid gap-1 text-[13px] text-white/90">
-                {s.explanation.slice(0, 3).map((e) => (
-                  <li key={e}>· {e}</li>
-                ))}
-              </ul>
-            </div>
+    <div className="pb-6">
+      <TopMeta platform={platform} title="Ganancias" />
+      {!platform ? (
+        <div className="px-5 pt-8">
+          <Display size={36}>Sin plataforma</Display>
+          <Meta className="mt-3" parts={["Conecta Uber, DiDi o Rappi en Inicio"]} />
+        </div>
+      ) : !d ? (
+        <div className="grid gap-3 px-5 pt-8" aria-busy="true">
+          <Skeleton className="h-12 w-48 rounded-[4px]" />
+          <Skeleton className="h-28 w-full rounded-[2px]" />
+        </div>
+      ) : (
+        <>
+          <section className="px-5 pt-6">
+            <p className="m-meta">Semana típica · neto</p>
+            <BigMoney value={f?.medianWeeklyNetMxn ?? median(d.weeks.map((w) => w.netMxn))} digits={0} unit="MXN" size={48} className="mt-2" />
+            <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, "Datos sintéticos"]} />
           </section>
-        )}
-        {s?.attestationWithheld && <Banner tone="error">{s.attestationWithheld}</Banner>}
-
-        {adv.att && !adv.expired && (
-          <div className="grid gap-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[14px] text-[var(--m-on-surface-variant)]">¿Cuánto quieres? · drawable now</p>
-              <span className="m-num rounded-full bg-[var(--m-surface-2)] px-2.5 py-1 text-[13px] text-[var(--m-on-surface-variant)]">vence en {adv.secondsLeft ?? "…"}s</span>
-            </div>
-            <div className="flex gap-2">
-              {[25, 50, 100].map((p) => (
-                <Chip key={p} selected={pct === p} disabled={busy} onClick={() => setPct(p)}>
-                  {p === 100 ? "Todo" : `${p}%`}
-                </Chip>
-              ))}
-            </div>
-            <Button
-              loading={busy}
-              disabled={busy || amount === 0n}
-              onClick={async () => {
-                const steps = await adv.draw(amount);
-                if (steps) setScreen("recibido");
-              }}
-            >
-              {busy ? `${adv.tx.stepLabel ?? "Enviando"}…` : `Recibir ${fmtAmount(amount)} xMXN`}
-            </Button>
-            <p className="text-[13px] leading-[1.4] text-[var(--m-on-surface-variant)]">
-              Comisión fija del 2% · flat 2% fee added to what you owe. Repay whenever you can; nothing is taken from your payouts.
-            </p>
-            {adv.tx.status === "error" && adv.tx.error && <Banner tone="error">{adv.tx.error}</Banner>}
+          <div className="px-5 pt-6">
+            <EarningsBars weeks={d.weeks} />
           </div>
-        )}
-        {adv.att && adv.expired && (
-          <Button variant="outlined" onClick={adv.check}>
-            La oferta venció · Refresh the offer
-          </Button>
-        )}
-      </div>
+          <div className="flex items-center gap-3 px-5 pt-6">
+            <span className="grid size-10 place-items-center rounded-full bg-[var(--m-ink)] text-[15px] font-semibold text-white">{d.driver.firstName[0]}</span>
+            <div className="min-w-0">
+              <p className="text-[15px] font-semibold">
+                {d.driver.firstName} · {d.driver.city}
+              </p>
+              <p className="flex items-center gap-1 text-[13px] text-[var(--m-on-surface-variant)]">
+                <Star className="size-3.5 fill-current" /> {fmtNumber(d.driver.rating, 2)} · {d.driver.vehicle}
+              </p>
+            </div>
+          </div>
+          <div className="px-5 pt-7">
+            <SectionHead>Por qué esta línea</SectionHead>
+            {!s ? (
+              <div className="grid gap-2 pt-3">
+                <Skeleton className="h-4 w-3/4 rounded-[2px]" />
+                <Skeleton className="h-4 w-2/3 rounded-[2px]" />
+              </div>
+            ) : (
+              <ol className="grid">
+                {why.map((w, i) => (
+                  <li key={w.t} className="flex items-baseline gap-4 border-b border-[var(--m-outline-variant)] py-3">
+                    <span className="m-display w-6 text-[15px] text-[var(--m-on-surface-variant)]">{String(i + 1).padStart(2, "0")}</span>
+                    <span>
+                      <span className="block text-[15px] font-medium">{w.t}</span>
+                      <span className="block text-[13px] text-[var(--m-on-surface-variant)]">{w.sub}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {s && <Meta className="mt-3" parts={[`Puntaje ${fmtNumber(s.score, 0)}/100`, `Mínimo ${s.scoreFloor}`, "Ilustrativo, no es un modelo de crédito"]} />}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-/* ─────────────────────────────── Recibido ─────────────────────────────── */
-
-function Recibido({ adv, setScreen }: Props) {
-  const last = adv.tx.steps.at(-1);
-  return (
-    <SuccessScreen
-      title="¡Listo! Ya tienes tu adelanto"
-      amount={`${fmtAmount(adv.pool.loanPrincipal)} xMXN`}
-      caption="en tu wallet, on-chain · in your wallet now"
-      action={
-        <Button variant="dark" className="w-full" onClick={() => setScreen("adelanto")}>
-          Ver mi adelanto
-        </Button>
-      }
-    >
-      <DetailRows
-        rows={[
-          { label: "Debes", value: `${fmtAmount(adv.pool.debt)} xMXN`, sub: "incluye la comisión del 2%" },
-          {
-            label: "Comprobante",
-            value: last ? (
-              <a href={last.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono" style={{ color: "#b0124f" }}>
-                {last.hash.slice(0, 10)}… <ExternalLink className="size-3.5" />
-              </a>
-            ) : (
-              "—"
-            ),
-            sub: "Tempo testnet",
-          },
-        ]}
-      />
-    </SuccessScreen>
-  );
+function median(xs: number[]) {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length ? s[Math.floor(s.length / 2)] : 0;
 }
 
-/* ─────────────────────────────── Adelanto ─────────────────────────────── */
+/* ─────────────────────────────── Actividad ─────────────────────────────── */
 
-function Adelanto({ adv, setScreen }: Props) {
-  const bal = useBalances();
-  const debt = adv.pool.debt;
-  const busy = adv.tx.isBusy;
-  const canRepay = debt !== undefined && debt > 0n && bal.xmxn !== undefined;
-  const repayAmount = canRepay ? (bal.xmxn! < debt! ? bal.xmxn! : debt!) : 0n;
-  const owed = adv.pool.loanPrincipal !== undefined && adv.pool.loanFee !== undefined ? adv.pool.loanPrincipal + adv.pool.loanFee : undefined;
-  const paidPct = owed && debt !== undefined && owed > 0n ? Math.max(0, Math.min(100, Number(((owed - debt) * 100n) / owed))) : 0;
-  return (
-    <div className="flex min-h-full flex-col">
-      <TopAppBar title="Tu adelanto" sub="Your advance" onBack={busy ? undefined : () => setScreen("conectar")} />
-      {busy && <LinearProgress className="rounded-none" />}
-      <div className="grid gap-4 px-4 pt-1 pb-5">
-        <section className="relative overflow-hidden rounded-[28px] p-5 text-white" style={{ background: PINK }}>
-          <span aria-hidden className="absolute -top-14 -right-10 size-44 rounded-full bg-white/10" />
-          <div className="relative">
-            <p className="text-[14px] text-white/90">Debes · You owe</p>
-            <p className="m-num mt-1 text-[40px] leading-none font-medium">{debt === undefined ? "—" : fmtAmount(debt)}</p>
-            <p className="text-[13px] text-white/85">xMXN, incluye la comisión del 2%</p>
-            {debt !== undefined && debt > 0n && (
-              <div className="mt-4">
-                <div className="h-2 overflow-hidden rounded-full bg-white/25">
-                  <div className="h-full rounded-full bg-white transition-[width] duration-500" style={{ width: `${paidPct}%` }} />
-                </div>
-                <p className="mt-1.5 text-[13px] text-white/85">{paidPct}% pagado</p>
-              </div>
-            )}
+function ActivityList({ limit }: { limit?: number }) {
+  const { address } = useConnection();
+  const now = useNow(60_000);
+  const feed = useActivityFeed("credit", { account: address, limit: 100 });
+  const rows = feed.rows.filter((r) => r.event === "Borrowed" || r.event === "Repaid").slice(0, limit ?? 30);
+  if (feed.isLoading)
+    return (
+      <div className="grid gap-3 pt-3" aria-busy="true">
+        {[0, 1].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="size-10 rounded-full" />
+            <Skeleton className="h-4 flex-1 rounded-[2px]" />
           </div>
-        </section>
-        <DetailRows
-          rows={[
-            { label: "Recibiste · borrowed", value: `${fmtAmount(adv.pool.loanPrincipal)} xMXN` },
-            { label: "Comisión · fee", value: `${fmtAmount(adv.pool.loanFee)} xMXN` },
-            { label: "Tu saldo · balance", value: `${fmtAmount(bal.xmxn)} xMXN` },
-          ]}
-        />
-        {debt !== undefined && debt > 0n ? (
-          <Button variant="dark" loading={busy} disabled={busy || repayAmount === 0n} onClick={() => adv.repay(repayAmount)}>
-            {busy ? `${adv.tx.stepLabel ?? "Pagando"}…` : repayAmount < debt ? `Pagar ${fmtAmount(repayAmount)} de ${fmtAmount(debt)}` : `Pagar todo · ${fmtAmount(debt)} xMXN`}
-          </Button>
-        ) : (
-          <Banner tone="success" icon={<Wallet />}>
-            No debes nada · Nothing owed
-          </Banner>
-        )}
-        {adv.tx.status === "error" && adv.tx.error && <Banner tone="error">{adv.tx.error}</Banner>}
-        <div className="-mx-4">
-          <ListItem
-            href="/remesas?screen=aire"
+        ))}
+      </div>
+    );
+  if (!rows.length) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Sin movimientos todavía.</p>;
+  return (
+    <DayGroups
+      items={rows}
+      ts={(r) => r.timestamp}
+      now={now}
+      render={(r) => {
+        const drawn = r.event === "Borrowed";
+        return (
+          <BankRow
+            key={`${r.txHash}-${r.logIndex}`}
+            href={r.url}
             leading={
-              <span className="grid size-10 place-items-center rounded-full bg-[#ff8a1f] text-white">
-                <Smartphone className="size-5" strokeWidth={1.75} />
+              <span className={cn("grid size-10 place-items-center rounded-full", drawn ? "text-white" : "border border-[var(--m-on-surface)]")} style={drawn ? { background: ROSA } : undefined}>
+                {drawn ? <ArrowDownLeft strokeWidth={2} /> : <ArrowUpRight strokeWidth={2} />}
               </span>
             }
-            headline="Recargar Tiempo Aire"
-            supporting="Top up your phone in Mercado Remesas"
+            title={drawn ? "Adelanto recibido" : "Pago de adelanto"}
+            sub={[hora(r.timestamp), drawn && r.fee !== undefined ? `Comisión ${fmtMoney(r.fee)}` : "On-chain"].filter(Boolean).join(" · ")}
+            amount={`${drawn ? "+" : "−"}${fmtMoney(r.amount)}`}
+            amountSub="xMXN"
+            positive={drawn}
           />
+        );
+      }}
+    />
+  );
+}
+
+function Actividad({ platform }: Props) {
+  return (
+    <div className="pb-6">
+      <TopMeta platform={platform} title="Actividad" />
+      <div className="px-5 pt-6">
+        <Display size={40}>Actividad</Display>
+        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo testnet"]} />
+        <div className="pt-3">
+          <ActivityList />
         </div>
-        <p className={cn("flex items-start gap-2 text-[13px] text-[var(--m-on-surface-variant)]")}>
-          <Info className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} />
-          Pagas cuando quieras. Nada se descuenta de tus pagos de la plataforma · Repayment is manual.
-        </p>
       </div>
-      <HonestyNote className="mt-auto pb-4">xMXN es un token demo en Tempo testnet. Datos de ganancias: demo, sintéticos.</HonestyNote>
     </div>
   );
 }
 
-function WhatHappened({ screen, platform, data, adv }: Props) {
+/* ─────────────────────────────── Perfil ─────────────────────────────── */
+
+function Perfil({ platform, data, disconnect }: Props) {
+  const { address } = useConnection();
+  const d = data.data;
+  const rows: { k: string; v: ReactNode }[] = [
+    { k: "Plataforma", v: platform ? <BrandLogo id={platform} height={platform === "rappi" ? 15 : 12} /> : "Sin conectar" },
+    { k: "Datos de ganancias", v: d?.label ?? "—" },
+    { k: "Wallet", v: <span className="font-mono text-[13px]">{shortAddr(address)}</span> },
+    { k: "Red", v: "Tempo testnet" },
+  ];
+  return (
+    <div className="pb-6">
+      <TopMeta platform={platform} title="Perfil" />
+      <div className="px-5 pt-6">
+        <Display size={48}>{d?.driver.firstName ?? "Chofer"}</Display>
+        {d && <Meta className="mt-2" parts={[d.driver.city, `★ ${fmtNumber(d.driver.rating, 2)}`, d.driver.vehicle]} />}
+        <dl className="mt-6 border-t border-[var(--m-on-surface)]">
+          {rows.map((r) => (
+            <div key={r.k} className="flex min-h-14 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
+              <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{r.k}</dt>
+              <dd className="text-[15px] font-medium">{r.v}</dd>
+            </div>
+          ))}
+        </dl>
+        {platform && (
+          <div className="pt-6">
+            <Pill variant="line" onClick={disconnect}>
+              Desconectar {brandName(platform)}
+            </Pill>
+          </div>
+        )}
+        <Meta
+          className="mt-6"
+          parts={["Consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Ganancias: datos demo sintéticos", "xMXN: token demo sin valor real"]}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────── Sheets ─────────────────────────────── */
+
+function SheetRows({ rows }: { rows: { k: string; v: ReactNode }[] }) {
+  return (
+    <dl className="border-t border-[var(--m-on-surface)]">
+      {rows.map((r) => (
+        <div key={r.k} className="flex min-h-12 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
+          <dt className="text-[14px] text-[var(--m-on-surface-variant)]">{r.k}</dt>
+          <dd className="m-num text-[15px] font-semibold">{r.v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
+  const [pct, setPct] = useState(100);
+  const busy = adv.tx.isBusy;
+  const available = adv.available ?? 0n;
+  const amount = (available * BigInt(pct)) / 100n;
+  const feeBps = adv.pool.feeBps;
+  const fee = feeBps !== undefined ? (amount * feeBps) / 10_000n : undefined;
+  useEffect(() => {
+    if (openSheet) setPct(100);
+  }, [openSheet]);
+  return (
+    <BottomSheet open={openSheet} onClose={close} dismissable={!busy} title={undefined}>
+      <div className={cn(edClass, "grid gap-5 px-6 pb-2")} aria-label="Pedir adelanto">
+        <Meta mark={ROSA} parts={["Adelanto", feeBps !== undefined ? `Comisión fija ${fmtNumber(Number(feeBps) / 100, 0)}%` : undefined, "Testnet"]} />
+        <BigMoney value={amount} unit="xMXN" size={48} />
+        <div className="flex gap-2">
+          {[25, 50, 100].map((p) => (
+            <PillChip key={p} selected={pct === p} disabled={busy} onClick={() => setPct(p)}>
+              {p === 100 ? "Todo" : `${p}%`}
+            </PillChip>
+          ))}
+        </div>
+        <SheetRows
+          rows={[
+            { k: "Comisión", v: fee === undefined ? "—" : fmtMoney(fee) },
+            { k: "Total a pagar", v: fee === undefined ? "—" : fmtMoney(amount + fee) },
+            { k: "La oferta vence en", v: mmss(adv.secondsLeft) },
+          ]}
+        />
+        {adv.tx.status === "error" && adv.tx.error && (
+          <p role="alert" className="text-[14px] font-medium text-[#b3261e]">
+            {adv.tx.error}
+          </p>
+        )}
+        <Pill
+          accent
+          loading={busy}
+          disabled={busy || amount === 0n || !adv.att || adv.expired}
+          onClick={async () => {
+            const steps = await adv.draw(amount);
+            if (steps) {
+              close();
+              setFlow("recibido");
+            }
+          }}
+        >
+          {busy ? `${adv.tx.stepLabel ?? "Enviando"}…` : `Recibir ${fmtAmount(amount)} xMXN`}
+        </Pill>
+        <Meta className="justify-center" parts={["Pagas cuando quieras", "Nada se descuenta de tus pagos"]} />
+      </div>
+    </BottomSheet>
+  );
+}
+
+function PagarSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
+  const bal = useBalances();
+  const debt = adv.pool.debt ?? 0n;
+  const busy = adv.tx.isBusy;
+  const can = bal.xmxn !== undefined && debt > 0n;
+  const amount = can ? (bal.xmxn! < debt ? bal.xmxn! : debt) : 0n;
+  const partial = amount < debt;
+  return (
+    <BottomSheet open={openSheet} onClose={close} dismissable={!busy}>
+      <div className={cn(edClass, "grid gap-5 px-6 pb-2")} aria-label="Pagar adelanto">
+        <Meta mark={ROSA} parts={["Pagar adelanto", "Testnet"]} />
+        <BigMoney value={amount} unit="xMXN" size={48} />
+        <SheetRows
+          rows={[
+            { k: "Debes", v: fmtMoney(debt) },
+            { k: "Tu saldo", v: fmtMoney(bal.xmxn) },
+            { k: "Te quedará por pagar", v: fmtMoney(debt - amount) },
+          ]}
+        />
+        {partial && amount > 0n && <Meta parts={["Tu saldo no cubre todo", "Pagas lo que tienes"]} />}
+        {adv.tx.status === "error" && adv.tx.error && (
+          <p role="alert" className="text-[14px] font-medium text-[#b3261e]">
+            {adv.tx.error}
+          </p>
+        )}
+        <Pill
+          loading={busy}
+          disabled={busy || amount === 0n}
+          onClick={async () => {
+            const steps = await adv.repay(amount);
+            if (steps) {
+              close();
+              setFlow("pagado");
+            }
+          }}
+        >
+          {busy ? `${adv.tx.stepLabel ?? "Pagando"}…` : partial ? `Pagar ${fmtAmount(amount)} xMXN` : `Pagar todo · ${fmtAmount(amount)} xMXN`}
+        </Pill>
+      </div>
+    </BottomSheet>
+  );
+}
+
+/* ─────────────────────────────── Success screens ─────────────────────────────── */
+
+function Receipt({ title, amount, rows, action, adv }: { title: string; amount: bigint | undefined; rows: { k: string; v: ReactNode }[]; action: ReactNode; adv: Props["adv"] }) {
+  const last = adv.tx.steps.at(-1);
+  return (
+    <div className="flex flex-1 flex-col px-5 pt-10 pb-6">
+      <SuccessCheck size={72} color={ROSA} />
+      <Display size={46} className="m-rise mt-8" as="h2">
+        {title}
+      </Display>
+      <BigMoney value={amount} unit="xMXN" size={40} className="mt-4" />
+      <Meta className="mt-2" parts={["Confirmado en Tempo", "Testnet · sin valor real"]} />
+      <div className="mt-7">
+        <SheetRows
+          rows={[
+            ...rows,
+            {
+              k: "Comprobante",
+              v: last ? (
+                <a href={last.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] underline underline-offset-4">
+                  {last.hash.slice(0, 10)}… <ExternalLink className="size-3.5" />
+                </a>
+              ) : (
+                "—"
+              ),
+            },
+          ]}
+        />
+      </div>
+      <div className="mt-auto pt-8">{action}</div>
+    </div>
+  );
+}
+
+function Recibido({ adv, setFlow, setTab }: Props) {
+  return (
+    <Receipt
+      adv={adv}
+      title="Listo. Ya es tuyo."
+      amount={adv.pool.loanPrincipal}
+      rows={[{ k: "Debes", v: `${fmtMoney(adv.pool.debt)} · incluye 2%` }]}
+      action={
+        <Pill
+          onClick={() => {
+            setTab("inicio");
+            setFlow("app");
+          }}
+        >
+          Ver mi adelanto
+        </Pill>
+      }
+    />
+  );
+}
+
+function Pagado({ adv, setFlow, setTab }: Props) {
+  return (
+    <Receipt
+      adv={adv}
+      title={adv.pool.debt === 0n ? "Pagado. No debes nada." : "Pago recibido."}
+      amount={undefined}
+      rows={[{ k: "Debes ahora", v: fmtMoney(adv.pool.debt) }]}
+      action={
+        <Pill
+          onClick={() => {
+            setTab("inicio");
+            setFlow("app");
+          }}
+        >
+          Volver al inicio
+        </Pill>
+      }
+    />
+  );
+}
+
+/* ─────────────────────────────── Desktop panel ─────────────────────────────── */
+
+function WhatHappened({ flow, platform, data, adv }: Props) {
   const { address } = useConnection();
   const name = PLATFORMS.find((p) => p.id === platform)?.name;
   const s = adv.score.data;
   const steps = [
     {
-      done: !!platform && screen !== "conectar",
+      done: !!platform && flow !== "conectar",
       label: `Connected ${name ?? "a work platform"}`,
-      sub: "Simulated consent; nothing is read from a real account",
+      sub: "Simulated consent; nothing is read from a real account. Not affiliated with Uber, DiDi or Rappi; the app never asks for a password.",
       badge: "Demo",
     },
     {
       done: !!data.data,
       label: data.data ? `Loaded ${data.data.label}` : "Load demo earnings",
-      sub: data.data
-        ? `${data.data.weeks.length} weeks of synthetic payouts, kept off-chain`
-        : "Synthetic fixtures",
+      sub: data.data ? `${data.data.weeks.length} weeks of synthetic payouts, kept off-chain` : "Synthetic fixtures",
       badge: "Demo",
     },
     {
@@ -425,28 +786,13 @@ function WhatHappened({ screen, platform, data, adv }: Props) {
   ];
   return (
     <div className="grid content-start gap-8">
-      <Panel
-        title="What just happened"
-        description="Each step of the advance, and what is real."
-      >
+      <Panel title="What just happened" description="Each step of the advance, and what is real.">
         <ol className="grid gap-3">
           {steps.map((st) => (
             <li key={st.label} className="flex items-start gap-3">
-              <span
-                className={cn(
-                  "mt-1.5 size-2.5 shrink-0 rounded-full",
-                  st.done ? "bg-product" : "bg-input",
-                )}
-              />
+              <span className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", st.done ? "bg-product" : "bg-input")} />
               <div className="min-w-0 flex-1">
-                <p
-                  className={cn(
-                    "text-[15px]",
-                    !st.done && "text-muted-foreground",
-                  )}
-                >
-                  {st.label}
-                </p>
+                <p className={cn("text-[15px]", !st.done && "text-muted-foreground")}>{st.label}</p>
                 <p className="text-muted-foreground text-[13px]">{st.sub}</p>
               </div>
               {st.badge && <Badge variant="mock">{st.badge}</Badge>}
@@ -454,22 +800,10 @@ function WhatHappened({ screen, platform, data, adv }: Props) {
           ))}
           {adv.tx.steps.map((st) => (
             <li key={st.hash} className="flex items-start gap-3">
-              <span
-                className={cn(
-                  "mt-1.5 size-2.5 shrink-0 rounded-full",
-                  st.receipt ? "bg-success" : "bg-warning",
-                )}
-              />
-              <a
-                href={st.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex min-w-0 flex-1 items-center gap-2 hover:underline"
-              >
+              <span className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", st.receipt ? "bg-success" : "bg-warning")} />
+              <a href={st.url} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-2 hover:underline">
                 <span className="text-[15px]">{st.label}</span>
-                <span className="text-muted-foreground font-mono text-[13px]">
-                  {st.hash.slice(0, 10)}…
-                </span>
+                <span className="text-muted-foreground font-mono text-[13px]">{st.hash.slice(0, 10)}…</span>
                 <ExternalLink className="text-muted-foreground size-3.5" />
               </a>
               <Badge variant="success">On-chain</Badge>
@@ -477,46 +811,32 @@ function WhatHappened({ screen, platform, data, adv }: Props) {
           ))}
         </ol>
       </Panel>
-      <Panel
-        title="The pool behind it"
-        description="Advances come from lenders' xMXN in the credit pool, never from the mint vault."
-      >
+      {(s || adv.score.error) && (
+        <Panel title="Why this credit line" description="The scoring rule's own explanation. Illustrative demo heuristic only, not a validated credit model.">
+          {adv.score.error && <p className="text-destructive text-[14px]">{(adv.score.error as Error).message}</p>}
+          {s && (
+            <ul className="grid gap-1.5 text-[14px]">
+              {s.explanation.map((e) => (
+                <li key={e} className="text-muted-foreground">
+                  · {e}
+                </li>
+              ))}
+              {s.attestationWithheld && <li className="text-destructive">· No offer right now: {s.attestationWithheld}</li>}
+            </ul>
+          )}
+        </Panel>
+      )}
+      <Panel title="The pool behind it" description="Advances come from lenders' xMXN in the credit pool, never from the mint vault. A flat fee is added to what the driver owes; repayment is manual and nothing is taken from platform payouts.">
         <Rows>
-          <Row
-            label="Available to lend"
-            value={
-              adv.pool.available === undefined
-                ? "—"
-                : `${fmtAmount(adv.pool.available, 0)} xMXN`
-            }
-          />
-          <Row
-            label="Lent out"
-            value={
-              adv.pool.outstanding === undefined
-                ? "—"
-                : `${fmtAmount(adv.pool.outstanding, 0)} xMXN`
-            }
-          />
-          <Row
-            label="Your debt"
-            sub={address ? shortAddr(address) : undefined}
-            value={
-              adv.pool.debt === undefined
-                ? "—"
-                : `${fmtAmount(adv.pool.debt)} xMXN`
-            }
-          />
-          <Row
-            label="Fees paid to lenders"
-            sub="Realized only when advances are repaid"
-            value={
-              adv.pool.realizedFees === undefined
-                ? "—"
-                : `${fmtAmount(adv.pool.realizedFees)} xMXN`
-            }
-          />
+          <Row label="Available to lend" value={adv.pool.available === undefined ? "—" : `${fmtAmount(adv.pool.available, 0)} xMXN`} />
+          <Row label="Lent out" value={adv.pool.outstanding === undefined ? "—" : `${fmtAmount(adv.pool.outstanding, 0)} xMXN`} />
+          <Row label="Your debt" sub={address ? shortAddr(address) : undefined} value={adv.pool.debt === undefined ? "—" : `${fmtAmount(adv.pool.debt)} xMXN`} />
+          <Row label="Fees paid to lenders" sub="Realized only when advances are repaid" value={adv.pool.realizedFees === undefined ? "—" : `${fmtAmount(adv.pool.realizedFees)} xMXN`} />
         </Rows>
+        <p className="text-muted-foreground mt-3 text-[13px]">
+          <Wallet className="mr-1 inline size-3.5" />
+          xMXN is a demo token on Tempo testnet with no real value. Earnings are synthetic Demo Data.
+        </p>
       </Panel>
     </div>
   );
