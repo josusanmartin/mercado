@@ -737,7 +737,9 @@ export function ContractsProof() {
             />
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
               <VerifiedTally addresses={verifiable} />
-              <p className="text-muted-foreground text-[15px]">Testnet trust model: one admin key (the deployer), no timelock or multisig.</p>
+              <p data-honesty className="text-muted-foreground text-[15px]">
+                Testnet trust model: one admin key (the deployer), no timelock or multisig.
+              </p>
             </div>
             <details className="group text-[15px]">
               <summary className="meta text-muted-foreground hover:text-foreground cursor-pointer list-none">
