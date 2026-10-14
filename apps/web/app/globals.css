@@ -282,7 +282,8 @@
 
 /* Soft accent wash under the hero (the one place a gradient is allowed besides image-in-type). */
 .mx-wash {
-  background-image: radial-gradient(120% 460px at 50% 0, color-mix(in oklab, var(--accent) 7%, transparent), transparent 72%);
+  /* lead 05:15: a visible ~10% tint behind and just under the band, fading out over ~240px below it. */
+  background-image: linear-gradient(to bottom, color-mix(in oklab, var(--accent) 10%, transparent) 0, color-mix(in oklab, var(--accent) 10%, transparent) 200px, transparent 440px);
   background-repeat: no-repeat;
 }
 
@@ -343,16 +344,12 @@
 .mx-enter {
   animation: mx-enter var(--dur) var(--ease-out) both;
 }
+/* P0 (lead 05:22): content never RESTS hidden waiting for JS. Reveals are pure CSS animations that play on
+   render and always end visible, even if hydration is slow or fails (no opacity:0 base state, no data-shown gate). */
 .mx-reveal {
-  opacity: 0;
-}
-.mx-reveal[data-shown] {
   animation: mx-fade-up var(--dur-slow) var(--ease-out) var(--mx-delay, 0ms) both;
 }
 .mx-stagger > * {
-  opacity: 0;
-}
-.mx-stagger[data-shown] > * {
   animation: mx-fade-up var(--dur-slow) var(--ease-out) calc(var(--i, 0) * var(--mx-step, 40ms)) both;
 }
 .mx-letters span span {
@@ -403,9 +400,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mx-enter,
   .mx-reveal,
-  .mx-reveal[data-shown],
   .mx-stagger > *,
-  .mx-stagger[data-shown] > *,
   .mx-letters span span,
   .mx-pan,
   .mx-ripple {

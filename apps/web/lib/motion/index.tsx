@@ -3,6 +3,7 @@
 // never bouncy. Pure CSS keyframes (globals.css "v5 motion") driven by a few tiny components; no dependency.
 // prefers-reduced-motion collapses everything to the final state (the CSS does it; Ticker jumps).
 // Nothing here delays a primary action: elements are clickable while they animate, and nothing shifts layout.
+// Nothing ever RESTS hidden: every entrance is a CSS animation that ends visible without JS.
 import { Children, isValidElement, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ElementType, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -22,43 +23,22 @@ export function useReducedMotion(): boolean {
   );
 }
 
-/** Sets data-shown the first time the element scrolls into view (or at once if IO is unavailable). */
-function useShown<T extends Element>() {
-  const ref = useRef<T>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || shown) return;
-    if (typeof IntersectionObserver === "undefined") return setShown(true);
-    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && (setShown(true), io.disconnect()), { rootMargin: "0px 0px -8% 0px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [shown]);
-  return [ref, shown] as const;
-}
-
-/** Fade-up on first view. */
+/** Fade-up as it renders. Pure CSS: content never waits on JS to become visible (P0, lead 05:22). */
 export function Reveal({ children, delay = 0, as: Tag = "div", className }: { children: ReactNode; delay?: number; as?: ElementType; className?: string }) {
-  const [ref, shown] = useShown<HTMLElement>();
   return (
-    <Tag ref={ref} data-shown={shown || undefined} className={cn("mx-reveal", className)} style={{ "--mx-delay": `${delay}ms` } as CSSProperties}>
+    <Tag className={cn("mx-reveal", className)} style={{ "--mx-delay": `${delay}ms` } as CSSProperties}>
       {children}
     </Tag>
   );
 }
 
-/** Children fade up one after another (40ms apart, capped) on first view. Works on lists: as="ul"/"ol". */
+/** Children fade up one after another (40ms apart, capped at 12). Pure CSS. Works on lists: as="ul"/"ol". */
 export function Stagger({ children, as: Tag = "div", className, step = 40 }: { children: ReactNode; as?: ElementType; className?: string; step?: number }) {
-  const [ref, shown] = useShown<HTMLElement>();
   let i = 0;
   const kids = Children.map(children, (c) =>
     isValidElement<{ style?: CSSProperties }>(c) ? { ...c, props: { ...c.props, style: { ...c.props.style, "--i": Math.min(i++, 12), "--mx-step": `${step}ms` } as CSSProperties } } : c,
   );
-  return (
-    <Tag ref={ref} data-shown={shown || undefined} className={cn("mx-stagger", className)}>
-      {kids}
-    </Tag>
-  );
+  return <Tag className={cn("mx-stagger", className)}>{kids}</Tag>;
 }
 
 /**
