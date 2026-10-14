@@ -324,7 +324,7 @@ function PaySupplier() {
 
           {/* one fixed-height line for: not enough balance / quote error / pricing / the live quote */}
           <p
-            className="tabular text-muted-foreground min-h-5 text-[13px]"
+            className="tabular text-muted-foreground min-h-10 text-[13px] sm:min-h-5"
             aria-live="polite"
           >
             {insufficient ? (
@@ -430,7 +430,7 @@ function PaySupplier() {
         <PanelActions>
           <Button
             size="lg"
-            className="h-auto min-h-12 max-w-full py-2 whitespace-normal"
+            className="h-auto min-h-16 max-w-full py-2 whitespace-normal sm:min-h-12"
             pending={m.tx.isBusy}
             disabled={!canPay}
             onClick={() => {
