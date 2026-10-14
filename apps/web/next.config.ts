@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@mercado/shared"],
   // mppx has an optional @modelcontextprotocol/sdk import that Turbopack cannot bundle.
   serverExternalPackages: ["mppx"],
+  // Let josu open the dev server over Tailscale (private tailnet only; port 3100 is not public).
+  allowedDevOrigins: ["tailnet-host.ts.net", "tailnet-ip"],
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
