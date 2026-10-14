@@ -4,15 +4,17 @@
 // "What's real here" panel (incl. CARD_LABEL). Everything here is real on-chain: the card, freeze, the
 // calendar-day limit, the spending allowance, the tap signature and the charge/refund history. Only the
 // card network and number are simulated (the "Demo" mark on the card and the meta line under it).
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { type Address, type Hex } from "viem";
-import { Check, CircleUserRound, CreditCard, ExternalLink, History, Lock, Snowflake, Store } from "lucide-react";
+import { CircleUserRound, CreditCard, ExternalLink, History, Lock, Snowflake, Store } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
 import { toUnits } from "@/lib/format";
 import { useBalances, useCardActions, useCards, usePool, type Tap } from "@/lib/contracts";
 import { useActivityFeed } from "@/lib/contracts/activity";
+import { Stagger, TickerText } from "@/lib/motion";
 import { useNow } from "@/lib/use-now";
 import {
+  AccentField,
   AppHeader,
   Avatar,
   BalanceHead,
@@ -28,13 +30,19 @@ import {
   Money,
   ScreenTransition,
   Skeleton,
+  SuccessCheck,
   Switch,
+  useNavDirection,
+  useStatusBar,
   fmtMoney,
   haceTiempo,
   type NavItem,
 } from "@/components/mobile";
 
 export const CARD_CREAM = "#f2e6c9";
+
+/** Spanish in the phone for the shared English error sentences that reach it (lib/contracts/errors.ts). */
+const phoneError = (e?: string) => (e && /allowance is too low/i.test(e) ? "Tu autorización de gasto es muy baja. Autoriza primero." : e);
 
 export type Pending = { tap: Tap; status: "asking" | "signing" | "charging" | "done" | "declined" | "error"; error?: string; hash?: Hex; chargeId?: bigint };
 
@@ -64,28 +72,31 @@ export function HolderApp({
   const busy = a.tx.isBusy;
   const [limitOpen, setLimitOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("tarjeta");
+  const dir = useNavDirection(tab, TAB_ORDER);
+  useStatusBar(CARD_CREAM);
 
   return (
     <div className="relative flex min-h-full flex-col">
       {busy && <LinearProgress className="absolute inset-x-0 top-0 z-20" />}
       {/* Persistent on every tab and state (R-051): index, product and the full honesty line. */}
-      <AppHeader index="05" product="Tarjeta" right={<Avatar name={who.hello} size={36} />} />
-      <ScreenTransition id={tab} dir="fade" className="flex-1 pb-6">
+      {/* v5 ink world on cream: a cream band holds the header and the tab's title (ink text, 16:1) and stays
+          put like an Android top app bar; the content under it slides between tabs. The cream card then sits on ink. */}
+      <AccentField color={CARD_CREAM} className="pb-4">
+        <AppHeader index="05" product="Tarjeta" right={<Avatar name={who.hello} size={36} />} />
+        <Display as="h1" size={40} className="px-4 pt-1">
+          {tab === "tarjeta" ? `Hola, ${who.hello}` : tab === "actividad" ? "Actividad" : "Perfil"}
+        </Display>
+      </AccentField>
+      <ScreenTransition id={tab} dir={dir} className="flex-1 pb-6">
         {tab === "actividad" && (
           <>
-            <Display as="h1" size={40} className="px-4 pt-1 pb-2">
-              Actividad
-            </Display>
+            <div className="h-2" />
             <CardActivity holder={holder} merchantName={merchantName} limit={30} />
           </>
         )}
         {tab === "perfil" && <Perfil who={who} holder={holder} last4={card?.last4} />}
         {tab === "tarjeta" && (
           <>
-            <Display as="h1" size={40} className="px-4 pt-1">
-              Hola, {who.hello}
-            </Display>
-
             {isLoading ? (
               <div className="mt-6 px-4">
                 <Skeleton className="aspect-[1.586] w-full rounded-[8px]" />
@@ -112,13 +123,13 @@ export function HolderApp({
                   <div className="mt-4">
                     <div className="flex items-baseline justify-between">
                       <Meta>Disponible hoy</Meta>
-                      <span className="m-num text-[15px] font-semibold">MX{fmtMoney(card.availableToday)}</span>
+                      <TickerText className="m-num text-[15px] font-semibold" text={`MX${fmtMoney(card.availableToday)}`} />
                     </div>
                     <div className="mt-2 h-1.5 w-full bg-[var(--m-surface-3)]" aria-hidden>
                       <div
-                        className="h-full transition-[width] duration-500"
+                        className="h-full w-full origin-left transition-transform duration-[420ms] ease-[cubic-bezier(.2,.8,.2,1)]"
                         style={{
-                          width: `${card.dailyLimit > 0n ? Math.min(100, Number((card.spentToday * 100n) / card.dailyLimit)) : 0}%`,
+                          transform: `scaleX(${card.dailyLimit > 0n ? Math.min(100, Number((card.spentToday * 100n) / card.dailyLimit)) / 100 : 0})`,
                           background: CARD_CREAM,
                         }}
                       />
@@ -130,7 +141,7 @@ export function HolderApp({
                   {showAdvance && (
                     <div className="mt-4 flex items-baseline justify-between border-t border-[var(--m-outline-variant)] pt-3">
                       <span className="text-[15px]">Adelanto pendiente</span>
-                      <span className="m-num text-[15px] font-semibold">{pool.debt === undefined ? "—" : `MX${fmtMoney(pool.debt)}`}</span>
+                      <TickerText className="m-num text-[15px] font-semibold" text={pool.debt === undefined ? "—" : `MX${fmtMoney(pool.debt)}`} />
                     </div>
                   )}
                 </section>
@@ -143,9 +154,7 @@ export function HolderApp({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[16px] font-medium">Congelar</span>
-                      <span className="block text-[13.5px] text-[var(--m-on-surface-variant)]">
-                        {card.frozen ? "Congelada: se rechaza todo cobro" : "Bloquea todo cobro al instante"}
-                      </span>
+                      <span className="block text-[13.5px] text-[var(--m-on-surface-variant)]">{card.frozen ? "Congelada: se rechaza todo cobro" : "Bloquea todo cobro al instante"}</span>
                     </span>
                     <Switch checked={card.frozen} disabled={busy} label="Congelar · Freeze" onChange={(v) => a.setFrozen(card.cardId, v)} />
                   </div>
@@ -154,7 +163,7 @@ export function HolderApp({
                     leading={<RowGlyph>≤</RowGlyph>}
                     headline="Límite diario"
                     supporting="Se reinicia a medianoche (CDMX)"
-                    trailing={`MX${fmtMoney(card.dailyLimit, 0)}`}
+                    trailing={<TickerText text={`MX${fmtMoney(card.dailyLimit, 0)}`} />}
                     onClick={() => setLimitOpen(true)}
                     disabled={busy}
                   />
@@ -163,14 +172,14 @@ export function HolderApp({
                     leading={<RowGlyph>✓</RowGlyph>}
                     headline="Permiso de gasto"
                     supporting="Lo que la tarjeta puede mover de tu saldo"
-                    trailing={`MX${fmtMoney(allowance, 0)}`}
+                    trailing={<TickerText text={`MX${fmtMoney(allowance, 0)}`} />}
                     onClick={() => a.approveSpending(card.dailyLimit * 2n)}
                     disabled={busy}
                   />
                 </div>
                 {a.tx.status === "error" && a.tx.error && (
                   <div className="px-4 pt-3">
-                    <Banner tone="error">{a.tx.error}</Banner>
+                    <Banner tone="error">{phoneError(a.tx.error)}</Banner>
                   </div>
                 )}
 
@@ -210,6 +219,7 @@ export function HolderApp({
 }
 
 type Tab = "tarjeta" | "actividad" | "perfil";
+const TAB_ORDER: readonly Tab[] = ["tarjeta", "actividad", "perfil"];
 const TABS: NavItem<Tab>[] = [
   { id: "tarjeta", label: "Tarjeta", icon: <CreditCard /> },
   { id: "actividad", label: "Actividad", icon: <History /> },
@@ -219,10 +229,7 @@ const TABS: NavItem<Tab>[] = [
 function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }; holder?: Address; last4?: number }) {
   return (
     <div>
-      <Display as="h1" size={40} className="px-4 pt-1 pb-2">
-        Perfil
-      </Display>
-      <div className="flex items-center gap-4 px-4 pt-2 pb-5">
+      <div className="flex items-center gap-4 px-4 pt-4 pb-5">
         <Avatar name={who.hello} size={64} />
         <div className="min-w-0">
           <Display size={24}>{who.onCard}</Display>
@@ -258,11 +265,22 @@ const RowGlyph = ({ children }: { children: string }) => (
   <span className="m-display grid size-10 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)] text-[16px]">{children}</span>
 );
 
-/** The card: flat cream, ink type, Mercado wordmark, no network marks. */
+/**
+ * The card: flat cream, ink type, Mercado wordmark, no network marks. v5: a subtle tilt toward the pointer on
+ * hover (desktop pointers only, ≤4°, transform only; none under reduced motion, see mobile.css .m-tilt).
+ */
 function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; name: string }) {
+  const tilt = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--tx", `${(((e.clientY - r.top) / r.height - 0.5) * -6).toFixed(2)}deg`);
+    e.currentTarget.style.setProperty("--ty", `${(((e.clientX - r.left) / r.width - 0.5) * 8).toFixed(2)}deg`);
+  };
   return (
     <div
-      className="relative aspect-[1.586] overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]"
+      className="m-tilt relative aspect-[1.586] overflow-hidden rounded-[8px] p-5 text-[#0a0a0a]"
+      onPointerMove={tilt}
+      onPointerLeave={(e) => (e.currentTarget.style.removeProperty("--tx"), e.currentTarget.style.removeProperty("--ty"))}
       style={{ background: CARD_CREAM }}
       role="img"
       aria-label={`Tarjeta Mercado terminación ${last4}${frozen ? ", congelada" : ""}`}
@@ -302,7 +320,7 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
     );
   if (rows.length === 0) return <Meta className="px-4 py-3">Aún no hay cobros con esta tarjeta</Meta>;
   return (
-    <div className="border-t border-[var(--m-outline-variant)]">
+    <Stagger className="border-t border-[var(--m-outline-variant)]">
       {rows.slice(0, limit).map((r) => {
         const refund = r.event === "CardRefunded";
         return (
@@ -322,23 +340,11 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
           />
         );
       })}
-    </div>
+    </Stagger>
   );
 }
 
-function LimitSheet({
-  open,
-  onClose,
-  current,
-  busy,
-  onSave,
-}: {
-  open: boolean;
-  onClose: () => void;
-  current: number;
-  busy: boolean;
-  onSave: (v: number) => void;
-}) {
+function LimitSheet({ open, onClose, current, busy, onSave }: { open: boolean; onClose: () => void; current: number; busy: boolean; onSave: (v: number) => void }) {
   const [v, setV] = useState(current);
   useEffect(() => {
     if (open) setV(current);
@@ -414,22 +420,20 @@ function TapPrompt({ pending, merchantName, onApprove, onDecline }: { pending: P
           </Button>
         )}
         {status === "done" && (
-          <p className="flex items-center gap-2 text-[16px] font-semibold">
-            <Check className="size-5" /> Pagado
+          <p className="flex items-center gap-3 text-[16px] font-semibold">
+            <span aria-hidden className="inline-grid">
+              <SuccessCheck size={40} />
+            </span>
+            Pagado
             {pending.hash && (
-              <a
-                href={explorerTx(pending.hash)}
-                target="_blank"
-                rel="noreferrer"
-                className="m-meta ml-auto inline-flex items-center gap-1 text-[var(--m-on-surface)] underline underline-offset-4"
-              >
+              <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="m-meta ml-auto inline-flex items-center gap-1 text-[var(--m-on-surface)] underline underline-offset-4">
                 Ver recibo <ExternalLink className="size-3" />
               </a>
             )}
           </p>
         )}
         {status === "declined" && <p className="text-[16px]">Rechazado. No se cobró nada.</p>}
-        {status === "error" && <Banner tone="error">{pending.error}</Banner>}
+        {status === "error" && <Banner tone="error">{phoneError(pending.error)}</Banner>}
         {!inFlight && status !== "asking" && <Button onClick={close}>Cerrar</Button>}
         <Meta className="flex items-start gap-1.5">
           <Lock className="mt-px size-3 shrink-0" /> Tu firma cubre solo este monto, esta tienda y este ticket · vence en 2 min
