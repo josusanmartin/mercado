@@ -1,14 +1,33 @@
 "use client";
 // Modal bottom sheet, rendered inside the phone screen (portal into AndroidDevice's overlay host).
-// Built on Radix Dialog (review a11y P1): focus is trapped inside and restored to the opener on close,
-// everything outside is aria-hidden and non-interactive while it's open, it always has an accessible
+// Built on Radix Dialog (review a11y P1): Tab loops inside it and focus returns to the opener on close,
+// the app behind it is inert (aria-hidden, unclickable) while it's open, it always has an accessible
 // title, and a visible close (X, "Ocultar") button. Scrim tap / Escape / drag-down / X close it unless
 // `dismissable` is false (something irreversible in flight); it animates out before unmounting.
+// Scope: in a framed phone (desktop) only that phone's screen goes inert, because a page can show two
+// devices (Card: the shop POS beside the phone) and the other one must keep working. Below 640px the
+// app IS the page, so the sheet is fully modal (Radix hides and blocks everything else).
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Dialog, VisuallyHidden } from "radix-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useOverlayHost } from "./device";
+import { useOverlayHost, usePhoneScreen } from "./device";
+
+// Several sheets can be open at once; the screen stays inert until the last one closes.
+const inertCount = new WeakMap<HTMLElement, number>();
+function holdInert(el: HTMLElement) {
+  const n = (inertCount.get(el) ?? 0) + 1;
+  inertCount.set(el, n);
+  el.inert = true;
+  el.setAttribute("aria-hidden", "true");
+  return () => {
+    const left = (inertCount.get(el) ?? 1) - 1;
+    inertCount.set(el, left);
+    if (left > 0) return;
+    el.inert = false;
+    el.removeAttribute("aria-hidden");
+  };
+}
 
 export function BottomSheet({
   open,
@@ -32,6 +51,7 @@ export function BottomSheet({
   className?: string;
 }) {
   const host = useOverlayHost();
+  const screen = usePhoneScreen();
   const [mounted, setMounted] = useState(open);
   const [closing, setClosing] = useState(false);
   const [drag, setDrag] = useState(0);
@@ -52,11 +72,22 @@ export function BottomSheet({
         setMounted(false);
         const el = opener.current;
         opener.current = null;
-        if (el?.isConnected) requestAnimationFrame(() => el.focus({ preventScroll: true }));
+        // Not if the user has moved on to the other device on the page (focus is there, not lost).
+        const lost = () => {
+          const a = document.activeElement;
+          return !a || a === document.body || !!el?.closest(".m-root")?.contains(a);
+        };
+        if (el?.isConnected) requestAnimationFrame(() => lost() && el.focus({ preventScroll: true }));
       }, 180);
       return () => clearTimeout(t);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scoped modality (framed phone): only the app screen behind the sheet goes inert.
+  useEffect(() => {
+    if (!mounted || !screen) return;
+    return holdInert(screen);
+  }, [mounted, screen]);
 
   // Latest values for Radix's event handlers: they can fire between a state change (e.g. "signing")
   // and the re-render that makes the sheet non-dismissable.
@@ -65,19 +96,27 @@ export function BottomSheet({
 
   if (!mounted || !host) return null;
   const close = () => live.current.dismissable && live.current.onClose();
+  const scoped = !!screen;
+  // Keys/taps that belong to another device on the page never dismiss this phone's sheet.
+  const inPhone = (n: EventTarget | null) => !!host.parentElement?.contains(n as Node);
   const hiddenName = ariaLabel ?? (typeof sub === "string" ? sub : "Detalle");
 
   return (
-    <Dialog.Root open onOpenChange={(o) => !o && close()}>
+    <Dialog.Root open modal={!scoped} onOpenChange={(o) => !o && close()}>
       <Dialog.Portal container={host}>
-        <Dialog.Overlay data-closing={closing || undefined} className="m-scrim absolute inset-0" />
+        {scoped ? (
+          // Radix draws no overlay when non-modal; a tap here reaches onPointerDownOutside below.
+          <div data-closing={closing || undefined} className="m-scrim absolute inset-0" aria-hidden />
+        ) : (
+          <Dialog.Overlay data-closing={closing || undefined} className="m-scrim absolute inset-0" />
+        )}
         <Dialog.Content
           aria-describedby={undefined}
           onCloseAutoFocus={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => !live.current.dismissable && e.preventDefault()}
+          onEscapeKeyDown={(e) => (!live.current.dismissable || (scoped && !inPhone(document.activeElement))) && e.preventDefault()}
           // Only an explicit tap on the scrim/outside may dismiss. Focus moving (a button swapping to a
           // spinner, a wallet prompt) must NEVER close a sheet: that used to decline Card taps (P0).
-          onPointerDownOutside={(e) => !live.current.dismissable && e.preventDefault()}
+          onPointerDownOutside={(e) => (!live.current.dismissable || (scoped && !inPhone(e.target))) && e.preventDefault()}
           onFocusOutside={(e) => e.preventDefault()}
           data-closing={closing || undefined}
           className={cn(

@@ -12,11 +12,16 @@ import { phoneDisplay, phoneFont } from "./font";
 import "./mobile.css";
 
 type Snack = { id: number; text: string; action?: { label: string; onClick: () => void }; closing?: boolean };
-type DeviceCtx = { overlay: HTMLElement | null; snack: (text: string, action?: Snack["action"]) => void };
-const Ctx = createContext<DeviceCtx>({ overlay: null, snack: () => {} });
+type DeviceCtx = { overlay: HTMLElement | null; screen: HTMLElement | null; snack: (text: string, action?: Snack["action"]) => void };
+const Ctx = createContext<DeviceCtx>({ overlay: null, screen: null, snack: () => {} });
 
 /** Where in-phone overlays (bottom sheets, dialogs) portal to. */
 export const useOverlayHost = () => useContext(Ctx).overlay;
+/**
+ * The framed phone's app screen (desktop only; null when the app IS the page, below 640px). A modal sheet
+ * makes only this inert, so another device on the same page (Card's shop POS) stays usable.
+ */
+export const usePhoneScreen = () => useContext(Ctx).screen;
 /** Show an M3 snackbar at the bottom of the phone screen. */
 export const useSnackbar = () => useContext(Ctx).snack;
 
@@ -40,6 +45,7 @@ export function AndroidDevice({
   theme?: "paper" | "ink";
 }) {
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
+  const [screen, setScreen] = useState<HTMLElement | null>(null);
   const [snacks, setSnacks] = useState<Snack[]>([]);
   const seq = useRef(0);
   const snack = useCallback((text: string, action?: Snack["action"]) => {
@@ -118,7 +124,7 @@ export function AndroidDevice({
   );
 
   return (
-    <Ctx.Provider value={{ overlay, snack }}>
+    <Ctx.Provider value={{ overlay, screen: small ? null : screen, snack }}>
       <div ref={frame} className="relative sm:mx-auto sm:w-[360px] sm:pb-1" style={zoom < 1 ? { zoom } : undefined} role="group" aria-label={label}>
         {/* side keys: power + volume rocker on the right edge */}
         <span aria-hidden className="absolute top-[150px] -right-[3px] hidden h-[62px] w-[4px] rounded-r-[3px] bg-gradient-to-b from-[#3b4048] via-[#272a30] to-[#3b4048] sm:block" />
@@ -136,7 +142,7 @@ export function AndroidDevice({
               data-theme={theme}
             >
               <StatusBar bg={statusBar} />
-              <div className="m-scroll relative min-h-0 flex-1 max-sm:min-h-[calc(100dvh-58px)] max-sm:pb-[76px] sm:overflow-y-auto sm:pb-5">{children}</div>
+              <div ref={setScreen} className="m-scroll relative min-h-0 flex-1 max-sm:min-h-[calc(100dvh-58px)] max-sm:pb-[76px] sm:overflow-y-auto sm:pb-5">{children}</div>
               {/* gesture navigation handle (edge-to-edge, over the app) */}
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-30 hidden h-5 items-center justify-center sm:flex">
                 <span className="h-[4px] w-[108px] rounded-full bg-[var(--m-on-surface)] opacity-80" />
