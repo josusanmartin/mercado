@@ -4,7 +4,7 @@
 // flow of funds with the on-chain receipts. All numbers are live; only bill fulfillment is SIMULATED.
 import { useEffect, useState } from "react";
 import { ChevronRight, ExternalLink } from "lucide-react";
-import { FlowPath, Pulse } from "@/lib/motion";
+import { FlowPath, Pulse, type FlowState } from "@/lib/motion";
 import { useConnection } from "wagmi";
 import type { Address } from "viem";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
@@ -111,11 +111,18 @@ function SendFlow({ s }: { s: RemesasState }) {
   const mid = q.mid !== undefined ? Number(q.mid) / 1e8 : undefined;
   const rate = out !== undefined && inUsd > 0n ? Number(out) / Number(inUsd) : undefined;
   const quoted = out !== undefined && inUsd > 0n && !q.error;
+  // V6-TASTE #2: the flow's motion describes state. A quote is still; only an in-flight send travels; a receipt
+  // plays one arrival; a failed send stops where it failed (at Mamá if the conversion already confirmed).
+  const tx = s.send.tx;
+  const converted = tx.steps.some((st) => st.receipt && /^(Mint xMXN|Swap OUSD)/.test(st.label));
+  const flowState: FlowState = r ? "confirmed" : tx.isBusy ? "pending" : tx.status === "error" ? "failed" : quoted ? "quoted" : "idle";
+  const flowFailedAt = converted ? 2 : 1;
   // v6 "show, don't tell": the panel leads with the money flow; a dot travels it once there's a quote.
   const flow = (
     <FlowPath
       label="Where the money goes"
-      active={!!r || quoted}
+      state={flowState}
+      failedAt={flowFailedAt}
       nodes={[
         { label: "Sender (US)", value: inUsd > 0n ? `US$${fmtAmount(inUsd)}` : undefined, sub: "OUSD" },
         { label: q.venue, value: USE_V2 ? "mint" : "swap", sub: rate !== undefined ? `${fmtNumber(rate, 2)} MXN/USD` : "live rate" },
