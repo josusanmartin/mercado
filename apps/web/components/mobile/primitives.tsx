@@ -5,6 +5,7 @@
 import {
   forwardRef,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -64,10 +65,50 @@ export const Pressable = forwardRef<HTMLButtonElement, PressProps>(function Pres
 
 /* ───────────────────────── type ───────────────────────── */
 
-/** The display face: Archivo Black, uppercase, tight. Balances and screen titles. */
-export function Display({ children, size = 44, className, as: Tag = "p", style }: { children: ReactNode; size?: number; className?: string; as?: "p" | "h1" | "h2" | "span"; style?: CSSProperties }) {
+/**
+ * The display face: Archivo Black, uppercase, tight. Balances and screen titles.
+ * `fit` shrinks the size so one line never overflows its column (large balances, narrow phones).
+ */
+export function Display({
+  children,
+  size = 44,
+  fit,
+  className,
+  as: Tag = "p",
+  style,
+}: {
+  children: ReactNode;
+  size?: number;
+  fit?: boolean;
+  className?: string;
+  as?: "p" | "h1" | "h2" | "span";
+  style?: CSSProperties;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const [px, setPx] = useState(size);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!fit || !el) return;
+    const measure = () => {
+      el.style.fontSize = `${size}px`;
+      const avail = el.clientWidth;
+      const need = el.scrollWidth;
+      const next = need > avail && avail > 0 ? Math.max(18, Math.floor((size * avail) / need)) : size;
+      el.style.fontSize = `${next}px`;
+      setPx(next);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el.parentElement ?? el);
+    const mo = new MutationObserver(measure);
+    mo.observe(el, { childList: true, subtree: true, characterData: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+    };
+  }, [fit, size]);
   return (
-    <Tag className={cn("m-display", className)} style={{ fontSize: size, ...style }}>
+    <Tag ref={ref as never} className={cn("m-display", fit && "overflow-hidden whitespace-nowrap", className)} style={{ fontSize: fit ? px : size, ...style }}>
       {children}
     </Tag>
   );

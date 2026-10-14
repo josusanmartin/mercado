@@ -201,7 +201,7 @@ function Balance() {
         <Meta>Saldo total</Meta>
         <DemoBadge>Testnet · sin valor real</DemoBadge>
       </div>
-      <Display size={44} className="mt-2">
+      <Display size={48} fit className="mt-2">
         <TickUp value={total} format={(n) => `US${fmtMoney(n)}`} />
       </Display>
       <div className="mt-3 flex items-center gap-3">
@@ -224,12 +224,14 @@ function CurrencyBlock({ flag, code, name, amount, sub, style }: { flag: ReactNo
     <div className="grid min-w-0 gap-3 rounded-[8px] p-3.5" style={style}>
       <div className="flex items-center gap-2">
         {flag}
-        <span className="text-[11.5px] font-semibold tracking-[0.08em] uppercase opacity-80">
-          {code} · {name}
+        <span className="truncate text-[11.5px] font-semibold tracking-[0.08em] whitespace-nowrap uppercase opacity-80" title={code}>
+          {name}
         </span>
       </div>
-      <div>
-        <p className="m-display truncate text-[19px] leading-tight">{amount}</p>
+      <div className="min-w-0">
+        <Display size={22} fit className="leading-tight">
+          {amount}
+        </Display>
         <p className="mt-1 text-[11.5px] font-medium tracking-[0.06em] uppercase opacity-70">{sub}</p>
       </div>
     </div>
@@ -465,7 +467,7 @@ function Enviar({ s }: AppProps) {
 
       <div className="px-4 pt-5">
         <Meta>Envías</Meta>
-        <Display size={60} className={cn("mt-2", overBalance && "text-[var(--m-error)]")}>
+        <Display size={60} fit className={cn("mt-2", overBalance && "text-[var(--m-error)]")}>
           US${fmtTyping(amount)}
         </Display>
         <Meta className="mt-2">{overBalance ? "Saldo insuficiente" : `Disponible US${fmtMoney(bal.ousd)}`}</Meta>
