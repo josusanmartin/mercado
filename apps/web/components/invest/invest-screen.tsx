@@ -15,6 +15,7 @@ import { ConnectGate } from "@/components/shell/connect-gate";
 import { PhonePanel } from "@/components/mobile";
 import { Honesty } from "@/components/console/present";
 import { fmtAmount } from "@/lib/format";
+import { useOracle } from "@/lib/contracts";
 import { PhoneApp } from "./phone-app";
 import { INVEST, useInvestHistory, useInvestPositions } from "./use-invest";
 import { useLiveDollars, useLivePesos, type LiveValue } from "./use-live-yield";
@@ -82,6 +83,84 @@ function LiveEarned({
   );
 }
 
+const ALLOC_COLOR: Record<string, string> = {
+  Dollars: "var(--c-invest)",
+  Pesos: "color-mix(in oklab, var(--c-invest) 45%, var(--background))",
+  Stocks: "var(--foreground)",
+};
+
+/** One stacked bar of where the money sits (USD terms) + a legend with each share. Static: no looping motion. */
+function AllocationBar({
+  parts,
+}: {
+  parts: { key: string; usd: number | undefined }[];
+}) {
+  const known = parts.filter((x) => x.usd !== undefined) as {
+    key: string;
+    usd: number;
+  }[];
+  const total = known.reduce((a, x) => a + x.usd, 0);
+  const ready = known.length === parts.length;
+  return (
+    <figure
+      className="grid gap-2 pt-2 pb-4"
+      aria-label="Allocation by value in US dollars"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="meta text-muted-foreground">Allocation</span>
+        <span className="tabular text-[15px] font-semibold">
+          {ready
+            ? `US$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : "…"}
+        </span>
+      </div>
+      <div
+        className="bg-muted flex h-2.5 w-full overflow-hidden rounded-full"
+        role="img"
+        aria-label={
+          ready && total > 0
+            ? parts
+                .map(
+                  (x) =>
+                    `${x.key} ${Math.round(((x.usd ?? 0) / total) * 100)}%`,
+                )
+                .join(", ")
+            : "Loading"
+        }
+      >
+        {ready &&
+          total > 0 &&
+          known.map((x) => (
+            <span
+              key={x.key}
+              style={{
+                width: `${(x.usd / total) * 100}%`,
+                background: ALLOC_COLOR[x.key],
+              }}
+            />
+          ))}
+      </div>
+      <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+        {parts.map((x) => (
+          <span key={x.key} className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="size-2 rounded-full"
+              style={{ background: ALLOC_COLOR[x.key] }}
+            />
+            {x.key}{" "}
+            <span className="text-muted-foreground tabular">
+              {ready && total > 0 && x.usd !== undefined
+                ? `${Math.round((x.usd / total) * 100)}%`
+                : "…"}
+            </span>
+          </span>
+        ))}
+      </figcaption>
+    </figure>
+  );
+}
+
 export function InvestScreen() {
   if (INVEST.protocol !== "v2" || !INVEST.sOUSD || !INVEST.deskIdx)
     return (
@@ -105,6 +184,7 @@ export function InvestScreen() {
 function InvestV2() {
   const p = useInvestPositions();
   // exact per-second accrual (StakedOUSD formula), the same source as the phone's ticking counters
+  const fx = useOracle();
   const liveDol = useLiveDollars();
   const livePes = useLivePesos();
   const h = useInvestHistory();
@@ -184,112 +264,162 @@ function InvestV2() {
         <PhonePanel className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
           <Panel
             title="Portfolio"
-            description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
+            description="Your positions and what they earned, from your own on-chain deposits and trades."
           >
-            <p className="text-muted-foreground pt-2 text-[13px] font-medium">
-              Dollar savings · sOUSD
-            </p>
+            {/* v6 "show, don't tell": one allocation bar + one line per position; the sources sit behind "How it works" */}
+            <AllocationBar
+              parts={[
+                {
+                  key: "Dollars",
+                  usd:
+                    p.dollars?.value === undefined
+                      ? undefined
+                      : Number(p.dollars.value) / 1e6,
+                },
+                {
+                  key: "Pesos",
+                  usd:
+                    (vault ? vault.value : p.pesos.balance) === undefined ||
+                    !fx.rate
+                      ? undefined
+                      : Number((vault ? vault.value : p.pesos.balance)!) /
+                        1e6 /
+                        fx.rate,
+                },
+                {
+                  key: "Stocks",
+                  usd:
+                    p.stocks?.value === undefined
+                      ? undefined
+                      : Number(p.stocks.value) / 1e6,
+                },
+              ]}
+            />
             <Rows>
               <Row
-                label="Value"
+                label="Dollar savings"
                 value={v(p.dollars?.value, "OUSD")}
-                sub={`${v(p.dollars?.shares, "sOUSD shares")} · ${pct(p.dollars?.aprBps)} a year, accrued every second`}
+                sub={
+                  <>
+                    {unscoped(dolScoped, "sOUSD shares") ?? (
+                      <LiveEarned
+                        live={liveDol}
+                        base={net?.netDolares}
+                        unit="OUSD"
+                        fallback={signed(earnedDol, "OUSD")}
+                      />
+                    )}{" "}
+                    earned · {pct(p.dollars?.aprBps)} a year
+                  </>
+                }
               />
               <Row
-                label="Earned since deposit"
-                value={
-                  unscoped(dolScoped, "sOUSD shares") ?? (
-                    <LiveEarned
-                      live={liveDol}
-                      base={net?.netDolares}
-                      unit="OUSD"
-                      fallback={signed(earnedDol, "OUSD")}
-                    />
+                label="Peso savings"
+                value={v(vault ? vault.value : p.pesos.balance, "xMXN")}
+                sub={
+                  vault ? (
+                    <>
+                      {unscoped(pesoScoped, "sxMXN shares") ?? (
+                        <LiveEarned
+                          live={livePes}
+                          base={net?.netPesosVault}
+                          unit="xMXN"
+                          fallback={signed(earnedPesos, "xMXN")}
+                        />
+                      )}{" "}
+                      earned · {pct(vault.aprBps)} a year
+                    </>
+                  ) : (
+                    <>{signed(earnedPesos, "xMXN")} earned · variable</>
                   )
                 }
-                sub={`Source: admin-funded demo yield reserve (${v(p.dollars?.yieldReserve, "OUSD", 0)} left). Accrual stops if it runs out.`}
+              />
+              <Row
+                label="Stocks · mIDX"
+                value={v(p.stocks?.value, "OUSD")}
+                sub={
+                  <>
+                    {v(p.stocks?.balance, "mIDX", 4)} at{" "}
+                    {p.stocks?.px8 === undefined
+                      ? "…"
+                      : `$${(Number(p.stocks.px8) / 1e8).toFixed(2)}`}{" "}
+                    ·{" "}
+                    {unscoped(idxScoped, "mIDX (e.g. Mint collateral)") ??
+                      signed(idxPnl, "OUSD")}{" "}
+                    vs cost
+                    {p.stocks?.priceValid === false && (
+                      <span className="text-destructive">
+                        {" "}
+                        · feed STALE: trading refused
+                      </span>
+                    )}
+                  </>
+                }
               />
             </Rows>
-
-            <p className="text-muted-foreground pt-6 text-[13px] font-medium">
-              Peso savings · {vault ? "sxMXN" : "lending pool"}
-            </p>
-            {vault ? (
-              <Rows>
-                <Row
-                  label="Value"
-                  value={v(vault.value, "xMXN")}
-                  sub={`${v(vault.shares, "sxMXN shares")} · ${pct(vault.aprBps)} a year, accrued every second`}
-                />
-                <Row
-                  label="Earned since deposit"
-                  value={
-                    unscoped(pesoScoped, "sxMXN shares") ?? (
-                      <LiveEarned
-                        live={livePes}
-                        base={net?.netPesosVault}
-                        unit="xMXN"
-                        fallback={signed(earnedPesos, "xMXN")}
-                      />
-                    )
-                  }
-                  sub={`Source: admin-funded demo yield reserve (${v(vault.yieldReserve, "xMXN", 0)} left). Accrual stops if it runs out.`}
-                />
-              </Rows>
-            ) : (
-              <Rows>
-                <Row
-                  label="Balance"
-                  value={v(p.pesos.balance, "xMXN")}
-                  sub="Your share of the pool: principal plus realized fees"
-                />
-                <Row
-                  label="Earned since deposit"
-                  value={signed(earnedPesos, "xMXN")}
-                  sub="Source: fees drivers actually paid on repaid advances. Variable, not guaranteed."
-                />
-                <Row
-                  label="Withdrawable now"
-                  value={v(p.pesos.withdrawable, "xMXN")}
-                  sub={`Your claim, capped by idle pool cash (${v(p.pesos.poolCash, "xMXN", 0)} across all lenders); lent funds return as drivers repay`}
-                />
-              </Rows>
-            )}
-
-            <p className="text-muted-foreground pt-6 text-[13px] font-medium">
-              Stocks · mIDX (Mercado US Equity Index)
-            </p>
-            <Rows>
-              <Row
-                label="Holding"
-                value={v(p.stocks?.balance, "mIDX", 4)}
-                sub={`Worth ${v(p.stocks?.value, "OUSD")} at ${p.stocks?.px8 === undefined ? "…" : `$${(Number(p.stocks.px8) / 1e8).toFixed(2)}`}${p.stocks?.priceValid === false ? " (feed STALE: trading refused)" : ""}`}
-              />
-              <Row
-                label="Gain / loss vs cost"
-                value={
-                  unscoped(idxScoped, "mIDX (e.g. Mint collateral)") ??
-                  signed(idxPnl, "OUSD")
-                }
-                sub="Includes the desk's spread. Demo index token with an admin price feed, not a security."
-              />
-              <Row
-                label="Sellable to the desk"
-                value={v(sellable, "mIDX", 4)}
-                sub="The desk only buys back what this wallet bought there. mIDX received from others (or seized in a Mint liquidation) can't be sold here."
-              />
-              <Row
-                label="Use as collateral"
-                value={
+            <details className="mt-4 text-[13px]">
+              <summary className="text-muted-foreground hover:text-foreground cursor-pointer">
+                How it works
+              </summary>
+              <ul className="text-muted-foreground grid gap-2 pt-3">
+                <li>
+                  <span className="text-foreground font-medium">
+                    Dollar savings (sOUSD).
+                  </span>{" "}
+                  Accrues every second at the configured rate,
+                  <Honesty>
+                    {" "}
+                    paid from an admin-funded demo yield reserve (
+                    {v(p.dollars?.yieldReserve, "OUSD", 0)} left). Accrual stops
+                    if it runs out.
+                  </Honesty>
+                </li>
+                <li>
+                  <span className="text-foreground font-medium">
+                    Peso savings ({vault ? "sxMXN" : "lending pool"}).
+                  </span>{" "}
+                  {vault ? (
+                    <>
+                      Same vault design over xMXN,
+                      <Honesty>
+                        {" "}
+                        paid from an admin-funded demo yield reserve (
+                        {v(vault.yieldReserve, "xMXN", 0)} left).
+                      </Honesty>
+                    </>
+                  ) : (
+                    <>
+                      Your share of the driver-advance pool; earnings are fees
+                      drivers actually paid. Withdrawable now:{" "}
+                      {v(p.pesos.withdrawable, "xMXN")} (capped by idle pool
+                      cash). Variable, not guaranteed.
+                    </>
+                  )}
+                </li>
+                <li>
+                  <span className="text-foreground font-medium">
+                    Stocks (mIDX).
+                  </span>{" "}
+                  Bought and sold at the desk around its price feed, spread
+                  included. Sellable to the desk: {v(sellable, "mIDX", 4)} (it
+                  only buys back what this wallet bought there).
+                  <Honesty>
+                    {" "}
+                    Demo index token with an admin price feed, not a security.
+                  </Honesty>{" "}
                   <Link
                     href="/mint"
                     className="text-product font-medium hover:underline"
                   >
                     Mint xMXN against mIDX →
                   </Link>
-                }
-              />
-            </Rows>
+                </li>
+                <li>
+                  The allocation bar converts pesos at the oracle rate (
+                  {fx.rate ? `${fx.rate.toFixed(2)} MXN/USD` : "…"}).
+                </li>
+              </ul>
+            </details>
           </Panel>
 
           <Panel
