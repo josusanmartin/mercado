@@ -35,9 +35,9 @@ import {
 } from "@/lib/contracts";
 import { fmtAmount, toUnits } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TxProgress } from "@/components/shell/tx-progress";
 import { AgentApiPanel } from "./agent-api-panel";
 import { EarningsChart } from "./earnings-chart";
-import { TxStatus } from "./tx-status";
 import {
   PROFILES,
   useCountdown,
@@ -442,7 +442,10 @@ export function CreditScreen() {
                 </Button>
               </PanelActions>
               <div className="pt-3">
-                <TxStatus tx={drawTx.tx} />
+                <TxProgress
+                  tx={drawTx.tx}
+                  successNote="Advance received. A fresh offer was requested for your next draw."
+                />
               </div>
             </>
           )}
@@ -515,7 +518,10 @@ export function CreditScreen() {
             </PanelActions>
           )}
           <div className="pt-3">
-            <TxStatus tx={repayTx.tx} />
+            <TxProgress
+              tx={repayTx.tx}
+              successNote="Repayment recorded on-chain."
+            />
           </div>
         </Panel>
       )}

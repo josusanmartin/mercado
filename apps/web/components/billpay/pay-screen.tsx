@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBalances, usePool } from "@/lib/contracts";
+import { useReportBusy } from "@/lib/busy";
 import { fmtAmount } from "@/lib/format";
 import { PayStepper } from "./pay-stepper";
 import { RecentOrders } from "./recent-orders";
@@ -56,6 +57,8 @@ export function PayScreen() {
     "signing",
     "verifying",
   ].includes(flow.stage);
+  // R-012: lock persona switching / the Tour while a payment is in flight.
+  useReportBusy(busy);
   const insufficient =
     q && balances.xmxn !== undefined && balances.xmxn < BigInt(q.amount);
 

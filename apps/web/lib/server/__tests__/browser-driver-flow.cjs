@@ -26,7 +26,7 @@ const S = process.env.SHOTS_DIR ?? "/tmp/";
       await p.getByRole("button", { name: "Draw an advance" }).click();
       await p.getByPlaceholder("Amount in xMXN").fill("50");
       await p.getByRole("button", { name: "Draw advance" }).click();
-      await p.getByText(/Draw advance ✓/).waitFor({ timeout: 60000 });
+      await p.getByText(/Advance received/).waitFor({ timeout: 90000 });
     });
     await p.waitForTimeout(6000);
     await p.screenshot({ path: S + "e2e-credit.png", fullPage: true });
