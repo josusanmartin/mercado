@@ -46,7 +46,7 @@ P = [
 
 def slide(p):
     prod = p["art"].replace("product-", "").replace("-v4.webp", "")
-    key = next((k for k in (f"screen-{prod}-v2live.png", f"screen-{prod}-v4.png") if k in assets), None)
+    key = next((k for k in (f"screen-{prod}-v2live2.png", f"screen-{prod}-v2live.png", f"screen-{prod}-v4.png") if k in assets), None)
     shot = key is not None
     art = assets[key] if shot else assets.get(p["art"], "ART_" + p["art"])
     alt = (p["name"] + " in the Mercado app: product header, live KPIs and the first tab") if shot else ""
