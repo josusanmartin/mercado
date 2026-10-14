@@ -7,9 +7,18 @@ import "./globals.css";
 const body = Inter_Tight({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 const display = Archivo_Black({ variable: "--font-display-face", subsets: ["latin"], weight: "400", display: "swap" });
 
+const DESCRIPTION =
+  "A plug-and-play financial system for emerging markets on Tempo: one local stablecoin to mint, send, borrow, spend and save. Mexico first, live on Tempo testnet.";
+
+// Link previews (Twitter launch): app/opengraph-image.png + twitter-image.png need an absolute base URL.
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3100",
+  ),
   title: { default: "Mercado · a parallel financial system on Tempo", template: "%s · Mercado" },
-  description: "Testnet prototype: create xMXN synthetic pesos backed by testnet OUSD, then send them, borrow them and pay with them on Tempo.",
+  description: DESCRIPTION,
+  openGraph: { title: "Mercado", description: DESCRIPTION, siteName: "Mercado", type: "website" },
+  twitter: { card: "summary_large_image", title: "Mercado", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = { themeColor: "#ffffff" };
