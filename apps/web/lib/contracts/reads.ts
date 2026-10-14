@@ -451,3 +451,71 @@ export function useMyPositions(user?: Address) {
   });
   return { ...q, positions, open: positions.filter((p) => (p.collateral ?? 0n) > 0n || (p.debt ?? 0n) > 0n) };
 }
+
+// ---------------------------------------------------------------- exchange state (Global backing panel)
+
+/** The active protocol's exchange: v2 MoveAMM balance sheet + redemption bucket, or v1 swap desk inventory. */
+export function useExchangeState() {
+  const { address } = useConnection();
+  const q = useReadContracts({
+    contracts: V2
+      ? [
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "state", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "feeBps", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "depthUsd", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "maxSwapUsd", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "redeemCapBps", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "paused", chainId: CHAIN_ID },
+          { address: ADDR.vamm, abi: moveAmmAbi, functionName: "minMintCoverageBps", chainId: CHAIN_ID },
+        ]
+      : [
+          { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
+          { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "spreadBps", chainId: CHAIN_ID },
+          { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "maxSwapXmxn", chainId: CHAIN_ID },
+          { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "dailyCapOusd", chainId: CHAIN_ID },
+          { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "paused", chainId: CHAIN_ID },
+          {
+            address: ADDR.swapDesk,
+            abi: swapDeskAbi,
+            functionName: "remainingDailyCap",
+            args: [address ?? "0x0000000000000000000000000000000000000000"],
+            chainId: CHAIN_ID,
+          },
+        ],
+    query: REFRESH,
+  } as never);
+  const d = (q.data ?? []) as { status: string; result?: unknown }[];
+  if (V2) {
+    const st = ok<readonly [bigint, bigint, bigint, bigint, bigint, bigint]>(d[0]);
+    return {
+      ...q,
+      protocol: "v2" as const,
+      venue: ADDR.vamm,
+      reserveOusd: st?.[0],
+      liabilityXmxn: st?.[1],
+      equityOusd: st?.[2],
+      coverageBps: st?.[3],
+      bucketUsedOusd: st?.[4],
+      bucketCapOusd: st?.[5],
+      feeBps: ok<bigint>(d[1]),
+      depthUsd: ok<bigint>(d[2]),
+      maxSwapUsd: ok<bigint>(d[3]),
+      redeemCapBps: ok<bigint>(d[4]),
+      paused: ok<boolean>(d[5]),
+      minMintCoverageBps: ok<bigint>(d[6]),
+    };
+  }
+  const r = ok<readonly [bigint, bigint]>(d[0]);
+  return {
+    ...q,
+    protocol: "v1" as const,
+    venue: ADDR.swapDesk,
+    reserveOusd: r?.[0],
+    reserveXmxn: r?.[1],
+    feeBps: ok<bigint>(d[1]),
+    maxSwapXmxn: ok<bigint>(d[2]),
+    dailyCapOusd: ok<bigint>(d[3]),
+    paused: ok<boolean>(d[4]),
+    remainingDailyCap: address ? ok<bigint>(d[5]) : undefined,
+  };
+}

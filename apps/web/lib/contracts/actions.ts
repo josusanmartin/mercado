@@ -7,7 +7,8 @@ import { useCallback } from "react";
 import { hexToString, isAddress, parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
 import { useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
-import { ADDR, CHAIN_ID } from "./addresses";
+import { moveAmmAbi } from "@mercado/shared";
+import { ADDR, CHAIN_ID, PROTOCOL } from "./addresses";
 import { creditPoolAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
 import { readableError } from "./errors";
 import { useTx, type TxApi, type TxStep } from "./tx";
@@ -168,6 +169,42 @@ export function useMercado() {
             `The swap went through (you now hold the xMXN), but sending failed: ${readableError(e)} Retry with "Send only", no new swap needed.`,
           );
         }
+      }),
+
+    // ---------------------------------------------------------------- exchange (Global / Remesas), protocol-aware
+    /** OUSD → xMXN delivered to `to`. v2: MoveAMM mints straight to `to` in one tx (the AMM can't attach a TIP-20
+     *  memo, so a memo is validated but not sent on-chain in v2). v1: swap desk, then transfer (memo on-chain). */
+    exchangeUsdToMxn: (amountIn: bigint, quotedOut: bigint, to: Address, memo?: string, slippageBps = 50n) =>
+      tx.run(async (t) => {
+        checkRecipient(to);
+        const memo32 = memo ? memoToBytes32(memo) : undefined;
+        const minOut = withSlippage(quotedOut, slippageBps);
+        if (PROTOCOL === "v2") {
+          await approveIfNeeded(t, ADDR.ousd, ADDR.vamm, amountIn, "OUSD");
+          const s = await t.write(call(ADDR.vamm, moveAmmAbi as Abi, "swapOusdForXmxn", [amountIn, minOut, to]), "Pay in OUSD, deliver xMXN");
+          return s;
+        }
+        await approveIfNeeded(t, ADDR.ousd, ADDR.swapDesk, amountIn, "OUSD");
+        const swapped = await t.write(desk("swapOusdForXmxn", [amountIn, minOut]), "Swap OUSD → xMXN");
+        const [ev] = parseEventLogs({ abi: swapDeskAbi, eventName: "Swapped", logs: swapped.receipt?.logs ?? [] });
+        const send = ev?.args.amountOut ?? minOut;
+        return t.write(
+          memo32
+            ? call(ADDR.xmxn, tokenAbi as Abi, "transferWithMemo", [to, send, memo32])
+            : call(ADDR.xmxn, tokenAbi as Abi, "transfer", [to, send]),
+          "Deliver xMXN",
+        );
+      }),
+    /** xMXN → OUSD to the caller. v2: MoveAMM burns the xMXN and pays from its own reserve. v1: swap desk. */
+    exchangeMxnToUsd: (amountIn: bigint, quotedOut: bigint, slippageBps = 50n) =>
+      tx.run(async (t) => {
+        const minOut = withSlippage(quotedOut, slippageBps);
+        if (PROTOCOL === "v2") {
+          await approveIfNeeded(t, ADDR.xmxn, ADDR.vamm, amountIn, "xMXN");
+          return t.write(call(ADDR.vamm, moveAmmAbi as Abi, "swapXmxnForOusd", [amountIn, minOut, t.account]), "Redeem xMXN → OUSD");
+        }
+        await approveIfNeeded(t, ADDR.xmxn, ADDR.swapDesk, amountIn, "xMXN");
+        return t.write(desk("swapXmxnForOusd", [amountIn, minOut]), "Swap xMXN → OUSD");
       }),
 
     // ---------------------------------------------------------------- credit pool (Advance / Earn)
