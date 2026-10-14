@@ -11,7 +11,7 @@ import { fmtAmount, shortAddr } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { PERSONAS, type PersonaId } from "@/components/wallet/personas";
-import { usePersona } from "@/components/wallet/use-persona";
+import { PersonaRestore, usePersona } from "@/components/wallet/use-persona";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { NetworkBadge } from "@/components/shell/network-badge";
 import { useState } from "react";
@@ -23,7 +23,8 @@ export function ProfileBar() {
   const [pending, setPending] = useState<PersonaId>();
   const bal = useBalances();
   const now = useNow(15_000);
-  const otherWallet = isConnected && !active;
+  const { stale } = usePersona();
+  const otherWallet = isConnected && !active && !stale;
 
   async function pick(id: PersonaId) {
     if (busy) return toast.warning("Wait for the current transaction to finish first.");
@@ -39,6 +40,7 @@ export function ProfileBar() {
 
   return (
     <div className="flex items-center gap-3 sm:gap-6">
+      <PersonaRestore />
       <nav aria-label="Profiles" data-nav="row" className="scrollbar-none -my-2 flex min-w-0 items-center gap-2 overflow-x-auto py-2 pl-1 sm:gap-3">
         {PERSONAS.map((p) => {
           const on = active?.id === p.id;

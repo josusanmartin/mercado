@@ -1,7 +1,7 @@
 "use client";
 // Connect a Demo Tour persona through wagmi's Tempo secp256k1 connector, so every screen and hook
 // sees it as an ordinary connected wallet.
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useConfig, useConnection } from "wagmi";
 import { connect, disconnect } from "wagmi/actions";
 import { dangerous_secp256k1 } from "wagmi/tempo";
@@ -12,7 +12,13 @@ import { personaByAddress, personaById, type PersonaId } from "./personas";
 export function usePersona() {
   const config = useConfig();
   const { address, connector } = useConnection();
-  const active = connector?.type === "secp256k1" ? personaByAddress(address) : undefined;
+  const persona = personaByAddress(address);
+  const local = connector?.type === "secp256k1";
+  // Active only when it signs with the local demo key. After a reload the `accounts` provider can
+  // restore a persona's address under the Tempo Wallet connector, whose writes open the tempo.xyz
+  // dialog instead; that session is "stale" and gets reconnected with the key (see PersonaRestore).
+  const active = persona && local ? persona : undefined;
+  const stale = persona && !local ? persona : undefined;
 
   const switchTo = useCallback(
     async (id: PersonaId) => {
@@ -28,5 +34,17 @@ export function usePersona() {
     [config, active?.id],
   );
 
-  return { active, switchTo };
+  return { active, stale, switchTo };
+}
+
+/** Mounted once in the shell: silently re-attach a restored persona session to its local demo key. */
+export function PersonaRestore() {
+  const { stale, switchTo } = usePersona();
+  const tried = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!stale || tried.current === stale.id) return;
+    tried.current = stale.id;
+    void switchTo(stale.id).catch(() => {});
+  }, [stale, switchTo]);
+  return null;
 }
