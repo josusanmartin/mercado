@@ -29,7 +29,6 @@ import { personaById } from "@/components/wallet/personas";
 import {
   useBalances,
   useExchangeState,
-  useFlowTotals,
   useMercado,
 } from "@/lib/contracts";
 import { fmtAmount, toUnits } from "@/lib/format";
@@ -54,45 +53,6 @@ const pct = (bps: bigint | number | undefined) =>
 
 export function GlobalScreen() {
   const [tab, setTab] = useState<Tab>("pay");
-  const ex = useExchangeState();
-  const flows = useFlowTotals();
-
-  const kpis =
-    ex.protocol === "v2"
-      ? [
-          {
-            label: "Exchange reserve",
-            value: v(ex.reserveOusd, "OUSD", 0),
-            sub: "Backs xMXN the exchange issued",
-          },
-          {
-            label: "Coverage",
-            value: pct(ex.coverageBps),
-            sub: "Reserve ÷ exchange liability",
-          },
-          {
-            label: "Moved USD → MXN",
-            value: v(flows.data?.movedUsdToMxn, "OUSD", 0),
-            sub: "All-time, on-chain",
-          },
-        ]
-      : [
-          {
-            label: "Desk OUSD inventory",
-            value: v(ex.reserveOusd, "OUSD", 0),
-            sub: "v1 capped demo desk",
-          },
-          {
-            label: "Desk xMXN inventory",
-            value: v(ex.reserveXmxn, "xMXN", 0),
-            sub: "Finite, owner-seeded",
-          },
-          {
-            label: "Moved USD → MXN",
-            value: v(flows.data?.movedUsdToMxn, "OUSD", 0),
-            sub: "All-time, on-chain",
-          },
-        ];
 
   return (
     <SettingsLayout
@@ -110,7 +70,6 @@ export function GlobalScreen() {
           </span>
         </>
       }
-      kpis={kpis}
       list={
         <ListPane
           label="Mercado Global"

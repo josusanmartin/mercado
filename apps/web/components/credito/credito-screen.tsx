@@ -1,5 +1,5 @@
 "use client";
-// Mercado Crédito (v2, crew/DESIGN-ECOSYSTEM.md §5): ONE product header (live pool KPIs) and ONE tab row:
+// Mercado Crédito (v2, crew/DESIGN-ECOSYSTEM.md §5): ONE product header and ONE tab row:
 //   Driver app  → web's Android-framed driver app (Uber/DiDi/Rappi demo connection → line → draw → repay)
 //   Back office → the credit platform: KPIs, loan book, underwriting, lenders, Underwriting API
 // The tab is synced to ?tab= and switches the Demo-mode role (Driver ↔ Lender).
@@ -7,8 +7,6 @@ import { useEffect, useState } from "react";
 import { LayoutDashboard, Smartphone } from "lucide-react";
 import { ListPane, SettingsLayout } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
-import { usePool } from "@/lib/contracts";
-import { fmtAmount } from "@/lib/format";
 import { BackOffice } from "./back-office";
 import { DriverApp } from "./driver-app";
 
@@ -35,8 +33,6 @@ function tabFromUrl(): Tab {
   return TABS.some((x) => x.id === t) ? (t as Tab) : "driver";
 }
 
-const xmxn = (v: bigint | undefined, digits = 0) =>
-  v === undefined ? "…" : `${fmtAmount(v, digits)} xMXN`;
 
 export function CreditoScreen() {
   // Rendered inside ClientOnly, so window is available on first render.
@@ -47,7 +43,6 @@ export function CreditoScreen() {
     window.history.replaceState(null, "", url);
   }, [tab]);
 
-  const pool = usePool();
 
   return (
     <SettingsLayout
@@ -66,23 +61,6 @@ export function CreditoScreen() {
           </span>
         </>
       }
-      kpis={[
-        {
-          label: "Available to lend",
-          value: xmxn(pool.available),
-          sub: "Idle pool cash",
-        },
-        {
-          label: "Advances out",
-          value: xmxn(pool.outstanding),
-          sub: "Principal owed by drivers",
-        },
-        {
-          label: "Fees paid to lenders",
-          value: xmxn(pool.realizedFees, 2),
-          sub: "From repaid advances",
-        },
-      ]}
       list={
         <ListPane
           label="Mercado Crédito"

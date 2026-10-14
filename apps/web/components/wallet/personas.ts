@@ -3,7 +3,7 @@
 // (apps/web/.env.local, NEXT_PUBLIC_DEMO_*) so Demo mode works in one click. No real value.
 import type { Address, Hex } from "viem";
 
-export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender" | "merchant" | "saver";
+export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender" | "merchant" | "saver" | "partner";
 
 export type Persona = {
   id: PersonaId;
@@ -73,6 +73,14 @@ export const PERSONAS: Persona[] = [
     blurb: "Saves in pesos and dollars and buys demo T-bills.",
     address: process.env.NEXT_PUBLIC_DEMO_SAVER_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_SAVER_PRIVATE_KEY as Hex | undefined,
+  },
+  {
+    id: "partner",
+    name: "API partner (demo)",
+    role: "Developers",
+    blurb: "A third-party app that pays Mercado's APIs per call over HTTP 402.",
+    address: process.env.NEXT_PUBLIC_DEMO_PARTNER_ADDRESS as Address | undefined,
+    privateKey: process.env.NEXT_PUBLIC_DEMO_PARTNER_PRIVATE_KEY as Hex | undefined,
   },
 ];
 

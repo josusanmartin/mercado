@@ -1,0 +1,350 @@
+"use client";
+// /developers: Mercado APIs over HTTP 402 (MPP). Every paid endpoint with its live price, the real 402
+// challenge (decoded from a no-payment call), copy-paste curl + an mppx client snippet, and a LIVE "Try it"
+// that pays from the API partner demo account and shows 402 → pay → 200 + Payment-Receipt.
+import { useEffect, useState } from "react";
+import {
+  Check,
+  Copy,
+  FileText,
+  Receipt as ReceiptIcon,
+  Repeat,
+} from "lucide-react";
+import { Challenge } from "mppx";
+import { Fetch } from "mppx/client";
+import { explorerTx } from "@mercado/shared";
+import {
+  ListPane,
+  Panel,
+  PanelActions,
+  Row,
+  Rows,
+  SettingsLayout,
+} from "@/components/console";
+import { ConnectGate } from "@/components/shell/connect-gate";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { personaById } from "@/components/wallet/personas";
+import { PaidCalls } from "@/components/credito/paid-calls";
+import { usePricing } from "@/components/credito/use-pricing";
+import { fmtAmount } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import {
+  ENDPOINTS,
+  curlFor,
+  snippetFor,
+  type EndpointId,
+  type PaidEndpoint,
+} from "./endpoints";
+import { useTryIt, type TraceStep } from "./use-try-it";
+
+const ICONS = {
+  underwriting: FileText,
+  "move-quote": Repeat,
+  bills: ReceiptIcon,
+} as const;
+const DRIVER =
+  personaById("driver")?.address ??
+  "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63";
+
+export function DevelopersScreen() {
+  const [tab, setTab] = useState<EndpointId>("underwriting");
+  const pricing = usePricing();
+  // client-only page (ClientOnly wrapper), so window is defined
+  const [origin] = useState(() => window.location.origin);
+  const e = ENDPOINTS.find((x) => x.id === tab)!;
+
+  const price = (id: EndpointId) => {
+    const p = pricing.data;
+    if (!p) return "…";
+    if (id === "bills")
+      return !p.bills
+        ? "the quoted bill"
+        : `the quoted bill (${fmtAmount(BigInt(p.bills.perMxn))} ${p.bills.symbol} per MXN)`;
+    return `${fmtAmount(BigInt(p[id].amount))} ${p[id].symbol} per call`;
+  };
+
+  return (
+    <SettingsLayout
+      title="Mercado APIs over HTTP 402"
+      demo="partner"
+      meta={
+        pricing.data
+          ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value · Testnet · sin valor real`
+          : undefined
+      }
+      purpose={
+        <>
+          Pay per call with MPP: no API key, account or card. Each endpoint
+          answers HTTP 402 with a payment challenge; your client pays in xMXN on
+          Tempo and retries with the credential, and the response carries a
+          Payment-Receipt you can check on the explorer.
+          <span className="mt-3 flex flex-wrap gap-2">
+            <Badge variant="mock">Testnet · xMXN has no real value</Badge>
+          </span>
+        </>
+      }
+      list={
+        <ListPane
+          label="Endpoints"
+          items={ENDPOINTS.map((x) => ({
+            id: x.id,
+            label: x.title,
+            icon: ICONS[x.id],
+            hint: x.product,
+          }))}
+          value={tab}
+          onChange={(id) => setTab(id as EndpointId)}
+        />
+      }
+    >
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
+          <Panel title={e.title} description={e.summary}>
+            <Rows>
+              <Row
+                label="Request"
+                value={
+                  <span className="font-mono text-[13px]">
+                    {e.method} {e.path}
+                  </span>
+                }
+              />
+              <Row
+                label="Price"
+                value={price(e.id)}
+                sub="Live from /api/mpp/pricing (what the route charges)"
+              />
+              <Row label="Returns" value={e.returns} />
+              <Row
+                label="Settles"
+                value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
+              />
+            </Rows>
+          </Panel>
+          <ChallengeShape key={e.id} endpoint={e} />
+          <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
+          <Code
+            title="mppx client: pay and get the response"
+            code={snippetFor(e, origin, DRIVER)}
+          />
+        </div>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
+          <TryIt key={e.id} endpoint={e} />
+          {e.id !== "bills" && (
+            <PaidCalls
+              product={e.id}
+              title="Paid calls ledger"
+              description="Every paid call to this endpoint, recorded when its payment was verified on-chain."
+            />
+          )}
+        </div>
+      </div>
+    </SettingsLayout>
+  );
+}
+
+/** The real 402 for this endpoint, fetched WITHOUT paying (unwrapped fetch, no credential). */
+function ChallengeShape({ endpoint }: { endpoint: PaidEndpoint }) {
+  const [shape, setShape] = useState<{
+    header: string;
+    decoded: unknown;
+    body: unknown;
+  }>();
+  const [error, setError] = useState<string>();
+  useEffect(() => {
+    if (endpoint.needsQuote) return; // bills: shown in the Try-it trace (a probe would open an order)
+    const raw = Fetch.unwrapFetch(globalThis.fetch);
+    const init: RequestInit =
+      endpoint.method === "POST"
+        ? {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(endpoint.body!({ borrower: DRIVER })),
+          }
+        : {};
+    raw(endpoint.path, init)
+      .then(async (res) => {
+        const header = res.headers.get("WWW-Authenticate") ?? "";
+        if (res.status !== 402 || !header)
+          throw new Error(`Expected 402, got ${res.status}`);
+        const c = Challenge.deserialize(header);
+        setShape({
+          header,
+          decoded: {
+            id: c.id,
+            realm: c.realm,
+            method: c.method,
+            intent: c.intent,
+            request: c.request,
+            expires: c.expires,
+            description: c.description,
+            opaque: c.meta,
+          },
+          body: await res.json().catch(() => undefined),
+        });
+      })
+      .catch((e) => setError((e as Error).message));
+  }, [endpoint]);
+
+  return (
+    <Panel
+      title="The 402 challenge"
+      description={`${endpoint.needsQuote ? "" : "Live: this endpoint called just now without paying. "}The challenge is HMAC-signed by Mercado, so the amount, token, recipient, chain and order binding can't be altered.`}
+      aside={
+        endpoint.needsQuote ? undefined : <Badge variant="success">Live</Badge>
+      }
+    >
+      {endpoint.needsQuote && (
+        <p className="text-muted-foreground py-2 text-[15px]">
+          Same shape, with the amount set to the quoted bill and externalId to
+          the order. Run “Try it” to see a real one decoded step by step.
+        </p>
+      )}
+      {error && <p className="text-destructive py-2 text-[15px]">{error}</p>}
+      {!endpoint.needsQuote && !shape && !error && (
+        <p className="text-muted-foreground py-2 text-[15px]">Calling…</p>
+      )}
+      {shape && (
+        <div className="grid gap-3 pt-2">
+          <p className="text-muted-foreground text-[13px]">
+            HTTP/1.1 402 Payment Required · WWW-Authenticate
+          </p>
+          <pre className="bg-muted overflow-x-auto rounded-[12px] p-4 font-mono text-[12px] leading-relaxed break-all whitespace-pre-wrap">
+            {shape.header}
+          </pre>
+          <p className="text-muted-foreground text-[13px]">Decoded challenge</p>
+          <pre className="bg-muted overflow-x-auto rounded-[12px] p-4 font-mono text-[12px] leading-relaxed">
+            {JSON.stringify(shape.decoded, null, 2)}
+          </pre>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function Code({ title, code }: { title: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Panel
+      title={title}
+      aside={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            void navigator.clipboard?.writeText(code).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            });
+          }}
+        >
+          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      }
+    >
+      <pre className="bg-muted mt-2 overflow-x-auto rounded-[12px] p-4 font-mono text-[12px] leading-relaxed">
+        {code}
+      </pre>
+    </Panel>
+  );
+}
+
+function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
+  const t = useTryIt(endpoint, DRIVER);
+  const partner = personaById("partner");
+  const receiptTx = t.result?.receipt?.reference;
+  return (
+    <Panel
+      variant="card"
+      title="Try it: a real paid call"
+      description={`Pays from the API partner demo account (${partner?.address ? `${partner.address.slice(0, 6)}…${partner.address.slice(-4)}` : "testnet"}) to Mercado's merchant on Tempo. Real testnet transfer; nothing of real value.`}
+    >
+      <ConnectGate
+        persona="partner"
+        why="The live call is paid by the API partner demo account (or your own wallet)."
+      >
+        <PanelActions>
+          <Button size="lg" onClick={t.run} disabled={!t.ready || t.busy}>
+            {t.busy
+              ? "Calling…"
+              : `Run ${endpoint.method} ${endpoint.path.split("?")[0]}`}
+          </Button>
+        </PanelActions>
+        {t.trace.length > 0 && (
+          <ol className="mt-6 grid gap-4">
+            {t.trace.map((s, i) => (
+              <Step key={i} s={s} />
+            ))}
+          </ol>
+        )}
+        {receiptTx && (
+          <div className="mt-6 grid gap-1 text-[15px]">
+            <span className="text-muted-foreground text-[13px]">
+              Settlement
+            </span>
+            <a
+              href={explorerTx(receiptTx)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-product font-mono font-medium hover:underline"
+            >
+              {receiptTx.slice(0, 18)}… on the Tempo explorer ↗
+            </a>
+          </div>
+        )}
+        {t.result?.body !== undefined && (
+          <details className="mt-4">
+            <summary className="text-muted-foreground cursor-pointer text-[13px]">
+              Response body
+            </summary>
+            <pre className="bg-background mt-2 max-h-80 overflow-auto rounded-[12px] p-4 font-mono text-[12px] leading-relaxed">
+              {JSON.stringify(t.result.body, null, 2)}
+            </pre>
+          </details>
+        )}
+      </ConnectGate>
+    </Panel>
+  );
+}
+
+const DOT: Record<TraceStep["kind"], string> = {
+  quote: "bg-muted-foreground",
+  request: "bg-foreground",
+  challenge: "bg-warning",
+  credential: "bg-product",
+  response: "bg-success",
+  error: "bg-destructive",
+};
+
+function Step({ s }: { s: TraceStep }) {
+  return (
+    <li className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+      <span className={cn("mt-1.5 size-2.5 rounded-full", DOT[s.kind])} />
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-baseline justify-between gap-2 text-[15px] font-medium">
+          <span>{s.title}</span>
+          <span className="text-muted-foreground tabular text-[12px] font-normal">
+            +{s.at} ms
+          </span>
+        </p>
+        {s.detail && (
+          <dl className="mt-1 grid gap-0.5 text-[13px]">
+            {Object.entries(s.detail)
+              .filter(([, v]) => v !== undefined && v !== "")
+              .map(([k, v]) => (
+                <div
+                  key={k}
+                  className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2"
+                >
+                  <dt className="text-muted-foreground">{k}</dt>
+                  <dd className="font-mono break-all">{String(v)}</dd>
+                </div>
+              ))}
+          </dl>
+        )}
+      </div>
+    </li>
+  );
+}

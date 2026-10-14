@@ -101,29 +101,6 @@ function InvestV2() {
           </span>
         </>
       }
-      kpis={[
-        {
-          label: "Saved in pesos (all lenders)",
-          value: v(p.pesos.poolAssets, "xMXN", 0),
-          sub: "Credit pool lender claims",
-        },
-        {
-          label: "sOUSD demo APR",
-          value: pct(p.dollars?.aprBps),
-          sub: "Admin-set, funded from a demo reserve",
-        },
-        {
-          label: "tTBILL price",
-          value:
-            p.tbill?.px8 === undefined
-              ? "…"
-              : `$${(Number(p.tbill.px8) / 1e8).toFixed(2)}`,
-          sub:
-            p.tbill?.priceValid === false
-              ? "Feed STALE: trading refused"
-              : "Admin price feed (demo)",
-        },
-      ]}
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
         <div className="-mx-4 sm:mx-0">
@@ -137,7 +114,7 @@ function InvestV2() {
           </ConnectGate>
         </div>
 
-        <div className="grid min-w-0 content-start gap-10">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
           <Panel
             title="Portfolio"
             description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
