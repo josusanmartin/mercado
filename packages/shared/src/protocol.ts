@@ -44,6 +44,8 @@ export type ProtocolAddresses = {
   investDesk?: Address;
   /** v2 only: InvestDesk for the demo equity index mIDX ("Stocks"). */
   investDeskIdx?: Address;
+  /** v2 only: sxMXN peso savings vault (StakedOUSD logic over xMXN v2, configured APR). */
+  sxMXN?: Address;
   collaterals: CollateralInfo[];
   /** First block of this protocol's deployment (indexers scan logs from here). */
   startBlock: number;
@@ -71,7 +73,7 @@ function v2(): ProtocolAddresses {
   const v = d.v2 as unknown as
     | {
         xMXN: Address; factory: Address; vault: Address; vamm: Address; creditPool: Address; fxOracle: Address;
-        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number; card?: Address; investDesk?: Address; investDeskIdx?: Address;
+        collaterals: CollateralInfo[]; attestationSigner: Address; merchant: Address; startBlock?: number; card?: Address; investDesk?: Address; investDeskIdx?: Address; sxMXN?: Address;
       }
     | undefined;
   // fail closed: never fall back to v1 when v2 is requested
@@ -94,6 +96,7 @@ function v2(): ProtocolAddresses {
     card: v.card,
     investDesk: v.investDesk,
     investDeskIdx: v.investDeskIdx,
+    sxMXN: v.sxMXN,
     collaterals: v.collaterals,
     startBlock: v.startBlock ?? 0,
   };

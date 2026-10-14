@@ -24,6 +24,8 @@ export const ADDR = {
   investDesk: (A.investDesk ?? zeroAddress) as Address,
   /** v2 only: the Stocks desk (mIDX) */
   investDeskIdx: (A.investDeskIdx ?? zeroAddress) as Address,
+  /** v2 only: sxMXN peso savings vault */
+  sxmxn: (A.sxMXN ?? zeroAddress) as Address,
   creditPool: A.creditPool,
   factory: A.factory,
   merchant: A.merchant,

@@ -29,3 +29,4 @@ v card         "$(g card)"         src/v2/MercadoCard.sol:MercadoCard           
 v mIDX         "$(g mIDX)"         src/v2/DemoRWA.sol:DemoRWA                         "$(cast abi-encode 'f(string,string,address,uint256)' 'Mercado US Equity Index (demo, testnet, not a security)' mIDX $O 0)"
 v mIDXFeed     "$(g mIDXFeed)"     src/v2/AdminPriceFeed.sol:AdminPriceFeed           "$(cast abi-encode 'f(address,string,uint256,uint256,uint256,uint256,uint256)' $O 'mIDX demo price (admin)' 10000000000 86400 1000000000 100000000000 1000)"
 v investDeskIdx "$(g investDeskIdx)" src/v2/InvestDesk.sol:InvestDesk                 "$(cast abi-encode 'f(address,address,address,address,address,address)' $O "$(g ousd)" "$(g mIDX)" "$(g xMXN)" "$(g mIDXFeed)" "$(g vamm)")"
+v sxMXN        "$(g sxMXN)"        src/v2/StakedXMXN.sol:StakedXMXN                   "$(cast abi-encode 'f(address,address,uint256)' "$(g xMXN)" $O 800)"

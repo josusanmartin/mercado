@@ -63,6 +63,7 @@
     "investDeskIdx": "0x5711C155A5C5D70A1867676DFC0bcE5B8A36811A",
     "mIDX": "0x42c7b204D17cbc578cFff3FeE56de469D146d2e8",
     "mIDXFeed": "0xaa2ceDbBd726426B9003dD6a0911944A6e025922",
+    "sxMXN": "0xbf2c33811D9467fa3c210421F442969585B37927",
     "tTBILLFeed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
     "sOUSD": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
     "tTBILL": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
@@ -171,7 +172,11 @@
       "equityStage.mint#2": "0x3de0d938f8a9c41f40abcf03a85117cff07cfaa777419d486d4550de6c62a70c",
       "equityStage.approve": "0x6e239116dc01c6f6b0b2555535458356612042ad2d6b7bbcd225db259459096f",
       "equityStage.approve#2": "0x21f6172658fdc8c5cfa3011cc31a8e6867d290769f035826f61a824c333431d9",
-      "equityStage.seed": "0xc2d74842daf691e0e989db1d5e23a032b769fa6c0d3bc1a1ede3c5b7fc66c5ba"
+      "equityStage.seed": "0xc2d74842daf691e0e989db1d5e23a032b769fa6c0d3bc1a1ede3c5b7fc66c5ba",
+      "sxmxnStage.transfer": "0xda7f5a08f4480840e5f5b1d252931c1b922303c1698440c99575c5b30751a565",
+      "sxmxnStage.deployStakedXMXN": "0x36054abfb6127e7975c54420553d94c2d5312418117cddd47246f19bd6c5ef02",
+      "sxmxnStage.approve": "0xec5165ef6791a930fb6247ec4b05ae01bef81b64473a395d5d6b202cf1b5b98f",
+      "sxmxnStage.fundYield": "0x0feca9ee538a409db1604ac90713f6821ad863bedb9550af41099b182eb16dfc"
     }
   }
 }

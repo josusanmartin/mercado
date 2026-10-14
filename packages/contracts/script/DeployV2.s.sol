@@ -16,6 +16,7 @@ import {MoveAMM} from "../src/v2/MoveAMM.sol";
 import {MercadoFactoryV2} from "../src/v2/MercadoFactoryV2.sol";
 import {MercadoCard} from "../src/v2/MercadoCard.sol";
 import {InvestDesk} from "../src/v2/InvestDesk.sol";
+import {StakedXMXN} from "../src/v2/StakedXMXN.sol";
 
 /// @notice v2 deployment ALONGSIDE v1 (v1 untouched). Writes deployments/<chainId>.v2.json; export.mjs merges it
 ///         into packages/shared under the "v2" key.
@@ -44,6 +45,7 @@ contract DeployV2 is Script {
     address midx;
     address midxFeed;
     address investDeskIdx;
+    address sxmxn;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -69,6 +71,7 @@ contract DeployV2 is Script {
             midx = _a(j, ".mIDX");
             midxFeed = _a(j, ".mIDXFeed");
             investDeskIdx = _a(j, ".investDeskIdx");
+            sxmxn = _a(j, ".sxMXN");
         }
     }
 
@@ -259,6 +262,25 @@ contract DeployV2 is Script {
         _save();
     }
 
+    /// Peso savings (lead 03:32): sxMXN = the StakedOUSD logic over xMXN v2, configured APR 8.00% (owner-settable),
+    /// yield reserve funded with 20,000 xMXN from the LP institution (via the owner, since fundYield is owner-only).
+    function sxmxnStage() external {
+        uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        uint256 lpPk = vm.envUint("LP_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPk);
+        uint256 reserve = 20_000e6;
+        vm.startBroadcast(lpPk);
+        IERC20(xmxn).transfer(deployer, reserve);
+        vm.stopBroadcast();
+        vm.startBroadcast(deployerPk);
+        StakedXMXN sx = new StakedXMXN(IERC20(xmxn), deployer, 800);
+        sxmxn = address(sx);
+        IERC20(xmxn).approve(sxmxn, reserve);
+        sx.fundYield(reserve);
+        vm.stopBroadcast();
+        _save();
+    }
+
     function _save() internal {
         string memory k = "v2";
         vm.serializeAddress(k, "factory", factory);
@@ -278,6 +300,7 @@ contract DeployV2 is Script {
         vm.serializeAddress(k, "mIDX", midx);
         vm.serializeAddress(k, "mIDXFeed", midxFeed);
         vm.serializeAddress(k, "investDeskIdx", investDeskIdx);
+        vm.serializeAddress(k, "sxMXN", sxmxn);
         string memory out = vm.serializeAddress(k, "tTBILLFeed", tbillFeed);
         vm.writeJson(out, path);
         console.log("wrote", path);

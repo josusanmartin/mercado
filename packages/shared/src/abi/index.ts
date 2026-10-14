@@ -12,4 +12,5 @@ export { priceFeedAbi } from "./AdminPriceFeed";
 export { mercadoFactoryV2Abi } from "./MercadoFactoryV2";
 export { mercadoCardAbi } from "./MercadoCard";
 export { investDeskAbi } from "./InvestDesk";
+export { stakedXmxnAbi } from "./StakedXMXN";
 export { tip20Abi } from "./TIP20";

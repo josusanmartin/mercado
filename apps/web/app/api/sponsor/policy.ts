@@ -89,6 +89,7 @@ export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
           [A.vamm!, sel(moveAmmAbi as Abi, "swapOusdForXmxn", "swapXmxnForOusd", "addEquity")],
           [A.creditPool, sel(creditPoolAbi as Abi, "supply", "withdrawAvailable", "borrow", "repay")],
           ...(SOUSD ? [[SOUSD, [...sel(stakedOusdAbi as Abi, "deposit", "redeem", "withdraw"), APPROVE]] as const] : []),
+          ...(A.sxMXN ? [[A.sxMXN, sel(stakedOusdAbi as Abi, "deposit", "redeem", "withdraw")] as const] : []),
           // gated tTBILL (no public faucet since R-042): approvals only, to the vault or the InvestDesk
           ...(TTBILL ? [[TTBILL, [APPROVE]] as const] : []),
           ...(A.card ? [[A.card, sel(mercadoCardAbi as Abi, "issueCard", "setDailyLimit", "setFrozen", "charge", "refund")] as const] : []),
@@ -102,7 +103,7 @@ export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
 export const ALLOWED_TARGETS: ReadonlySet<string> = new Set(ALLOWED_CALLS.keys());
 /** Approvals are sponsored only toward the active protocol's own contracts. */
 const APPROVE_SPENDERS = new Set(
-  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card, A.investDesk, A.investDeskIdx].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
+  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card, A.investDesk, A.investDeskIdx, A.sxMXN].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
 );
 
 // ---------------------------------------------------------------- state (single process)
@@ -266,10 +267,11 @@ export async function senderEligible(sender: Address, personas: ReadonlySet<stri
       SOUSD ? client.readContract({ address: SOUSD, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
       TTBILL ? client.readContract({ address: TTBILL, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
       MIDX ? client.readContract({ address: MIDX, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
+      A.sxMXN ? client.readContract({ address: A.sxMXN, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
       A.card
         ? client.readContract({ address: A.card, abi: cardAbiLite, functionName: "cardsOf", args: [sender] }).then((ids) => BigInt(ids.length))
         : 0n,
-    ]).catch(() => [0n, 0n, 0n, 0n]);
+    ]).catch(() => [0n, 0n, 0n, 0n, 0n]);
     ok = extra.some((v) => v > 0n);
   }
   state.eligible.set(key, { ok, at: Date.now() });
