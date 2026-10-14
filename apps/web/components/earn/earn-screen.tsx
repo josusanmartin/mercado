@@ -50,8 +50,13 @@ export function EarnScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const maxWithdraw = min(pool.lenderBalance, pool.available);
   const share = pct(pool.lenderBalance, pool.totalAssets);
   const utilization = pct(pool.outstanding, pool.totalAssets);
+  // undefined (unavailable) when reads fail, never a reassuring 0 (R-023/R-035 principle)
   const lockedInLoans =
-    pool.lenderBalance !== undefined && maxWithdraw !== undefined && pool.lenderBalance > maxWithdraw ? pool.lenderBalance - maxWithdraw : 0n;
+    pool.lenderBalance === undefined || maxWithdraw === undefined
+      ? undefined
+      : pool.lenderBalance > maxWithdraw
+        ? pool.lenderBalance - maxWithdraw
+        : 0n;
 
   const FEE = pctOf(pool.feeBps);
   const UTIL_CAP = pctOf(pool.maxUtilizationBps);
@@ -127,7 +132,7 @@ export function EarnScreen({ embedded = false }: { embedded?: boolean } = {}) {
                 <Row label="Your claim" value={xmxn(pool.lenderBalance)} />
                 <Row
                   label="Locked in loans"
-                  sub={lockedInLoans > 0n ? "Unlocks as drivers repay" : "Nothing of yours is locked right now"}
+                  sub={lockedInLoans === undefined ? "Unavailable right now" : lockedInLoans > 0n ? "Unlocks as drivers repay" : "Nothing of yours is locked right now"}
                   value={xmxn(lockedInLoans)}
                 />
               </Rows>
