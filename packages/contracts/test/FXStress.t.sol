@@ -183,6 +183,25 @@ contract FXStressTest is Base {
         assertEq(px, PX_20);
     }
 
+    /// StressDemo default: 160% at 20 → 112% at 14. Solvent, so the liquidator gets the full 10% bonus.
+    function test_stressDemoDefaultIsSolventLiquidation() public {
+        _open(alice, 100e6, 1_250e6);
+        vm.prank(admin);
+        oracle.forceSet(14e8);
+        assertEq(vault.collateralRatio(alice), 11_200);
+        _open(liquidator, 1_000e6, 1_250e6);
+        uint256 before = ousd.balanceOf(liquidator);
+        vm.startPrank(liquidator);
+        xmxn.approve(address(vault), 1_250e6);
+        vault.liquidate(alice, 1_250e6);
+        vm.stopPrank();
+        // 1,250 xMXN / 14 = 89.285714 OUSD of debt value, + 10% = 98.214285 OUSD seized
+        assertEq(ousd.balanceOf(liquidator) - before, 98_214_285);
+        CollateralVault.Position memory p = vault.getPosition(alice);
+        assertEq(p.debt, 0);
+        assertEq(p.collateral, 100e6 - 98_214_285, "borrower keeps the remainder");
+    }
+
     function test_cannotLiquidateMoreThanDebt() public {
         _open(alice, 1_000e6, 10_000e6);
         vm.prank(admin);

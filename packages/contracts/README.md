@@ -40,7 +40,7 @@ forge script script/Deploy.s.sol --sig "credit()" --rpc-url moderato --broadcast
 node script/export.mjs   # → packages/shared/src/{abi,deployments}
 
 forge script script/ReseedDesk.s.sol  --rpc-url moderato --broadcast --slow   # top desk back up (LP inventory)
-forge script script/StressDemo.s.sol  --rpc-url moderato --broadcast --slow   # FX 20→13, liquidate, restore
+forge script script/StressDemo.s.sol  --rpc-url moderato --broadcast --slow   # FX 20→14, liquidate, restore
 script/oracle.sh price | set 19.5 | force 13 | refresh | keeper [secs]       # mock oracle admin
 ```
 

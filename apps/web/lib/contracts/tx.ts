@@ -22,6 +22,8 @@ export type WriteRequest = {
 };
 
 export type TxApi = {
+  /** The account that started the flow. Every step is pinned to it. */
+  account: Address;
   /** Simulate, sign, send and wait for one write. Throws (already recorded in state) on failure. */
   write: (req: WriteRequest, label: string) => Promise<TxStep>;
 };
@@ -36,17 +38,30 @@ export function useTx() {
   const [rawError, setRawError] = useState<unknown>();
   const busy = useRef(false);
 
-  const write = useCallback<TxApi["write"]>(
-    async (req, label) => {
+  /** Abort if the wallet switched account or chain since the flow started (R-012). */
+  const assertSameWallet = useCallback(
+    (account: Address) => {
+      const now = getConnection(config);
+      if (!now.address || now.address.toLowerCase() !== account.toLowerCase())
+        throw new Error("The wallet account changed during this flow, so it was stopped. Start again.");
+      if (now.chainId !== undefined && now.chainId !== CHAIN_ID)
+        throw new Error("The wallet switched networks during this flow, so it was stopped. Switch back to Tempo Moderato.");
+    },
+    [config],
+  );
+
+  const write = useCallback(
+    async (account: Address, req: WriteRequest, label: string): Promise<TxStep> => {
+      assertSameWallet(account);
       setStepLabel(label);
       setStatus("simulating");
-      const account = getConnection(config).address;
       const { request } = await simulateContract(config, {
         ...(req as Parameters<typeof simulateContract>[1]),
         account,
         chainId: CHAIN_ID,
       });
       setStatus("signing");
+      assertSameWallet(account);
       const hash = await writeContract(config, request as Parameters<typeof writeContract>[1]);
       const step: TxStep = { label, hash, url: explorerTx(hash) };
       setSteps((s) => [...s, step]);
@@ -57,7 +72,7 @@ export function useTx() {
       setSteps((s) => s.map((x) => (x.hash === hash ? { ...step } : x)));
       return step;
     },
-    [config],
+    [config, assertSameWallet],
   );
 
   /** Run a flow of one or more writes. Resolves to the steps, or undefined on failure (see `error`). */
@@ -70,9 +85,15 @@ export function useTx() {
       setRawError(undefined);
       const done: TxStep[] = [];
       try {
+        const conn = getConnection(config);
+        const account = conn.address;
+        if (!account) throw new Error("Connect a wallet first.");
+        if (conn.chainId !== undefined && conn.chainId !== CHAIN_ID)
+          throw new Error("Switch your wallet to Tempo Moderato (chain 42431).");
         await flow({
+          account,
           write: async (req, label) => {
-            const s = await write(req, label);
+            const s = await write(account, req, label);
             done.push(s);
             return s;
           },
@@ -90,7 +111,7 @@ export function useTx() {
         await queryClient.invalidateQueries();
       }
     },
-    [write, queryClient],
+    [config, write, queryClient],
   );
 
   const reset = useCallback(() => {

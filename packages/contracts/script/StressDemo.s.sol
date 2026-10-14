@@ -12,12 +12,13 @@ import {FXOracleAdapter} from "../src/FXOracleAdapter.sol";
 ///   1. pause the SwapDesk (nobody can trade at the stressed rate)
 ///   2. a fresh throwaway account opens a dedicated ~160% position (100 OUSD)
 ///   3. DEPLOYER (the liquidator) mints the xMXN it will need from its own 500% position
-///   4. forceSet the oracle to STRESS_PRICE (default 13.00 MXN/USD: the peso appreciates; position → ~104%)
+///   4. forceSet the oracle to STRESS_PRICE (default 14.00 MXN/USD: the peso appreciates; position → 112%,
+///      below 135% but still solvent, so the liquidator gets the full 10% bonus)
 ///   5. DEPLOYER liquidates the full debt (Liquidated event)
 ///   6. forceSet back to the pre-stress price, 7. unpause the desk (only if this script paused it)
 ///   set -a; source ../../.env.local; set +a
 ///   forge script script/StressDemo.s.sol --rpc-url moderato --broadcast --slow
-/// Env (optional): STRESS_PRICE (8dp, default 13e8), STRESS_COLLATERAL (6dp, default 100e6)
+/// Env (optional): STRESS_PRICE (8dp, default 14e8), STRESS_COLLATERAL (6dp, default 100e6)
 contract StressDemo is Deployed {
     address constant PATH_USD = 0x20C0000000000000000000000000000000000000;
     address constant ALPHA_USD = 0x20C0000000000000000000000000000000000001;
@@ -26,7 +27,7 @@ contract StressDemo is Deployed {
         _load();
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer = vm.addr(deployerPk);
-        uint256 stressPx = vm.envOr("STRESS_PRICE", uint256(13e8));
+        uint256 stressPx = vm.envOr("STRESS_PRICE", uint256(14e8));
         uint256 coll = vm.envOr("STRESS_COLLATERAL", uint256(100e6));
         // fresh throwaway key for the dedicated position (testnet only, holds ~nothing after the run)
         uint256 stressPk = uint256(keccak256(abi.encode("mercado.stress", deployerPk, block.timestamp))) % (2 ** 255);

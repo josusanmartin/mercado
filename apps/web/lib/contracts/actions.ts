@@ -6,7 +6,7 @@
 import { useCallback } from "react";
 import { parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
 import { useConfig } from "wagmi";
-import { getConnection, readContract } from "wagmi/actions";
+import { readContract } from "wagmi/actions";
 import { ADDR, CHAIN_ID } from "./addresses";
 import { creditPoolAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
 import { useTx, type TxApi } from "./tx";
@@ -36,8 +36,7 @@ export function useMercado() {
 
   const approveIfNeeded = useCallback(
     async (t: TxApi, token: Address, spender: Address, amount: bigint, symbol: string) => {
-      const owner = getConnection(config).address;
-      if (!owner) throw new Error("Connect a wallet first.");
+      const owner = t.account; // pinned for the whole flow (R-012)
       const allowance = await readContract(config, {
         address: token,
         abi: tokenAbi,
