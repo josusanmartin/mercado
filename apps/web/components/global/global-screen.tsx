@@ -7,8 +7,8 @@ import { useState } from "react";
 import { ArrowDownUp, Building2, Landmark, Plug, Receipt } from "lucide-react";
 import type { Address } from "viem";
 import { isAddress } from "viem";
-import { useConnection } from "wagmi";
-import type { MoveQuoteResponse } from "@mercado/shared";
+import { useConnection, useReadContracts } from "wagmi";
+import { moveAmmAbi, type MoveQuoteResponse } from "@mercado/shared";
 import {
   BigNumber,
   ListPane,
@@ -28,6 +28,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { personaById } from "@/components/wallet/personas";
 import {
+  ADDR,
+  CHAIN_ID,
   useBalances,
   useExchangeState,
   useMercado,
@@ -385,8 +387,29 @@ function Redeem() {
   );
 }
 
+/** Size impact (bps) of a USD→MXN swap at US$1,000 and at the per-swap max, read from MoveAMM.quote. */
+function useSizeSpread(maxSwapUsd: bigint | undefined) {
+  const at = [1_000_000_000n, ...(maxSwapUsd ? [maxSwapUsd] : [])];
+  const q = useReadContracts({
+    contracts: at.map((amount) => ({
+      address: ADDR.vamm,
+      abi: moveAmmAbi,
+      functionName: "quote",
+      args: [true, amount],
+      chainId: CHAIN_ID,
+    })) as never,
+    query: { refetchInterval: 30_000 },
+  });
+  const bps = (i: number) => {
+    const r = q.data?.[i] as { status: string; result?: readonly bigint[] } | undefined;
+    return r?.status === "success" ? r.result![3] : undefined;
+  };
+  return { at1k: bps(0), atMax: maxSwapUsd ? bps(1) : undefined };
+}
+
 function Backing() {
   const ex = useExchangeState();
+  const spread = useSizeSpread(ex.protocol === "v2" ? ex.maxSwapUsd : undefined);
   if (ex.protocol === "v2")
     return (
       <Panel
@@ -422,7 +445,16 @@ function Backing() {
           <Row
             label="Fee"
             value={pct(ex.feeBps)}
-            sub={`Depth ${v(ex.depthUsd, "USD", 0)} · max ${v(ex.maxSwapUsd, "USD", 0)} per swap`}
+            sub={`Max ${v(ex.maxSwapUsd, "USD", 0)} per swap`}
+          />
+          <Row
+            label="Size spread"
+            value={
+              spread.at1k === undefined
+                ? "…"
+                : `~${pct(spread.at1k)} at US$1,000`
+            }
+            sub={`${spread.atMax === undefined ? "…" : pct(spread.atMax)} at the US$${ex.maxSwapUsd === undefined ? "…" : fmtAmount(ex.maxSwapUsd, 0)} max. Larger swaps price further from the oracle mid on a virtual curve: a pricing parameter, not funded liquidity.`}
           />
           <Row
             label="Status"
