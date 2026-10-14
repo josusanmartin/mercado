@@ -131,10 +131,10 @@ At D = 250k: 100 USD → 0.04% impact, 1,000 → 0.4%, 10,000 → 3.8%. Default 
 
 ### Balance sheet and solvency (the important part)
 - **Reserve `R`**: OUSD held by the AMM = mint inflows + fees + **equity buffer** − redemptions. It's the AMM's own balance, tracked internally (donations are ignored).
-- **Liability `L`**: xMXN the AMM has issued and not yet bought back. `+out` on mint, `−amountIn` on burn, floored at 0 (CDP-minted xMXN may also redeem here, which can only shrink `R` and `L` together).
+- **Liability `L`**: xMXN the AMM has issued and not yet bought back. `+out` on mint, `−amountIn` on redeem, exact (no floor): a redemption requires `amountIn ≤ L` and burns exactly `amountIn`.
 - **Coverage** `c = R × m / L` (bps; ∞ if `L = 0`).
 
-**Peso appreciation** (m falls) shrinks `R × m` while `L` is fixed in pesos. Example: 1,000 OUSD minted at 20 → L = 20,000 xMXN. With a 250 OUSD buffer, R = 1,250 and c = 125% at 20. That reaches 100% at m = 16 (a 20% stronger peso) and 80% at m = 12.8. The testnet seed uses 2,500 OUSD of equity against ~19,950 xMXN (≈350% at 20; still >100% at m = 5.7, the bottom of the oracle band). On-chain rules:
+**Peso appreciation** (m falls) shrinks `R × m` while `L` is fixed in pesos. Example: 1,000 OUSD minted at 20 → L = 20,000 xMXN. With a 250 OUSD buffer, R = 1,250 and c = 125% at 20. That reaches 100% at m = 16 (the peso 25% stronger, i.e. the dollar 20% weaker) and 80% at m = 12.8. The testnet seed starts with 2,500 OUSD of equity against ~19,950 xMXN (≈350% at 20 today). That's **current** coverage, not permanent protection: new mints can take coverage down toward the 100% mint floor, so the UI shows live coverage from `state()`. On-chain rules:
 
 1. **Equity buffer.** A backstop (the DEPLOYER on testnet; an institution in prod) seeds OUSD as `equity`, which adds to `R` but not `L`. Fees also accrue to `R`. Testnet seed: **2,500 OUSD**. The owner can withdraw equity only while `c ≥ targetCoverage` (120%) after the withdrawal.
 2. **Mint circuit breaker.** A mint reverts if coverage after the mint would be < `minMintCoverage` (100%). New users are never sold xMXN that's already under-backed. Create (CDP) keeps working.

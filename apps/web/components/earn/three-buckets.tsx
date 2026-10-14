@@ -35,25 +35,59 @@ export function ThreeBuckets() {
       <Rows>
         <Row
           label="Vault collateral"
-          sub={<Source text="Testnet OUSD locked by people minting xMXN. It backs only their own debt." address={ADDR.vault} />}
-          value={amt(b.vault.collateralOusd, "OUSD")}
-        />
-        <Row label="xMXN minted against it" sub="Total xMXN debt = xMXN supply" value={amt(b.vault.debtXmxn, "xMXN")} />
-        <Row
-          label="Swap desk inventory"
-          sub={<Source text="Seeded separately by a liquidity provider. A capped demo desk, not a market." address={ADDR.swapDesk} />}
-          value={
-            b.desk.ousd === undefined ? (
-              "…"
-            ) : (
-              <>
-                {fmtAmount(b.desk.ousd)} OUSD
-                <br />
-                {fmtAmount(b.desk.xmxn)} xMXN
-              </>
-            )
+          sub={
+            <Source
+              text={
+                b.protocol === "v2"
+                  ? "OUSD, demo staked OUSD and demo T-bills locked by minters, valued in xMXN. It backs only their own debt."
+                  : "Testnet OUSD locked by people minting xMXN. It backs only their own debt."
+              }
+              address={ADDR.vault}
+            />
           }
+          value={b.protocol === "v2" ? amt(b.vault.collateralValueXmxn, "xMXN") : amt(b.vault.collateralOusd, "OUSD")}
         />
+        <Row
+          label="xMXN minted against it"
+          sub={b.protocol === "v2" ? "CDP debt; xMXN supply = CDP debt + exchange-issued xMXN" : "Total xMXN debt = xMXN supply"}
+          value={amt(b.vault.debtXmxn, "xMXN")}
+        />
+        {b.protocol === "v2" ? (
+          <Row
+            label="Exchange reserve (Move)"
+            sub={<Source text="OUSD held by the vault's exchange to redeem the xMXN it issued. Never touches CDP collateral." address={ADDR.vamm} />}
+            value={
+              b.move === undefined ? (
+                "…"
+              ) : (
+                <>
+                  {fmtAmount(b.move.reserveOusd)} OUSD
+                  <br />
+                  <span className="text-muted-foreground text-sm font-normal">
+                    backs {fmtAmount(b.move.liabilityXmxn)} xMXN ·{" "}
+                    {b.move.coverageBps === undefined || b.move.coverageBps > 10_000_000n ? "—" : `${(Number(b.move.coverageBps) / 100).toFixed(0)}% covered`}
+                  </span>
+                </>
+              )
+            }
+          />
+        ) : (
+          <Row
+            label="Swap desk inventory"
+            sub={<Source text="Seeded separately by a liquidity provider. A capped demo desk, not a market." address={ADDR.swapDesk} />}
+            value={
+              b.desk.ousd === undefined ? (
+                "…"
+              ) : (
+                <>
+                  {fmtAmount(b.desk.ousd)} OUSD
+                  <br />
+                  {fmtAmount(b.desk.xmxn)} xMXN
+                </>
+              )
+            }
+          />
+        )}
         <Row
           label="Advance pool"
           sub={<Source text="xMXN supplied by lenders. It funds driver advances only." address={ADDR.creditPool} />}

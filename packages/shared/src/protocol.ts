@@ -66,7 +66,10 @@ function v2(): ProtocolAddresses {
       }
     | undefined;
   // fail closed: never fall back to v1 when v2 is requested
-  if (!v?.vamm || !v.creditPool || !v.xMXN) throw new Error("Mercado v2 is selected but deployments.v2 is missing or incomplete.");
+  const required = ["xMXN", "factory", "vault", "vamm", "creditPool", "fxOracle", "attestationSigner", "merchant"] as const;
+  const missing = v ? required.filter((k) => !/^0x[0-9a-fA-F]{40}$/.test(v[k] ?? "") || /^0x0{40}$/.test(v[k])) : required;
+  if (missing.length || !v?.collaterals?.length || v.collaterals.some((c) => !/^0x[0-9a-fA-F]{40}$/.test(c.token) || /^0x0{40}$/.test(c.token)))
+    throw new Error(`Mercado v2 is selected but deployments.v2 is incomplete (${missing.join(", ") || "collaterals"}).`);
   return {
     protocol: "v2",
     chainId: d.chainId,

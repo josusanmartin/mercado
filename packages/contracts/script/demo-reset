@@ -22,16 +22,20 @@ fi
 
 echo "== on-chain reset"
 cd "$here"
-# Own Tempo 2D nonce lane, so the oracle keeper / other DEPLOYER txs can't collide with this run's nonces.
+# Normal nonces. If another DEPLOYER tx (oracle keeper, qa's J0 heal) lands mid-run, forge aborts with "nonce
+# changed"; a fresh run re-simulates against current state (every step is idempotent), so we retry.
 reset() {
   forge script script/DemoReset.s.sol --rpc-url moderato --broadcast --slow \
-    --tempo.fee-token 0x20C0000000000000000000000000000000000001 --tempo.nonce-key 0x6d657263616465 2>&1 \
-    | grep -vE "WARN|^\s*$" | grep -E "seeded|supplied|repaid|swept|DEMO_RESET|Error|error|revert|SUCCESS" || true
+    --tempo.fee-token 0x20C0000000000000000000000000000000000001 2>&1 \
+    | grep -vE "WARN|^\s*$" | grep -E "seeded|supplied|repaid|swept|DEMO_RESET|Error|error|revert|SUCCESS|No transactions" || true
 }
-out="$(reset)"; echo "$out"
-if ! grep -q "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL" <<<"$out" && ! grep -q "No transactions" <<<"$out"; then
-  if grep -qiE "error|revert" <<<"$out"; then echo "== retrying once"; out="$(reset)"; echo "$out"; fi
-fi
+ok=0
+for attempt in 1 2 3; do
+  out="$(reset)"; echo "$out"
+  if grep -q "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL" <<<"$out" || ! grep -qiE "error|revert" <<<"$out"; then ok=1; break; fi
+  echo "== attempt $attempt failed; retrying"
+done
 
 echo "== state"
 node "$here/script/demo-state.mjs"
+[ "$ok" = 1 ] || { echo "!! demo reset did not complete" >&2; exit 1; }

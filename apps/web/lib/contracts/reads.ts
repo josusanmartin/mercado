@@ -3,8 +3,11 @@
 // allowFailure, so the UI gets `undefined` plus `oracle.valid === false` instead of an exception.
 import type { Address } from "viem";
 import { useConnection, useReadContract, useReadContracts } from "wagmi";
-import { ADDR, CHAIN_ID } from "./addresses";
+import { moveAmmAbi, multiCollateralVaultAbi } from "@mercado/shared";
+import { ADDR, CHAIN_ID, COLLATERALS, PROTOCOL } from "./addresses";
 import { creditPoolAbi, oracleAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
+
+const V2 = PROTOCOL === "v2";
 
 // 10s keeps the demo live without tripping the public RPC rate limit (reads are multicall-batched).
 const REFRESH = { refetchInterval: 10_000 } as const;
@@ -80,24 +83,37 @@ export function useOracle() {
 
 // ---------------------------------------------------------------- vault
 
-export function useVaultPosition(user?: Address) {
+/** A user's vault position. v1: the single OUSD position. v2: the position on `token` (default OUSD) in the
+ *  MultiCollateralVault (per-collateral API). Same return shape either way. */
+export function useVaultPosition(user?: Address, token: Address = ADDR.ousd) {
   const who = useWho(user);
-  const c = (functionName: "collateralRatio" | "maxMintable" | "maxWithdrawable" | "isLiquidatable") =>
+  const v1 = (functionName: "collateralRatio" | "maxMintable" | "maxWithdrawable" | "isLiquidatable") =>
     ({ address: ADDR.vault, abi: vaultAbi, functionName, args: [who!], chainId: CHAIN_ID }) as const;
+  const v2 = (functionName: "getPosition" | "collateralRatio" | "maxMintable" | "maxWithdrawable" | "isLiquidatable") =>
+    ({ address: ADDR.vault, abi: multiCollateralVaultAbi, functionName, args: [who!, token], chainId: CHAIN_ID }) as const;
   const q = useReadContracts({
-    contracts: [
-      { address: ADDR.vault, abi: vaultAbi, functionName: "getPosition", args: [who!], chainId: CHAIN_ID },
-      c("collateralRatio"),
-      c("maxMintable"),
-      c("maxWithdrawable"),
-      c("isLiquidatable"),
-    ],
+    contracts: V2
+      ? [v2("getPosition"), v2("collateralRatio"), v2("maxMintable"), v2("maxWithdrawable"), v2("isLiquidatable")]
+      : [
+          { address: ADDR.vault, abi: vaultAbi, functionName: "getPosition", args: [who!], chainId: CHAIN_ID },
+          v1("collateralRatio"),
+          v1("maxMintable"),
+          v1("maxWithdrawable"),
+          v1("isLiquidatable"),
+        ],
     query: { enabled: !!who, ...REFRESH },
   });
-  const pos = ok<{ collateral: bigint; debt: bigint }>(q.data?.[0]);
+  const raw = ok<{ collateral: bigint; debt: bigint } | readonly [bigint, bigint]>(q.data?.[0]);
+  // v1 returns a struct, v2 a (collateral, debt) tuple
+  let pos: { collateral: bigint; debt: bigint } | undefined;
+  if (raw !== undefined) {
+    const t = raw as readonly [bigint, bigint] & { collateral?: bigint; debt?: bigint };
+    pos = t.collateral !== undefined ? { collateral: t.collateral, debt: t.debt as bigint } : { collateral: t[0], debt: t[1] };
+  }
   const ratio = ok<bigint>(q.data?.[1]);
   return {
     ...q,
+    token,
     collateral: pos?.collateral,
     debt: pos?.debt,
     /** bps; undefined if the oracle is invalid; `null` if there's no debt (infinite ratio). */
@@ -214,26 +230,72 @@ export function useBorrowCapacity(maxAmount: bigint | undefined, user?: Address)
 
 // ---------------------------------------------------------------- three buckets (Home / Earn)
 
-/** Vault collateral locked, desk inventory, pool cash vs loans out: separate sources of funds. */
+/** Vault collateral locked, the exchange's own funds, pool cash vs loans out: separate sources of funds.
+ *  v1: `desk` = SwapDesk inventory. v2: `move` = MoveAMM reserve/liability/coverage (desk is undefined), and the
+ *  vault side sums every collateral (debt in xMXN, collateral valued in xMXN at current prices). */
 export function useThreeBuckets() {
-  const q = useReadContracts({
-    contracts: [
-      { address: ADDR.vault, abi: vaultAbi, functionName: "totalCollateral", chainId: CHAIN_ID },
-      { address: ADDR.vault, abi: vaultAbi, functionName: "totalDebt", chainId: CHAIN_ID },
-      { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
-      { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "stats", chainId: CHAIN_ID },
-      { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "availableLiquidity", chainId: CHAIN_ID },
-      { address: ADDR.xmxn, abi: tokenAbi, functionName: "totalSupply", chainId: CHAIN_ID },
-    ],
-    query: REFRESH,
+  const n = COLLATERALS.length;
+  const common = [
+    { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "stats", chainId: CHAIN_ID },
+    { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "availableLiquidity", chainId: CHAIN_ID },
+    { address: ADDR.xmxn, abi: tokenAbi, functionName: "totalSupply", chainId: CHAIN_ID },
+  ] as const;
+  const v1 = [
+    { address: ADDR.vault, abi: vaultAbi, functionName: "totalCollateral", chainId: CHAIN_ID },
+    { address: ADDR.vault, abi: vaultAbi, functionName: "totalDebt", chainId: CHAIN_ID },
+    { address: ADDR.swapDesk, abi: swapDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
+  ] as const;
+  const v2 = [
+    { address: ADDR.vamm, abi: moveAmmAbi, functionName: "state", chainId: CHAIN_ID },
+    ...COLLATERALS.map((c) => ({ address: ADDR.vault, abi: multiCollateralVaultAbi, functionName: "totals", args: [c.token], chainId: CHAIN_ID }) as const),
+  ];
+  const q = useReadContracts({ contracts: [...common, ...(V2 ? v2 : v1)] as never, query: REFRESH });
+  const d = q.data as { status: string; result?: unknown }[] | undefined;
+  const stats = ok<readonly [bigint, bigint, bigint, bigint]>(d?.[0]);
+  const pool = { cash: ok<bigint>(d?.[1]), loansOut: stats?.[2], lenderClaims: stats?.[0], realizedFees: stats?.[3] };
+  const xmxnSupply = ok<bigint>(d?.[2]);
+
+  // second pass (v2): value each collateral's total in xMXN at current prices
+  const totals = V2 ? COLLATERALS.map((_, i) => ok<readonly [bigint, bigint]>(d?.[4 + i])) : [];
+  const values = useReadContracts({
+    contracts: COLLATERALS.map((c, i) => ({
+      address: ADDR.vault,
+      abi: multiCollateralVaultAbi,
+      functionName: "collateralValue",
+      args: [c.token, totals[i]?.[0] ?? 0n],
+      chainId: CHAIN_ID,
+    })),
+    query: { enabled: V2 && totals.length === n && totals.every((t) => t !== undefined), ...REFRESH },
   });
-  const reserves = ok<readonly [bigint, bigint]>(q.data?.[2]);
-  const stats = ok<readonly [bigint, bigint, bigint, bigint]>(q.data?.[3]);
+
+  if (!V2) {
+    const reserves = ok<readonly [bigint, bigint]>(d?.[5]);
+    return {
+      ...q,
+      protocol: "v1" as const,
+      vault: { collateralOusd: ok<bigint>(d?.[3]), debtXmxn: ok<bigint>(d?.[4]), collateralValueXmxn: undefined as bigint | undefined },
+      desk: { ousd: reserves?.[0], xmxn: reserves?.[1] } as { ousd?: bigint; xmxn?: bigint },
+      move: undefined as { reserveOusd?: bigint; liabilityXmxn?: bigint; equityOusd?: bigint; coverageBps?: bigint } | undefined,
+      pool,
+      xmxnSupply,
+    };
+  }
+  const st = ok<readonly [bigint, bigint, bigint, bigint, bigint, bigint]>(d?.[3]);
+  const sum = (xs: (bigint | undefined)[]) => (xs.some((x) => x === undefined) ? undefined : xs.reduce<bigint>((a, b) => a + (b ?? 0n), 0n));
+  const ousdIdx = COLLATERALS.findIndex((c) => c.symbol === "OUSD");
   return {
     ...q,
-    vault: { collateralOusd: ok<bigint>(q.data?.[0]), debtXmxn: ok<bigint>(q.data?.[1]) },
-    desk: { ousd: reserves?.[0], xmxn: reserves?.[1] },
-    pool: { cash: ok<bigint>(q.data?.[4]), loansOut: stats?.[2], lenderClaims: stats?.[0], realizedFees: stats?.[3] },
-    xmxnSupply: ok<bigint>(q.data?.[5]),
+    protocol: "v2" as const,
+    vault: {
+      /** OUSD collateral only (other collaterals are in their own units; see collateralValueXmxn) */
+      collateralOusd: ousdIdx >= 0 ? totals[ousdIdx]?.[0] : undefined,
+      debtXmxn: sum(totals.map((t) => t?.[1])),
+      collateralValueXmxn: sum((values.data ?? []).map((r) => ok<bigint>(r))),
+    },
+    /** v2 has no swap desk: always-undefined fields (use `move`) */
+    desk: { ousd: undefined, xmxn: undefined } as { ousd?: bigint; xmxn?: bigint },
+    move: st && { reserveOusd: st[0], liabilityXmxn: st[1], equityOusd: st[2], coverageBps: st[3] },
+    pool,
+    xmxnSupply,
   };
 }
