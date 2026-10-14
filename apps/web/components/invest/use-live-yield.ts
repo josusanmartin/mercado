@@ -32,7 +32,13 @@ export type LiveValue = {
   aprBps?: number;
   /** Wallet shares (6dp), for "has a position" checks. */
   shares?: bigint;
+  /** ms timestamp of the last REAL position change (shares moved: a deposit/withdraw), 0 if none seen. */
+  changedAt?: number;
 };
+
+/** Last seen shares per vault+wallet, shared by every hook instance and kept across screen changes, so a
+ *  deposit seen while the receipt is up still counts when Inicio mounts again. First sighting is not a change. */
+const seen = new Map<string, { shares: bigint; changedAt: number }>();
 
 export function useLiveVault(vault: Address | undefined): LiveValue {
   const { address } = useConnection();
@@ -63,7 +69,18 @@ export function useLiveVault(vault: Address | undefined): LiveValue {
     },
     [ready, A, F, c, apr, S, shares],
   );
-  return { at, aprBps: apr !== undefined ? Number(apr) : undefined, shares };
+  let changedAt: number | undefined;
+  if (vault && address && shares !== undefined) {
+    const k = `${vault}:${address}`;
+    const rec = seen.get(k);
+    if (!rec) seen.set(k, { shares, changedAt: 0 });
+    else if (rec.shares !== shares) {
+      rec.shares = shares;
+      rec.changedAt = Date.now();
+    }
+    changedAt = seen.get(k)!.changedAt;
+  }
+  return { at, aprBps: apr !== undefined ? Number(apr) : undefined, shares, changedAt };
 }
 
 export const useLiveDollars = () => useLiveVault(INVEST.sOUSD);

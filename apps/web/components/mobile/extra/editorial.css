@@ -16,8 +16,9 @@
     clip-path: inset(0 0 0 0);
   }
 }
-/* v6: the live earnings digits glow once a second (an opacity-only blurred layer behind the text).
-   AccentField sets --m-glow so it shows on the accent too. */
+/* v6: the live earnings digits glow ONCE when the position really changes (a deposit or withdrawal), never on
+   the projected per-second interest (lead 08:58, motion budget). An opacity-only blurred layer behind the
+   text; AccentField sets --m-glow so it shows on the accent too. */
 .m-root .m-ed-glow {
   position: relative;
   isolation: isolate;
@@ -31,7 +32,7 @@
   background: var(--m-glow, color-mix(in oklab, var(--m-accent) 40%, transparent));
   filter: blur(6px);
   opacity: 0;
-  animation: m-ed-glow 1s ease-out infinite;
+  animation: m-ed-glow 1.2s ease-out 1 both;
 }
 @keyframes m-ed-glow {
   18% {
@@ -76,7 +77,6 @@
   .m-root .m-ed-fade {
     animation: none;
   }
-  /* the kit only shortens animations; an infinite pulse must stop outright */
   .m-root .m-ed-glow::after {
     animation: none;
     display: none;

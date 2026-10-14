@@ -230,9 +230,10 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
   );
 }
 
-/** v6: live allocation donut (US$, pesos at the oracle rate), re-read every second so accruing interest moves it. */
+/** v6: live allocation donut (US$, pesos at the oracle rate). Re-read every 10s with the chain reads, so it follows
+ *  deposits, withdrawals and trades without creeping on the projected interest (lead 08:58 motion budget). */
 function Allocation({ r, rate }: { r: ReturnType<typeof useReturns>; rate?: number }) {
-  const now = useNow(1_000);
+  const now = useNow(10_000);
   const t = now ?? Date.now() / 1000;
   const usd = r.usd.at(t) ?? 0;
   const mxn = PESOS_READY && rate ? (r.mxn.at(t) ?? 0) / rate : 0;
