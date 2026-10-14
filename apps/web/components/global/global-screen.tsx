@@ -41,7 +41,7 @@ import { personaById, type PersonaId } from "@/components/wallet/personas";
 import { usePersona } from "@/components/wallet/use-persona";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { useDemoMode } from "@/components/console/demo-mode";
-import { FlowPath, Pulse, SuccessCheck, TickerText } from "@/lib/motion";
+import { FlowPath, SuccessCheck, TickerText } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   ADDR,
@@ -78,14 +78,7 @@ export function GlobalScreen() {
       product="global"
       title="Cross-border payments for businesses"
       demo="merchant"
-      purpose={
-        <>
-          Pay Mexican suppliers in pesos from dollars, or bring pesos home,
-          through Mercado&apos;s exchange: OUSD in mints xMXN, xMXN out burns
-          it.
-          <Honesty> Quotes come from an admin-relayed testnet FX feed.</Honesty>
-        </>
-      }
+      purpose={<>Pay suppliers in xMXN from OUSD, or redeem xMXN into OUSD.</>}
       list={
         <ListPane
           label="Mercado Global"
@@ -246,6 +239,124 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
           </Button>
         </>
       )}
+    </div>
+  );
+}
+
+/** A fixed-size, amount-shaped placeholder: the slot never changes size when the number arrives. */
+const Skel = ({ w = "w-20" }: { w?: string }) => (
+  <span
+    aria-hidden
+    className={cn("bg-muted inline-block h-4 rounded-[4px] align-middle", w)}
+  />
+);
+
+/**
+ * V6-TASTE #9: why the supplier gets what they get. Oracle-mid value → minus fee and size impact (the engine's own
+ * terms) → quoted receipt → the minimum the swap enforces. Aligned numbers, no inflated bars; expiry as a quiet track.
+ */
+function QuoteBridge({
+  q,
+  secondsLeft,
+}: {
+  q: MoveQuoteResponse | undefined;
+  secondsLeft: number | undefined;
+}) {
+  const out = q ? BigInt(q.amountOut) : undefined;
+  const atMid = q
+    ? (BigInt(q.amountIn) * BigInt(q.oracleMid)) / 100_000_000n
+    : undefined;
+  const fee = q ? BigInt(q.fee) : undefined;
+  const impact =
+    atMid !== undefined && fee !== undefined && out !== undefined
+      ? atMid - fee - out
+      : undefined;
+  const n = (x: bigint | undefined, sign = "") =>
+    x === undefined ? <Skel /> : `${sign}${fmtAmount(x < 0n ? 0n : x)}`;
+  const window = q ? Math.max(1, q.expiresAt - q.quotedAt) : 30;
+  const left = secondsLeft ?? window;
+  const stale = !!q && secondsLeft === 0;
+  return (
+    <div className="grid gap-4 border-t pt-4">
+      <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5 text-[14px]">
+        <dt>
+          At oracle mid
+          <span className="text-muted-foreground block text-[12px]">
+            {q ? (
+              `${q.oracleMidRate.toLocaleString("en-US", { maximumFractionDigits: 4 })} MXN/USD`
+            ) : (
+              <Skel w="w-24" />
+            )}
+            <Honesty className="block">Admin-relayed testnet FX feed</Honesty>
+          </span>
+        </dt>
+        <dd className="tabular self-start text-right">{n(atMid)}</dd>
+        <dt className="text-muted-foreground pl-3">
+          − Fee {q ? `(${(q.feeBps / 100).toFixed(2)}%)` : ""}
+        </dt>
+        <dd className="text-muted-foreground tabular text-right">
+          {n(fee, "−")}
+        </dd>
+        <dt className="text-muted-foreground pl-3">
+          − Size impact {q ? `(${(q.sizeImpactBps / 100).toFixed(2)}%)` : ""}
+        </dt>
+        <dd className="text-muted-foreground tabular text-right">
+          {n(impact, "−")}
+        </dd>
+        <dt className="border-t pt-1.5 font-medium">Quoted receipt</dt>
+        <dd className="tabular border-t pt-1.5 text-right font-medium">
+          {n(out)}
+        </dd>
+      </dl>
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <div className="grid gap-0.5">
+          <span className="meta text-muted-foreground">
+            Minimum received · enforced on-chain
+          </span>
+          <span className="tabular text-[32px] leading-tight font-semibold">
+            {q ? (
+              <TickerText text={fmtAmount(BigInt(q.minOutSuggested))} />
+            ) : (
+              <Skel w="w-36" />
+            )}{" "}
+            <span className="text-muted-foreground text-[14px] font-medium">
+              xMXN
+            </span>
+          </span>
+        </div>
+        <span className="text-muted-foreground tabular text-[12px]">
+          Cost vs mid {q ? `${(q.effectiveSpreadBps / 100).toFixed(2)}%` : "…"}
+        </span>
+      </div>
+      {/* expiry: a quiet track from the real deadline; no flashing, no false urgency */}
+      <div className="flex items-center gap-3 text-[12px]" aria-live="polite">
+        <span
+          className="bg-muted relative h-1 w-[120px] overflow-hidden rounded-full"
+          aria-hidden
+        >
+          <span
+            className={cn(
+              "absolute inset-y-0 left-0 rounded-full",
+              stale ? "bg-warning" : "bg-foreground/40",
+            )}
+            style={{
+              width: `${stale ? 100 : Math.min(100, (left / window) * 100)}%`,
+            }}
+          />
+        </span>
+        <span
+          className={cn(
+            "tabular",
+            stale ? "text-warning" : "text-muted-foreground",
+          )}
+        >
+          {!q
+            ? "Reading Tempo…"
+            : stale
+              ? "Quote expired · refreshing"
+              : `Indicative · ${left}s left`}
+        </span>
+      </div>
     </div>
   );
 }
@@ -548,54 +659,24 @@ function PaySupplier() {
               {(quote.error as Error).message}
             </p>
           ) : (
-            <dl className="grid grid-cols-3 gap-3 border-t pt-4">
-              {(
-                [
-                  [
-                    "Cost vs mid",
-                    q ? `${(q.effectiveSpreadBps / 100).toFixed(2)}%` : "…",
-                    true,
-                  ],
-                  [
-                    "Minimum received",
-                    q ? `${fmtAmount(BigInt(q.minOutSuggested))}` : "…",
-                    true,
-                  ],
-                  // a countdown ticks every second: never pulsed (review V6 #2, semantic motion budget)
-                  [
-                    "Expires in",
-                    q
-                      ? secondsLeft === 0
-                        ? "refreshing"
-                        : `${secondsLeft ?? "…"}s`
-                      : "…",
-                    false,
-                  ],
-                ] as const
-              ).map(([k, v, pulse]) => (
-                <div key={k} className="grid min-w-0 gap-0.5">
-                  <dt className="meta text-muted-foreground">{k}</dt>
-                  <dd className="tabular text-[17px] font-semibold">
-                    {pulse ? <Pulse value={v}>{v}</Pulse> : v}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <QuoteBridge q={q} secondsLeft={secondsLeft} />
           )}
-          {q && (
-            <details className="text-[13px]">
-              <summary className="text-muted-foreground hover:text-foreground cursor-pointer">
-                How it works
-              </summary>
-              <div className="pt-2">
+          <details className="text-[13px]">
+            <summary className="text-muted-foreground hover:text-foreground cursor-pointer">
+              How it works
+            </summary>
+            <div className="pt-2">
+              {q ? (
                 <QuoteRows q={q} secondsLeft={secondsLeft} />
-                <p className="text-muted-foreground pt-3">
-                  For a quote signed by Mercado (cotización indicativa firmada),
-                  use the Partner API.
-                </p>
-              </div>
-            </details>
-          )}
+              ) : (
+                <p className="text-muted-foreground">Reading Tempo…</p>
+              )}
+              <p className="text-muted-foreground pt-3">
+                For a quote signed by Mercado (cotización indicativa firmada),
+                use the Partner API.
+              </p>
+            </div>
+          </details>
         </div>
       </Panel>
     </div>
