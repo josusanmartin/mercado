@@ -3,7 +3,7 @@
 // Sets data-product so every component below picks up the product's signature color.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type AnimationEvent, type ReactNode } from "react";
 import { Boxes, Code2, Ellipsis, FileCode2, LayoutGrid, Moon, Route, Sun } from "lucide-react";
 import { useTour } from "@/components/tour/demo-tour";
 import { cn } from "@/lib/utils";
@@ -53,9 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main id="main" className="mx-auto w-full max-w-[84rem] min-w-0 flex-1 px-4 pt-5 pb-[calc(var(--m-chrome,9rem)+1.5rem)] sm:px-8 sm:pt-8 lg:pb-24">
           {/* v5 route transition: each page enters with a short fade-slide (reduced motion: none). */}
-          <div key={path} className="mx-enter">
-            {children}
-          </div>
+          <EnterGroup key={path}>{children}</EnterGroup>
         </main>
         <HintBar />
         <MobileTabs active={utility ? undefined : product.id} />
@@ -74,6 +72,30 @@ export function Wordmark({ className, compact }: { className?: string; compact?:
       </span>
       <span className={cn("display text-[1.35rem]", compact && "hidden sm:inline")}>Mercado</span>
     </span>
+  );
+}
+
+/** End of the route entrance: what's on the page now is settled (won't replay); later mounts animate (globals.css). */
+function settle(group: HTMLElement) {
+  if (group.hasAttribute("data-entered")) return;
+  group.querySelectorAll(".mx-reveal, .mx-stagger > *").forEach((n) => {
+    if (!n.closest(".m-root")) n.setAttribute("data-settled", "");
+  });
+  group.setAttribute("data-entered", "");
+}
+
+/** The route's one entrance owner. If the entrance already ran before hydration (server-rendered first load),
+ *  settle on mount; otherwise settle when it ends. */
+function EnterGroup({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el && !el.getAnimations().some((a) => (a as CSSAnimation).animationName === "mx-enter" && a.playState === "running")) settle(el);
+  }, []);
+  return (
+    <div ref={ref} className="mx-enter" onAnimationEnd={(e: AnimationEvent<HTMLDivElement>) => e.target === e.currentTarget && settle(e.currentTarget)}>
+      {children}
+    </div>
   );
 }
 

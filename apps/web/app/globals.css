@@ -341,13 +341,19 @@
   }
 }
 
-/* V5-TASTE #3: the page's content group is the ONE entrance owner (opacity + 6px, 220ms). Nested reveals
-   and staggers inside it don't replay their own entrances. */
+/* V5-TASTE #3: the page's content group is the ONE entrance owner (opacity + 6px, 220ms).
+   fill-mode BACKWARDS (lead 06:32): nothing is held after it ends, so the wrapper never keeps a transform and
+   never becomes the containing block for position:fixed (the phones' bottom navs stay on screen). */
 .mx-enter {
-  animation: mx-enter 220ms var(--ease-out) both;
+  animation: mx-enter 220ms var(--ease-out) backwards;
 }
-.mx-enter .mx-reveal,
-.mx-enter .mx-stagger > * {
+/* First paint only: nested entrances present when the page arrives don't replay inside the route entrance.
+   When it ends, the shell marks those nodes data-settled and the group data-entered, so anything that mounts
+   LATER (a list after its fetch, a tab switch) gets its own entrance. Phones (.m-root) own their motion. */
+.mx-enter:not([data-entered]) .mx-reveal:not(.m-root .mx-reveal),
+.mx-enter:not([data-entered]) .mx-stagger:not(.m-root .mx-stagger) > *,
+.mx-reveal[data-settled],
+.mx-stagger > [data-settled] {
   animation: none;
 }
 /* P0 (lead 05:22): content never RESTS hidden waiting for JS. Reveals are pure CSS animations that play on
