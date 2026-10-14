@@ -1,37 +1,14 @@
 <section id="problem" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
 <img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
 <p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">02 — the problem</p>
-<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">A driver needs 100 MXN</h2>
-<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">of airtime before payday.</h2>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Local money is stuck</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">on old rails.</h2>
 <hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
-<x-embed style="position:absolute;left:128px;top:470px;width:1664px;height:390px"><!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
-#bars{position:absolute;left:0;bottom:48px;height:330px;display:flex;align-items:flex-end;gap:28px}
-.col{width:96px;display:flex;flex-direction:column;align-items:center;gap:8px}
-.v{font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:24px;color:#999;opacity:0;transition:opacity .4s}
-.bar{width:96px;height:0;background:#3A3A38;transition:height .7s cubic-bezier(.2,.8,.2,1)}
-.zero .bar{background:#FFB547;box-shadow:0 0 16px rgba(255,181,71,.6)}
-.zero .v{color:#FFB547}
-.wk{position:absolute;bottom:0;width:96px;text-align:center;font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:24px;color:#666}
-.on{opacity:1!important}
-#need{position:absolute;right:0;bottom:48px;width:330px;display:flex;flex-direction:column;gap:6px;padding:0 0 0 32px;border-left:1px solid rgba(255,255,255,.12);opacity:0;transition:opacity .8s}
-#need small{font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:24px;color:#999}
-#need b{font-size:150px;line-height:1;font-weight:500;letter-spacing:-6px;color:#FFB547;text-shadow:0 0 24px rgba(255,181,71,.35)}
-</style></head><body>
-<div id="bars"></div>
-<div id="need"><small>airtime needed now</small><b>100</b><small>MXN</small></div>
-<script>
-var W=[3906,5308,4044,0,6745,3307,3773,3778,5191,6060],M=6745,H=270,B=document.getElementById('bars'),cols=[];
-W.forEach(function(w,i){var c=document.createElement('div');c.className='col'+(w===0?' zero':'');c.innerHTML='<div class="v">'+(w===0?'0':w.toLocaleString('en-US'))+'</div><div class="bar"></div>';B.appendChild(c);cols.push(c);
-var l=document.createElement('div');l.className='wk';l.style.left=(i*124)+'px';l.textContent='w'+(i+1);document.body.appendChild(l);});
-var need=document.getElementById('need');
-function run(){cols.forEach(function(c){c.querySelector('.bar').style.height='0';c.querySelector('.v').classList.remove('on')});need.classList.remove('on');
-cols.forEach(function(c,i){setTimeout(function(){var w=W[i];c.querySelector('.bar').style.height=(w===0?4:Math.round(w/M*H))+'px';c.querySelector('.v').classList.add('on')},300+i*220)});
-setTimeout(function(){need.classList.add('on')},3200);}
-run();setInterval(run,9000);
-</script></body></html></x-embed>
-<p style="position:absolute;left:128px;top:880px;width:1100px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">weekly net pay, MXN · Demo Uber Data, synthetic</p>
+<div data-build-in="rise 3" style="position:absolute;left:128px;top:480px;width:1664px;display:flex;gap:40px;align-items:baseline;padding:0 0 24px 0;border-bottom:1px solid rgba(255,255,255,0.12)"><p style="width:140px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#FFB547">create</p><p style="flex:1;font-size:44px;font-weight:500;line-height:1.2;letter-spacing:-1px;color:#F2F0EA">Dollar collateral sits idle while local money on-chain is scarce.</p></div>
+<div data-build-in="rise 4" style="position:absolute;left:128px;top:584px;width:1664px;display:flex;gap:40px;align-items:baseline;padding:0 0 24px 0;border-bottom:1px solid rgba(255,255,255,0.12)"><p style="width:140px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#FFB547">move</p><p style="flex:1;font-size:44px;font-weight:500;line-height:1.2;letter-spacing:-1px;color:#F2F0EA">Sending money home runs through FX spreads and intermediaries.</p></div>
+<div data-build-in="rise 5" style="position:absolute;left:128px;top:688px;width:1664px;display:flex;gap:40px;align-items:baseline;padding:0 0 24px 0;border-bottom:1px solid rgba(255,255,255,0.12)"><p style="width:140px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#FFB547">lend</p><p style="flex:1;font-size:44px;font-weight:500;line-height:1.2;letter-spacing:-1px;color:#F2F0EA">Gig income is weekly and uneven; credit is not built for it.</p></div>
+<div data-build-in="rise 6" style="position:absolute;left:128px;top:792px;width:1664px;display:flex;gap:40px;align-items:baseline;padding:0 0 24px 0;border-bottom:1px solid rgba(255,255,255,0.12)"><p style="width:140px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#FFB547">spend</p><p style="flex:1;font-size:44px;font-weight:500;line-height:1.2;letter-spacing:-1px;color:#F2F0EA">Everyday bills and services are priced in local currency.</p></div>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">02</p>
-<aside>~12s. One person carries the whole pitch: a gig driver who needs 100 MXN of airtime before payday. The bars are the "irregular" Demo Uber Data profile, which is synthetic: weekly net pay in MXN, and week 4 earned nothing. This is our demo scenario, not market data, so don't add statistics. Everything that follows is one xMXN flow: a lender funds a pool, the driver draws a small advance, and pays for the top-up over HTTP 402.</aside>
+<aside>~10s. Four problems, one per module, in plain words and with no statistics; don't add numbers we haven't sourced. Institutions hold dollar collateral that earns but does not create local money. Families sending money home go through FX spreads and intermediaries. Gig drivers earn weekly and unevenly, and credit isn't shaped for that. And everyday spending is priced in pesos. Mercado puts all four on one synthetic peso, on Tempo.</aside>
 </section>

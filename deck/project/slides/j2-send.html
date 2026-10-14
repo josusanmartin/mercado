@@ -1,9 +1,9 @@
 <section id="j2-send" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
 <img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
-<p style="position:absolute;left:128px;top:128px;width:700px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">07 — where xMXN comes from</p>
-<p style="position:absolute;left:892px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#999999">on-chain delivery only, no cash-out · <a href="https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3">live swap ↗</a></p>
-<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Send pesos home,</h2>
-<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">settled on-chain.</h2>
+<p style="position:absolute;left:128px;top:128px;width:700px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">05 — move</p>
+<p style="position:absolute;left:592px;top:128px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#999999">live today via the swap desk · vAMM in progress (v2) · <a href="https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3">live swap ↗</a></p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Move money across borders.</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">The vault becomes the exchange.</h2>
 <hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
 <x-embed style="position:absolute;left:128px;top:470px;width:1664px;height:440px"><!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
@@ -19,7 +19,7 @@ html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"S
 </style></head><body>
 <div class="n" style="left:0"><small class="mono">sender</small><b>50</b><span class="mono">testnet OUSD</span></div>
 <div class="sep" style="left:560px"></div>
-<div class="n" style="left:600px"><small class="mono">swap desk</small><b>0.5%</b><span class="mono">spread, own reserves</span></div>
+<div class="n" style="left:600px"><small class="mono">swap desk today · vAMM next</small><b>0.5%</b><span class="mono">spread today</span></div>
 <div class="sep" style="left:1140px"></div>
 <div class="n" style="left:1180px"><small class="mono">family wallet</small><b id="amt">0</b><span class="mono">xMXN received</span></div>
 <div id="line"></div><div id="tok"></div>
@@ -31,6 +31,6 @@ tk.style.left=x+'px';tk.style.opacity=o;amt.textContent=a.toLocaleString('en-US'
 requestAnimationFrame(frame);
 </script></body></html></x-embed>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">07</p>
-<aside>~8s, keep it brief. A sender swaps 50 testnet OUSD on the swap desk: the mock 20 MXN/USD minus a 50 bps spread is 995 xMXN, exactly what the live run delivered, with a minOut slippage guard. The desk pays from its own seeded, finite reserves and can't touch vault collateral; it's a capped demo liquidity source, not a market. The xMXN goes to the recipient's wallet. There's no SPEI or bank cash-out in this prototype. Live on Moderato: swap 50 OUSD for 995 xMXN, then transfer 995 xMXN to the recipient.</aside>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">05</p>
+<aside>~10s. Move is remittances and cross-border payments. In v2 the vault is also the exchange: OUSD coming in from a US sender mints xMXN directly, and xMXN going out is burned to redeem OUSD, priced off the oracle with a virtual-reserve curve for size-dependent rates. Its solvency limits (OUSD reserve against xMXN outstanding when the peso strengthens) are enforced on-chain. That vAMM is in progress and deploys alongside v1. What's live today is the separately funded swap desk: 50 testnet OUSD in, 995 xMXN out at the mock 20 MXN/USD minus a 50 bps spread, sent to the family wallet (the link is that live swap). On-chain delivery only; there's no SPEI or bank cash-out in this prototype.</aside>
 </section>
