@@ -1,8 +1,8 @@
 // The Mercado ecosystem: one currency, four products (crew/DESIGN-ECOSYSTEM.md).
-import { ArrowLeftRight, Coins, Globe2, HandCoins, LayoutGrid, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Coins, CreditCard, Globe2, HandCoins, LayoutGrid, type LucideIcon } from "lucide-react";
 import type { PersonaId } from "@/components/wallet/personas";
 
-export type ProductId = "home" | "mint" | "remesas" | "global" | "credito";
+export type ProductId = "home" | "mint" | "remesas" | "global" | "credito" | "card";
 
 export type Product = {
   id: ProductId;
@@ -72,6 +72,17 @@ export const PRODUCTS: Product[] = [
     icon: HandCoins,
     color: "var(--c-credito)",
     demo: "driver",
+  },
+  {
+    id: "card",
+    href: "/card",
+    name: "Mercado Card",
+    short: "Card",
+    purpose: "Spend xMXN at the corner store with a virtual card.",
+    audience: "Families and the shops they buy from",
+    icon: CreditCard,
+    color: "var(--c-card)",
+    demo: "recipient",
   },
 ];
 

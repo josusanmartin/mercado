@@ -21,6 +21,7 @@
   --c-remesas: #ff8a1f;
   --c-global: #2f6bff;
   --c-credito: #f2357d;
+  --c-card: #7c5cff;
   --focus: #00c3e3;
 
   --accent: var(--ink);
@@ -66,6 +67,9 @@
 }
 [data-product="credito"] {
   --accent: var(--c-credito);
+}
+[data-product="card"] {
+  --accent: var(--c-card);
 }
 
 .dark {
@@ -124,6 +128,7 @@
   --color-remesas: var(--c-remesas);
   --color-global: var(--c-global);
   --color-credito: var(--c-credito);
+  --color-mcard: var(--c-card);
   --color-page: var(--page);
   --color-tile: var(--tile);
   --color-ink: var(--ink);

@@ -42,11 +42,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function Wordmark({ className, compact }: { className?: string; compact?: boolean }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
-      <span className="grid size-7 grid-cols-2 grid-rows-2 gap-[3px]" aria-hidden>
+      <span className="relative grid size-7 grid-cols-2 grid-rows-2 gap-[3px]" aria-hidden>
         <span className="bg-mint rounded-[3px]" />
         <span className="bg-remesas rounded-[3px]" />
         <span className="bg-global rounded-[3px]" />
         <span className="bg-credito rounded-[3px]" />
+        <span className="bg-mcard absolute top-1/2 left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white" />
       </span>
       <span className={cn("text-lg font-bold tracking-tight", compact && "hidden sm:inline")}>Mercado</span>
     </span>
@@ -104,12 +105,12 @@ function Sidebar({ active, path }: { active: string; path: string }) {
 
 function MobileTabs({ active }: { active: string }) {
   return (
-    <nav aria-label="Products" className="bg-card fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Products" className="bg-card fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t pb-[env(safe-area-inset-bottom)] lg:hidden">
       {PRODUCTS.map((p) => {
         const on = p.id === active;
         const Icon = p.icon;
         return (
-          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2 text-[13px]", on ? "font-semibold" : "text-muted-foreground")}>
+          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2 text-[12.5px]", on ? "font-semibold" : "text-muted-foreground")}>
             <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
             {p.id === "home" ? "Inicio" : p.short}
           </Link>

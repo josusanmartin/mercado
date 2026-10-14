@@ -68,6 +68,13 @@ export const TOUR: TourStep[] = [
     title: "Crédito: the lender earns the fee",
     doThis: "Realized fees come only from repaid advances. No return is promised.",
   },
+  {
+    spec: 5,
+    persona: "recipient",
+    href: "/card",
+    title: "Card: Mamá spends at the corner store",
+    doThis: "Tienda Doña Mary charges the virtual card. Mamá approves on her phone; the xMXN moves on-chain. Only the card network is simulated.",
+  },
 ];
 
 type TourState = { active: boolean; index: number };

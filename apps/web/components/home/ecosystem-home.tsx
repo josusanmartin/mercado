@@ -31,6 +31,8 @@ function useLive() {
       ? { value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), caption: "exchange backing" }
       : { value: n0(b.desk.ousd), caption: "OUSD of exchange liquidity" },
     credito: { value: n0(b.pool.cash), caption: "xMXN available to lend" },
+    // Wired to MercadoCard's events once contracts deploys it (deployments.v2.card); never a placeholder number.
+    card: { value: "—", caption: "spent with Card (contract launching)" },
   };
   return { b, live };
 }
@@ -42,7 +44,7 @@ export function EcosystemHome() {
     <div className="grid gap-12 pt-2">
       <section className="grid gap-3">
         <h1 className="text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-[3.4rem]">
-          Mercado: one currency, four products.
+          Mercado: one currency, five products.
         </h1>
         <p className="text-muted-foreground max-w-2xl text-lg text-pretty">
           A parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.
@@ -95,7 +97,7 @@ function ProductRow({ live }: { live: Live }) {
   }, [products.length]);
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
-    const cols = window.matchMedia("(min-width: 640px)").matches ? products.length : 2;
+    const cols = getComputedStyle(e.currentTarget).gridTemplateColumns.split(" ").length || 1;
     const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key as string];
     if (d === undefined) return;
     const next = sel + d;
@@ -109,7 +111,7 @@ function ProductRow({ live }: { live: Live }) {
       <p className="mb-3 h-7 text-lg font-semibold" style={{ color: products[sel].color }} aria-hidden>
         {products[sel].name}
       </p>
-      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 xl:grid-cols-5">
         {products.map((p, i) => (
           <Link
             key={p.id}
@@ -140,18 +142,21 @@ function ProductRow({ live }: { live: Live }) {
   );
 }
 
+const H = 470;
 const NODES: Record<Pid, { x: number; y: number }> = {
-  mint: { x: 150, y: 90 },
-  remesas: { x: 850, y: 90 },
-  global: { x: 850, y: 330 },
-  credito: { x: 150, y: 330 },
+  mint: { x: 150, y: 70 },
+  remesas: { x: 850, y: 70 },
+  global: { x: 850, y: 290 },
+  credito: { x: 150, y: 290 },
+  card: { x: 500, y: 380 },
 };
-const HUB = { x: 500, y: 210 };
+const HUB = { x: 500, y: 180 };
 const FLOWS: { product: Pid; label: string; outbound: boolean }[] = [
   { product: "mint", label: "collateral in, xMXN minted", outbound: false },
   { product: "remesas", label: "dollars in, pesos delivered home", outbound: true },
   { product: "global", label: "MXN↔USD for businesses", outbound: true },
   { product: "credito", label: "advances out, repaid with fees", outbound: true },
+  { product: "card", label: "xMXN spent at shops", outbound: true },
 ];
 const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const mx = (a.x + b.x) / 2;
@@ -175,8 +180,8 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
   const reduced = useReducedMotion();
   return (
     <>
-      <div className="relative hidden aspect-[1000/420] w-full md:block">
-        <svg viewBox="0 0 1000 420" className="absolute inset-0 h-full w-full" aria-hidden>
+      <div className="relative hidden aspect-[1000/470] w-full md:block">
+        <svg viewBox={`0 0 1000 ${H}`} className="absolute inset-0 h-full w-full" aria-hidden>
           {FLOWS.map((f, i) => {
             const a = f.outbound ? HUB : NODES[f.product];
             const b = f.outbound ? NODES[f.product] : HUB;
@@ -197,7 +202,7 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
           })}
           <circle cx={HUB.x} cy={HUB.y} r={10} fill="var(--ink)" />
         </svg>
-        <div className="absolute grid -translate-x-1/2 text-center" style={{ left: "50%", top: `${((HUB.y + 20) / 420) * 100}%` }}>
+        <div className="absolute grid -translate-x-1/2 text-center" style={{ left: "50%", top: `${((HUB.y - 118) / H) * 100}%` }}>
           <p className="text-xl font-semibold">xMXN</p>
           <p className="text-[2rem] leading-none font-semibold tracking-tight tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</p>
           <p className="text-muted-foreground text-[13px]">in circulation</p>
@@ -206,12 +211,17 @@ function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
           const p = PRODUCTS.find((x) => x.id === f.product)!;
           const n = NODES[f.product];
           const right = n.x > 500;
+          const center = n.x === 500;
           return (
             <Link
               key={f.product}
               href={p.href}
-              className={cn("absolute grid w-[24%] rounded-[8px] focus-visible:outline-offset-4", right ? "text-right" : "text-left")}
-              style={{ left: right ? undefined : `${((n.x - 10) / 1000) * 100}%`, right: right ? `${((1000 - n.x - 10) / 1000) * 100}%` : undefined, top: `${((n.y + 16) / 420) * 100}%` }}
+              className={cn("absolute grid w-[24%] rounded-[8px] focus-visible:outline-offset-4", center ? "-translate-x-1/2 text-center" : right ? "text-right" : "text-left")}
+              style={{
+                left: center ? "50%" : right ? undefined : `${((n.x - 10) / 1000) * 100}%`,
+                right: right && !center ? `${((1000 - n.x - 10) / 1000) * 100}%` : undefined,
+                top: `${((n.y + 16) / H) * 100}%`,
+              }}
             >
               <span className="text-base font-semibold" style={{ color: p.color }}>
                 {p.short}
