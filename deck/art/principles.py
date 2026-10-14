@@ -42,7 +42,7 @@ def _meta(m):
     if "text-transform:uppercase" in style:
         return m.group(0)
     style = style.replace("color:#999999", "color:#B3B3B3")
-    t = re.sub(r"^(\d\d|A\d) — ", r"■ \1 · ", text)
+    t = re.sub(r"^(\d\d|A\d+) — ", r"■ \1 · ", text)
     if TOKENS.search(re.sub(r"<[^>]+>", "", t)):
         return f'<p style="{style};letter-spacing:1px;font-weight:600">{t}</p>'
     return f'<p style="{style};{META}">{t}</p>'

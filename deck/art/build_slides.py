@@ -33,16 +33,21 @@ EXTRA = [
          notes="Peso debt gets harder to cover when the peso strengthens against dollar-valued collateral, so the app shows the effect on backing and individual positions. Positions can be liquidated and exchange redemptions can be restricted or take a haircut; owner-controlled prices and settings remain part of the trust model."),
 ]
 
+# CR-03: the product slides live in the appendix (A1-A8); proof is A14.
+NUMS = {"j1-mint": "A1", "j2-send": "A2", "p-global": "A3", "j3-advance": "A4", "p-card": "A5",
+        "p-invest": "A6", "j4-bills": "A7", "risk": "A8"}
+
 if __name__ == "__main__":
     out = os.path.join(ps.ROOT, "project", "slides")
     for p in ps.P:
         if p["id"] == "p-invest":
             continue
-        p = dict(p, visuals=VISUALS.get(p["id"], []))
+        p = dict(p, visuals=VISUALS.get(p["id"], []), num=NUMS[p["id"]])
         p.pop("video", None)
         open(os.path.join(out, p["id"] + ".html"), "w").write(principles(ps.slide(p)))
         print(p["id"], [v[1] for v in p["visuals"]])
     for p in EXTRA:
+        p = dict(p, num=NUMS[p["id"]])
         open(os.path.join(out, p["id"] + ".html"), "w").write(principles(ps.slide(p)))
         print(p["id"], [v[1] for v in p["visuals"]])
 
@@ -60,7 +65,7 @@ def build_proof():
     DH = 660; DW = round(DH * dw / dh)
     CW = 1164; CH = round(CW * ch / cw)
     s = f'''<section id="proof" data-transition="fade" style="background:#0A0A0A;color:#FFFFFF;{I};padding:128px 128px 160px">
-<p style="position:absolute;left:128px;top:128px;width:900px;{I};font-size:24px;color:#B3B3B3;{META}">■ 13 · proof</p>
+<p style="position:absolute;left:128px;top:128px;width:900px;{I};font-size:24px;color:#B3B3B3;{META}">■ A14 · appendix: proof</p>
 <h2 data-build-in="rise 1" style="position:absolute;left:128px;top:180px;width:1100px;{A};font-size:96px;font-weight:400;line-height:0.95;letter-spacing:-1px;text-transform:uppercase;color:#FFFFFF">Follow the money.<br><span style="color:#E5A823">Check the receipt.</span></h2>
 <p data-build-in="rise 2" style="position:absolute;left:128px;top:390px;width:1100px;font-size:36px;font-weight:500;line-height:1.3;color:#C9C9C9">Open the payment trail, contract code, and paid API responses.</p>
 <img data-build-in="fade 3" src="{a['panel-contracts-verified.png']}" alt="Mercado Contracts page: each contract with its source verified, exact match" style="position:absolute;left:128px;top:560px;width:{CW}px;height:{CH}px;object-fit:contain;{FRAME}">
