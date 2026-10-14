@@ -2,7 +2,7 @@
 route traced through it (no third-party imagery, no real map data). Used inside the DriverApp hero type
 (CSS background-clip:text), so features are bold enough to read at ~6% scale. Seeded and reproducible:
   python3 apps/web/art/make_ruta.py  ->  apps/web/public/photos/ruta.webp      (rosa ground, for a white canvas)
-                                     ->  apps/web/public/photos/ruta-ink.webp  (ink ground, for the v5 rosa field)
+                                     ->  apps/web/public/photos/ruta-cream.webp (cream, low contrast: reads as one clean word on the v5 rosa field)
 """
 import math
 import random
@@ -11,14 +11,15 @@ from PIL import Image, ImageDraw, ImageFilter
 
 W, H = 1200, 520
 ROSA, INK, CREAM, GOLD = (217, 58, 122), (10, 10, 10), (242, 230, 201), (229, 168, 35)
-# variant -> (ground, streets, avenues, route): the ink one keeps the word dark (≥4.5:1) on a rosa field
+# variant -> (ground, streets, avenues, route, stop fill, stop outline). The cream one keeps every detail close to
+# the ground so the word stays a solid light shape on rosa (≥3:1 for large type) even at the desktop 0.7 zoom.
 VARIANTS = {
-    "ruta": (ROSA, (160, 32, 88), (122, 22, 66), INK),
-    "ruta-ink": (INK, (58, 16, 36), (92, 20, 54), CREAM),
+    "ruta": (ROSA, (160, 32, 88), (122, 22, 66), INK, GOLD, INK),
+    "ruta-cream": (CREAM, (234, 218, 186), (228, 208, 170), (255, 252, 244), (240, 214, 150), (230, 206, 160)),
 }
 
 
-def make(name, ground, street, avenue, route):
+def make(name, ground, street, avenue, route, stop, stop_line):
     rng = random.Random(2027)
     img = Image.new("RGB", (W, H), ground)
     d = ImageDraw.Draw(img)
@@ -52,7 +53,7 @@ def make(name, ground, street, avenue, route):
         pts.append((min(px, W - 30), py))
     d.line(pts, fill=route, width=40, joint="curve")  # ink route on rosa (cream would vanish on white)
     for p in pts[1::2]:
-        d.ellipse([p[0] - 30, p[1] - 30, p[0] + 30, p[1] + 30], fill=GOLD, outline=INK, width=9)
+        d.ellipse([p[0] - 30, p[1] - 30, p[0] + 30, p[1] + 30], fill=stop, outline=stop_line, width=9)
     img = img.filter(ImageFilter.GaussianBlur(0.8))
     dest = Path(__file__).resolve().parents[1] / "public" / "photos" / f"{name}.webp"
     img.save(dest, "WEBP", quality=84)
