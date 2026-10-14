@@ -271,7 +271,9 @@ function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; na
       <span aria-hidden className="absolute -right-2 -bottom-8 size-28 rounded-full bg-[#1f3d2b]" />
       <div className="relative flex items-start justify-between">
         <span className="m-display text-[26px]">Mercado</span>
-        <span className="rounded-[2px] border border-[#0a0a0a]/40 px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">Demo</span>
+        <span data-honesty className="rounded-[2px] border border-[#0a0a0a]/40 px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+          Demo
+        </span>
       </div>
       <p className="m-num absolute bottom-12 left-5 text-[18px] font-medium tracking-[0.14em]">5x•• •••• •••• {String(last4).padStart(4, "0")}</p>
       <div className="absolute bottom-4 left-5 text-[11.5px] font-semibold tracking-[0.08em] uppercase">{name}</div>

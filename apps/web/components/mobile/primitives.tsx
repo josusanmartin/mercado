@@ -726,7 +726,7 @@ export function SuccessScreen({ title, amount, caption, children, action }: { ti
 }
 
 /** Label/value rows on receipts: hairlines, no box. */
-export function DetailRows({ rows }: { rows: { label: ReactNode; value: ReactNode; sub?: ReactNode }[] }) {
+export function DetailRows({ rows }: { rows: { label: ReactNode; value: ReactNode; sub?: ReactNode; /** the sub is a disclaimer (?present=1 hides it) */ subHonesty?: boolean }[] }) {
   return (
     <dl className="grid border-t border-[var(--m-outline-variant)]">
       {rows.map((r, i) => (
@@ -734,7 +734,11 @@ export function DetailRows({ rows }: { rows: { label: ReactNode; value: ReactNod
           <dt className="m-meta pt-0.5">{r.label}</dt>
           <dd className="min-w-0 text-right">
             <span className="m-num block text-[15px] font-semibold break-words">{r.value}</span>
-            {r.sub && <span className="block text-[13px] text-[var(--m-on-surface-variant)]">{r.sub}</span>}
+            {r.sub && (
+              <span data-honesty={r.subHonesty ? "" : undefined} className="block text-[13px] text-[var(--m-on-surface-variant)]">
+                {r.sub}
+              </span>
+            )}
           </dd>
         </div>
       ))}

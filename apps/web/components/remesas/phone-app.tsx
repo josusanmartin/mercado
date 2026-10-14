@@ -565,7 +565,7 @@ function Enviar({ s }: AppProps) {
           {busy && <LinearProgress />}
           <DetailRows
             rows={[
-              { label: "Envías", value: `US${fmtMoney(amt)}`, sub: "OUSD de prueba" },
+              { label: "Envías", value: `US${fmtMoney(amt)}`, sub: "OUSD de prueba", subHonesty: true },
               { label: "Tipo de cambio", value: rate !== undefined ? `${fmtNumber(rate, 4)} MXN` : "—", sub: "comisión incluida" },
               { label: `${contact?.name} recibe`, value: q.amountOut !== undefined ? `MX${fmtMoney(q.amountOut)}` : "—", sub: "xMXN en su wallet" },
               { label: "Llega", value: "Al instante", sub: "en la cadena" },
