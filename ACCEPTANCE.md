@@ -74,5 +74,5 @@ Findings from `qa`'s contract and API review. Each one is posted to the owner in
 | Q-008 | web / `CreditPool.stats()` | `totalSupplied` is really totalAssets (cash + lent), so label it "lender claims" | web | open (P3) |
 | Q-009 | api `bills/service.ts` payLocked | CREATED orders can be paid after quote expiry (stale interim FX) | api | open (P3) |
 | Q-010 | api bills store | File store + in-process locks aren't serverless-safe; demo runs on a local single process (README note) | api / qa | disclosed (P3) |
-| Q-011 | contracts v2 `MultiCollateralVault.maxMintable` | Ignores debt-ceiling headroom, so a UI 'Max' can revert `DebtCeilingExceeded` | contracts | open (P2) |
+| Q-011 | contracts v2 `MultiCollateralVault.maxMintable` | ~~Ignores debt-ceiling headroom~~. Withdrawn: maxMintable already returns min(ratio, ceiling) headroom (326,667), so MAX+1 → `DebtCeilingExceeded` is correct | contracts | withdrawn (qa error) |
 | Q-002 | api `/api/driver/score` | Caller chooses profile for any borrower, so any wallet can claim "steady". Mitigated by borrower binding + 1,500 per-user cap; demo-acceptable, disclosed | api / qa | accepted (P3) |
