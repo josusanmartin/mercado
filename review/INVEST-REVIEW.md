@@ -31,3 +31,9 @@ Next: inspect InvestDesk when contracts posts source, write bounded independent 
 InvestDesk routes xMXN trades atomically through MoveAMM; outer minOut protects the combined trade, and a failed buy restores the AMM burn/reserve/liability in the local probe. Both direct OUSD directions use6dp tokens,8dp price, conservative downward output and upward fee rounding. Inventory is tracked independently from donations; admin can seed/withdraw/change spread. Existing stale/paused-feed tests pass.
 
 14 tests pass (10 owner+4 independent,256 round-trip fuzz runs), evidence invest-review-tests.log. Two findings: R-042 public DemoRWA faucet→sell allows an unfunded wallet to drain9975 of10000 OUSD in one local sequence; R-043 paused desk still quotes while trade reverts. Both posted. This is testnet reserve liveness/economic interpretation, not a claim of real-value theft. No live trade or exploit executed by reviewer.
+
+## Replacement accepted at bounded contract/source scope (02:43–02:52)
+
+17 local tests pass (12 owner+5 independent,256 fuzz). Faucet-only sale rejects, paused quote rejects, and transferred tokens do not convey bought[wallet] eligibility. New desk0xDacE8de24876Dc52930B3f986C4c9427d124EfEd matches the reviewed runtime; active v2 token/feed/AMM bindings and inventory funding pass atblock39495410, unbought sell eth_call gives ExceedsBoughtBalance,5 manifest receipts succeed (`invest-live-1791945774666.json`).
+
+UI source fixes: personal withdrawable is min(claim,cash); sOUSD/tTBILL return is unavailable if holdings do not match own event-derived units; sell maximum uses personal buyback right and explains transfers/liquidations do not inherit that right. No guaranteed-return claim observed. Browser Card/Invest/Driver routes200 with no page errors or horizontal overflow at390/1440 (`extensions-1791945841528.json`). User-driven browser trade proof remains API/QA's evidence, no reviewer transactions.

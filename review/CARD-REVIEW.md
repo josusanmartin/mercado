@@ -45,3 +45,7 @@ Initial deployed Card0x7Fb945ee8BC4A80A37F0c5d95BbEC26976a36A70 matches the revi
 R-041:1000 dailyLimit permitted1500 spend within12h while spentToday showed1000. Lead chose actual CDMX calendar days (00:00 fixedUTC−6) and same-day refunds restore capacity; previous-day refunds do not. Source updated, calendar local/deployed recheck underway. Previously described no-refund-headroom policy is historical, superseded by this decision. Initial deployment proof does not automatically accept the replacement.
 
 UI source: holder signs typed data; terminal uses explicit testnet demo merchant account, waits for successful receipt and extracts charge ID before completion; token refunds require merchant approval and success receipt. Card network/PAN simulation label is visible. Full UI behavior/receiver-account switching still needs its own acceptance. ECDSA verification supports matching EOA signatures; contract-wallet signature schemes are not established by these tests.
+
+## Calendar replacement verification (02:42)
+
+Lead's calendar-day change passes25 tests including9 reviewer additions; refund replay remains consumed and only same-day refunds restore capacity. New Card0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6 matches reviewed runtime atblock39495229, uses v2 xMXN, active merchant, and correct EIP-712 digest;3 current manifest Card receipts succeed and event sum reconciles with gross spend (`card-live-1791945663477.json`). Card UI renders at390/1440 without runtime errors or overflow in the post-flip snapshot. Full payment clicks remain crew QA evidence.

@@ -1,0 +1,32 @@
+ M apps/web/app/(dashboard)/contracts/page.tsx
+ M apps/web/app/api/mpp/pricing/route.ts
+ M apps/web/components/card/card-screen.tsx
+ M apps/web/components/tour/demo-tour.tsx
+ M apps/web/components/wallet/personas.ts
+ M review/CARD-REVIEW.md
+ M review/FINDINGS.md
+ M review/INVEST-REVIEW.md
+ M review/PRODUCT.md
+ M review/remesa-recovery-check.mjs
+ M review/v2-protocol-sponsor-check.mjs
+?? apps/web/components/contracts/
+?? apps/web/components/developers/
+?? apps/web/lib/server/__tests__/setup-partner.mts
+?? packages/contracts/broadcast/DemoResetV2.s.sol/
+?? review/evidence/invest-copy-fixes-source.txt
+?? review/evidence/invest-gated-live-summary.txt
+?? review/evidence/invest-live-1791946524221.json
+?? review/evidence/irc-onramp-priority.txt
+?? review/evidence/irc-onramp-residual.txt
+?? review/evidence/irc-review-latest.txt
+?? review/evidence/irc-sponsor-update.txt
+?? review/evidence/onramp-live-get.json
+?? review/evidence/onramp-sandbox-1791946237470/
+?? review/evidence/onramp-sandbox-1791946317787/
+?? review/evidence/onramp-v2-1791946237470.json
+?? review/evidence/onramp-v2-1791946317787.json
+?? review/evidence/remesa-recovery-1791946121612.json
+?? review/evidence/sponsor-new-borrow-summary.txt
+?? review/evidence/status-review-0256.txt
+?? review/evidence/v2-protocol-sponsor-1791946519222.json
+?? review/onramp-v2-check.mjs

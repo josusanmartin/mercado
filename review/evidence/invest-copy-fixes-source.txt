@@ -1,0 +1,20 @@
+apps/web/components/global/global-screen.tsx:444:            label="Net contributed capital"
+apps/web/components/global/global-screen.tsx:451:            sub={`A mint is refused if post-trade coverage would fall below ${pct(ex.minMintCoverageBps)}`}
+apps/web/components/global/global-screen.tsx:460:            sub={`Used / capacity. Capacity is ${pct(ex.redeemCapBps)} of the current reserve; usage leaks back out over 24h (continuous refill, not a daily reset)`}
+apps/web/components/invest/use-invest.ts:6:// Positions' cost basis and accrued yield come from the account's own on-chain events.
+apps/web/components/invest/use-invest.ts:161:      withdrawable:
+apps/web/components/invest/use-invest.ts:179:// The account's own deposits/withdrawals/trades, from chain logs (cost basis + activity list).
+apps/web/components/invest/use-invest.ts:192:const bought = parseAbiItem(
+apps/web/components/invest/use-invest.ts:267:                event: bought,
+apps/web/components/invest/use-invest.ts:367:        /** Net amounts put in (deposits − withdrawals), for "earned since deposit". */
+apps/web/components/invest/phone-app.tsx:160:      maxOut: p.pesos.withdrawable, // R-044: min(own claim, idle pool cash)
+apps/web/components/invest/phone-app.tsx:186:      // Sellable = what you hold AND bought at this desk (buy-back is personal, non-transferable).
+apps/web/components/invest/invest-screen.tsx:57:  const earnedPesos =
+apps/web/components/invest/invest-screen.tsx:76:  const earnedDolRaw =
+apps/web/components/invest/invest-screen.tsx:84:  const earnedDol = dolScoped ? earnedDolRaw : undefined;
+apps/web/components/invest/invest-screen.tsx:140:            description="Your positions and what they earned since you put money in, computed from your own on-chain deposits, withdrawals and trades."
+apps/web/components/invest/invest-screen.tsx:153:                value={signed(earnedPesos, "xMXN")}
+apps/web/components/invest/invest-screen.tsx:158:                value={v(p.pesos.withdrawable, "xMXN")}
+apps/web/components/invest/invest-screen.tsx:175:                  signed(earnedDol, "OUSD")
+apps/web/components/invest/invest-screen.tsx:201:                sub="The desk only buys back what this wallet bought there. tTBILL received from others (or seized in a Mint liquidation) can't be sold here."
+apps/web/components/invest/invest-screen.tsx:227:            description="Where T-bills are bought and sold: finite inventory, a small spread around the admin price feed, per-trade cap."

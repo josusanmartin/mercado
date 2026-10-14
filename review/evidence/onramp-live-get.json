@@ -1,0 +1,16 @@
+[
+  {
+    "port": 3100,
+    "status": 200,
+    "body": {
+      "enabled": false,
+      "minUsd": 1,
+      "maxPerTxUsd": 500,
+      "maxPerWalletDayUsd": 1000
+    }
+  },
+  {
+    "port": 3101,
+    "error": "fetch failed"
+  }
+]

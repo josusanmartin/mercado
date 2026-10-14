@@ -1,8 +1,8 @@
 # Mercado review findings
 
-Last reviewed commit: `f81cadb` plus v2 switch/UI WIP through02:04 UTC; deployment snapshot atblock39491154. Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
+Last reviewed head: `7b2cc99` plus shared-tree WIP through02:56 UTC (six products, gated tTBILL/InvestDesk redeploy, sponsor first-draw change, on-ramp rewrite, mobile restyles). Evidence hashes and pinned blocks below take precedence over moving source.
 
-Current status: SIX-PRODUCT ECOSYSTEM: Card auth review active; Invest pricing/inventory/copy queued (02:35). Read review/CARD-REVIEW.md first for the new assignment. Card calendar25 tests and replacement runtime pass; Invest17 tests and replacement runtime pass. On-ramp R-046/R-047 block that new route acceptance; Invest UI R-044/R-045 need correction. No full new on-ramp acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
+Current status: SIX-PRODUCT ECOSYSTEM: Card auth review active; Invest pricing/inventory/copy queued (02:35). Read review/CARD-REVIEW.md first for the new assignment. Card calendar25 tests and replacement runtime pass; Invest17 tests and latest gated-token desk runtime pass. On-ramp R-046 retains corrupt-store/multi-writer blockers behind disabled flag; R-047 core caps pass. Sponsor R-016 now includes selector-only first-draw bypass. Invest UI R-044/R-045 source fixes pass. No full new on-ramp acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
 
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -241,7 +241,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-031 — P1 — web — V2 backing labels overstate fairness and remaining capital
 
-- Status: OPEN; owner notified.
+- Status: SOURCE FIX VERIFIED02:52 in current Global: contributed capital, refill capacity and post-trade coverage labels match semantics.
 - Location: `components/transfer/send-screen.tsx:295`–`:301` at discovery.
 - Scenario: `equity()` is historical contributions minus withdrawals, not remaining equity after FX losses; the decaying bucket is labeled “Redeemed today”; the NAV row promises no one can run first. Those labels misdescribe state under stress and throttling.
 - Fix: label net contributed capital and used redemption capacity, describe haircut and availability limits, and qualify the mint rule as post-trade coverage. No unconditional no-run claim.
@@ -255,7 +255,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-033 — P2 — web — Send connect button overflows a phone viewport
 
-- Status: BROWSER REPRODUCED; owner notified.
+- Status: BROWSER FIX VERIFIED02:44 in extensions-1791945841528.json: send deep link and all checked routes exactly390px. Later mobile redesigns need fresh acceptance.
 - Location: `components/shell/connect-gate.tsx`, reused by /send.
 - Scenario: anonymous390px /send has403px document width. “Continue as Miguel (Sender in Houston)” button is343px wide atx60 and escapes its panel.
 - Evidence: `evidence/send-mobile-overflow.json` and screenshot. Fix button sizing/wrapping within available width.
@@ -338,14 +338,14 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-044 — P1 — api — Invest personal withdrawable value shows whole-pool cash
 
-- Status: SOURCE VERIFIED02:44; owner notified.
+- Status: SOURCE FIX VERIFIED02:52: portfolio and phone use min(personal claim,pool cash), unavailable if either read is unknown.
 - Location: `apps/web/components/invest/invest-screen.tsx:139`.
 - Scenario: Portfolio displays p.pesos.poolCash as Withdrawable now for a wallet with no lender claim. Whole-pool liquidity is not that wallet's withdrawable amount. The phone's actual maxOut already computes min(user claim,pool cash), so transaction guard and displayed claim disagree.
 - Fix: use the same minimum in the portfolio; label aggregate pool cash separately. Unknown either read means unavailable, not zero/default.
 
 ### R-045 — P1 — api — Invest attributes transferred assets or collateral movement to earned return
 
-- Status: SOURCE VERIFIED02:44; owner notified.
+- Status: SOURCE FIX VERIFIED02:52 for the stated scenarios: return withheld unless current shares/token quantity equals quantity from own deposits/trades. Label explains external movements; personal desk buyback eligibility displayed. This is a bounded UI attribution check, not a complete basis engine.
 - Location: `apps/web/components/invest/invest-screen.tsx:61`,`:65`; `use-invest.ts:useInvestHistory`.
 - Scenario: receiving100 sOUSD by Transfer with no ERC4626 Deposit event creates100 OUSD Earned since deposit. Moving purchased sOUSD/tTBILL into Mint makes wallet value fall while deposit/trade basis remains, producing a false loss. Faucet tTBILL likewise looks like investment profit. History scans deposit/withdraw/buy/sell events but not transfers or posted collateral.
 - Fix: track basis and custody movements, or withhold return when scope/basis is incomplete. Current wallet mark is not an investment yield calculation. Keep actual share value/holdings visible with honest source labels.
@@ -477,9 +477,9 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Read local `tempo-std` TIP-20 interfaces and `ForkProbe.t.sol`; issuer-gated burn operates on the caller balance. Pool/vault tests must account for the actual precompile behavior.
 - Official references consulted: [MPP server creation](https://mpp.dev/sdk/typescript/server/Mppx.create), [Tempo source](https://github.com/tempoxyz/tempo), [Tempo integration guide](https://docs.chain.link/ccip/v1/evm/tools-resources/network-specific/tempo-integration-guide). Direct docs.tempo.xyz pages redirected to a location unavailable to the browsing tool; installed source is the implementation evidence used here.
 
-## Next pass (updated02:35 UTC)
+## Next pass (updated02:56 UTC)
 
-Start IRC unread. Active Card auth review: read CARD-REVIEW.md,23 local tests pass; card-live-check deployment verification underway. Invest queued in INVEST-REVIEW.md (new six-product scope). Continue source/runtime/hooks review as owners land Card/Invest, new Crédito platform driver/back office and demo tour. R-039 Remesas recovery retry persistence open; R-031 Global labels assigned api; R-033 new send-form overflow430 at390 persists after header fix. R-036–038 fixed, R-040 browser recovery green. No broadcasts, commits or server restarts by reviewer; lead flips/commits. Large outputs under review/evidence.
+Start IRC unread. Active blockers: R-046 on-ramp must stay disabled (corrupt ledger returns empty; multi-process mutex allows duplicate intents), R-016 first-borrow eligibility grants a4-byte selector-only request without attestation. R-047 rewrite cap/minimum tests pass. R-039 ordinary retry/reload now passes but a broadcast Send hash with unknown receipt needs reconciliation before recovery; token/version/hash scope still requested. Card calendar25 tests/runtime green; Invest17 tests/latest gated-token desk runtime green, UI R-044/R-045 source fixes green. New phone restyle is owned by mobile (Remesas/Card) and mobile2 (Crédito/Invest), so prior browser snapshots are not current visual acceptance. Read latest scripts/reviews; no reviewer chain writes, commits or server restarts. Lead enables on-ramp only after review PASS and QA take finishes. Big outputs under review/evidence.
 
 ## Pass12 — Brand v4, relay fixes and migrated recovery (02:19–02:25)
 
@@ -513,3 +513,17 @@ New Brand v4 browser snapshot ecosystem-1791945070347.json: Global now200; all18
 - Post-flip extensions snapshot extensions-1791945841528.json: Home/Card/Invest/Crédito/Remesas-send all200 at1440 and390, no page errors, all exactviewport width. R-033 send overflow fixed. Typecheck-six-products.txt is empty (tsc exit0 at this snapshot). No button-driven transfer by review.
 - New Invest UI financial-copy issues R-044/R-045 posted. New simulated on-ramp assignment from lead received02:44; actual route inspected, R-046/P0 and R-047/P1 locally reproduced with fake wallet/receipt adapters. Reviewer probe initial syntax error corrected before execution; no product error or real transaction involved.
 - Remesas R-039 owner added persisted state plus fresh-send guards; source looks improved, independent updated-hook probe still needed. Prior failed-recovery reproduction remains preserved.
+
+## Pass15 — on-ramp rewrite residuals / UI fixes (02:48–02:52)
+
+- R-039 actual-hook updated probe remesa-recovery-1791946121612.json confirms failed recovery persists, fresh mount reloads same55 amount/account/recipient, new Send is refused. Unknown delivery settlement remains open: Send step hash with no receipt must be reconciled before issuing another transfer. Stored recovery also needs token/version/hash scope; owner notified.
+- On-ramp rewrite tested via actual route + actual bill mutex with isolated review ledger and fake wallet. Four groups pass: pending restart/no re-sign, settled replay+payload409, disabled+$1 min/integer-cent validation, concurrent per-wallet cap. Two remaining R-046 blockers reproduced in onramp-v2-1791946317787.json: corrupt existing file becomes empty and re-signs, two isolated process mutexes sharing a file create2 signatures for one key. Live GET3100 shows enabled:false;3101 unreachable at02:52. No live POST/transfer by reviewer. Lead told to keep disabled.
+- Initial rewrite probe default-import adapter error was corrected before executing cases; launcher artifact is instrumentation only. Durable ledger artifacts are fake signed-byte records under review/evidence/onramp-sandbox-*; no secrets.
+- R-031 Global copy, R-044 personal withdrawal amount and R-045 scope-sensitive yield display fixes source verified; owners notified. New UI screenshot pass already confirms no runtime errors/overflow for Card/Invest/new Driver app at390/1440.
+
+## Pass16 — current source drift / sponsor regression (02:53–02:56)
+
+- Contracts redeployed InvestDesk again against gated tTBILL, now0xD4662343deeE28B4d4a9E4be8E718d9C7d5E4c32. Independent read-only recheck in invest-gated-live-summary.txt: runtime matches, current v2 token/feed/AMM bindings correct, tracked inventory funded, quote positive, unbought sell rejected,5 manifest receipts succeed. Earlier0xDacE8d… proof remains historical. Old tTBILL remains listed as tTBILL-legacy; do not confuse its public faucet with new gated token.
+- R-016 NEW concrete bypass: sponsor first-draw exception grants senderEligible=true and refusal accepts an invented sender whose call is only the4-byte borrow selector, no arguments/attestation. Actual policy probe in sponsor-new-borrow-summary.txt:21/22 pass, first-borrow case fails. Installed viem feePayer.ts:110–126 uses prepared transaction directly, so upstream fill simulation is not a reliable guard. Contracts notified; no live sponsor spam.
+- Current on-ramp v2 harness onramp-v2-1791946317787.json has4 pass groups and2 fail groups. Single-process restart is safe; corrupt ledger and multiple process mutexes are not. GET /api/onramp enabled:false confirmed;3101 unreachable then. Keep route disabled.
+- Brand guidance changed again02:55: Spanish-only dark-first phone apps, tiny Testnet/sin valor real + Demo/Simulado badges, detailed explanation in desktop panels; mobile owns Remesas/Card and mobile2 Crédito/Invest. Real platform logos now allowed with sources. Preserve accessible recovery/close controls and essential simulation labels on actual mobile devices where side panels may move below the fold. QA reported Card error sheet blocks freeze toggle; owner fixing, no duplicate finding needed.

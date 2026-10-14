@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-14T02:48:41.611Z",
+  "mode": "actual hook with local React/tx adapters, no network or broadcasts",
+  "sourceSha256": "5e8f3c6aa26d1b2c82c8f7eaa89ad7022cf92d46d6fb4c4ebd0d2c289328bedc",
+  "beforeFailedRecovery": {
+    "account": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "to": "0x00000000000000000000000000000000000000aa",
+    "amount": "55000000",
+    "memo": "para mamá"
+  },
+  "afterFailedRecovery": {
+    "account": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "to": "0x00000000000000000000000000000000000000aa",
+    "amount": "55000000",
+    "memo": "para mamá"
+  },
+  "afterReload": {
+    "account": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+    "to": "0x00000000000000000000000000000000000000aa",
+    "amount": "55000000",
+    "memo": "para mamá"
+  },
+  "newSendError": "You have converted pesos waiting for delivery. Deliver them first.",
+  "writes": [
+    "mint",
+    "transfer-attempt"
+  ]
+}
