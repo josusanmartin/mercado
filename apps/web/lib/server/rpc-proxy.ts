@@ -67,14 +67,19 @@ async function gate<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** An explicit "not processed, slow down" answer: safe to retry even for a write. */
 const isRateLimit = (status: number, body: RpcResponse | undefined) =>
   status === 429 ||
-  status === 403 ||
-  status >= 500 ||
   body?.error?.code === -32005 ||
   /rate.?limit|too many/i.test(body?.error?.message ?? "");
+/** Also transient for READS (403 from the edge, 5xx, network): retrying a read is always harmless. */
+const isTransient = (status: number, body: RpcResponse | undefined) =>
+  isRateLimit(status, body) || status === 403 || status >= 500 || !body;
+/** Writes: a 5xx or dropped connection may have been processed, so never resend those. */
+const WRITES = new Set(["eth_sendRawTransaction", "eth_sendRawTransactionSync", "eth_sendTransaction"]);
 
 async function upstream(req: RpcRequest, retries: number): Promise<RpcResponse> {
+  const retryable = WRITES.has(req.method) ? isRateLimit : isTransient;
   let last: RpcResponse | undefined;
   for (let attempt = 0; ; attempt++) {
     let status = 0;
@@ -93,9 +98,9 @@ async function upstream(req: RpcRequest, retries: number): Promise<RpcResponse> 
     } catch {
       status = 599; // network error
     }
-    if (body && !isRateLimit(status, body)) return body;
+    if (body && !retryable(status, body)) return body;
     last = body;
-    if (attempt >= retries) break;
+    if (attempt >= retries || !retryable(status, body)) break;
     await new Promise((r) => setTimeout(r, 250 * 2 ** attempt + Math.random() * 150));
   }
   return last ?? { jsonrpc: "2.0", id: 1, error: { code: -32603, message: "Upstream RPC unavailable" } };
@@ -117,7 +122,7 @@ async function handle(req: RpcRequest): Promise<RpcResponse> {
   if (typeof req?.method !== "string") return { jsonrpc: "2.0", id, error: { code: -32600, message: "Invalid request" } };
   const params = Array.isArray(req.params) ? req.params : [];
   if (!cacheable(req.method)) {
-    // writes and live reads: no cache/dedupe; only rate limits are retried (a rejected send is never resent)
+    // writes and live reads: no cache/dedupe; a write is retried ONLY on an explicit rate limit
     const r = await upstream({ method: req.method, params }, 3);
     return { ...r, jsonrpc: "2.0", id };
   }

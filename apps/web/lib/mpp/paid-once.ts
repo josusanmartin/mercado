@@ -68,7 +68,13 @@ export interface PaidOnceOptions<T> {
  */
 export async function paidOnce<T>(request: Request, o: PaidOnceOptions<T>): Promise<Response> {
   const cred = ownCredential(request);
-  let paid = cred ? load()[cred.challengeId] : undefined;
+  // no credential → just a 402; with one, the whole lifecycle (charge → persist → produce → store) runs
+  // serialized per challenge, so concurrent retries of one credential can't both charge or both produce
+  return cred ? withKeyLock(`paid-once:${cred.challengeId}`, () => lifecycle(request, o, cred.challengeId)) : lifecycle(request, o);
+}
+
+async function lifecycle<T>(request: Request, o: PaidOnceOptions<T>, challengeId?: string): Promise<Response> {
+  let paid = challengeId ? load()[challengeId] : undefined;
 
   if (paid && paid.externalId !== o.charge.externalId)
     return jsonError(409, "This payment was for a different request; retry with the original parameters.", "PAYMENT_REQUEST_MISMATCH");
