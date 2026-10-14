@@ -8,37 +8,37 @@ M = "'DM Mono', 'Courier New', monospace"
 assets = json.load(open(os.path.join(ROOT, "assets.json")))
 
 P = [
- dict(id="j1-mint", num="04", name="Mercado Mint", tint="#00A68A", base="#00A68A", art="product-mint-v4.webp",
+ dict(id="j1-mint", headline='Deposit collateral. Issue pesos.', subline='Keep earning on assets that pay yield.', number=None, num="04", name="Mercado Mint", tint="#00A68A", base="#00A68A", art="product-mint-v4.webp",
   purpose="Institutions mint xMXN.", who="Institutions and sophisticated holders with collateral that should be working.",
   proofs=[("48.99M", "pesos an institution can mint against US$4M of collateral, at the 150% line", None, None),
           ("200%", "recommended ratio: MX$36.74M on the same US$4M", None, None)],
   status=None,
-  notes="~10s. Mercado Mint is for institutions and sophisticated holders: lock collateral (dollars, staked dollars, and tokenized assets) and mint pesos, xMXN, while the collateral keeps its own yield. The math is the product's own: US$4M of collateral at today's 18.37 is worth MX$73.48M; at the 150% minimum ratio that mints up to MX$48.99M, or MX$36.74M at the recommended 200%. Each collateral has its own mint line, liquidation line and debt ceiling. Q&A context: running on Tempo's testnet today; collateral assets there are test assets."),
- dict(id="j2-send", num="05", name="Mercado Remesas", tint="#FF8A1F", base="#FF8A1F", art="product-remesas-v4.webp",
+  notes="Institutions keep eligible collateral in a vault and borrow newly issued pesos against it; yield-bearing collateral can keep accruing while deposited. This is secured debt, and a position can be liquidated if its backing falls too far."),
+ dict(id="j2-send", headline='Send money home.', subline='Your family receives pesos straight into their wallet.', number='9,149 pesos received.', num="05", name="Mercado Remesas", tint="#FF8A1F", base="#FF8A1F", art="product-remesas-v4.webp",
   purpose="Send money home in one transaction.", who="A sender in the US paying family in Mexico, plus Tiempo Aire and bills for them.",
   proofs=[("9,149.04", "pesos the family receives for US$500, in one transaction", None, None),
           ("0.40%", "all-in cost versus the market rate, fee included", None, None)],
   status=None,
-  notes="~10s. Mercado Remesas: dollars in the US become pesos in Mexico in one transaction. A real quote from the product right now: US$500 delivers MX$9,149.04 to the family, about 0.40% all-in versus the market rate, fee included. The same app tops up the family's phone and pays their bills. Q&A context: on Tempo testnet today; delivery is on-chain to the family's wallet (no bank cash-out yet), and bill fulfillment is simulated until a provider is contracted."),
- dict(id="p-global", num="06", name="Mercado Global", tint="#5C8BFF", base="#2F6BFF", art="product-global-v4.webp",
+  notes="Sending five hundred dollars quotes about nine thousand one hundred forty-nine pesos after the exchange fee and size impact. This is wallet delivery, not bank cashout; the exact amount is quoted before sending."),
+ dict(id="p-global", headline='Pay your supplier in pesos.', subline='Send dollars. Deliver pesos straight to their wallet.', number='176,297 pesos delivered.', num="06", name="Mercado Global", tint="#5C8BFF", base="#2F6BFF", art="product-global-v4.webp",
   purpose="Move MXN and USD across borders.", who="Businesses and fintech partners paying suppliers and settling MXN ⇄ USD.",
   proofs=[("176,294.94", "pesos to a supplier for US$10,000, quoted in real time", None, None),
           ("30 s", "signed indicative quote, minimum received shown up front", None, None)],
   status=None,
-  notes="~10s. Mercado Global is cross-border for businesses: pay a Mexican supplier in pesos from dollars, or bring pesos back. A real quote right now: US$10,000 pays a supplier MX$176,294.94. At that size, price impact is part of the cost, and the quote shows it; one swap is capped at US$10,000. Partners get a signed indicative quote valid for 30 seconds with the minimum received, through an API they pay for per call. Never call it a firm quote. Q&A context: Tempo testnet today; the FX rate is relayed from Coinbase by our operator."),
- dict(id="j3-advance", num="07", name="Mercado Crédito", tint="#F2357D", base="#F2357D", art="product-credito-v4.webp",
+  notes="Ten thousand dollars quotes about one hundred seventy-six thousand two hundred ninety-seven pesos in the current example. Buying a signed quote pays for an API response; moving the supplier's money is a separate action."),
+ dict(id="j3-advance", headline='Get an advance on what you’ve earned.', subline='Use your earnings history to request an advance.', number='Up to 1,500 pesos.', num="07", name="Mercado Crédito", tint="#F2357D", base="#F2357D", art="product-credito-v4.webp",
   purpose="Credit for the gig economy.", who="Gig drivers who need small advances, the lenders who fund them, and bots that buy scores.",
   proofs=[("1,500", "pesos advanced against a driver's earnings line", None, None),
           ("2%", "flat fee, repaid by the driver as they earn", None, None)],
   status=None,
-  notes="~12s. Mercado Crédito: a driver connects their earnings and draws an advance against them; lenders fund the pool. The product's configured limits: up to MX$1,500 per driver, a 2% flat fee, and the pool lends at most 80% of what lenders supplied. The driver repays as they earn. Q&A context: the score is an illustrative rule on demo earnings data, not a validated credit model; repayment is manual today; Tempo testnet."),
- dict(id="p-card", num="08", name="Mercado Card", tint="#9B82FF", base="#7C5CFF", art="product-card-v4.webp",
+  notes="Drivers share earnings data, receive an offer, and draw from lender capital within their available limit. Our demonstrated earnings are simulated, the loan is unsecured, and repayment is manual with the fee shown before borrowing."),
+ dict(id="p-card", headline='Tap to pay at the corner store.', subline='Approve the amount. See the receipt.', number=None, num="08", name="Mercado Card", tint="#9B82FF", base="#7C5CFF", art="product-card-v4.webp",
   purpose="Spend xMXN at a shop.", who="Anyone holding xMXN who wants to pay at a counter: the family in Mexico, a driver, a merchant's customers.",
   proofs=[("450", "pesos paid with a tap at the corner store", None, None),
           ("1,000", "pesos daily limit, resets at midnight CDMX; freeze any time", None, None)],
   video=("hero-spend-final.mp4", "hero-spend-final-paid.png"),
   status=None,
-  notes="~8s. Mercado Card: spend pesos with a tap at the corner store. MX$450 at the tienda; a daily limit that resets at midnight CDMX; freeze it any time. The video is one person, end to end: Javier draws an advance, his frozen card is declined, he unfreezes it, and the tap pays exactly once, with receipts on the shop terminal and his phone. Q&A context: Tempo testnet today; the card network and number are simulated (works only at Mercado merchants)."),
+  notes="The same driver approves the shop and amount, and the payment moves pesos already in that wallet. A frozen card rejects the charge; this is a Mercado merchant payment flow, not an issued Visa or Mastercard."),
  dict(id="p-invest", num="09", name="Mercado Invest", tint="#F2B807", base="#F2B807", art="product-invest-v4.webp",
   purpose="Save in pesos, dollars or T-bills.", who="Savers in Mexico, and institutions holding xMXN or dollars that should be working.",
   proofs=[("0.0998", "demo T-bill bought for 10 OUSD on the InvestDesk", "T-bill buy tx", TX+"0x3b5ec7b7f73be6a4558139904f797ebce34b3f0bf6c344e979f294c46ac54879"),
@@ -63,9 +63,9 @@ def slide(p):
     alt = p.get("alt", p["name"] + " in the Mercado app")
     head = p.get("headline", p["purpose"])
     sub = p.get("subline", p["who"])
-    big = p.get("number", p["proofs"][0][0] if p["proofs"] else "")
-    bigcap = p.get("numcap", p["proofs"][0][1] if p["proofs"] else "")
-    bsize = 160 if len(big) <= 6 else (128 if len(big) <= 9 else 104)
+    big = p.get("number")
+    bsize = 96 if big and len(big) <= 16 else 80
+    numblock = (f'<p data-build-in="rise 3" style="position:absolute;left:128px;top:700px;width:920px;font-size:{bsize}px;font-weight:500;line-height:1;letter-spacing:-5px;color:{p["tint"]}">{big}</p>\n') if big else ""
     if kind == "phone":
         visual = (f'<img data-build-in="fade 4" src="{src}" alt="{alt}" style="position:absolute;left:1240px;top:220px;width:552px;height:620px;object-fit:contain">\n')
         capy = 856
@@ -80,11 +80,7 @@ def slide(p):
 <h2 data-build-in="rise 1" style="font-size:88px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">{head}</h2>
 <p data-build-in="rise 2" style="font-size:36px;font-weight:500;line-height:1.3;color:#C9C9C9">{sub}</p>
 </div>
-<div data-build-in="rise 3" style="position:absolute;left:128px;top:640px;width:920px;display:flex;flex-direction:column;gap:8px">
-<p style="font-size:{bsize}px;font-weight:500;line-height:1;letter-spacing:-5px;color:{p["tint"]}">{big}</p>
-<p style="font-family:{M};font-size:24px;color:#999999">{bigcap}</p>
-</div>
-{visual}{capline}<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:{M};font-size:24px;color:#8A8A8A">Mercado · built on Tempo</p>
+{numblock}{visual}{capline}<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:{M};font-size:24px;color:#8A8A8A">Mercado</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:{M};font-size:24px;text-align:right;color:#8A8A8A">{p["num"]}</p>
 <aside>{p["notes"]}</aside>
 </section>
