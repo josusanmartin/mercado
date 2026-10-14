@@ -3,10 +3,9 @@
 // on-chain. Showing them side by side proves the vault isn't funding the desk or the drivers.
 import { explorerAddress } from "@mercado/shared";
 import { Panel, Row, Rows } from "@/components/console";
-import { ADDR, useThreeBuckets } from "@/lib/contracts";
+import { ADDR, usePool, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount } from "@/lib/format";
 
-const MAX_UTILIZATION = 80; // CreditPool maxUtilizationBps / 100
 
 const amt = (v: bigint | undefined, unit: string) => (v === undefined ? "…" : `${fmtAmount(v)} ${unit}`);
 
@@ -23,6 +22,8 @@ function Source({ text, address }: { text: string; address: string }) {
 
 export function ThreeBuckets() {
   const b = useThreeBuckets();
+  const { maxUtilizationBps } = usePool();
+  const MAX_UTILIZATION = maxUtilizationBps === undefined ? undefined : Number(maxUtilizationBps) / 100;
   const lent = b.pool.loansOut;
   const claims = b.pool.lenderClaims;
   const utilization = lent !== undefined && claims ? Number((lent * 10_000n) / claims) / 100 : undefined;
@@ -99,7 +100,7 @@ export function ThreeBuckets() {
                 {fmtAmount(b.pool.cash)} xMXN available
                 <br />
                 <span className="text-muted-foreground text-sm font-normal">
-                  {fmtAmount(lent)} lent{utilization !== undefined ? ` · ${utilization.toFixed(1)}% of ${MAX_UTILIZATION}% cap` : ""}
+                  {fmtAmount(lent)} lent{utilization !== undefined ? ` · ${utilization.toFixed(1)}% lent${MAX_UTILIZATION !== undefined ? ` (cap ${MAX_UTILIZATION}%)` : ""}` : ""}
                 </span>
               </>
             )

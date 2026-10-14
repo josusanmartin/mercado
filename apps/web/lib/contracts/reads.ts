@@ -194,6 +194,9 @@ export function usePool(user?: Address) {
       u("getDebt"),
       u("maxBorrowable"),
       u("loans"),
+      { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "feeBps", chainId: CHAIN_ID },
+      { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "perUserCap", chainId: CHAIN_ID },
+      { address: ADDR.creditPool, abi: creditPoolAbi, functionName: "maxUtilizationBps", chainId: CHAIN_ID },
     ],
     query: REFRESH,
   });
@@ -212,6 +215,10 @@ export function usePool(user?: Address) {
     maxBorrowable: enabledUser ? ok<bigint>(q.data?.[4]) : undefined,
     loanPrincipal: enabledUser ? loan?.[0] : undefined,
     loanFee: enabledUser ? loan?.[1] : undefined,
+    /** Live pool params (owner-settable on-chain; never hardcode them in the UI). */
+    feeBps: ok<bigint>(q.data?.[6]),
+    perUserCap: ok<bigint>(q.data?.[7]),
+    maxUtilizationBps: ok<bigint>(q.data?.[8]),
   };
 }
 

@@ -16,8 +16,8 @@ import { fmtAmount, toUnits } from "@/lib/format";
 import { ThreeBuckets } from "./three-buckets";
 
 type Section = "supply" | "withdraw" | "lending" | "pool" | "money" | "risks";
-const FEE_PCT = 2; // CreditPool feeBps = 200, flat per advance
-const MAX_UTILIZATION = 80;
+// fee / caps are read live from the CreditPool (owner-settable), never hardcoded (R-035)
+const pctOf = (bps: bigint | undefined) => (bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(Number(bps) % 100 ? 1 : 0)}%`);
 const min = (a?: bigint, b?: bigint) => (a === undefined || b === undefined ? undefined : a < b ? a : b);
 const xmxn = (v: bigint | undefined) => (v === undefined ? "…" : `${fmtAmount(v)} xMXN`);
 
@@ -52,6 +52,9 @@ export function EarnScreen() {
   const lockedInLoans =
     pool.lenderBalance !== undefined && maxWithdraw !== undefined && pool.lenderBalance > maxWithdraw ? pool.lenderBalance - maxWithdraw : 0n;
 
+  const FEE = pctOf(pool.feeBps);
+  const UTIL_CAP = pctOf(pool.maxUtilizationBps);
+
   const items = [
     { id: "supply", label: "Supply", icon: ArrowDownToLine },
     { id: "withdraw", label: "Withdraw", icon: ArrowUpFromLine },
@@ -67,7 +70,7 @@ export function EarnScreen() {
         <Panel
           key="supply"
           title="Supply xMXN"
-          description={`Your xMXN funds driver advances. Lenders share the flat ${FEE_PCT}% fee drivers pay, and only once they repay. Advances are unsecured and repaid manually.`}
+          description={`Your xMXN funds driver advances. Lenders share the flat ${FEE} fee drivers pay, and only once they repay. Advances are unsecured and repaid manually.`}
           aside={NO_YIELD}
         >
           <ConnectGate persona="lender" why="Connect a wallet holding xMXN to supply the advance pool.">
@@ -167,12 +170,12 @@ export function EarnScreen() {
               <Row label="Lent to drivers" sub="Open, unsecured exposure" value={xmxn(pool.outstanding)} />
               <Row
                 label="Utilization"
-                sub={`At most ${MAX_UTILIZATION}% of the pool can be lent at once`}
+                sub={`At most ${UTIL_CAP} of the pool can be lent at once`}
                 value={utilization === undefined ? "…" : `${utilization.toFixed(1)}%`}
               />
-              <Row label="Realized fees" sub={`${FEE_PCT}% flat, counted only when repaid`} value={xmxn(pool.realizedFees)} />
+              <Row label="Realized fees" sub={`${FEE} flat, counted only when repaid`} value={xmxn(pool.realizedFees)} />
               <Row label="Total ever lent" value={xmxn(pool.totalBorrowed)} />
-              <Row label="Per-driver cap" value="1,500.00 xMXN" />
+              <Row label="Per-driver cap" value={xmxn(pool.perUserCap)} />
             </Rows>
           </div>
         </Panel>
