@@ -499,7 +499,7 @@ export function MintDashboard() {
     <SettingsLayout
       title="Mercado Mint"
       meta={meta.join(" · ")}
-      purpose="Institutions mint xMXN against OUSD and yield-bearing collateral. The collateral keeps its own yield."
+      purpose="Create xMXN against OUSD or yield-bearing collateral."
       list={<ListPane label="Mint sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}
     >
       {section === "overview" && <Overview go={setSection} />}

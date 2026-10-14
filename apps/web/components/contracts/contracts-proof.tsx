@@ -489,9 +489,9 @@ export function ContractsProof() {
   return (
     <SettingsLayout
       title="Every contract, live and verified"
-      statement="Every contract, verified."
+      statement="Verified contracts"
       meta={`${total} contracts with source · verified on Sourcify, live · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID}${present ? "" : " · Testnet · no real value"}`}
-      purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state. Testnet trust model: one admin key (the deployer), no timelock or multisig. 'No direct sweep' is not 'no control', so the control paths are spelled out per contract."
+      purpose="Inspect deployed contracts, source verification and admin powers."
       list={
         <ListPane
           label="Contracts sections"
@@ -507,6 +507,12 @@ export function ContractsProof() {
     >
       {section === "v2" && (
         <div className="grid gap-14">
+          {/* the trust model in full (moved out of the header, V5-TASTE #2): never shortened */}
+          <p className="text-muted-foreground max-w-3xl text-[15px] text-pretty">
+            Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state.
+            Testnet trust model: one admin key (the deployer), no timelock or multisig. &lsquo;No direct sweep&rsquo; is not &lsquo;no
+            control&rsquo;, so the control paths are spelled out per contract.
+          </p>
           {groups.map((g, i) => (
             <section key={g.title} className="grid gap-3">
               <SectionLabel index={String(i + 1).padStart(2, "0")}>{g.label}</SectionLabel>
