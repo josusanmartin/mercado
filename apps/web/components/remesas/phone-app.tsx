@@ -22,7 +22,7 @@ const ACCENT = "#ff8a1f";
 export function PhoneApp({ s }: { s: RemesasState }) {
   const { screen } = s;
   return (
-    <div className="flex min-h-full flex-col bg-[#ffffff] text-[#111418]">
+    <div className="flex min-h-full w-full min-w-0 flex-col bg-[#ffffff] text-[#111418]">
       {screen === "inicio" && <Inicio s={s} />}
       {screen === "enviar" && <Enviar s={s} />}
       {screen === "enviado" && <Enviado s={s} />}
@@ -131,9 +131,9 @@ function Enviar({ s }: { s: RemesasState }) {
   const can = !busy && amt > 0n && !overBalance && !memoTooLong && q.amountOut !== undefined && !q.error && !!mama.address;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full min-w-0 flex-col">
       <Header title="Enviar a México" sub="Send money home" onBack={busy ? undefined : () => s.setScreen("inicio")} />
-      <div className="grid gap-3 px-4">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 px-4">
         <div className="text-center">
           <p className="text-xs text-[#5b6270]">Envías · You send</p>
           <p className="text-[2.6rem] leading-none font-semibold tracking-tight tabular">${amount || "0"}</p>
@@ -174,7 +174,7 @@ function Enviar({ s }: { s: RemesasState }) {
           />
         </label>
       </div>
-      <div className="mt-auto px-3 pt-2">
+      <div className="mt-auto min-w-0 px-3 pt-2">
         <Keypad value={amount} onChange={setAmount} disabled={busy} />
         <button
           type="button"
