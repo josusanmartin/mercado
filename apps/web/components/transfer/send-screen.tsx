@@ -95,7 +95,7 @@ export function SendScreen() {
         title="Send money"
         lede="Turn dollars into pesos on the swap desk and send them to any wallet on Tempo in one step. Delivery is on-chain only: there is no cash-out to a Mexican bank (SPEI) in this prototype."
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="content-start">
           <CardContent>
             <ConnectGate persona="sender" why="Connect a wallet with testnet OUSD or xMXN to send money.">

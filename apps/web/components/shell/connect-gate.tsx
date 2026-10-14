@@ -33,6 +33,7 @@ export function ConnectGate({ persona, children, why }: { persona: PersonaId; wh
       <div className="flex flex-wrap gap-2">
         <Button
           variant="brand"
+          className="h-auto min-h-9 py-2 text-left whitespace-normal"
           disabled={!p.privateKey}
           onClick={() => switchTo(persona).catch((e) => toast.error(String(e?.message ?? e).split("\n")[0]))}
         >
