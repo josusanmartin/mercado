@@ -11,7 +11,7 @@ export function CircleButton({ label, icon: Icon, href, onClick, active }: Circl
     <>
       <span
         className={cn(
-          "bg-card shadow-tile grid size-12 place-items-center rounded-full transition-transform duration-150 ease-out group-hover:scale-105 sm:size-16",
+          "bg-card grid size-11 place-items-center rounded-[12px] border transition-colors duration-150 group-hover:border-product",
           active && "bg-primary text-primary-foreground",
         )}
       >

@@ -4,19 +4,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Console-menu language (crew/DESIGN-SWITCH.md): a flat "basic white" and "basic black" theme,
-  one accent (the cyan selection ring), status colors only in tiny dots and badges.
+  Mercado ecosystem brand (crew/DESIGN-ECOSYSTEM.md): Mexican-modern fintech.
+  Warm paper canvas, ink text, and one signature color per product, set by data-product:
+  Mint = jade, Remesas = cempasúchil, Global = talavera cobalt, Crédito = rosa mexicano.
+  The home (no data-product) uses ink as its accent and all four colors in its art and diagram.
 */
 :root {
-  --page: #ebebeb;
-  --tile: #ffffff;
-  --ink: #2d2d2d;
-  --ink-2: #6b6b6b;
-  --line: #d6d6d6;
-  --well: #f4f4f4;
-  --accent: #00c3e3;
-  --accent-dim: rgb(0 195 227 / 0.55);
-  --shadow: 0 2px 6px rgb(0 0 0 / 0.08);
+  --page: #f5efe4;
+  --tile: #fffdf8;
+  --ink: #15110e;
+  --ink-2: #6b5e51;
+  --line: #e7dccb;
+  --well: #f1e8da;
+
+  --c-mint: #0e7c66;
+  --c-remesas: #f08c00;
+  --c-global: #1e4fd6;
+  --c-credito: #e4007c;
+
+  --accent: var(--ink);
+  --accent-fg: #fffdf8;
+  /* accent tint for soft backgrounds (selected rows, chips) */
+  --accent-soft: color-mix(in oklab, var(--accent) 10%, var(--tile));
+
+  --shadow: 0 1px 2px rgb(21 17 14 / 0.05);
 
   --background: var(--page);
   --foreground: var(--ink);
@@ -24,42 +35,63 @@
   --card-foreground: var(--ink);
   --popover: var(--tile);
   --popover-foreground: var(--ink);
-  --primary: var(--ink);
-  --primary-foreground: var(--tile);
-  --secondary: #e2e2e2;
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--well);
   --secondary-foreground: var(--ink);
   --muted: var(--well);
   --muted-foreground: var(--ink-2);
-  --accent-bg: #f0f0f0;
-  --destructive: #d33a2c;
+  --accent-bg: var(--well);
+  --destructive: #c4352b;
   --border: var(--line);
-  --input: #cfcfcf;
+  --input: #dccfbb;
   --ring: var(--accent);
-  --radius: 14px;
+  --radius: 12px;
 
-  --brand: var(--ink);
-  --brand-foreground: var(--tile);
-  --warning: #c27c0e;
-  --warning-ink: #8a5600;
-  --success: #24965a;
+  --brand: var(--accent);
+  --brand-foreground: var(--accent-fg);
+  --warning: #c77700;
+  --warning-ink: #8a5300;
+  --success: #1f9d55;
+}
+
+[data-product="mint"] {
+  --accent: var(--c-mint);
+}
+[data-product="remesas"] {
+  --accent: var(--c-remesas);
+  --accent-fg: #15110e;
+}
+[data-product="global"] {
+  --accent: var(--c-global);
+}
+[data-product="credito"] {
+  --accent: var(--c-credito);
 }
 
 .dark {
-  --page: #2d2d2d;
-  --tile: #3c3c3c;
-  --ink: #ffffff;
-  --ink-2: #b9b9b9;
-  --line: #4d4d4d;
-  --well: #353535;
-  --shadow: 0 2px 6px rgb(0 0 0 / 0.25);
-  --secondary: #4a4a4a;
-  --accent-bg: #474747;
-  --input: #595959;
-  --destructive: #ff6b5e;
-  --warning: #f0b43c;
-  --warning-ink: #f6c766;
-  --success: #4fd08a;
+  --page: #15110e;
+  --tile: #1f1a16;
+  --ink: #f5efe4;
+  --ink-2: #b4a692;
+  --line: #3a3029;
+  --well: #28211c;
+  --input: #4a3e35;
+  --accent-fg: #15110e;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --destructive: #f0685d;
+  --warning: #f0a53a;
+  --warning-ink: #f6c776;
+  --success: #4cc985;
+  --c-mint: #2bb596;
+  --c-global: #6d8fff;
+  --c-credito: #ff4fa8;
   color-scheme: dark;
+}
+.dark [data-product="mint"],
+.dark [data-product="global"],
+.dark [data-product="credito"] {
+  --accent-fg: #15110e;
 }
 
 @theme inline {
@@ -86,64 +118,50 @@
   --color-warning: var(--warning);
   --color-warning-ink: var(--warning-ink);
   --color-success: var(--success);
+  /* product accent (follows data-product) and the four fixed product colors */
   --color-select: var(--accent);
+  --color-product: var(--accent);
+  --color-product-fg: var(--accent-fg);
+  --color-product-soft: var(--accent-soft);
+  --color-mint: var(--c-mint);
+  --color-remesas: var(--c-remesas);
+  --color-global: var(--c-global);
+  --color-credito: var(--c-credito);
   --color-page: var(--page);
   --color-tile: var(--tile);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-line: var(--line);
   --color-well: var(--well);
-  /* legacy names from the first theme, kept so older classes still resolve */
   --color-tinta: var(--ink);
   --color-papel: var(--page);
 
-  --radius-sm: 8px;
-  --radius-md: 10px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
   --radius-lg: var(--radius);
-  --radius-xl: 18px;
+  --radius-xl: 14px;
   --shadow-tile: var(--shadow);
 
-  --font-sans: var(--font-body), ui-rounded, system-ui, sans-serif;
-  --font-display: var(--font-body), ui-rounded, system-ui, sans-serif;
-
-  --animate-ring-pulse: ring-pulse 1.2s ease-in-out infinite alternate;
-  @keyframes ring-pulse {
-    from {
-      outline-color: var(--accent);
-    }
-    to {
-      outline-color: var(--accent-dim);
-    }
-  }
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, monospace;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  html {
-    font-size: 16px;
-  }
   body {
     @apply bg-background text-foreground font-sans;
+    font-size: 15px;
   }
   h1,
   h2,
-  h3,
-  strong,
-  b {
-    font-weight: 600;
+  h3 {
+    letter-spacing: -0.02em;
   }
-  /* The one accent: a thick pulsing ring around whatever is selected. Follows the element's radius. */
-  :focus-visible,
-  [data-selected="true"] {
-    outline: 4px solid var(--accent);
-    outline-offset: 3px;
-    animation: var(--animate-ring-pulse);
-  }
-  input:focus-visible,
-  textarea:focus-visible,
-  [role="slider"]:focus-visible {
+  :focus-visible {
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
   .tabular,

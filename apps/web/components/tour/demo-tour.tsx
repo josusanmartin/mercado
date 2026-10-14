@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useAnyBusy } from "@/lib/busy";
 import { cn } from "@/lib/utils";
 import { personaById, type PersonaId } from "@/components/wallet/personas";
-import { usePersona } from "@/components/wallet/use-persona";
+import { useDemoMode } from "@/components/console/demo-mode";
 
 export type TourStep = {
   spec: number; // SPEC §0 step this demonstrates
@@ -28,53 +28,45 @@ export const TOUR: TourStep[] = [
     spec: 1,
     persona: "lp",
     href: "/mint",
-    title: "Create: lock OUSD, mint pesos",
-    doThis: "Deposit 1,000 OUSD and mint 8,000 xMXN, a 250% ratio. Then drag the peso slider to see where it turns red.",
-    prefill: { deposit: "1000", mint: "8000" },
+    title: "Mint: an institution creates pesos",
+    doThis: "Lock collateral and mint xMXN. Then open the stress view to see where the position turns red if the peso strengthens.",
   },
   {
     spec: 3,
     persona: "sender",
-    href: "/send",
-    title: "Move: send pesos home",
-    doThis: "Swap 50 OUSD for xMXN on the swap desk and send it to Rosa in one go.",
+    href: "/remesas",
+    title: "Remesas: send money home",
+    doThis: "From the phone: send dollars to Familia (MX). They arrive as xMXN in one transaction, with a note.",
     prefill: { amount: "50", memo: "para mamá" },
   },
   {
-    spec: 4,
-    persona: "lender",
-    href: "/earn",
-    title: "Lend: a lender funds the pool",
-    doThis: "Check the pool has cash to lend. Supply 2,000 xMXN if it's running low.",
-    prefill: { supply: "2000" },
-  },
-  {
-    spec: 4,
-    persona: "driver",
-    href: "/credit",
-    title: "Lend: the driver gets an advance",
-    doThis: "Connect the demo driver, check eligibility, then draw the advance.",
-  },
-  {
     spec: 5,
-    persona: "driver",
-    href: "/pay",
-    title: "Spend: pay the phone bill over HTTP 402",
-    doThis: "Buy 100 MXN of Telcel airtime. Payment is real on Tempo; the top-up is SIMULATED.",
+    persona: "sender",
+    href: "/remesas",
+    title: "Remesas: recargar Tiempo Aire",
+    doThis: "Top up the family's Telcel line. The payment is a real HTTP 402 on Tempo; the top-up itself is SIMULATED.",
+    prefill: { screen: "airtime" },
   },
   {
-    spec: 6,
+    spec: 3,
+    persona: "merchant",
+    href: "/global",
+    title: "Global: pay a supplier across the border",
+    doThis: "Get a signed indicative quote off the oracle mid, then pay. Check the exchange backing.",
+  },
+  {
+    spec: 4,
     persona: "driver",
-    href: "/credit",
-    title: "Lend: repay the advance",
-    doThis: "Repay the full balance. Nothing is deducted from Uber payouts automatically.",
+    href: "/credito",
+    title: "Crédito: a driver gets an advance",
+    doThis: "Connect the Demo Uber Data, check eligibility, draw the advance, and repay it.",
   },
   {
     spec: 6,
     persona: "lender",
-    href: "/earn",
-    title: "Lend: the lender sees the fee",
-    doThis: "Realized fees went up and loans out went down. No APY is promised.",
+    href: "/credito?tab=lenders",
+    title: "Crédito: the lender earns the fee",
+    doThis: "Realized fees come only from repaid advances. No return is promised.",
   },
 ];
 
@@ -97,7 +89,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<TourState>({ active: false, index: 0 });
   const [going, setGoing] = useState(false);
   const router = useRouter();
-  const { switchTo } = usePersona();
+  const demo = useDemoMode();
   const busy = useAnyBusy();
 
   useEffect(() => {
@@ -123,7 +115,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setGoing(true);
       setState({ active: true, index });
       try {
-        await switchTo(step.persona);
+        // Demo mode makes each product connect its own demo account on arrival.
+        if (!demo.on) demo.setOn(true);
         router.push(step.href);
       } catch (e) {
         toast.error(e instanceof Error ? e.message.split("\n")[0] : "Could not switch persona");
@@ -131,7 +124,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
         setGoing(false);
       }
     },
-    [busy, switchTo, router],
+    [busy, demo, router],
   );
 
   const value = useMemo<TourCtx>(
@@ -158,7 +151,7 @@ export function useTour() {
 /** Amounts the current tour step suggests for this page, or {} when the tour isn't on it. */
 export function useTourPrefill(href: string): Record<string, string> {
   const { step } = useTour();
-  return step?.href === href ? (step.prefill ?? {}) : {};
+  return step && step.href.split("?")[0] === href ? (step.prefill ?? {}) : {};
 }
 
 export function TourLauncher() {
@@ -178,7 +171,7 @@ export function TourPanel() {
   const busy = useAnyBusy();
   if (!active || !step) return null;
   const p = personaById(step.persona);
-  const here = path === step.href;
+  const here = path === step.href.split("?")[0];
 
   return (
     <aside
@@ -208,7 +201,7 @@ export function TourPanel() {
         </button>
       </div>
       <p className="text-muted-foreground mt-3 text-sm">
-        Step {index + 1} of {TOUR.length} · as {p.name} ({p.role})
+        Step {index + 1} of {TOUR.length} · {p.role} · demo account: {p.name}
       </p>
       <h2 className="mt-0.5 text-xl font-semibold">{step.title}</h2>
       <p className="mt-1 text-[15px] text-pretty">{step.doThis}</p>
@@ -225,7 +218,7 @@ export function TourPanel() {
         {!here ? (
           <Button size="sm" variant="brand" className="ml-auto" disabled={going || busy} onClick={() => go(index)}>
             {going && <Loader2 className="animate-spin" />}
-            Go as {p.name}
+            Go to {p.role}
           </Button>
         ) : index < TOUR.length - 1 ? (
           <Button size="sm" variant="brand" className="ml-auto" disabled={going || busy} onClick={() => go(index + 1)}>

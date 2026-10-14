@@ -1,13 +1,15 @@
-// Demo Tour personas. TESTNET DEMO KEYS ONLY: throwaway Tempo Moderato accounts, exposed to the
-// browser on purpose (apps/web/.env.local, NEXT_PUBLIC_DEMO_*) so the tour runs in one click.
-// They hold faucet tokens with no real value. Never reuse these keys anywhere else.
+// Demo accounts, one per product role (crew/DESIGN-ECOSYSTEM.md: roles, not faces).
+// TESTNET DEMO KEYS ONLY: throwaway Tempo Moderato accounts exposed to the browser on purpose
+// (apps/web/.env.local, NEXT_PUBLIC_DEMO_*) so Demo mode works in one click. No real value.
 import type { Address, Hex } from "viem";
 
-export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender";
+export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender" | "merchant";
 
 export type Persona = {
   id: PersonaId;
+  /** Role name shown in the UI. */
   name: string;
+  /** Which product uses it. */
   role: string;
   blurb: string;
   address?: Address;
@@ -18,40 +20,48 @@ export type Persona = {
 export const PERSONAS: Persona[] = [
   {
     id: "lp",
-    name: "Lucía",
-    role: "Liquidity provider",
-    blurb: "Locks OUSD in the vault and mints xMXN.",
+    name: "Institución demo",
+    role: "Mercado Mint",
+    blurb: "Locks collateral and mints xMXN.",
     address: process.env.NEXT_PUBLIC_DEMO_LP_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_LP_PRIVATE_KEY as Hex | undefined,
   },
   {
     id: "sender",
-    name: "Miguel",
-    role: "Sender in Houston",
-    blurb: "Swaps OUSD for xMXN and sends it home.",
+    name: "Sender (US)",
+    role: "Mercado Remesas",
+    blurb: "Sends money home and pays the family's bills.",
     address: process.env.NEXT_PUBLIC_DEMO_SENDER_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_SENDER_PRIVATE_KEY as Hex | undefined,
   },
   {
     id: "recipient",
-    name: "Rosa",
-    role: "Recipient in Puebla",
-    blurb: "Receives xMXN from Miguel.",
+    name: "Familia (MX)",
+    role: "Mercado Remesas",
+    blurb: "Receives xMXN from the sender.",
     address: process.env.NEXT_PUBLIC_DEMO_RECIPIENT_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_RECIPIENT_PRIVATE_KEY as Hex | undefined,
   },
   {
+    id: "merchant",
+    name: "Business demo",
+    role: "Mercado Global",
+    blurb: "Pays suppliers across the border.",
+    address: process.env.NEXT_PUBLIC_DEMO_MERCHANT_ADDRESS as Address | undefined,
+    privateKey: process.env.NEXT_PUBLIC_DEMO_MERCHANT_PRIVATE_KEY as Hex | undefined,
+  },
+  {
     id: "driver",
-    name: "Javier",
-    role: "Driver in CDMX",
-    blurb: "Gets an advance on Demo Uber Data and pays his phone bill.",
+    name: "Driver",
+    role: "Mercado Crédito",
+    blurb: "Gets an advance on Demo Uber Data and repays it.",
     address: process.env.NEXT_PUBLIC_DEMO_DRIVER_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_DRIVER_PRIVATE_KEY as Hex | undefined,
   },
   {
     id: "lender",
-    name: "Elena",
-    role: "Lender",
+    name: "Lender",
+    role: "Mercado Crédito",
     blurb: "Funds the advance pool with xMXN.",
     address: process.env.NEXT_PUBLIC_DEMO_LENDER_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_LENDER_PRIVATE_KEY as Hex | undefined,

@@ -141,39 +141,9 @@ export function WalletChooser({ onDone }: { onDone: () => void }) {
         />
       </div>
 
-      <section aria-labelledby="personas-h" className="rounded-lg border border-dashed p-3">
-        <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h3 id="personas-h" className="text-sm font-semibold">
-            Demo personas
-          </h3>
-          <span className="text-muted-foreground text-xs">Testnet demo keys, no real value</span>
-        </div>
-        <ul className="grid gap-1">
-          {PERSONAS.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                disabled={busy || !p.privateKey || personaPending !== undefined}
-                onClick={() => usePersonaAccount(p.id)}
-                className={cn(
-                  "hover:bg-accent flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm disabled:opacity-50",
-                  active?.id === p.id && "bg-accent",
-                )}
-              >
-                <KeyRound className="text-brand size-4 shrink-0" aria-hidden />
-                <span className="min-w-0 flex-1">
-                  <span className="font-medium">{p.name}</span> <span className="text-muted-foreground">· {p.role}</span>
-                </span>
-                {personaPending === p.id ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <span className="text-muted-foreground text-xs tabular">{shortAddr(p.address)}</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <p className="text-muted-foreground rounded-[10px] border border-dashed px-3 py-2.5 text-sm">
+        Just looking? Turn on <span className="text-foreground font-medium">Demo mode</span> in the top bar and each product uses its own testnet demo account.
+      </p>
 
       <WalletOption
         icon={<Wallet />}

@@ -23,7 +23,7 @@ export function TileRow({ tiles, label }: { tiles: TileProps[]; label: string })
   const current = tiles[sel] ?? tiles[0];
   return (
     <section aria-label={label} className="grid gap-3">
-      <p aria-hidden className="text-select hidden h-8 px-1 text-2xl font-medium sm:block">
+      <p aria-hidden className="text-product hidden h-7 px-1 text-lg font-semibold sm:block">
         {current?.title}
       </p>
       <div
@@ -42,8 +42,8 @@ export function Tile({ title, icon: Icon, value, caption, href, onClick, badge, 
   const body = (
     <>
       {badge && <span className="absolute top-3 right-3">{badge}</span>}
-      <Icon className="size-12 stroke-[1.4] sm:size-16" aria-hidden />
-      <span className="grid gap-0.5 text-center">
+      <Icon className="text-product size-7 stroke-[1.6]" aria-hidden />
+      <span className="grid gap-0.5">
         {value !== undefined && <span className="text-xl font-semibold tabular sm:text-2xl">{value}</span>}
         {caption && <span className="text-muted-foreground text-xs sm:text-sm">{caption}</span>}
         <span className="mt-1 text-sm font-medium sm:sr-only">{title}</span>
