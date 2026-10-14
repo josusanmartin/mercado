@@ -53,6 +53,7 @@ import {
   haceTiempo,
   useNavDirection,
   useSnackbar,
+  useFirstShow,
   useNewKeys,
   useStatusBar,
   washStyle,
@@ -83,8 +84,30 @@ export function PhoneApp({ s }: { s: RemesasState }) {
   const [onramp, setOnramp] = useState(false);
   const tab = screen === "inicio" || screen === "actividad" || screen === "perfil";
   const app = { s, openOnramp: () => setOnramp(true) };
+  const snack = useSnackbar();
+  useStatusBar(tab ? TERRACOTTA : undefined);
   return (
     <div className="flex min-h-full flex-col bg-[var(--m-surface)]">
+      {/* V6 #6: on the three tabs the header (index + honesty line) stays anchored in the terracotta band; only
+          the content plane slides. Sub-screens (Enviar, Pagar, Enviado) bring their own top bar. */}
+      {tab && (
+        <AccentField color={TERRACOTTA}>
+          <AppHeader
+            index="02"
+            product="Remesas"
+            right={
+              <>
+                <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
+                  <Bell className="size-[22px]" strokeWidth={1.75} />
+                </IconButton>
+                <Avatar name="Sender US" size={36}>
+                  S
+                </Avatar>
+              </>
+            }
+          />
+        </AccentField>
+      )}
       <ScreenTransition id={screen} dir={dir} className="flex-1">
         {screen === "inicio" && <Inicio {...app} />}
         {screen === "enviar" && <Enviar {...app} />}
@@ -120,7 +143,6 @@ const PAPEL =
 const cdmxTime = (now?: number) => (now ? new Date((now - 6 * 3600) * 1000).toISOString().slice(11, 16) : "--:--");
 
 function Inicio({ s, openOnramp }: AppProps) {
-  useStatusBar(TERRACOTTA);
   const now = useNow(30_000);
   const snack = useSnackbar();
   const fx = useOracle();
@@ -151,21 +173,6 @@ function Inicio({ s, openOnramp }: AppProps) {
       {/* v5 color world: the terracotta field holds the header, the hero and the balance (ink text, 5.6:1 AA);
           a soft wash carries it into the white canvas for the tiles, actions and contacts. */}
       <AccentField color={TERRACOTTA} className="pb-6">
-        <AppHeader
-          index="02"
-          product="Remesas"
-          right={
-            <>
-              <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
-                <Bell className="size-[22px]" strokeWidth={1.75} />
-              </IconButton>
-              <Avatar name="Sender US" size={36}>
-                S
-              </Avatar>
-            </>
-          }
-        />
-
         <div className="px-4">
           <Display as="h1" size={58} style={papel} className="pt-1">
             Envía
@@ -374,6 +381,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
   const now = useNow(30_000) ?? 0;
   const keyOf = (e: Entry) => (e.kind === "send" ? e.row.txHash + e.row.logIndex : e.order.orderId);
   const fresh = useNewKeys("remesas-activity", loading ? [] : entries.map(keyOf));
+  const List = useFirstShow("remesas-activity") ? Stagger : "div"; // the entrance plays once, not on every return
   if (loading && entries.length === 0) return <SkeletonList rows={3} />;
   if (error && entries.length === 0)
     return (
@@ -399,7 +407,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
   // Rows arrive after the screen (async reads), so they own their entrance: a short stagger. A row that is
   // new since this list last showed (e.g. the send you just made) slides in at the top with an accent flash.
   return (
-    <Stagger>
+    <List>
       {shown.map((e, i) => {
         const g = dayGroup(e.at, now);
         const head = i === 0 || dayGroup(shown[i - 1].at, now) !== g;
@@ -432,7 +440,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
           </div>
         );
       })}
-    </Stagger>
+    </List>
   );
 }
 

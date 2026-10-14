@@ -37,6 +37,7 @@ import {
   SuccessCheck,
   Switch,
   useNavDirection,
+  useFirstShow,
   useNewKeys,
   useStatusBar,
   fmtMoney,
@@ -284,23 +285,10 @@ const RowGlyph = ({ children }: { children: string }) => (
  * (≤4°, .m-tilt). v6: a tap flips it to the back (last 4 + daily limit; "Ver reverso" does the same for
  * keyboards and screen readers), and one light sweep crosses it when a payment is approved (`shine` = the tap).
  */
-function CardFront({
-  last4,
-  frozen,
-  name,
-  limit,
-  back,
-  onFlip,
-  shine,
-}: {
-  last4: number;
-  frozen: boolean;
-  name: string;
-  limit: bigint;
-  back: boolean;
-  onFlip: () => void;
-  shine?: string;
-}) {
+// Taps whose approve shine already played: it never replays on a tab return (V6-TASTE #12, no recurring shine).
+const shined = new Set<string>();
+
+function CardFront({ last4, frozen, name, limit, back, onFlip, shine }: { last4: number; frozen: boolean; name: string; limit: bigint; back: boolean; onFlip: () => void; shine?: string }) {
   const tilt = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -342,7 +330,7 @@ function CardFront({
             </div>
           )}
           {/* after the paid sheet closes itself (2.5 s + exit), so the sweep isn't under the scrim */}
-          {shine && <span key={shine} aria-hidden className="m-shine" style={{ animationDelay: "2750ms" }} />}
+          {shine && !shined.has(shine) && <span key={shine} aria-hidden className="m-shine" style={{ animationDelay: "2750ms" }} onAnimationEnd={() => shined.add(shine)} />}
         </div>
         <div
           className="m-face m-face-back overflow-hidden rounded-[8px] text-[#0a0a0a]"
@@ -376,6 +364,7 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
   const now = useNow(30_000) ?? 0;
   const rows = feed.rows.filter((r) => r.event === "CardCharged" || r.event === "CardRefunded");
   const fresh = useNewKeys("card-activity", feed.isLoading ? [] : rows.map((r) => r.txHash + r.logIndex));
+  const List = useFirstShow("card-activity") ? Stagger : "div"; // the entrance plays once, not on every tab return
   if (feed.isLoading && rows.length === 0)
     return (
       <div className="grid gap-3 px-4 py-2">
@@ -385,7 +374,7 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
     );
   if (rows.length === 0) return <EmptyState icon={<NoChargesArt />} size={88} hint="Aún no hay cobros con esta tarjeta" />;
   return (
-    <Stagger>
+    <List>
       {rows.slice(0, limit).map((r) => {
         const refund = r.event === "CardRefunded";
         return (
@@ -406,7 +395,7 @@ function CardActivity({ holder, merchantName, limit = 6 }: { holder?: Address; m
           </div>
         );
       })}
-    </Stagger>
+    </List>
   );
 }
 
@@ -502,7 +491,7 @@ function TapPrompt({ pending, merchantName, onApprove, onDecline }: { pending: P
           </Button>
         )}
         {status === "done" && (
-          <p className="flex items-center gap-3 text-[16px] font-semibold">
+          <p className="m-receipt flex items-center gap-3 text-[16px] font-semibold">
             <span aria-hidden className="inline-grid">
               <SuccessCheck size={40} />
             </span>
