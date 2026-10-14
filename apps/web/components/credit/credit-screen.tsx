@@ -176,7 +176,7 @@ export function CreditScreen() {
   // Embedded in Mercado Crédito's shell (which owns the product hero and the tab row): numbered steps,
   // then the panel for the selected step.
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
       <DriverSteps
         items={items.map((it) => ({
           ...it,

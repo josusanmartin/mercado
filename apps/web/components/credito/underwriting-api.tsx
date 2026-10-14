@@ -76,7 +76,7 @@ export function UnderwritingApi() {
   };
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
       <Panel
         title="Underwriting API"
         description="Lenders, fintechs and bots buy a driver's demo underwriting report per call. No API key, account or card: the endpoint answers HTTP 402, the caller pays 2 xMXN on Tempo, and gets the report with a receipt. Same illustrative score on Demo Uber Data, and never a borrow attestation."

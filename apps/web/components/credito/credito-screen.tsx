@@ -90,7 +90,7 @@ export function CreditoScreen() {
       }
     >
       {tab === "drivers" && (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
           <CreditScreen />
           <CreditActivity
             title="Advances on-chain"
@@ -99,7 +99,7 @@ export function CreditoScreen() {
         </div>
       )}
       {tab === "lenders" && (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
           <EarnScreen embedded />
           <CreditActivity
             title="Pool activity"
