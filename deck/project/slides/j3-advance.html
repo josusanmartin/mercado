@@ -1,0 +1,43 @@
+<section id="j3-advance" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Journey 3 of 4 · Driver advance</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">A driver draws a small, explained advance from a separate lender pool</h2>
+</div>
+<div style="display:flex;gap:64px;align-items:start">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">1</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">Connect a demo driver: 8 to 12 weeks of Demo Uber Data.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">2</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">An illustrative score reads median net pay, volatility and active weeks, and explains the offer.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">3</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">The server signs a short-lived EIP-712 attestation bound to this wallet, pool, chain and nonce.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">4</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">CreditPool checks it, burns the nonce and lends xMXN with a 2% flat fee. A replay fails.</p>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0 0 80px">
+<p style="font-size:24px;font-weight:600;padding:4px 16px;border-radius:999px;border:2px dashed #A64B0A;color:#A64B0A">Demo Uber Data</p>
+<p style="font-size:24px;font-weight:600;padding:4px 16px;border-radius:999px;border:2px dashed #A64B0A;color:#A64B0A">Not a credit model</p>
+</div>
+</div>
+<div style="width:620px;display:flex;flex-direction:column;gap:20px;background:#13241F;border-radius:24px;padding:48px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#BCCBC4">Demo profiles · real scorer output</p>
+<table style="font-size:28px;color:#F5F0E6">
+<tr><th style="width:46%;color:#F2A54A">Profile</th><th style="width:22%;color:#F2A54A;text-align:right">Score</th><th style="width:32%;color:#F2A54A;text-align:right">Offer</th></tr>
+<tr><td>Steady</td><td>96.5</td><td>1,500</td></tr>
+<tr><td>Irregular</td><td>54.2</td><td>590</td></tr>
+<tr><td>New driver</td><td>21.3</td><td>None</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.35;color:#BCCBC4">Offer = min(15% of median weekly net, 1,500 MXN), within pool liquidity.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">07</p>
+<aside>~20s. A lender has funded the pool separately. The driver connects Demo Uber Data (synthetic fixtures, labeled everywhere), and the server explains the offer from a simple, reproducible heuristic: it's illustrative, not a validated credit model. It signs an EIP-712 attestation that expires quickly and is bound to this borrower, pool, chain and nonce. The pool enforces a 1,500 xMXN per-driver cap and keeps total lending at or under 80% of supplied funds. Repayment is manual; nothing is taken from Uber payouts.</aside>
+</section>

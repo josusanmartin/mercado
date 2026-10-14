@@ -1,0 +1,29 @@
+<section id="j4-bills" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Journey 4 of 4 · Pay bills with MPP</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">The driver pays for simulated airtime with a real HTTP 402 payment</h2>
+</div>
+<div style="display:flex;gap:16px;align-items:center">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;padding:12px 20px;border-radius:12px;background:#13241F;color:#F5F0E6">402 Payment Required</p>
+<x-shape kind="arrow-right" style="background:#A64B0A;width:48px;height:28px"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;padding:12px 20px;border-radius:12px;background:#13241F;color:#F5F0E6">Pay xMXN on Tempo</p>
+<x-shape kind="arrow-right" style="background:#A64B0A;width:48px;height:28px"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;padding:12px 20px;border-radius:12px;background:#13241F;color:#F5F0E6">PAYMENT_VERIFIED</p>
+<x-shape kind="arrow-right" style="background:#A64B0A;width:48px;height:28px"></x-shape>
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:24px;font-weight:600;padding:10px 18px;border-radius:12px;border:2px dashed #A64B0A;color:#A64B0A">FULFILLED_SIMULATED</p>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#13241F;border-radius:20px;padding:40px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;line-height:1.1;color:#F2A54A">Real: the payment</h3>
+<p style="font-size:32px;line-height:1.4;color:#F5F0E6">The server checks the on-chain receipt for this order and amount. A retry returns the same order, with no second debit.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border:2px dashed #A64B0A;border-radius:20px;padding:40px">
+<h3 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:44px;font-weight:700;line-height:1.1;color:#A64B0A">SIMULATED: the top-up</h3>
+<p style="font-size:32px;line-height:1.4;color:#13241F">A mock Telcel provider returns a reference number. No airtime is delivered.</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#4B5A54">Then the driver repays by hand from separate funds, and the pool records the fee.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">08</p>
+<aside>~25s. This is the moment to slow down. The driver spends part of the advance on 100 MXN of Telcel airtime. The unpaid request gets a real HTTP 402 from mppx; the wallet pays in xMXN on Tempo; the server verifies that exact payment for that exact order before calling the provider. Show the receipt next to the remaining loan debt. The top-up itself is SIMULATED: MPP is the payment rail, not a bill-payment provider. Retrying never charges or fulfills twice. Finish with manual repayment from a labeled top-up of test funds.</aside>
+</section>

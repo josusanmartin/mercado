@@ -1,0 +1,38 @@
+<section id="j1-mint" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Journey 1 of 4 · Create pesos</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">Lock testnet OUSD, mint xMXN, and see the peso risk up front</h2>
+</div>
+<div style="display:flex;gap:64px;align-items:start">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">1</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">Deposit 1,000 testnet OUSD into the CollateralVault.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">2</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">Mint 8,000 xMXN at 20 MXN/USD. That's a 250% ratio; the vault refuses anything under 150%.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">3</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">Drag the peso-appreciation slider: it turns red near 10.8 MXN/USD, the 135% liquidation line.</p>
+</div>
+<div style="display:flex;gap:24px;align-items:start">
+<p style="font-size:24px;font-weight:700;width:56px;height:56px;line-height:2.33;text-align:center;border-radius:50%;background:#13241F;color:#F5F0E6">4</p>
+<p style="flex:1;font-size:32px;line-height:1.35;color:#13241F">A separate stress script proves liquidation on-chain, then restores the oracle.</p>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0 0 80px">
+<p style="font-size:24px;font-weight:600;padding:6px 18px;border-radius:999px;background:#13241F;color:#F5F0E6">Real: deposit + mint txs</p>
+<p style="font-size:24px;font-weight:600;padding:4px 16px;border-radius:999px;border:2px dashed #A64B0A;color:#A64B0A">Mock oracle · 20.00</p>
+<p style="font-size:24px;font-weight:600;padding:4px 16px;border-radius:999px;border:2px dashed #A64B0A;color:#A64B0A">Slider is preview-only</p>
+</div>
+</div>
+<div style="width:620px;display:flex;flex-direction:column;gap:20px;background:#13241F;border-radius:24px;padding:48px">
+<p style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:176px;font-weight:800;line-height:1;letter-spacing:-4px;color:#F2A54A">10.8</p>
+<p style="font-size:32px;line-height:1.35;color:#F5F0E6">MXN/USD, where this 250% position reaches 135%: the dollar falling 46% against the peso.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">05</p>
+<aside>~20s. The LP deposits 1,000 testnet OUSD and mints 8,000 xMXN at the mock 20 MXN/USD, which is 250%. Then drag the slider: a USD-backed peso debt gets riskier when the peso strengthens. It goes red at about 10.8, which is the dollar falling 46% against the peso. The slider runs only in the browser and never writes the shared oracle. The real liquidation is a separate admin stress script on a dedicated ~160% position.</aside>
+</section>

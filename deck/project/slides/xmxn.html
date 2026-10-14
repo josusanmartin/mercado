@@ -1,0 +1,27 @@
+<section id="xmxn" data-transition="fade" style="background:#F2A54A;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:24px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#13241F">What Mercado is</p>
+<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F">xMXN is a synthetic peso, minted only against over-collateralized OUSD</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'IBM Plex Mono', 'Courier New', monospace;font-size:44px;font-weight:600;line-height:1.2;color:#13241F">1,000 OUSD × 20 MXN/USD ÷ 150% = up to 13,333.33 xMXN</p>
+<p style="font-size:24px;color:#13241F">Worked example, not an FX quote. Collateral is testnet OUSD from the Tempo faucet: no real value, not issuer-backed, not redeemable.</p>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:3px solid #13241F;padding:24px 0 0 0">
+<h3 style="font-size:32px;font-weight:700;line-height:1.2;color:#13241F">A real TIP-20</h3>
+<p style="font-size:32px;line-height:1.35;color:#13241F">6 decimals, created by Tempo's TIP20Factory. Only the vault can mint or burn.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:3px solid #13241F;padding:24px 0 0 0">
+<h3 style="font-size:32px;font-weight:700;line-height:1.2;color:#13241F">Two separate lines</h3>
+<p style="font-size:32px;line-height:1.35;color:#13241F">Mint needs 150% or more (we suggest 200%). Liquidation starts below 135%.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:3px solid #13241F;padding:24px 0 0 0">
+<h3 style="font-size:32px;font-weight:700;line-height:1.2;color:#13241F">Synthetic first</h3>
+<p style="font-size:32px;line-height:1.35;color:#13241F">Issuer-backed pesos are future work. We don't claim reserves we don't have.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#13241F">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#13241F">03</p>
+<aside>~15s. Mercado is a CDP for local currency. You lock USD collateral, and the vault mints xMXN, a six-decimal TIP-20 peso, only up to 150% collateralization. Walk the formula once. Stress that the mint line (150%) and the liquidation line (135%) are separate, and that issuer-backed issuance is a future path we show as a stub, not a claim.</aside>
+</section>
