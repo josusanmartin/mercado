@@ -26,7 +26,15 @@ export const TEMPO_ADDRESSES = {
 export const FEE_TOKEN: Address = TEMPO_ADDRESSES.alphaUSD;
 
 /** viem's built-in Tempo Moderato chain (Tempo tx serializers/formatters) with our default fee token. */
-export const tempoModerato = viemTempoModerato.extend({ feeToken: FEE_TOKEN });
+/** Multicall3 is predeployed at the canonical address on Moderato (tempo-std StdContracts). */
+export const MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11" as const;
+
+/** viem's built-in Tempo Moderato chain (Tempo tx serializers/formatters) with our default fee token and
+ *  multicall3, so wagmi batches useReadContracts into one eth_call (avoids RPC 429s). */
+export const tempoModerato = viemTempoModerato.extend({
+  feeToken: FEE_TOKEN,
+  contracts: { ...viemTempoModerato.contracts, multicall3: { address: MULTICALL3, blockCreated: 0 } },
+});
 
 export const explorerTx = (hash: Hash | string) => `${TEMPO_EXPLORER_URL}/tx/${hash}`;
 export const explorerAddress = (addr: Address | string) => `${TEMPO_EXPLORER_URL}/address/${addr}`;

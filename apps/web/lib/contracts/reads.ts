@@ -6,7 +6,8 @@ import { useConnection, useReadContract, useReadContracts } from "wagmi";
 import { ADDR, CHAIN_ID } from "./addresses";
 import { creditPoolAbi, oracleAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
 
-const REFRESH = { refetchInterval: 5_000 } as const;
+// 10s keeps the demo live without tripping the public RPC rate limit (reads are multicall-batched).
+const REFRESH = { refetchInterval: 10_000 } as const;
 const ok = <T>(r: { status: string; result?: unknown } | undefined) =>
   r?.status === "success" ? (r.result as T) : undefined;
 

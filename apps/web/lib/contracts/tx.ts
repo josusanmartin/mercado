@@ -113,6 +113,8 @@ export function useTx() {
         busy.current = false;
         setStepLabel(undefined);
         await queryClient.invalidateQueries();
+        // the public RPC's "latest" can trail the receipt by a block; refetch once more shortly after
+        setTimeout(() => void queryClient.invalidateQueries(), 2_000);
       }
     },
     [config, write, queryClient],
