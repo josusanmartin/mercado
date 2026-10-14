@@ -1,52 +1,39 @@
-<section id="j3-advance" data-transition="magic" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:20px">
-<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Core flow · 1 of 2</p>
-<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F;width:1200px">A signed advance from a separate pool</h2>
-<x-embed style="position:absolute;left:128px;top:320px;width:1664px;height:520px"><!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:#F5F0E6;color:#13241F;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
-.row{position:absolute;top:60px;left:0;right:0;display:flex;gap:56px}
-.card{flex:1;height:300px;box-sizing:border-box;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:10px;opacity:.18;transform:translateY(14px);transition:all .5s}
-.card.on{opacity:1;transform:none}
-.solid{background:#13241F;color:#F5F0E6}
-.dash{border:3px dashed #A64B0A;color:#13241F}
-.k{font-size:24px;letter-spacing:2px;text-transform:uppercase;opacity:.8}
-.big{font-size:64px;font-weight:800;line-height:1.05}
-.solid .big{color:#F2A54A}.dash .big{color:#A64B0A}
-.s{font-size:26px;line-height:1.3}
-.ar{position:absolute;top:206px;width:40px;height:4px;background:#A64B0A;transform:scaleX(0);transform-origin:left;transition:transform .4s}
-.ar.on{transform:scaleX(1)}
-.ar:after{content:"";position:absolute;right:-4px;top:-8px;border-left:14px solid #A64B0A;border-top:10px solid transparent;border-bottom:10px solid transparent}
-#spark{display:flex;align-items:flex-end;gap:6px;height:90px}
-#spark i{display:block;width:18px;background:#A64B0A;border-radius:3px}
-#ghost{position:absolute;left:0;right:0;top:410px;display:flex;justify-content:flex-end;gap:16px;align-items:center;opacity:0;transition:opacity .5s}
-#ghost.on{opacity:1}
-#ghost p{margin:0;font-size:26px;font-weight:700;padding:10px 20px;border-radius:999px}
-#ghost .r{border:3px dashed #5B6963;color:#5B6963}
-#ghost .x{background:#A64B0A;color:#F5F0E6}
-#used{display:inline-block;font-size:24px;font-weight:700;background:#F2A54A;color:#13241F;padding:4px 12px;border-radius:8px;opacity:0;transition:opacity .4s}
-#used.on{opacity:1}
+<section id="j3-advance" data-transition="magic" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/43f886d7093f469dc1d8680cd904ef9d" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:700px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">03 — the core flow</p>
+<p style="position:absolute;left:892px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#999999">Demo Uber Data · not a credit model · <a href="https://explore.testnet.tempo.xyz/tx/0x15e9ad6a3e0cb2f974cab113a5d8744755463b3f662214081216db4f3e950bf1">live borrow ↗</a></p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">A signed advance</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">from a separate lender pool.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:470px;width:1060px;height:310px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:26px;overflow:hidden}
+.l{display:flex;gap:24px;height:60px;align-items:center;white-space:nowrap;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,text-shadow .8s}
+.l.on{opacity:1;transform:none}
+.d{width:32px;color:#666}
+.v{color:#999}
+.amber{color:#FFB547}
+.amber.on{text-shadow:0 0 18px rgba(255,181,71,.55)}
+.ok{color:#00FF00;text-shadow:0 0 10px rgba(0,255,0,.5)}
+.dim{color:#666}
 </style></head><body>
-<div class="row">
-<div class="card dash" id="c1"><div class="k">Demo Uber Data</div><div id="spark"></div><div class="s">12 weeks of synthetic pay</div></div>
-<div class="card solid" id="c2"><div class="k">Score</div><div class="big">96.5</div><div class="s">Credit line 1,500 xMXN</div></div>
-<div class="card solid" id="c3"><div class="k">EIP-712 signature</div><div class="big" id="cd">15:00</div><div class="s">until it expires<br><span id="used">nonce used</span></div></div>
-<div class="card solid" id="c4"><div class="k">CreditPool → driver</div><div class="big">+500</div><div class="s">xMXN · debt 510 with the 2% fee</div></div>
-</div>
-<div class="ar" id="a1" style="left:calc(25% - 42px)"></div><div class="ar" id="a2" style="left:calc(50% - 28px)"></div><div class="ar" id="a3" style="left:calc(75% - 14px)"></div>
-<div id="ghost"><p class="r">Replay the same signature</p><p class="x">Rejected</p></div>
+<div class="l"><span class="d">←</span><span>12 weeks of earnings</span><span class="v">Demo Uber Data</span></div>
+<div class="l"><span class="d">←</span><span>score 96.5</span><span class="v">credit line 1,500 xMXN</span></div>
+<div class="l amber"><span class="d">←</span><span>EIP-712 attestation</span><span>expires in <span id="cd">15:00</span></span></div>
+<div class="l"><span class="d">→</span><span>CreditPool.borrow 500 xMXN</span><span><span class="ok">✓</span> <span class="v">nonce burned</span></span></div>
+<div class="l dim"><span class="d">→</span><span>replay the same signature</span><span>rejected</span></div>
 <script>
-var S=[9863,10035,10037,10288,10117,10506,10601,11092,9796,9687,11134,9688],sp=document.getElementById('spark');
-S.forEach(function(v){var i=document.createElement('i');i.style.height=Math.round((v-8000)/3200*90)+'px';sp.appendChild(i)});
-function $(id){return document.getElementById(id)}
-var cdT=null;
-function run(){['c1','c2','c3','c4','a1','a2','a3','ghost','used'].forEach(function(i){$(i).classList.remove('on')});clearInterval(cdT);$('cd').textContent='15:00';
-[['c1',200],['a1',1100],['c2',1400],['a2',2300],['c3',2600],['a3',3600],['c4',3900],['used',4300],['ghost',5400]].forEach(function(p){setTimeout(function(){$(p[0]).classList.add('on')},p[1])});
-setTimeout(function(){var s=900;cdT=setInterval(function(){s--;$('cd').textContent=Math.floor(s/60)+':'+('0'+s%60).slice(-2)},1000)},2600);}
-run();setInterval(run,10000);
+var L=[].slice.call(document.querySelectorAll('.l')),cd=document.getElementById('cd'),T=null;
+function run(){L.forEach(function(e){e.classList.remove('on')});clearInterval(T);cd.textContent='15:00';
+L.forEach(function(e,i){setTimeout(function(){e.classList.add('on')},600+i*1100)});
+setTimeout(function(){var s=900;T=setInterval(function(){s--;cd.textContent=Math.floor(s/60)+':'+('0'+s%60).slice(-2)},1000)},2800);}
+run();setInterval(run,11000);
 </script></body></html></x-embed>
-<p data-build-in="fade" style="position:absolute;left:128px;top:870px;width:620px;font-size:24px;font-weight:600;color:#A64B0A">Demo Uber Data · not a credit model</p>
-<p data-build-in="fade" style="position:absolute;left:800px;top:870px;width:440px;font-size:24px;font-weight:600;color:#13241F"><a href="https://explore.testnet.tempo.xyz/tx/0x15e9ad6a3e0cb2f974cab113a5d8744755463b3f662214081216db4f3e950bf1">Live borrow on Moderato ↗</a></p>
-<p id="wallet" style="position:absolute;left:1312px;top:860px;width:480px;font-size:24px;font-weight:600;padding:10px 20px;border-radius:14px;background:#13241F;color:#F5F0E6">Driver: 500 xMXN · debt 510</p>
-<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">03</p>
-<aside>~25s. Start with the lender: the CreditPool is funded separately from the vault. The driver connects Demo Uber Data, which is synthetic. A simple, reproducible heuristic scores it (steady profile: 96.5) and sets a credit line of min(15% of median weekly net, 1,500 MXN); the actual draw is also capped by pool utilization (80%) and open debt. The server signs an EIP-712 attestation bound to this wallet, pool, chain and nonce that expires in 15 minutes. The pool checks it, burns the nonce and lends with a 2% flat fee; replaying the signature is rejected. The numbers match the live run on Moderato: borrow 500 xMXN, debt 510, and four negative simulations (tampered signature, expired, over the cap, replay) revert with the expected errors. Repayment is manual: the live run repaid 510 and the pool's realized fees went from 0 to 10.</aside>
+<div id="wallet" style="position:absolute;left:128px;top:808px;width:960px;display:flex;gap:64px;align-items:flex-end">
+<div style="width:400px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">driver balance</p><p style="font-size:72px;font-weight:500;line-height:1;letter-spacing:-2.5px;color:#F2F0EA">500 xMXN</p></div>
+<div style="width:400px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">now owed, 2% fee</p><p style="font-size:72px;font-weight:500;line-height:1;letter-spacing:-2.5px;color:#FFB547">510 xMXN</p></div>
+</div>
+<img data-build-in="fade 3" src="/_blob/c5ea78bbf666e2e5ebe92f1fce620377" alt="Mercado Get an advance screen: Lupita's 12 weeks of Demo Uber Data earnings, score 96.5 out of 100, credit line 1,500 xMXN, 1,400 xMXN available now" style="position:absolute;left:1272px;top:470px;width:520px;height:427px;object-fit:cover;border:1px solid rgba(255,255,255,0.12)">
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">03</p>
+<aside>~25s. Start with the lender: the CreditPool is funded separately from the vault. The driver connects Demo Uber Data, which is synthetic. A simple, reproducible heuristic scores it (steady profile: 96.5) and sets a credit line of min(15% of median weekly net, 1,500 MXN); the actual draw is also capped by pool utilization (80%) and open debt. The server signs an EIP-712 attestation bound to this wallet, pool, chain and nonce that expires in 15 minutes. The pool checks it, burns the nonce and lends with a 2% flat fee; replaying the signature is rejected. The screenshot is the real app's offer screen. The numbers match the live run on Moderato: borrow 500 xMXN, debt 510, and four negative simulations (tampered signature, expired, over the cap, replay) revert with the expected errors. Repayment is manual: the live run repaid 510 and the pool's realized fees went from 0 to 10.</aside>
 </section>

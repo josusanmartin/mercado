@@ -1,35 +1,33 @@
-<section id="j5-agent" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:20px">
-<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Machine to machine</p>
-<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F;width:1500px">A bot pays for a score. No API key.</h2>
-<x-embed style="position:absolute;left:128px;top:320px;width:1664px;height:520px"><!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:#F5F0E6;overflow:hidden}
-#term{position:absolute;inset:0;border-radius:24px;background:#0E1A16;padding:36px 44px;box-sizing:border-box;font-family:Menlo,Consolas,"Courier New",monospace;font-size:26px;line-height:1.75;color:#E9E3D6}
-.dots{display:flex;gap:10px;margin-bottom:14px}.dots i{width:16px;height:16px;border-radius:50%;background:#3A4A44;display:block}
-.l{white-space:nowrap;overflow:hidden;width:0}
-.l.on{width:100%;transition:width .9s steps(48)}
-.w{display:inline-block;width:140px;font-weight:700}
-.agent{color:#8FC7B4}.mercado{color:#F2A54A}.tempo{color:#BCCBC4}
-.hot{color:#F2A54A;font-weight:700}
-.cur{display:inline-block;width:14px;height:28px;background:#E9E3D6;vertical-align:middle;animation:b 1s steps(1) infinite}
-@keyframes b{50%{opacity:0}}
-</style></head><body><div id="term"><div class="dots"><i></i><i></i><i></i></div><div id="out"></div></div>
+<section id="j5-agent" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:700px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">05 — machine to machine</p>
+<p style="position:absolute;left:892px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#999999">illustrative score · <a href="https://explore.testnet.tempo.xyz/tx/0xbae8c938a550c95c5295203d7bfed526fd5a010768fb7f8c29b01f5d6f46683a">live agent payment ↗</a></p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">A bot pays for a score.</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">No API key, no signup.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:470px;width:1664px;height:440px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:26px;overflow:hidden}
+.l{display:flex;height:60px;align-items:center;white-space:nowrap;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,text-shadow .8s}
+.l.on{opacity:1;transform:none}
+.w{width:170px;color:#666}
+.m .w{color:#999}
+.hot{color:#FFB547}
+.l.on .hot{text-shadow:0 0 18px rgba(255,181,71,.55)}
+.ok{color:#00FF00;text-shadow:0 0 10px rgba(0,255,0,.5)}
+.v{color:#999}
+</style></head><body>
+<div class="l"><span class="w">agent</span><span>POST /api/driver/score?access=underwriter</span></div>
+<div class="l m"><span class="w">mercado</span><span><span class="hot">402 Payment Required</span> <span class="v">· 2 xMXN · tempo/charge</span></span></div>
+<div class="l"><span class="w">agent</span><span>signs an xMXN transfer bound to the challenge</span></div>
+<div class="l"><span class="w">tempo</span><span>settled on-chain <span class="v">· 0xbae8c938…683a</span></span></div>
+<div class="l m"><span class="w">mercado</span><span><span class="hot">200 OK</span> + Payment-Receipt <span class="ok">✓</span></span></div>
+<div class="l"><span class="w">agent</span><span>score 96.5 · credit line 1,500 · <span class="v">no borrow attestation</span></span></div>
 <script>
-var L=[['agent','POST /api/driver/score?access=underwriter'],
-['mercado','<span class="hot">402 Payment Required</span> · 2 xMXN · tempo/charge'],
-['agent','signs an xMXN transfer bound to the challenge'],
-['tempo','settled on-chain · tx 0xbae8c938…683a'],
-['mercado','<span class="hot">200 OK</span> + Payment-Receipt'],
-['agent','score 96.5 · credit line 1,500 xMXN · Demo Uber Data'],
-['agent','no borrow attestation included']],out=document.getElementById('out'),els=[];
-L.forEach(function(r){var d=document.createElement('div');d.className='l';d.innerHTML='<span class="w '+r[0]+'">'+r[0]+'</span>'+r[1];out.appendChild(d);els.push(d)});
-var c=document.createElement('span');c.className='cur';
-function run(){els.forEach(function(e){e.classList.remove('on')});if(c.parentNode)c.parentNode.removeChild(c);
-els.forEach(function(e,i){setTimeout(function(){e.classList.add('on');e.appendChild(c)},400+i*1200)});}
+var L=[].slice.call(document.querySelectorAll('.l'));
+function run(){L.forEach(function(e){e.classList.remove('on')});L.forEach(function(e,i){setTimeout(function(){e.classList.add('on')},500+i*1100)})}
 run();setInterval(run,11000);
 </script></body></html></x-embed>
-<p data-build-in="fade" style="position:absolute;left:128px;top:870px;width:800px;font-size:24px;font-weight:600;color:#A64B0A">Demo Uber Data · illustrative score, not a credit model</p>
-<p data-build-in="fade" style="position:absolute;left:1092px;top:870px;width:700px;font-size:24px;font-weight:600;text-align:right;color:#13241F"><a href="https://explore.testnet.tempo.xyz/tx/0xbae8c938a550c95c5295203d7bfed526fd5a010768fb7f8c29b01f5d6f46683a">Live agent payment: 2 xMXN ↗</a></p>
-<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">05</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">05</p>
 <aside>~8s. The same 402 rail works between machines. A brand-new bot wallet, funded from the faucet with no API key, account or signup, asks Mercado's score API for an underwriting report. It gets a 402 for 2 xMXN, pays on Tempo with a transfer bound to the challenge, and gets the report back with a Payment-Receipt. The report is the illustrative score on Demo Uber Data, and it never includes a borrow attestation: only the borrower's own session gets one. Live on Moderato; transcript in scripts/evidence/underwriter-agent.txt.</aside>
 </section>
