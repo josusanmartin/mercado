@@ -33,6 +33,33 @@ const MESSAGES: Record<string, (args: readonly unknown[]) => string> = {
   ExceedsUtilization: ([, limit]) => `The pool can lend at most ${amt(limit)} xMXN in total right now (80% utilization cap).`,
   InsufficientLiquidity: ([avail]) => `Only ${amt(avail)} xMXN is available in the pool right now.`,
   ExceedsLenderBalance: ([claim]) => `You can withdraw at most ${amt(claim)} xMXN.`,
+  // v2 vault (Mint)
+  DebtCeilingExceeded: ([, ceiling]) => `This collateral's debt ceiling (${amt(ceiling)} xMXN) would be exceeded.`,
+  MintingPaused: () => "Minting against this collateral is paused. You can still repay and withdraw.",
+  UnknownCollateral: () => "That token isn't accepted as collateral.",
+  // MoveAMM (exchange)
+  CoverageTooLow: ([cov, req]) => `The exchange's reserve coverage would be ${pct(cov)} (minimum ${pct(req)}), so minting is paused for now.`,
+  ExceedsLiability: ([liab]) => `The exchange can redeem at most ${amt(liab)} xMXN right now.`,
+  InsufficientReserve: ([r]) => `The exchange only has ${amt(r)} OUSD in reserve.`,
+  RedeemCapExceeded: ([, cap]) => `Redemptions are rate-limited (${amt(cap)} OUSD at once, refilling over 24h). Try a smaller amount or later.`,
+  LiabilityCeiling: () => "The exchange has reached its issuance ceiling.",
+  // Mercado Card (Spanish first, for the phone + POS)
+  CardIsFrozen: () => "Tarjeta congelada · Card is frozen. Unfreeze it on the phone to pay.",
+  OverDailyLimit: ([after, limit]) => `Supera tu límite diario · Over the daily limit (${amt(after)} of ${amt(limit)} xMXN; resets at midnight CDMX).`,
+  TapExpired: () => "Autorización vencida · The tap expired. Tap again to approve.",
+  TapReplayed: () => "Autorización ya usada · This tap was already used. Tap again.",
+  BadTapSignature: () => "Firma no válida · The cardholder's approval doesn't match this charge.",
+  NotMerchant: () => "Terminal no autorizada · This terminal isn't an approved Mercado demo merchant.",
+  NotHolder: () => "Solo el titular puede cambiar esta tarjeta · Only the cardholder can change this card.",
+  InvalidLimit: () => "Límite no válido · Enter a daily limit between 1 and 100,000 xMXN.",
+  RefundTooLarge: ([refundable]) => `Reembolso mayor al cobro · At most ${amt(refundable)} xMXN can be refunded.`,
+  NotChargeMerchant: () => "Only the merchant that made this charge can refund it.",
+  UnknownCard: () => "Tarjeta no encontrada · Card not found.",
+  // InvestDesk (Invest)
+  InsufficientInventory: ([avail]) => `The T-bill desk only has ${amt(avail)} available right now.`,
+  ExceedsBoughtBalance: ([bought]) => `The desk buys back only what you bought here (${amt(bought)} tTBILL).`,
+  TradeTooLarge: ([, max]) => `Max ${amt(max)} USD per trade.`,
+  FeedPaused: () => "The demo T-bill price feed is paused.",
   // TIP-20
   InsufficientBalance: ([bal, need]) => `Insufficient balance: you have ${amt(bal)}, need ${amt(need)}.`,
   InsufficientAllowance: () => "The token allowance is too low. Approve first.",

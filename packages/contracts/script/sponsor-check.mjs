@@ -9,7 +9,14 @@ import { withRelay } from "viem/tempo";
 import { readFileSync } from "node:fs";
 
 const base = process.argv[2] ?? "http://localhost:3100";
-const dep = JSON.parse(readFileSync(new URL("../deployments/42431.json", import.meta.url)));
+// active protocol (same switch the app uses): v2 targets when NEXT_PUBLIC_MERCADO_PROTOCOL=v2
+const v1 = JSON.parse(readFileSync(new URL("../deployments/42431.json", import.meta.url)));
+const webEnv = (() => { try { return readFileSync(new URL("../../../apps/web/.env.local", import.meta.url), "utf8"); } catch { return ""; } })();
+const PROTO = process.env.MERCADO_PROTOCOL ?? webEnv.match(/^NEXT_PUBLIC_MERCADO_PROTOCOL=(\w+)$/m)?.[1] ?? "v1";
+const v2raw = PROTO === "v2" ? JSON.parse(readFileSync(new URL("../deployments/42431.v2.json", import.meta.url))) : undefined;
+// `vault` is the approve spender used below: v2 uses the card as a sponsored spender to also cover Card
+const dep = v2raw ? { ...v2raw, vault: v2raw.card ?? v2raw.vault, ousd: v1.ousd } : v1;
+console.log("protocol", PROTO);
 const RPC = "https://rpc.moderato.tempo.xyz";
 const chain = tempoModerato.extend({ feeToken: "0x20C0000000000000000000000000000000000001" });
 const account = privateKeyToAccount(generatePrivateKey());

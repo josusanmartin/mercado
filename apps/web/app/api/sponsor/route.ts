@@ -28,7 +28,19 @@ import {
   type SponsorRequest,
 } from "./policy";
 
-const PERSONA_VARS = ["LP_ADDRESS", "SENDER_ADDRESS", "RECIPIENT_ADDRESS", "DRIVER_ADDRESS", "LENDER_ADDRESS"];
+// demo personas (roles in Demo mode) + the demo merchant terminal, which submits Card charges
+const PERSONA_VARS = [
+  "LP_ADDRESS",
+  "SENDER_ADDRESS",
+  "SENDER2_ADDRESS",
+  "RECIPIENT_ADDRESS",
+  "RECIPIENT_PAPA_ADDRESS",
+  "RECIPIENT_ANA_ADDRESS",
+  "DRIVER_ADDRESS",
+  "LENDER_ADDRESS",
+  "SAVER_ADDRESS",
+  "MERCHANT_ADDRESS",
+];
 
 /** Read a var from env, re-reading the root .env.local if the server started before it was added. */
 function rootVar(name: string): string | undefined {
@@ -62,7 +74,7 @@ function createRelay() {
             console.warn("[sponsor] refused:", why, req.from);
             return false;
           }
-          if (!(await senderEligible(req.from as Address, personas))) {
+          if (!(await senderEligible(req.from as Address, personas, req))) {
             console.warn("[sponsor] refused: sender has no OUSD/xMXN/position", req.from);
             return false;
           }

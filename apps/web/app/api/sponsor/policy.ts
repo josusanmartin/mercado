@@ -5,16 +5,17 @@
 //     transferWithMemo; vault, desk and pool user actions. Unknown selectors are refused (R-016).
 //   - gas ≤ MAX_GAS, maxFeePerGas ≤ MAX_FEE_PER_GAS, tip ≤ MAX_PRIORITY_FEE, gas × maxFeePerGas ≤ MAX_TX_COST (R-013)
 //   - fee token unset (sponsor default) or one of FEE_TOKENS
-//   - senders with skin in the game: a demo persona, or an address holding OUSD/xMXN or a vault/pool position.
-//     Invented addresses are refused before they touch the quota (R-016 Sybil bound).
+//   - senders with skin in the game: a demo persona, or an address holding OUSD/xMXN/sOUSD/tTBILL, owing an
+//     advance, or holding a Mercado Card. A request whose ONLY call is CreditPool.borrow is also eligible (a new
+//     driver's first draw: the attestation binds the borrower, an invalid one fails at fill). Invented addresses
+//     are refused before they touch the quota (R-016 Sybil bound).
 //   - ≤ PER_SENDER_PER_HOUR per sender and ≤ GLOBAL_PER_HOUR overall; re-filling the same transaction
 //     doesn't consume quota again.
-import { createPublicClient, getAddress, http, toFunctionSelector, type Abi, type Address, type Hex } from "viem";
+import { createPublicClient, getAddress, http, parseAbi, toFunctionSelector, type Abi, type Address, type Hex } from "viem";
 import {
   activeAddresses,
   collateralVaultAbi,
   creditPoolAbi,
-  demoRwaAbi,
   mercadoCardAbi,
   investDeskAbi,
   moveAmmAbi,
@@ -76,7 +77,8 @@ export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
           [A.vamm!, sel(moveAmmAbi as Abi, "swapOusdForXmxn", "swapXmxnForOusd", "addEquity")],
           [A.creditPool, sel(creditPoolAbi as Abi, "supply", "withdrawAvailable", "borrow", "repay")],
           ...(SOUSD ? [[SOUSD, [...sel(stakedOusdAbi as Abi, "deposit", "redeem", "withdraw"), APPROVE]] as const] : []),
-          ...(TTBILL ? [[TTBILL, [...sel(demoRwaAbi as Abi, "faucet"), APPROVE]] as const] : []),
+          // gated tTBILL (no public faucet since R-042): approvals only, to the vault or the InvestDesk
+          ...(TTBILL ? [[TTBILL, [APPROVE]] as const] : []),
           ...(A.card ? [[A.card, sel(mercadoCardAbi as Abi, "issueCard", "setDailyLimit", "setFrozen", "charge", "refund")] as const] : []),
           ...(A.investDesk ? [[A.investDesk, sel(investDeskAbi as Abi, "buy", "sell", "buyWithXmxn", "sellForXmxn")] as const] : []),
         ]) as ReadonlyArray<readonly [string, readonly string[]]>
@@ -174,10 +176,26 @@ export function refusal(req: SponsorRequest): string | undefined {
 
 const client = createPublicClient({ chain: tempoModerato, transport: http(TEMPO_RPC_URL) });
 
-/** Sender has skin in the game: a demo persona, or holds OUSD/xMXN, or has a vault/pool position. Cached 60s. */
-export async function senderEligible(sender: Address, personas: ReadonlySet<string>): Promise<boolean> {
+const BORROW = sel(creditPoolAbi as Abi, "borrow")[0];
+
+/** Pure rule: a request whose only call is CreditPool.borrow (a driver's draw, attestation-bound). */
+export function isBorrowOnly(req: SponsorRequest): boolean {
+  const calls: Call[] = req.calls?.length ? [...req.calls] : [{ to: req.to, data: req.data }];
+  return (
+    calls.length === 1 &&
+    !!calls[0].to &&
+    getAddress(calls[0].to) === getAddress(A.creditPool) &&
+    (calls[0].data ?? calls[0].input ?? "").toLowerCase().startsWith(BORROW)
+  );
+}
+
+const cardAbiLite = parseAbi(["function cardsOf(address) view returns (uint256[])"]);
+
+/** Sender has skin in the game (see header). Cached 60s. */
+export async function senderEligible(sender: Address, personas: ReadonlySet<string>, req?: SponsorRequest): Promise<boolean> {
   const key = sender.toLowerCase();
   if (personas.has(key)) return true;
+  if (req && isBorrowOnly(req)) return true;
   const hit = state.eligible.get(key);
   if (hit && Date.now() - hit.at < 60_000) return hit.ok;
   const [ousd, xmxn, pos, debt] = await Promise.all([
@@ -189,7 +207,18 @@ export async function senderEligible(sender: Address, personas: ReadonlySet<stri
       : Promise.resolve({ collateral: 0n, debt: 0n }),
     client.readContract({ address: A.creditPool, abi: creditPoolAbi, functionName: "getDebt", args: [sender] }),
   ]).catch(() => [0n, 0n, { collateral: 0n, debt: 0n }, 0n] as const);
-  const ok = ousd > 0n || xmxn > 0n || pos.collateral > 0n || pos.debt > 0n || debt > 0n;
+  let ok = ousd > 0n || xmxn > 0n || pos.collateral > 0n || pos.debt > 0n || debt > 0n;
+  if (!ok && A.protocol === "v2") {
+    // savers (sOUSD / tTBILL only) and cardholders count too
+    const extra = await Promise.all([
+      SOUSD ? client.readContract({ address: SOUSD, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
+      TTBILL ? client.readContract({ address: TTBILL, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
+      A.card
+        ? client.readContract({ address: A.card, abi: cardAbiLite, functionName: "cardsOf", args: [sender] }).then((ids) => BigInt(ids.length))
+        : 0n,
+    ]).catch(() => [0n, 0n, 0n]);
+    ok = extra.some((v) => v > 0n);
+  }
   state.eligible.set(key, { ok, at: Date.now() });
   return ok;
 }

@@ -1,5 +1,11 @@
 // Generated ABIs from @mercado/shared (packages/contracts/script/export.mjs), under the names the app uses.
 import {
+  investDeskAbi,
+  mercadoCardAbi,
+  moveAmmAbi,
+  multiCollateralVaultAbi,
+  priceFeedAbi,
+  stakedOusdAbi,
   collateralVaultAbi,
   creditPoolAbi as poolAbi,
   fxOracleAdapterAbi,
@@ -23,4 +29,10 @@ export const allErrorsAbi = [
   ...collateralVaultAbi,
   ...deskAbi,
   ...poolAbi,
+  ...multiCollateralVaultAbi,
+  ...moveAmmAbi,
+  ...mercadoCardAbi,
+  ...investDeskAbi,
+  ...priceFeedAbi,
+  ...stakedOusdAbi,
 ].filter((x) => x.type === "error");
