@@ -319,7 +319,7 @@ export function DayGroups<T>({ items, ts, now, render }: { items: T[]; ts: (t: T
     else groups.push({ label, items: [it] });
   }
   return (
-    <div className="grid">
+    <div className="grid grid-cols-[minmax(0,1fr)]">
       {groups.map((g) => (
         <section key={g.label}>
           <p className="m-meta pt-4 pb-1">{g.label}</p>
