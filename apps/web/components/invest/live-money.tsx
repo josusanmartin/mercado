@@ -2,6 +2,7 @@
 // A balance that ticks every ~50ms (real-time interest). Writes straight to the DOM through refs, so React
 // doesn't re-render 20×/s. "hero": the display face, "US$160" big + ".00012345" small; "row": one tabular
 // line where the digits past the cents are muted. Respects prefers-reduced-motion (updates once a second).
+// `glow` (v6): the earning digits get a soft glow pulse each second (editorial.css .m-ed-glow; off under reduced motion).
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Display } from "@/components/mobile";
@@ -21,6 +22,7 @@ export function LiveMoney({
   variant = "row",
   size = 50,
   decimals = 8,
+  glow,
   className,
 }: {
   live: LiveValue;
@@ -28,6 +30,7 @@ export function LiveMoney({
   variant?: "hero" | "row";
   size?: number;
   decimals?: number;
+  glow?: boolean;
   className?: string;
 }) {
   const prefix = currency === "USD" ? "US$" : "MX$";
@@ -70,7 +73,7 @@ export function LiveMoney({
         </span>
         <span className="text-[0.42em]">
           <span ref={decRef}>.{first.cents}</span>
-          <span ref={tailRef} className="text-[var(--m-on-surface-variant)]">
+          <span ref={tailRef} className={cn("text-[var(--m-on-surface-variant)]", glow && "m-ed-glow")}>
             {first.tail}
           </span>
         </span>
@@ -81,7 +84,7 @@ export function LiveMoney({
       {prefix}
       <span ref={intRef}>{first.int}</span>
       <span ref={decRef}>.{first.cents}</span>
-      <span ref={tailRef} className="text-[0.85em] text-[var(--m-on-surface-variant)]">
+      <span ref={tailRef} className={cn("text-[0.85em] text-[var(--m-on-surface-variant)]", glow && "m-ed-glow")}>
         {first.tail}
       </span>
     </span>

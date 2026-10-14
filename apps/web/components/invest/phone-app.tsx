@@ -16,7 +16,7 @@ import { useReportBusy } from "@/lib/busy";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { TickerText } from "@/lib/motion";
-import { AppHeader, BalanceHead, BottomNav, BottomSheet, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping, useNavDirection } from "@/components/mobile";
+import { AppHeader, BalanceHead, BottomNav, BottomSheet, EmptyState, Meta, Money, NumericKeypad, ScreenTransition, Skeleton, SuccessScreen, fmtMoney, fmtTyping, useNavDirection } from "@/components/mobile";
 import { LiveMoney } from "./live-money";
 import { SXMXN, useLiveDollars, useLivePesos } from "./use-live-yield";
 import { STOCKS_DEPLOYED, useStocks, useStocksActions, useStocksQuote } from "./use-stocks";
@@ -27,6 +27,8 @@ import {
   BankRow,
   DayGroups,
   Display,
+  Donut,
+  Sparkline,
   EdApp,
   Flag,
   Pill,
@@ -42,6 +44,8 @@ import {
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
 
 export const MAIZ = "#E5A823";
+/** Stocks' slice in the allocation donut (Global's cobalt); dollars are ink, pesos maize. */
+const COBALT = "#2448c8";
 
 type Product = "dolares" | "pesos" | "acciones";
 type Mode = "in" | "out";
@@ -187,6 +191,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
         </div>
         <div className="px-5 pt-8">
           <SectionHead>Tu dinero</SectionHead>
+          <Allocation r={r} rate={fx.rate} />
           {ORDER.map((id) => {
             const P = PRODUCT[id];
             const ok = ready(id);
@@ -207,7 +212,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
                   ) : id === "acciones" ? (
                     `US${fmtMoney(r.st.value)}`
                   ) : (
-                    <LiveMoney live={id === "dolares" ? r.usd : r.mxn} currency={P.currency} />
+                    <LiveMoney live={id === "dolares" ? r.usd : r.mxn} currency={P.currency} glow />
                   )
                 }
                 amountSub={ok ? (id === "acciones" ? `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` : P.unit) : undefined}
@@ -225,6 +230,56 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
   );
 }
 
+/** v6: live allocation donut (US$, pesos at the oracle rate), re-read every second so accruing interest moves it. */
+function Allocation({ r, rate }: { r: ReturnType<typeof useReturns>; rate?: number }) {
+  const now = useNow(1_000);
+  const t = now ?? Date.now() / 1000;
+  const usd = r.usd.at(t) ?? 0;
+  const mxn = PESOS_READY && rate ? (r.mxn.at(t) ?? 0) / rate : 0;
+  const stocks = STOCKS_READY && r.st.value !== undefined ? Number(r.st.value) / 1e6 : 0;
+  const total = usd + mxn + stocks;
+  const parts = [
+    { key: "dolares" as const, value: usd, color: "var(--m-on-surface)" },
+    { key: "pesos" as const, value: mxn, color: MAIZ },
+    { key: "acciones" as const, value: stocks, color: COBALT },
+  ];
+  const share = (v: number) => (total > 0 ? Math.round((v / total) * 100) : 0);
+  return (
+    <div className="flex items-center gap-5 pt-4 pb-1">
+      <Donut parts={parts} size={84} stroke={12} label={parts.map((p) => `${PRODUCT[p.key].title} ${share(p.value)}%`).join(", ")} />
+      <ul className="grid min-w-0 flex-1 gap-1.5" aria-hidden>
+        {parts.map((p) => (
+          <li key={p.key} className="flex items-center gap-2 text-[14px]">
+            <span className="size-2.5 shrink-0 rounded-[2px]" style={{ background: p.color }} />
+            <span className="flex-1 font-medium">{PRODUCT[p.key].title}</span>
+            <TickerText text={`${share(p.value)}%`} className="m-num text-[var(--m-on-surface-variant)]" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** v6: a product's balance over time, from its own deposits/withdrawals/trades, ending at the live value. */
+function useBalanceSeries(product: Product, current: number | undefined) {
+  const h = useInvestHistory();
+  const now = useNow(10_000);
+  const rows = (h.data?.rows ?? [])
+    // pesos: only the sxMXN savings rows (older lending-pool rows are another product)
+    .filter((x) => x.product === product && x.timestamp !== undefined && (product === "acciones" || x.label.includes("ahorro")))
+    .sort((a, b) => a.timestamp! - b.timestamp!);
+  if (!rows.length || now === undefined) return [];
+  let v = 0;
+  const pts = rows.map((x) => {
+    const into = x.label.startsWith("Depósito") || x.label.startsWith("Compra");
+    v = Math.max(0, v + (into ? 1 : -1) * (Number(x.amount) / 1e6));
+    return { t: x.timestamp!, v };
+  });
+  const t0 = rows[0].timestamp!;
+  const lead = Math.max(60, (now - t0) * 0.04);
+  return [{ t: t0 - lead, v: 0 }, ...pts, { t: Math.max(now, pts.at(-1)!.t + 1), v: current ?? v }];
+}
+
 /* ─────────────────────────────── Product ─────────────────────────────── */
 
 function ProductScreen({ product, back, trade }: { product: Product; back: () => void; trade: (m: Mode) => void }) {
@@ -233,6 +288,12 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
   const pesos = useVaultPosition(SXMXN, INVEST.xmxn);
   const r = useReturns();
   const P = PRODUCT[product];
+  const nowS = useNow(10_000);
+  const liveNow = (l: typeof r.usd) => (nowS === undefined ? undefined : l.at(nowS));
+  const series = useBalanceSeries(
+    product,
+    product === "dolares" ? liveNow(r.usd) : product === "pesos" ? liveNow(r.mxn) : r.st.balance !== undefined ? Number(r.st.balance) / 1e6 : undefined,
+  );
   const view = {
     dolares: {
       live: r.usd,
@@ -284,11 +345,13 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
             <BalanceHead label="Tienes" />
           </div>
           {view.live && ok ? (
-            <LiveMoney live={view.live} currency={P.currency} variant="hero" size={50} className="mt-3" />
+            <LiveMoney live={view.live} currency={P.currency} variant="hero" size={50} className="mt-3" glow />
           ) : (
             <Money value={product === "acciones" && ok ? r.st.value : undefined} currency="USD" size={50} className="mt-3" />
           )}
           <Meta className="mt-2" parts={view.meta} />
+          {/* v6: the balance over time (steps at each deposit / withdrawal / trade, then today's live value) */}
+          <Sparkline points={series} label={`${P.title}: tu saldo en el tiempo`} color="#0a0a0a" fill="#ffffff" fillOpacity={0.32} className="mt-5" />
         </section>
       </AccentField>
       <div className="flex flex-1 flex-col" style={washStyle(MAIZ)}>
@@ -534,7 +597,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
         ))}
       </div>
     );
-  if (!rows.length) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Sin movimientos todavía.</p>;
+  if (!rows.length) return <EmptyState icon={<Coins strokeWidth={1.5} />} title="Sin movimientos todavía." />;
   return (
     <>
       {h.isRefetchError && <StaleLine updatedAt={h.dataUpdatedAt} now={now} onRetry={() => h.refetch()} />}

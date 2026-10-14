@@ -28,7 +28,7 @@
   inset: -0.05em -0.25em;
   z-index: -1;
   border-radius: 4px;
-  background: var(--m-glow, color-mix(in oklab, var(--m-accent) 55%, transparent));
+  background: var(--m-glow, color-mix(in oklab, var(--m-accent) 40%, transparent));
   filter: blur(6px);
   opacity: 0;
   animation: m-ed-glow 1s ease-out infinite;

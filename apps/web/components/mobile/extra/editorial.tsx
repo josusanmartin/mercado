@@ -56,7 +56,7 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
  */
 export function AccentField({ color, children, className }: { color: string; children: ReactNode; className?: string }) {
   const ink = "#0a0a0a";
-  const tokens = { "--m-on-surface": ink, "--m-on-surface-variant": ink, "--m-accent": ink, "--m-on-accent": color, "--m-surface-3": "rgba(10,10,10,.16)", "--m-glow": "rgba(255,255,255,.7)" };
+  const tokens = { "--m-on-surface": ink, "--m-on-surface-variant": ink, "--m-accent": ink, "--m-on-accent": color, "--m-surface-3": "rgba(10,10,10,.16)", "--m-glow": "rgba(255,255,255,.5)" };
   return (
     <div className={cn("text-[#0a0a0a]", className)} style={{ background: color, ...tokens } as CSSProperties}>
       {children}
@@ -677,6 +677,7 @@ export function Sparkline({
   height = 44,
   color = "var(--m-on-surface)",
   fill = "currentColor",
+  fillOpacity = 0.12,
   className,
 }: {
   points: { t: number; v: number }[];
@@ -684,6 +685,7 @@ export function Sparkline({
   height?: number;
   color?: string;
   fill?: string;
+  fillOpacity?: number;
   className?: string;
 }) {
   if (points.length < 2) return null;
@@ -707,7 +709,7 @@ export function Sparkline({
       aria-label={label}
       aria-hidden={label ? undefined : true}
     >
-      <path d={area} fill={fill} fillOpacity={0.12} stroke="none" className="m-ed-fade" />
+      <path d={area} fill={fill} fillOpacity={fillOpacity} stroke="none" className="m-ed-fade" />
       <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" pathLength={1} className="m-ed-draw" />
     </svg>
   );
