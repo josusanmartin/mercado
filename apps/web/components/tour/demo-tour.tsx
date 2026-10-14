@@ -23,6 +23,7 @@ import { explorerTx } from "@mercado/shared";
 import { ADDR, CHAIN_ID, tokenAbi, useBalances } from "@/lib/contracts";
 import { useAnyBusy } from "@/lib/busy";
 import { fmtAmount, shortAddr } from "@/lib/format";
+import { CopyAddress } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PRODUCTS, type ProductId } from "@/components/console/products";
@@ -480,7 +481,7 @@ export function TourPanel() {
 
       <div className="mt-4 grid gap-2 border-t pt-3">
         <p className="meta text-muted-foreground">
-          Demo account · <span className="text-foreground">{p.name}</span> · {shortAddr(p.address)}
+          Demo account · <span className="text-foreground">{p.name}</span> · {p.address ? <CopyAddress address={p.address} label={`${p.name} address`} className="meta" /> : null}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <BalanceCell label="xMXN" now={bal.xmxn} d={trace.delta.xmxn} />

@@ -3,7 +3,8 @@
 // Android phone on desktop (full-screen on phones); beside it, "what just happened" explains the
 // flow of funds with the on-chain receipts. All numbers are live; only bill fulfillment is SIMULATED.
 import { useEffect, useState } from "react";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
+import { FlowPath, Pulse } from "@/lib/motion";
 import { useConnection } from "wagmi";
 import type { Address } from "viem";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
@@ -99,17 +100,6 @@ function WhatHappened({ s }: { s: RemesasState }) {
   );
 }
 
-/** R-050: text on the terracotta fill is solid ink (5.6:1); white was 2.95–3.5:1. */
-function FlowNode({ title, value, sub, accent }: { title: string; value: string; sub?: string; accent?: boolean }) {
-  return (
-    <div className={cn("min-w-0 flex-1 p-3", accent ? "bg-product text-[#0a0a0a] rounded-[4px]" : "border-t-2 border-foreground")}>
-      <p className={cn("meta", accent ? "text-[#0a0a0a]" : "text-muted-foreground")}>{title}</p>
-      <p className="truncate text-lg font-semibold tabular">{value}</p>
-      {sub && <p className={cn("truncate text-[13px]", accent ? "text-[#0a0a0a]" : "text-muted-foreground")}>{sub}</p>}
-    </div>
-  );
-}
-
 function SendFlow({ s }: { s: RemesasState }) {
   const { address } = useConnection();
   const q = s.send.quote;
@@ -120,11 +110,30 @@ function SendFlow({ s }: { s: RemesasState }) {
   const out = r ? r.delivered : q.amountOut;
   const mid = q.mid !== undefined ? Number(q.mid) / 1e8 : undefined;
   const rate = out !== undefined && inUsd > 0n ? Number(out) / Number(inUsd) : undefined;
-  // V5-TASTE #19: before an amount is picked, one clear empty state instead of a diagram full of dashes.
+  const quoted = out !== undefined && inUsd > 0n && !q.error;
+  // v6 "show, don't tell": the panel leads with the money flow; a dot travels it once there's a quote.
+  const flow = (
+    <FlowPath
+      label="Where the money goes"
+      active={!!r || quoted}
+      nodes={[
+        { label: "Sender (US)", value: inUsd > 0n ? `US$${fmtAmount(inUsd)}` : undefined, sub: "OUSD" },
+        { label: q.venue, value: USE_V2 ? "mint" : "swap", sub: rate !== undefined ? `${fmtNumber(rate, 2)} MXN/USD` : "live rate" },
+        {
+          label: "Mamá (MX)",
+          // Stays mounted while a new quote loads ("…"), so the arriving amount pulses instead of remounting.
+          value: inUsd > 0n || r ? <Pulse value={out?.toString()}>{out !== undefined && (quoted || r) ? `MX$${fmtAmount(out)}` : "…"}</Pulse> : undefined,
+          sub: r ? "delivered" : "quoted",
+        },
+      ]}
+    />
+  );
+  // V5-TASTE #19 + v6: a designed empty state (the same flow, quiet) instead of a diagram full of dashes.
   if (!r && inUsd === 0n)
     return (
       <Panel title="What will happen">
-        <p className="text-muted-foreground text-[15px]">Pick an amount to see what your family receives.</p>
+        {flow}
+        <p className="text-muted-foreground mt-4 text-[15px]">Pick an amount to see what your family receives.</p>
       </Panel>
     );
   return (
@@ -133,25 +142,27 @@ function SendFlow({ s }: { s: RemesasState }) {
       description={r ? "Your transfer, read back from the chain." : "The live quote for this amount, and where the money goes."}
       aside={r ? <Badge variant="success">Delivered</Badge> : undefined}
     >
-      <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <FlowNode title="Monto a enviar · Amount sending" value={inUsd > 0n ? `$${fmtAmount(inUsd)}` : "—"} sub={`OUSD from Sender (US) ${shortAddr(address)}`} />
-        <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
-        <FlowNode title={q.venue} value={USE_V2 ? "mint" : "swap"} sub={USE_V2 ? "OUSD into the reserve, xMXN minted" : "desk inventory, then a transfer"} accent />
-        <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
-        <FlowNode title="Mamá (MX)" value={out !== undefined && inUsd > 0n ? `${fmtAmount(out)} MXN` : "—"} sub={r ? "confirmed on-chain" : "estimated"} />
-      </div>
-      <Rows className="mt-4">
-        <Row label="Oracle mid" sub={fxLabel.short ?? "USD/MXN oracle"} value={mid !== undefined ? `${fmtNumber(mid, 4)} MXN/USD` : "—"} />
-        <Row label="Your rate" sub="After fee and size impact" value={rate !== undefined ? `${fmtNumber(rate, 4)} MXN/USD` : "—"} />
-        <Row
-          label="Cost vs. mid"
-          sub="Everything you pay, in basis points"
-          value={rate !== undefined && mid ? `${fmtNumber(((mid - rate) / mid) * 10_000, 0)} bps` : "—"}
-        />
-        {USE_V2 && <Row label="Size impact" value={q.impactBps !== undefined ? fmtBps(q.impactBps, 2) : "—"} />}
-        <Row label="Minimum received" sub="Below this the transaction reverts and nothing moves" value={q.minOut !== undefined && !r ? `${fmtAmount(q.minOut)} xMXN` : "—"} />
-        <FeeRow steps={s.send.tx.steps} account={address} />
-      </Rows>
+      {flow}
+      {/* v6: the numbers behind the quote fold away behind "How it works". */}
+      <details className="group mt-5 border-t pt-3">
+        <summary className="meta text-muted-foreground hover:text-foreground flex cursor-pointer list-none items-center gap-1.5">
+          <ChevronRight className="size-3.5 transition-transform duration-200 group-open:rotate-90" aria-hidden />
+          How it works
+        </summary>
+        <Rows className="mt-2">
+          <Row label="Oracle mid" sub={fxLabel.short ?? "USD/MXN oracle"} value={mid !== undefined ? `${fmtNumber(mid, 4)} MXN/USD` : "—"} />
+          <Row label="Your rate" sub="After fee and size impact" value={rate !== undefined ? `${fmtNumber(rate, 4)} MXN/USD` : "—"} />
+          <Row
+            label="Cost vs. mid"
+            sub="Everything you pay, in basis points"
+            value={rate !== undefined && mid ? `${fmtNumber(((mid - rate) / mid) * 10_000, 0)} bps` : "—"}
+          />
+          {USE_V2 && <Row label="Size impact" value={q.impactBps !== undefined ? fmtBps(q.impactBps, 2) : "—"} />}
+          <Row label="Minimum received" sub="Below this the transaction reverts and nothing moves" value={q.minOut !== undefined && !r ? `${fmtAmount(q.minOut)} xMXN` : "—"} />
+          <Row label="Venue" sub={USE_V2 ? "OUSD into the reserve, xMXN minted to the recipient" : "Desk inventory, then a transfer"} value={q.venue} />
+          <FeeRow steps={s.send.tx.steps} account={address} />
+        </Rows>
+      </details>
       {s.send.tx.steps.length > 0 && (
         <ul className="mt-4 grid gap-1.5">
           {s.send.tx.steps.map((st) => (

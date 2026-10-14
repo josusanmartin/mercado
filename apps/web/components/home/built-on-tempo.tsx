@@ -4,12 +4,15 @@
 // Tempo logo. A proof that can't be read shows "—" and still links to where it can be checked.
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Coins, Fuel, KeyRound, MessageSquareText, Receipt, Zap, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient, useReadContract } from "wagmi";
 import { hexToBytes, parseAbiItem, type Address, type Hex } from "viem";
 import { explorerAddress, explorerTx, TEMPO_EXPLORER_URL } from "@mercado/shared";
-import { ADDR, CHAIN_ID, tokenAbi } from "@/lib/contracts";
-import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
+import { ADDR, CHAIN_ID, tokenAbi, useActivityFeed } from "@/lib/contracts";
+import { Pulse, useReducedMotion } from "@/lib/motion";
+import { fmtAmount, fmtNumber } from "@/lib/format";
+import { useNow } from "@/lib/use-now";
 import { Meta } from "@/components/console";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
 import { probeChallenge } from "@/lib/mpp/client";
@@ -60,7 +63,7 @@ function useMemoProofs() {
         .catch(() => undefined);
       const latest = await client!.getBlockNumber();
       let memo: { text: string; hash: Hex } | undefined;
-      let sponsored: { hash: Hex; feePayer: string } | undefined;
+      let sponsored: { hash: Hex; feePayer: string; at?: number } | undefined;
       let receipts = 0;
       for (let i = 0n; i < 4n && (!memo || !sponsored); i++) {
         const to = latest - i * CHUNK;
@@ -74,7 +77,8 @@ function useMemoProofs() {
             receipts++;
             const r = await client!.getTransactionReceipt({ hash: l.transactionHash as Hex }).catch(() => undefined);
             const fp = (r as unknown as { feePayer?: string } | undefined)?.feePayer?.toLowerCase();
-            if (r && fp === sponsor && fp !== r.from.toLowerCase()) sponsored = { hash: l.transactionHash as Hex, feePayer: fp };
+            const ts = (l as unknown as { blockTimestamp?: string | number | bigint }).blockTimestamp;
+            if (r && fp === sponsor && fp !== r.from.toLowerCase()) sponsored = { hash: l.transactionHash as Hex, feePayer: fp, at: ts !== undefined ? Number(BigInt(ts)) : undefined };
           }
           if (memo && sponsored) break;
         }
@@ -101,22 +105,83 @@ function use402() {
   });
 }
 
-function Primitive({ name, does, proof, href, external = true }: { name: string; does: string; proof: ReactNode; href?: string; external?: boolean }) {
-  return (
-    <li className="grid content-start gap-2 border-t border-foreground pt-3">
-      <h3 className="display text-[1.35rem] leading-tight">{name}</h3>
-      <p className="text-[15px] leading-snug text-pretty">{does}</p>
-      <p className="text-muted-foreground text-[13px] leading-snug">
-        <span className="meta text-foreground mr-1.5">Live</span>
-        {href ? (
-          <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className="hover:text-foreground underline decoration-1 underline-offset-[3px]">
-            {proof}
-          </Link>
+const ago = (unix: number | undefined, now: number | undefined) => {
+  if (!unix || !now) return undefined;
+  const s = Math.max(0, Math.floor(now - unix));
+  return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s / 60)}m ago` : s < 129600 ? `${Math.round(s / 3600)}h ago` : `${Math.round(s / 86400)}d ago`;
+};
+
+/** v6: one compact proof tile: icon, a live number, one short label; the whole tile links to the proof. */
+function Tile({ icon: Icon, value, label, href, external = true, pulse, loading }: { icon: LucideIcon; value: ReactNode; label: string; href?: string; external?: boolean; pulse?: unknown; loading?: boolean }) {
+  const body = (
+    <>
+      <Icon className="size-5 text-[var(--accent)]" strokeWidth={1.75} aria-hidden />
+      <span className="mt-3 block text-[1.6rem] leading-[1.05] font-semibold break-words tabular">
+        {/* v6: a designed loading state (shimmer), never a dash while Tempo is still being read. */}
+        {loading ? (
+          <span className="bg-border inline-block h-[0.9em] w-24 animate-pulse rounded-[4px] align-middle" aria-label="Reading Tempo" />
+        ) : pulse === undefined ? (
+          value
         ) : (
-          proof
+          <Pulse value={pulse}>{value}</Pulse>
         )}
-      </p>
-    </li>
+      </span>
+      <span className="text-muted-foreground mt-1.5 block text-[13px] leading-snug">{label}</span>
+    </>
+  );
+  const cls = "bg-well grid content-start rounded-[8px] p-4 transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0";
+  return href ? (
+    <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className={cls}>
+      {body}
+    </Link>
+  ) : (
+    <div className={cls}>{body}</div>
+  );
+}
+
+/**
+ * v6: a US → MX arc built from the exchange's real recent OUSD→xMXN swaps (Remesas and Global use the same
+ * exchange): one travelling dot per swap, with the totals they add up to. Reduced motion: dots stay put.
+ */
+function MoneyArc() {
+  const feed = useActivityFeed("move", { limit: 200 });
+  const now = useNow(30_000);
+  const dayAgo = (now ?? 0) - 86_400;
+  const recent = feed.rows.filter((r) => r.label === "OUSD → xMXN" && (r.timestamp ?? 0) >= dayAgo);
+  const sent = recent.reduce((a, r) => a + r.amount, 0n);
+  const delivered = recent.reduce((a, r) => a + (r.amountOut ?? 0n), 0n);
+  const dots = recent.slice(0, 8);
+  const reduced = useReducedMotion(); // SMIL ignores CSS media queries: reduced motion keeps the dots still
+  const d = "M60 130 C 220 10, 460 10, 640 130";
+  return (
+    <figure className="bg-well col-span-full grid gap-3 rounded-[8px] p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center" aria-label="Dollars to pesos on Mercado's exchange, last 24 hours">
+      <svg viewBox="0 0 700 150" className="h-24 w-full" aria-hidden>
+        <path d={d} fill="none" stroke="var(--c-remesas)" strokeWidth="2" strokeDasharray="4 6" opacity="0.6" />
+        <circle cx="60" cy="130" r="6" fill="var(--c-global)" />
+        <circle cx="640" cy="130" r="6" fill="var(--c-remesas)" />
+        <text x="60" y="148" textAnchor="middle" className="fill-current text-[12px] font-semibold">US</text>
+        <text x="640" y="148" textAnchor="middle" className="fill-current text-[12px] font-semibold">MX</text>
+        {dots.map((r, i) => (
+          reduced ? (
+            <circle key={r.txHash + r.logIndex} r="4.5" fill="var(--c-remesas)" cx={60 + ((i + 1) * 580) / (dots.length + 1)} cy={44} />
+          ) : (
+            <circle key={r.txHash + r.logIndex} r="4.5" fill="var(--c-remesas)">
+              <animateMotion dur="3.2s" begin={`${(i * 3.2) / Math.max(dots.length, 1)}s`} repeatCount="indefinite" path={d} />
+            </circle>
+          )
+        ))}
+      </svg>
+      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <span className="text-[15px] font-semibold">
+          {feed.isPending ? "Reading Tempo…" : recent.length ? `${recent.length} dollar → peso swaps in the last 24 h` : "No dollar → peso swaps in the last 24 h"}
+        </span>
+        {recent.length > 0 && (
+          <span className="text-muted-foreground text-[13px] tabular">
+            US${fmtAmount(sent, 0)} in · MX${fmtAmount(delivered, 0)} out · Mercado&apos;s exchange (Remesas + Global)
+          </span>
+        )}
+      </figcaption>
+    </figure>
   );
 }
 
@@ -125,76 +190,46 @@ export function BuiltOnTempo() {
   const bt = useBlockTime();
   const mp = useMemoProofs();
   const p402 = use402();
-  const reading = "reading Tempo…";
   const m = mp.data;
-
+  const now = useNow(15_000);
+  const dash = "—";
   return (
-    <section aria-labelledby="tempo-h" className="grid gap-5 border-t pt-4">
+    // v6 "show, don't tell": six compact live tiles (icon · live number · one short label) + the US → MX arc.
+    <section aria-labelledby="tempo-h" className="grid gap-4 border-t pt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <h2 id="tempo-h" className="display text-[clamp(2.2rem,5vw,4rem)]">
+        <h2 id="tempo-h" className="display text-[clamp(1.8rem,3vw,2.6rem)]">
           Built on Tempo
         </h2>
-        <Meta>Every proof below is read live from Tempo Moderato testnet</Meta>
+        <Meta>Every number below is read live from Tempo Moderato testnet</Meta>
       </div>
-      <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Primitive
-          name="TIP-20 stablecoins"
-          does="xMXN and OUSD are TIP-20 tokens: Tempo-native stablecoins with memos and fee payment built in."
-          href={explorerAddress(ADDR.xmxn)}
-          proof={<>{supply.data === undefined ? "—" : fmtAmount(supply.data as bigint, 0)} xMXN in circulation · {shortAddr(ADDR.xmxn)}</>}
-        />
-        <Primitive
-          name="Sub-second settlement"
-          does="Dollars sent from the US land as pesos in the family's wallet in one transaction."
-          href={bt.data ? `${TEMPO_EXPLORER_URL}/block/${bt.data.block}` : undefined}
-          proof={bt.data ? <>{fmtNumber(bt.data.seconds, 2)} s average block time over the last {bt.data.span.toLocaleString("en-US")} blocks</> : bt.isError ? "—" : reading}
-        />
-        <Primitive
-          name="Fee sponsorship"
-          does="Mercado pays the network fee for its own contract calls when they qualify, so users don't need a gas token to start."
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Tile icon={Coins} loading={supply.isPending} value={supply.data === undefined ? dash : fmtAmount(supply.data as bigint, 0)} pulse={supply.data?.toString()} label="xMXN on TIP-20" href={explorerAddress(ADDR.xmxn)} />
+        <Tile icon={Zap} loading={bt.isPending} value={bt.data ? `${fmtNumber(bt.data.seconds, 2)} s` : dash} label="per block, settled" href={bt.data ? `${TEMPO_EXPLORER_URL}/block/${bt.data.block}` : undefined} />
+        <Tile
+          icon={Fuel}
+          loading={mp.isPending}
+          value={m?.sponsored ? (ago(m.sponsored.at, now) ?? "✓") : dash}
+          label="last fee paid by Mercado"
           href={m?.sponsored ? explorerTx(m.sponsored.hash) : m?.sponsor ? explorerAddress(m.sponsor) : undefined}
-          proof={
-            m?.sponsored ? <>Latest sponsored payment: fee paid by Mercado ({shortAddr(m.sponsored.feePayer)}), not the sender</> : m?.sponsor ? <>Mercado fee payer {shortAddr(m.sponsor)}</> : mp.isError ? "—" : reading
-          }
         />
-        <Primitive
-          name="Transfer memos"
-          does="The family's note travels with the money, on-chain, in the transfer itself."
-          href={m?.memo ? explorerTx(m.memo.hash) : "/remesas"}
-          external={!!m?.memo}
-          proof={m?.memo ? <>Latest note: “{m.memo.text}”</> : m ? "No note sent recently. Send one in Remesas" : mp.isError ? "—" : reading}
-        />
-        <Primitive
-          name="Payments over HTTP 402"
-          does="Partners pay per API call in xMXN with MPP: no API keys, no invoices, a receipt per call."
+        <Tile icon={MessageSquareText} loading={mp.isPending} value={m?.memo ? `“${m.memo.text}”` : dash} label="latest note on-chain" href={m?.memo ? explorerTx(m.memo.hash) : "/remesas"} external={!!m?.memo} />
+        <Tile
+          icon={Receipt}
+          loading={p402.isPending}
+          value={p402.data ? String(p402.data.status) : dash}
+          label={p402.data?.price ? `pay per API call · ${p402.data.price}` : "pay per API call"}
           href="/developers"
           external={false}
-          proof={
-            p402.data ? (
-              <>
-                GET partner quote → {p402.data.status === 402 && p402.data.challenge ? "402 Payment Required" : `HTTP ${p402.data.status}`}
-                {p402.data.price && <> · {p402.data.price} per call</>}
-              </>
-            ) : p402.isError ? (
-              "—"
-            ) : (
-              reading
-            )
-          }
         />
-        <li className="grid content-start gap-2 border-t border-foreground pt-3">
-          <h3 className="display text-[1.35rem] leading-tight">Tempo Wallet + passkeys</h3>
-          <p className="text-[15px] leading-snug text-pretty">Sign in with Tempo Wallet or a device passkey. No seed phrase, no browser extension.</p>
-          <p className="text-muted-foreground text-[13px] leading-snug">
-            <span className="meta text-foreground mr-1.5">Live</span>
-            <WalletDialog>
-              <button type="button" className="hover:text-foreground underline decoration-1 underline-offset-[3px]">
-                Try it: connect with a passkey
-              </button>
-            </WalletDialog>
-          </p>
-        </li>
-      </ul>
+        <WalletDialog>
+          <button type="button" className="bg-well grid content-start rounded-[8px] p-4 text-left transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0">
+            <KeyRound className="size-5 text-[var(--accent)]" strokeWidth={1.75} aria-hidden />
+            <span className="mt-3 block text-[1.6rem] leading-none font-semibold">Passkey</span>
+            <span className="text-muted-foreground mt-1.5 block text-[13px] leading-snug">sign in, no seed phrase</span>
+          </button>
+        </WalletDialog>
+        <MoneyArc />
+      </div>
     </section>
   );
 }

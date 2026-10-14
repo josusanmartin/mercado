@@ -87,6 +87,7 @@ export function EcosystemHome() {
         </div>
         {/* Principle 3: image inside type, once, on the hero. Our own generated sarape texture. */}
         <h1
+          data-loop // the slow texture pan is an intentional continuous loop (reduced motion: still)
           // Dark theme: a cream-for-ink variant of the texture (black bands vanish on dark and chop the letters).
           // pt: background-clip:text only paints the padding box, and the caps rise above the tight line box.
           className="display image-type mx-pan bg-[url(/photos/sarape.webp)] pt-[0.1em] text-[clamp(2.2rem,15cqw,12rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)] dark:bg-[url(/photos/sarape-dark.webp)]"

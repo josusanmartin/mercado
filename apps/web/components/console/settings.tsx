@@ -4,7 +4,7 @@
 //   <SettingsLayout title list={<ListPane …/>} [product purpose kpis demo]>  → hero band + tabs + content
 //   <Panel title description aside>  <Rows><Row label value sub/></Rows>  <BigNumber/>  <PanelActions/>
 // The product (and its signature color) comes from the route unless `product` is passed.
-import type { CSSProperties, ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { useConnection } from "wagmi";
@@ -153,22 +153,37 @@ export type ListItemDef = { id: string; label: string; icon?: LucideIcon; hint?:
 
 /** Section tabs under the hero (scrolls horizontally on phones). */
 export function ListPane({ items, value, onChange, label }: { items: ListItemDef[]; value: string; onChange: (id: string) => void; label: string }) {
+  // v6: one accent underline that slides to the selected tab (measured; transform only; reduced motion: jumps).
+  const tabs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [line, setLine] = useState<{ x: number; w: number }>();
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = tabs.current[value];
+      setLine(el ? { x: el.offsetLeft, w: el.offsetWidth } : undefined);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [value, items.length]);
   return (
-    <nav aria-label={label} role="tablist" className="scrollbar-none -mx-4 flex gap-6 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
+    <nav aria-label={label} role="tablist" className="scrollbar-none relative -mx-4 flex gap-6 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
       {items.map((it) => {
         const on = it.id === value;
         const Icon = it.icon;
         return (
           <button
             key={it.id}
+            ref={(el) => {
+              tabs.current[it.id] = el;
+            }}
             type="button"
             role="tab"
             aria-selected={on}
             aria-current={on ? "true" : undefined}
             onClick={() => onChange(it.id)}
             className={cn(
-              "meta -mb-px flex shrink-0 items-center gap-2 border-b-2 py-3 transition-colors duration-150",
-              on ? "border-foreground text-foreground" : "text-muted-foreground hover:text-foreground border-transparent",
+              "meta -mb-px flex shrink-0 items-center gap-2 border-b-2 border-transparent py-3 transition-colors duration-150",
+              on ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {Icon && <Icon className="size-4" strokeWidth={1.75} aria-hidden />}
@@ -177,6 +192,13 @@ export function ListPane({ items, value, onChange, label }: { items: ListItemDef
           </button>
         );
       })}
+      {line && (
+        <span
+          aria-hidden
+          className="mx-tab-line pointer-events-none absolute bottom-0 left-0 h-0.5 w-px origin-left bg-[var(--accent)]"
+          style={{ transform: `translateX(${line.x}px) scaleX(${line.w})` }}
+        />
+      )}
     </nav>
   );
 }
