@@ -108,3 +108,44 @@ describe("refused", () => {
     expect(P.refusal({ ...req(call(A.card!, abis.mercadoCardAbi as Abi, "setFrozen", [1n, true])), maxFeePerGas: 100_000_000_000n })).toMatch(/maxFeePerGas/);
   });
 });
+
+describe("first-draw exception requires a fully valid attestation (review R-016 recheck)", () => {
+  const borrowData = (args: readonly unknown[]) => encodeFunctionData({ abi: abis.creditPoolAbi as Abi, functionName: "borrow", args } as never);
+  const env = require("node:fs").readFileSync(new URL("../../../../../.env.local", import.meta.url), "utf8") as string;
+  const signerPk = env.match(/^ATTESTATION_SIGNER_PRIVATE_KEY=(0x[0-9a-fA-F]{64})$/m)?.[1] as Hex;
+
+  async function attest(borrower: Address, maxAmount: bigint, expiry: bigint, nonce: bigint, pk: Hex = signerPk) {
+    const { privateKeyToAccount } = await import("viem/accounts");
+    return privateKeyToAccount(pk).signTypedData({
+      domain: { name: "MercadoCreditPool", version: "1", chainId: 42431, verifyingContract: A.creditPool },
+      types: { Eligibility: [{ name: "borrower", type: "address" }, { name: "maxAmount", type: "uint256" }, { name: "expiry", type: "uint256" }, { name: "nonce", type: "uint256" }, { name: "dataHash", type: "bytes32" }] },
+      primaryType: "Eligibility",
+      message: { borrower, maxAmount, expiry, nonce, dataHash: H },
+    });
+  }
+  const fresh = "0x1111111111111111111111111111111111111111" as Address;
+  const later = BigInt(Math.floor(Date.now() / 1000) + 600);
+
+  it("bare selector / garbage calldata from an invented sender is NOT eligible", async () => {
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: "0x5e9e1a0b" as Hex }] })).toBe(false);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([1n, 2n, later, 4n, H, "0x12"]) }] })).toBe(false);
+  });
+
+  it("signature from the wrong key, for another borrower, expired, or over the attested max is NOT eligible", async () => {
+    const wrongKey = await attest(fresh, 100n, later, 7n, `0x${"77".repeat(32)}`);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([10n, 100n, later, 7n, H, wrongKey]) }] })).toBe(false);
+    const forOther = await attest("0x2222222222222222222222222222222222222222", 100n, later, 7n);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([10n, 100n, later, 7n, H, forOther]) }] })).toBe(false);
+    const past = BigInt(Math.floor(Date.now() / 1000) - 10);
+    const expired = await attest(fresh, 100n, past, 7n);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([10n, 100n, past, 7n, H, expired]) }] })).toBe(false);
+    const ok = await attest(fresh, 100n, later, 7n);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([101n, 100n, later, 7n, H, ok]) }] })).toBe(false);
+  });
+
+  it("a real attestation from the pool's signer, for this sender, unexpired, unused nonce IS eligible", async () => {
+    const nonce = BigInt(Date.now());
+    const sig = await attest(fresh, 100n, later, nonce);
+    expect(await P.validFirstDraw({ ...FEES, from: fresh, calls: [{ to: A.creditPool, data: borrowData([50n, 100n, later, nonce, H, sig]) }] })).toBe(true);
+  });
+});

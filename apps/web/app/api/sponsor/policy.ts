@@ -6,12 +6,23 @@
 //   - gas ≤ MAX_GAS, maxFeePerGas ≤ MAX_FEE_PER_GAS, tip ≤ MAX_PRIORITY_FEE, gas × maxFeePerGas ≤ MAX_TX_COST (R-013)
 //   - fee token unset (sponsor default) or one of FEE_TOKENS
 //   - senders with skin in the game: a demo persona, or an address holding OUSD/xMXN/sOUSD/tTBILL, owing an
-//     advance, or holding a Mercado Card. A request whose ONLY call is CreditPool.borrow is also eligible (a new
-//     driver's first draw: the attestation binds the borrower, an invalid one fails at fill). Invented addresses
+//     advance, or holding a Mercado Card. A zero-balance driver's FIRST draw is eligible only when its decoded
+//     attestation is fully valid for that sender (validFirstDraw: signer, borrower, expiry, amount, unused nonce). Invented addresses
 //     are refused before they touch the quota (R-016 Sybil bound).
 //   - ≤ PER_SENDER_PER_HOUR per sender and ≤ GLOBAL_PER_HOUR overall; re-filling the same transaction
 //     doesn't consume quota again.
-import { createPublicClient, getAddress, http, parseAbi, toFunctionSelector, type Abi, type Address, type Hex } from "viem";
+import {
+  createPublicClient,
+  decodeFunctionData,
+  getAddress,
+  http,
+  parseAbi,
+  recoverTypedDataAddress,
+  toFunctionSelector,
+  type Abi,
+  type Address,
+  type Hex,
+} from "viem";
 import {
   activeAddresses,
   collateralVaultAbi,
@@ -191,11 +202,48 @@ export function isBorrowOnly(req: SponsorRequest): boolean {
 
 const cardAbiLite = parseAbi(["function cardsOf(address) view returns (uint256[])"]);
 
+/** A zero-balance driver's first draw is sponsored ONLY with a fully valid attestation (review R-016 recheck):
+ *  decoded calldata; signature recovers to the pool's live attestationSigner over the EIP-712 Eligibility with
+ *  borrower = the sender; not expired; 0 < amount ≤ maxAmount; nonce unused on-chain. Anything else: false. */
+export async function validFirstDraw(req: SponsorRequest): Promise<boolean> {
+  if (!req.from || !isBorrowOnly(req)) return false;
+  const call0 = (req.calls?.length ? req.calls[0] : { to: req.to, data: req.data }) as Call;
+  try {
+    const { args } = decodeFunctionData({ abi: creditPoolAbi as Abi, data: (call0.data ?? call0.input) as Hex });
+    const [amount, maxAmount, expiry, nonce, dataHash, signature] = args as unknown as [bigint, bigint, bigint, bigint, Hex, Hex];
+    if (amount === 0n || amount > maxAmount) return false;
+    if (BigInt(Math.floor(Date.now() / 1000)) > expiry) return false;
+    const signer = await recoverTypedDataAddress({
+      domain: { name: "MercadoCreditPool", version: "1", chainId: TEMPO_MODERATO_CHAIN_ID, verifyingContract: A.creditPool },
+      types: {
+        Eligibility: [
+          { name: "borrower", type: "address" },
+          { name: "maxAmount", type: "uint256" },
+          { name: "expiry", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+          { name: "dataHash", type: "bytes32" },
+        ],
+      },
+      primaryType: "Eligibility",
+      message: { borrower: getAddress(req.from), maxAmount, expiry, nonce, dataHash },
+      signature,
+    });
+    const [poolSigner, used] = await Promise.all([
+      client.readContract({ address: A.creditPool, abi: creditPoolAbi, functionName: "attestationSigner" }),
+      client.readContract({ address: A.creditPool, abi: creditPoolAbi, functionName: "nonceUsed", args: [getAddress(req.from), nonce] }),
+    ]);
+    return getAddress(signer) === getAddress(poolSigner as Address) && !used;
+  } catch {
+    return false;
+  }
+}
+
 /** Sender has skin in the game (see header). Cached 60s. */
 export async function senderEligible(sender: Address, personas: ReadonlySet<string>, req?: SponsorRequest): Promise<boolean> {
   const key = sender.toLowerCase();
   if (personas.has(key)) return true;
-  if (req && isBorrowOnly(req)) return true;
+  // a new driver's first draw: only with a fully valid attestation for THIS sender (never a bare selector)
+  if (req && isBorrowOnly(req) && (await validFirstDraw(req))) return true;
   const hit = state.eligible.get(key);
   if (hit && Date.now() - hit.at < 60_000) return hit.ok;
   const [ousd, xmxn, pos, debt] = await Promise.all([
