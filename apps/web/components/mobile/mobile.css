@@ -308,3 +308,10 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Slow pan for image-in-type textures (motion with intent, PRINCIPLES §8). */
+@keyframes m-papel {
+  to {
+    background-position: 480px 0;
+  }
+}

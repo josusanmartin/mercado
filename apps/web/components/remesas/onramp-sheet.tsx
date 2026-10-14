@@ -1,5 +1,6 @@
 "use client";
-// "Agregar dólares con tarjeta": the body of the Remesas on-ramp bottom sheet (mobile kit, M3).
+// "Agregar dólares con tarjeta": the body of the Remesas on-ramp bottom sheet (mobile kit). Spanish only;
+// ONRAMP_LABEL (English) also sits in the desktop panel.
 // The card charge is SIMULATED (4242 test card only); the OUSD that lands is a REAL testnet transfer
 // from the on-ramp float, with its explorer link. Keeps ONRAMP_LABEL visible. Uses useOnramp() (web).
 import { useState } from "react";
@@ -17,15 +18,15 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
 
   if (o.stage === "done" && o.result)
     return (
-      <div className="grid justify-items-center gap-3 px-6 pt-2 text-center">
+      <div className="grid justify-items-start gap-3 px-6 pt-2">
         <SuccessCheck size={72} />
-        <p className="text-[22px]">¡Listo! Agregaste</p>
-        <p className="m-num text-[40px] leading-none font-medium">US{fmtMoney(BigInt(o.result.amount))}</p>
-        <p className="text-[14px] text-[var(--m-on-surface-variant)]">OUSD llegó a tu cuenta, on-chain · arrived in your wallet</p>
+        <p className="m-display text-[30px]">Listo</p>
+        <p className="m-display text-[44px]">US{fmtMoney(BigInt(o.result.amount))}</p>
+        <p className="m-meta">OUSD en tu cuenta · en la cadena</p>
         <div className="w-full text-left">
           <DetailRows
             rows={[
-              { label: "Tarjeta", value: `•••• ${o.result.simulatedCharge.last4}`, sub: "cargo simulado · simulated charge" },
+              { label: "Tarjeta", value: `•••• ${o.result.simulatedCharge.last4}`, sub: "cargo simulado" },
               {
                 label: "Transferencia",
                 value: (
@@ -39,7 +40,7 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
           />
         </div>
         <Button variant="dark" className="mt-1 w-full" onClick={() => (o.reset(), onDone?.())}>
-          Listo · Done
+          Listo
         </Button>
       </div>
     );
@@ -49,7 +50,7 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
     return (
       <div className="grid gap-4 px-6">
         <Banner tone="info" icon={<CreditCard strokeWidth={1.75} />}>
-          <span className="font-medium">Próximamente · Coming soon.</span> Card top-ups are paused while we finish a safety review.
+          <span className="font-semibold">Próximamente.</span> Las recargas con tarjeta están en pausa por una revisión de seguridad.
         </Banner>
         {o.canTempoDeposit && (
           <Button variant="tonal" icon={<Wallet className="size-5" strokeWidth={1.75} />} onClick={() => o.tempoDeposit()}>
@@ -69,12 +70,12 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
           </Chip>
         ))}
       </div>
-      <div className="grid gap-3 rounded-[16px] bg-white p-4 shadow-[0_1px_2px_rgb(0_0_0/0.08)]">
+      <div className="grid gap-4 border-y border-[var(--m-outline-variant)] py-4">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-[14px] text-[var(--m-on-surface-variant)]">
-            <CreditCard className="size-5" strokeWidth={1.75} /> Tarjeta
+            <CreditCard className="size-5" strokeWidth={1.75} /> <span className="m-meta text-[var(--m-on-surface)]">Tarjeta</span>
           </span>
-          <DemoBadge>Solo tarjeta de prueba</DemoBadge>
+          <DemoBadge>Solo 4242 · prueba</DemoBadge>
         </div>
         <Field label="Número de tarjeta" value={card.number} disabled={busy} mono onChange={(v) => setCard({ ...card, number: v })} aria="Card number (test card 4242 4242 4242 4242)" />
         <div className="grid grid-cols-2 gap-3">
@@ -82,10 +83,12 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
           <Field label="CVC" value={card.cvc} disabled={busy} onChange={(v) => setCard({ ...card, cvc: v })} aria="CVC" />
         </div>
       </div>
-      <p className="text-[13px] leading-[1.4] text-[var(--m-on-surface-variant)]">{ONRAMP_LABEL}</p>
+      <p className="m-meta" title={ONRAMP_LABEL}>
+        Cargo simulado · los dólares llegan de verdad (testnet)
+      </p>
       {o.error && <Banner tone="error">{o.error}</Banner>}
-      <Button loading={busy} disabled={busy || amount > ONRAMP_MAX_PER_TX} onClick={() => o.buyWithCard(amount, card)}>
-        {busy ? (o.stage === "charging" ? "Procesando tarjeta (simulada)…" : "Enviando OUSD on-chain…") : `Pagar US$${amount} con tarjeta`}
+      <Button variant="accent" loading={busy} disabled={busy || amount > ONRAMP_MAX_PER_TX} onClick={() => o.buyWithCard(amount, card)}>
+        {busy ? (o.stage === "charging" ? "Procesando tarjeta (simulada)…" : "Enviando OUSD on-chain…") : `Pagar US$${amount}`}
       </Button>
       {o.canTempoDeposit && (
         <Button variant="tonal" disabled={busy} icon={<Wallet className="size-5" strokeWidth={1.75} />} onClick={() => o.tempoDeposit(amount)}>
@@ -98,15 +101,15 @@ export function OnrampSheet({ onDone }: { onDone?: () => void }) {
 
 function Field({ label, value, onChange, disabled, mono, aria }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; mono?: boolean; aria: string }) {
   return (
-    <label className="relative grid min-w-0">
-      <span className="absolute -top-2 left-3 bg-white px-1 text-[12.5px] text-[var(--m-on-surface-variant)]">{label}</span>
+    <label className="grid min-w-0 gap-1">
+      <span className="m-meta">{label}</span>
       <input
         value={value}
         disabled={disabled}
         inputMode="numeric"
         aria-label={aria}
         onChange={(e) => onChange(e.target.value)}
-        className={`m-num h-14 w-full min-w-0 rounded-[4px] border border-[var(--m-outline)] bg-transparent px-4 text-[16px] outline-none focus:border-2 focus:border-[var(--m-accent)] ${mono ? "tracking-[0.08em]" : ""}`}
+        className={`m-num h-12 w-full min-w-0 border-b-2 border-[var(--m-outline)] bg-transparent text-[18px] outline-none focus:border-[var(--m-accent)] ${mono ? "tracking-[0.08em]" : ""}`}
       />
     </label>
   );
