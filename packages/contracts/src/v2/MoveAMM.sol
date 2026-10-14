@@ -24,9 +24,10 @@ import {IPriceFeed} from "./IPriceFeed.sol";
 ///          so nobody can drain the equity buffer), paid at min(oracle, NAV): out × min(1, c), extra stress
 ///          spread below stressThresholdBps; out ≤ R; rate-limited by a leaky bucket (below)
 ///        - equity: anyone may add OUSD equity (raises R, not L); the owner may withdraw only while c ≥ target after
-///      Redemption rate limit (leaky bucket): capacity C = max(R × redeemCapBps, min(R, redeemFloorUsd)); the
-///        bucket drains at C per 24h. At most C can leave at once, and any 24h period is bounded by ≤ 2C
-///        (a full bucket plus a full day's refill). C shrinks as R shrinks, so a run slows itself down.
+///      Redemption rate limit (strict leaky bucket, no floor): capacity C = R × redeemCapBps (25%), refilling
+///        continuously at C per 24h. At most C can leave at once; with no fixed window there is no boundary
+///        doubling. C shrinks as R shrinks, so a run slows itself down. Demo usability comes from equity
+///        (≥ 2,500 OUSD), not from a floor.
 ///      Curve: usd → mxn: gross = usd × mid × D / (D + usd);  mxn → usd: gross = (mxn / mid) × D / (D + mxn/mid).
 contract MoveAMM is Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
@@ -52,7 +53,6 @@ contract MoveAMM is Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public stressThresholdBps = 11_000;
     uint256 public stressBps = 30;
 
-    uint256 public redeemFloorUsd = 1_000e6;
     uint256 public bucket; // OUSD redeemed, leaking at capacity per 24h
     uint256 public bucketAt;
 
@@ -234,9 +234,7 @@ contract MoveAMM is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     function _bucket() internal view returns (uint256 used, uint256 cap) {
-        uint256 floor = reserve < redeemFloorUsd ? reserve : redeemFloorUsd;
         cap = Math.mulDiv(reserve, redeemCapBps, BPS);
-        if (cap < floor) cap = floor;
         uint256 leaked = Math.mulDiv(cap, block.timestamp - bucketAt, 1 days);
         used = bucket > leaked ? bucket - leaked : 0;
     }

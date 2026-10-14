@@ -65,13 +65,14 @@ contract MoveAMMTest is BaseV2 {
     }
 
     function test_roundTripLosesOnlySpreadAndImpact() public {
+        _equity(5_000e6); // demo usability comes from equity (25% bucket, no floor)
         uint256 x = _mintVia(alice, 1_000e6, alice);
         uint256 back = _redeem(alice, x);
         assertLt(back, 1_000e6);
         assertGt(back, 980e6); // round trip at 1,000 USD: 2×20bps fee + 2×~0.4% size impact ≈ 1.5%
         (uint256 r, uint256 l,,,,) = amm.state();
         assertEq(l, 0);
-        assertEq(r, 1_000e6 - back, "spread stays in the reserve");
+        assertEq(r, 6_000e6 - back, "spread stays in the reserve");
     }
 
     function test_minOutSlippage() public {
@@ -101,6 +102,7 @@ contract MoveAMMTest is BaseV2 {
     // ------------------------------------------------------------ separation
 
     function test_cannotTouchCdpCollateral() public {
+        _equity(2_500e6);
         _open(bob, address(ousd), 10_000e6, 0); // 10,000 OUSD locked in the CDP vault
         _mintVia(alice, 100e6, alice);
         uint256 vaultBal = IERC20(address(ousd)).balanceOf(address(vault));
@@ -194,6 +196,15 @@ contract MoveAMMTest is BaseV2 {
         assertEq(l, 0);
         assertLe(paid, 1_000e6);
         assertEq(IERC20(address(ousd)).balanceOf(address(amm)), r, "books match balance");
+    }
+
+    function test_bucketIsStrictNoFloor() public {
+        _mintVia(alice, 100e6, alice); // R = 100 OUSD → C = 25 OUSD, no floor
+        (,,,,, uint256 cap) = amm.state();
+        assertEq(cap, 25e6);
+        uint256 bal = xmxn.balanceOf(alice);
+        vm.expectRevert(); // ~99 OUSD out > 25
+        amm.quote(false, bal);
     }
 
     function test_dailyRedeemCap() public {

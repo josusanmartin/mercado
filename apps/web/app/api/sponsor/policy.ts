@@ -10,7 +10,21 @@
 //   - ≤ PER_SENDER_PER_HOUR per sender and ≤ GLOBAL_PER_HOUR overall; re-filling the same transaction
 //     doesn't consume quota again.
 import { createPublicClient, getAddress, http, toFunctionSelector, type Abi, type Address, type Hex } from "viem";
-import { creditPoolAbi, moderatoDeployment, swapDeskAbi, collateralVaultAbi, tempoModerato, TEMPO_ADDRESSES, TEMPO_MODERATO_CHAIN_ID, TEMPO_RPC_URL, tip20Abi } from "@mercado/shared";
+import {
+  activeAddresses,
+  collateralVaultAbi,
+  creditPoolAbi,
+  demoRwaAbi,
+  moveAmmAbi,
+  multiCollateralVaultAbi,
+  stakedOusdAbi,
+  swapDeskAbi,
+  tempoModerato,
+  TEMPO_ADDRESSES,
+  TEMPO_MODERATO_CHAIN_ID,
+  TEMPO_RPC_URL,
+  tip20Abi,
+} from "@mercado/shared";
 
 export const MAX_GAS = 5_000_000n;
 /** Moderato's base fee is ~0.6 gwei (fee units: 1e-18 USD per gas); allow headroom, not a blank cheque. */
@@ -28,7 +42,8 @@ export const FEE_TOKENS: ReadonlySet<string> = new Set(
   [TEMPO_ADDRESSES.alphaUSD, TEMPO_ADDRESSES.pathUSD].map((a) => getAddress(a)),
 );
 
-const D = moderatoDeployment;
+// Active protocol only (crew/V2-SWITCH.md): v1 and v2 targets are never sponsored side by side.
+const A = activeAddresses();
 const sel = (abi: Abi, ...names: string[]) =>
   names.map((n) => {
     const f = abi.find((x) => x.type === "function" && x.name === n);
@@ -37,20 +52,37 @@ const sel = (abi: Abi, ...names: string[]) =>
   });
 const TOKEN_SELECTORS = sel(tip20Abi as Abi, "approve", "transfer", "transferWithMemo");
 const APPROVE = TOKEN_SELECTORS[0];
+const sym = (s: string) => A.collaterals.find((c) => c.symbol === s)?.token;
+const SOUSD = sym("sOUSD");
+const TTBILL = sym("tTBILL");
+
 /** target → allowed function selectors */
 export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
   (
-    [
-      [D.ousd, TOKEN_SELECTORS],
-      [D.xMXN, TOKEN_SELECTORS],
-      [D.vault, sel(collateralVaultAbi as Abi, "depositCollateral", "mint", "repayAndBurn", "withdrawCollateral", "liquidate")],
-      [D.swapDesk, sel(swapDeskAbi as Abi, "swapOusdForXmxn", "swapXmxnForOusd", "seed")],
-      [D.creditPool, sel(creditPoolAbi as Abi, "supply", "withdrawAvailable", "borrow", "repay")],
-    ] as const
+    (A.protocol === "v1"
+      ? [
+          [A.ousd, TOKEN_SELECTORS],
+          [A.xMXN, TOKEN_SELECTORS],
+          [A.vault, sel(collateralVaultAbi as Abi, "depositCollateral", "mint", "repayAndBurn", "withdrawCollateral", "liquidate")],
+          [A.swapDesk!, sel(swapDeskAbi as Abi, "swapOusdForXmxn", "swapXmxnForOusd", "seed")],
+          [A.creditPool, sel(creditPoolAbi as Abi, "supply", "withdrawAvailable", "borrow", "repay")],
+        ]
+      : [
+          [A.ousd, TOKEN_SELECTORS],
+          [A.xMXN, TOKEN_SELECTORS],
+          [A.vault, sel(multiCollateralVaultAbi as Abi, "depositCollateral", "mint", "repayAndBurn", "withdrawCollateral", "liquidate")],
+          [A.vamm!, sel(moveAmmAbi as Abi, "swapOusdForXmxn", "swapXmxnForOusd", "addEquity")],
+          [A.creditPool, sel(creditPoolAbi as Abi, "supply", "withdrawAvailable", "borrow", "repay")],
+          ...(SOUSD ? [[SOUSD, [...sel(stakedOusdAbi as Abi, "deposit", "redeem", "withdraw"), APPROVE]] as const] : []),
+          ...(TTBILL ? [[TTBILL, [...sel(demoRwaAbi as Abi, "faucet"), APPROVE]] as const] : []),
+        ]) as ReadonlyArray<readonly [string, readonly string[]]>
   ).map(([a, s]) => [getAddress(a), new Set<string>(s)]),
 );
 export const ALLOWED_TARGETS: ReadonlySet<string> = new Set(ALLOWED_CALLS.keys());
-const APPROVE_SPENDERS = new Set([D.vault, D.swapDesk, D.creditPool].map((a) => getAddress(a)));
+/** Approvals are sponsored only toward the active protocol's own contracts. */
+const APPROVE_SPENDERS = new Set(
+  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
+);
 
 // ---------------------------------------------------------------- state (single process)
 
@@ -145,10 +177,13 @@ export async function senderEligible(sender: Address, personas: ReadonlySet<stri
   const hit = state.eligible.get(key);
   if (hit && Date.now() - hit.at < 60_000) return hit.ok;
   const [ousd, xmxn, pos, debt] = await Promise.all([
-    client.readContract({ address: D.ousd as Address, abi: tip20Abi, functionName: "balanceOf", args: [sender] }),
-    client.readContract({ address: D.xMXN as Address, abi: tip20Abi, functionName: "balanceOf", args: [sender] }),
-    client.readContract({ address: D.vault as Address, abi: collateralVaultAbi, functionName: "getPosition", args: [sender] }),
-    client.readContract({ address: D.creditPool as Address, abi: creditPoolAbi, functionName: "getDebt", args: [sender] }),
+    client.readContract({ address: A.ousd, abi: tip20Abi, functionName: "balanceOf", args: [sender] }),
+    client.readContract({ address: A.xMXN, abi: tip20Abi, functionName: "balanceOf", args: [sender] }),
+    // v1 vault position only (v2 positions are per collateral; holding OUSD/xMXN already qualifies)
+    A.protocol === "v1"
+      ? client.readContract({ address: A.vault, abi: collateralVaultAbi, functionName: "getPosition", args: [sender] })
+      : Promise.resolve({ collateral: 0n, debt: 0n }),
+    client.readContract({ address: A.creditPool, abi: creditPoolAbi, functionName: "getDebt", args: [sender] }),
   ]).catch(() => [0n, 0n, { collateral: 0n, debt: 0n }, 0n] as const);
   const ok = ousd > 0n || xmxn > 0n || pos.collateral > 0n || pos.debt > 0n || debt > 0n;
   state.eligible.set(key, { ok, at: Date.now() });

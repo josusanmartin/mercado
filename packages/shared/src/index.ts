@@ -4,3 +4,4 @@ export type * from "./types";
 export * from "./chain";
 export * from "./abi";
 export * from "./deployments";
+export * from "./protocol";

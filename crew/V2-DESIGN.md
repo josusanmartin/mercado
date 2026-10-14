@@ -39,10 +39,10 @@ v2 deploys **alongside** v1. Nothing in v1 changes or stops working. Its address
 | **tTBILL** | demo tokenized T-bill | OZ ERC-20, 6dp, `faucet()` capped mint | owner mints; price is an admin feed | "Demo tokenized T-bill (testnet, not a security)" |
 | **tEQX** *(optional)* | demo equity index | same as tTBILL | same | "Demo equity index (testnet, not a security)" |
 
-### sOUSD mock yield, donation-proof
-- `totalAssets()` is **accrual-based, not balance-based**: `min(assetsCheckpoint × (1 + aprBps × Δt / (10_000 × 365d)), OUSD.balanceOf(this))`, checkpointed on every deposit, withdraw and APR change.
-- Tokens sent straight to the contract don't move the share price until the accrual formula reaches them. That kills the classic ERC-4626 donation/inflation attack, and OZ's virtual-share math covers the first deposit too. Yield is real OUSD that the owner pre-funds into the contract ("yield reserve"). If the reserve runs dry, the share price stops growing; it never inflates beyond backing.
-- Share price can only rise, at ≤ `aprBps` (capped 20% APR), so the vault's sOUSD valuation can't be pumped within a block.
+### sOUSD mock yield: fully accounted (R-027 fix)
+- The token balance is **never read**. `totalAssets = assetsAccounted + min(assetsAccounted × apr × Δt / year, fundedReserve)`.
+- Yield is funded only through owner-only `fundYield(amount)`, which **checkpoints before adding funds**. Accrual that wasn't funded while it accrued is forfeited, so a late top-up can't back-pay a "dry year" in one block. Direct transfers are ignored forever.
+- The share price can only rise, at ≤ `aprBps` (capped at 20% APR), and never beyond funded OUSD. OZ virtual-share math covers the first-depositor inflation attack. Tested: donation, first depositor, dry-year late funding, reserve exhaustion and stale feeds.
 
 ---
 
@@ -110,6 +110,12 @@ Same rounding rules as v1: value and ratio round down, required collateral round
 
 ## 4. MOVE: `MoveAMM` (vault-integrated vAMM / PSM)
 
+### Exact solvency statement (review's precheck)
+- `R` = OUSD reserve, segregated in MoveAMM and tracked internally. `L` = net AMM-issued xMXN (`+out` on mint, `−in` on redeem).
+- **Redemption bound:** `amountIn ≤ L`. Any xMXN, CDP-minted included, may redeem only up to the AMM's own liability, so the equity buffer is never paid out against CDP debt (lead's fix). Supply identity: `xMXN.totalSupply = Σ CDP debt + L`.
+- **Pre-trade, at fresh FX `m`:** `c = R·m/L`. A mint requires `(R+in)·m / (L+out) ≥ 1`. A redemption pays `out ≤ (in/m)·min(1, c)` and `out ≤ R`, so `R_after·m / L_after ≥ min(c, …)`: coverage never falls for those who stay.
+- Example (review's): 1,000 OUSD backing 19,900 xMXN with no equity is 90.5% at m = 18. Minting halts and redemptions haircut to 90.5% of oracle. With the 2,500 equity seed, the same book is 316% covered at 18.
+
 ### Pricing
 Oracle mid `m` = MXN per USD (8dp). Virtual depth `D` (USD, 6dp; default 250,000 USD) is a constant-product curve centred on the oracle, so impact grows with size:
 
@@ -128,13 +134,13 @@ At D = 250k: 100 USD → 0.04% impact, 1,000 → 0.4%, 10,000 → 3.8%. Default 
 - **Liability `L`**: xMXN the AMM has issued and not yet bought back. `+out` on mint, `−amountIn` on burn, floored at 0 (CDP-minted xMXN may also redeem here, which can only shrink `R` and `L` together).
 - **Coverage** `c = R × m / L` (bps; ∞ if `L = 0`).
 
-**Peso appreciation** (m falls) shrinks `R × m` while `L` is fixed in pesos. Example: 1,000 OUSD minted at 20 → L = 20,000 xMXN. With a 250 OUSD buffer, R = 1,250 and c = 125% at 20. That reaches 100% at m = 16 (a 20% stronger peso) and 80% at m = 12.8. On-chain rules:
+**Peso appreciation** (m falls) shrinks `R × m` while `L` is fixed in pesos. Example: 1,000 OUSD minted at 20 → L = 20,000 xMXN. With a 250 OUSD buffer, R = 1,250 and c = 125% at 20. That reaches 100% at m = 16 (a 20% stronger peso) and 80% at m = 12.8. The testnet seed uses 2,500 OUSD of equity against ~19,950 xMXN (≈350% at 20; still >100% at m = 5.7, the bottom of the oracle band). On-chain rules:
 
-1. **Equity buffer.** A backstop (the DEPLOYER on testnet; an institution in prod) seeds OUSD as `equity`, which adds to `R` but not `L`. Fees also accrue to `R`. The owner can withdraw equity only while `c ≥ targetCoverage` (120%) after the withdrawal.
-2. **Mint circuit breaker.** Mints revert if `c` after the mint would be < `minMintCoverage` (100%). New users are never sold xMXN that's already under-backed. Create (CDP) keeps working.
-3. **NAV redemption.** When `c < 100%`, every redemption is paid at `min(oracle, NAV)`: out × c/10_000. That's pro-rata, so there's no first-mover advantage and no bank run, and the reserve can never be over-drawn. `stressBps` (e.g. +30 bps below 110% coverage) widens the spread as coverage falls.
-4. **Rate limits.** Max per swap (default 10,000 USD-eq), and redemptions ≤ `redeemCapBps` (25%) of `R` per rolling 24h window. The AMM also has an overall mint ceiling `maxLiability` (default 2,000,000 xMXN).
-5. **Oracle hygiene.** Any invalid FX price (stale/paused/out of band) reverts both directions. The fee (20 bps) plus the oracle's max-jump bound limit stale-price arbitrage; a production feed should set the fee ≥ the feed's deviation threshold.
+1. **Equity buffer.** A backstop (the DEPLOYER on testnet; an institution in prod) seeds OUSD as `equity`, which adds to `R` but not `L`. Fees also accrue to `R`. Testnet seed: **2,500 OUSD**. The owner can withdraw equity only while `c ≥ targetCoverage` (120%) after the withdrawal.
+2. **Mint circuit breaker.** A mint reverts if coverage after the mint would be < `minMintCoverage` (100%). New users are never sold xMXN that's already under-backed. Create (CDP) keeps working.
+3. **NAV redemption (haircut, not freeze).** When `c < 100%`, every redemption is paid at `min(oracle, NAV)`: out × c/10_000. That's pro-rata, so there's no first-mover advantage and the reserve can't be over-drawn. `stressBps` (+30 bps below 110% coverage) widens the spread as coverage falls. Recapitalization is voluntary: anyone may `addEquity`, and fees accrue. There is no forced backstop or socialization on testnet.
+4. **Redemption limit = strict leaky bucket** (lead decision, R-028). Capacity C = 25% of `R`, refilling continuously at C per 24h, with **no floor** and no fixed window, so there's no boundary doubling. C shrinks with `R`, so a run slows itself down. Plus a max per swap (10,000 USD-eq) and an overall `maxLiability` (2,000,000 xMXN).
+5. **Oracle hygiene.** Any invalid FX price (stale/paused/out of band) reverts quotes and swaps both ways; `quote()` also reverts while paused (R-029). The fee (20 bps) plus the oracle's max-jump bound limit stale-price arbitrage; a production feed should set the fee ≥ the feed's deviation threshold.
 6. **Separation.** The AMM never holds or reads CDP collateral. The vault never reads the AMM reserve. Each is a separate contract with its own balance.
 
 ```solidity
@@ -183,5 +189,5 @@ ABIs: `multiCollateralVaultAbi`, `moveAmmAbi`, `stakedOusdAbi`, `demoRwaAbi`, `p
 - `MoveAMM.t.sol`: mint/burn math, size impact, minOut, per-swap and 24h caps, peso-appreciation sweep: coverage, mint breaker at <100%, NAV redemptions pro-rata and the reserve never over-drawn, equity withdrawal gate, AMM can't reach vault collateral, CDP-minted xMXN redeeming via the AMM, invalid oracle reverts.
 - Fuzz/invariant: `xMXN.totalSupply == Σ vault debt + AMM liability (+ CDP-minted xMXN burned in the AMM accounted)`. Reserve ≥ 0 always. Users can't extract more OUSD than the reserve.
 
-## 7. Open questions (my defaults in brackets)
-1. Reuse the v1 FX oracle so the stress demo moves both [yes]. 2. D = 250k USD virtual depth and fee 20 bps [yes; tunable]. 3. Equity buffer seeded by DEPLOYER at 25% of initial liability [yes]. 4. tEQX in this pass [only if time; the params are in place].
+## 7. Decisions (resolved)
+1. Reuse the v1 FX oracle so the stress demo moves both [yes]. 2. D = 250k USD virtual depth and fee 20 bps [yes; tunable]. 3. Equity buffer seeded by DEPLOYER [2,500 OUSD, lead decision]. 4. tEQX in this pass [only if time; the params are in place].
