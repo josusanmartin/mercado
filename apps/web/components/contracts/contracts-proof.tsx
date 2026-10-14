@@ -3,7 +3,7 @@
 // verification check, an explorer link, a one-line purpose, admin powers in plain words, and live key state read
 // on-chain right now. v1 is listed as legacy (still deployed). Nothing here is hardcoded state.
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useReadContracts } from "wagmi";
 import { ExternalLink, History, Layers, Loader2, XCircle } from "lucide-react";
 import type { Abi, Address } from "viem";
@@ -30,9 +30,10 @@ import { ListPane, Panel, Row, SectionLabel, SettingsLayout } from "@/components
 import { Badge } from "@/components/ui/badge";
 import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { useNow } from "@/lib/use-now";
 import { usePresent } from "@/components/console/present";
-import { CopyAddress, FlowPath, SuccessCheck } from "@/lib/motion";
+import { CopyAddress, SuccessCheck, useReducedMotion } from "@/lib/motion";
 
 const V2 = activeAddresses("v2");
 const V1 = activeAddresses("v1");
@@ -110,18 +111,48 @@ function useLive() {
 }
 
 /** Live Sourcify status for an address (the verifier allows browser CORS). */
+const verifiedQuery = (address?: string) => ({
+  queryKey: ["sourcify", address],
+  enabled: !!address,
+  staleTime: 10 * 60_000,
+  queryFn: async () => {
+    const r = await fetch(SOURCIFY(address!));
+    if (!r.ok) return { match: null as string | null };
+    const j = (await r.json()) as { match?: string; runtimeMatch?: string };
+    return { match: j.match === "exact_match" && j.runtimeMatch === "exact_match" ? "exact_match" : (j.match ?? null) };
+  },
+});
 function useVerified(address?: string) {
-  return useQuery({
-    queryKey: ["sourcify", address],
-    enabled: !!address,
-    staleTime: 10 * 60_000,
-    queryFn: async () => {
-      const r = await fetch(SOURCIFY(address!));
-      if (!r.ok) return { match: null as string | null };
-      const j = (await r.json()) as { match?: string; runtimeMatch?: string };
-      return { match: j.match === "exact_match" && j.runtimeMatch === "exact_match" ? "exact_match" : (j.match ?? null) };
-    },
-  });
+  return useQuery(verifiedQuery(address));
+}
+
+/** The live tally: how many of the deployed contracts are exact-match verified right now (same cached checks as the rows). */
+function VerifiedTally({ addresses }: { addresses: string[] }) {
+  const qs = useQueries({ queries: addresses.map((a) => verifiedQuery(a)) });
+  const done = qs.filter((q) => q.data).length;
+  const ok = qs.filter((q) => q.data?.match === "exact_match").length;
+  const all = done === addresses.length && ok === addresses.length;
+  return (
+    <a
+      href="#c-mint"
+      className={cn(
+        "inline-flex w-fit items-center gap-2 rounded-full border border-current/30 px-3 py-1 text-sm font-medium",
+        done < addresses.length ? "text-muted-foreground" : all ? "text-success" : "text-destructive",
+      )}
+    >
+      {all ? (
+        <span aria-hidden className="inline-grid">
+          <SuccessCheck size={14} />
+        </span>
+      ) : (
+        done < addresses.length && <Loader2 className="size-3.5 animate-spin" aria-hidden />
+      )}
+      <span className="whitespace-nowrap">
+        Verified ✓ {ok} of {addresses.length}
+      </span>
+      <span className="text-muted-foreground hidden font-normal sm:inline">· exact match on Sourcify, checked live</span>
+    </a>
+  );
 }
 
 // ---------------------------------------------------------------- one contract row
@@ -230,6 +261,135 @@ function ContractRow({ it }: { it: Item }) {
         )
       }
     />
+  );
+}
+
+// ---------------------------------------------------------------- architecture (review V6 #8)
+
+/**
+ * A permissions graph, not a pipeline: the factory grants the two issuer roles (then locks them), the vault and the
+ * exchange mint xMXN, the products use it. Admin-controlled inputs (owner key, FX oracle) are dashed side branches.
+ * Wide screens get the SVG; below lg the same graph reads top to bottom.
+ */
+function Architecture({ locked, supply, cdpDebt, coverageBps, rate }: { locked?: boolean; supply?: bigint; cdpDebt?: bigint; coverageBps?: bigint; rate?: number }) {
+  const reduced = useReducedMotion();
+  const n = (v?: bigint) => (v === undefined ? "…" : fmtAmount(v, 0));
+  const cov = coverageBps === undefined ? "…" : coverageBps > 10_000_000n ? "∞" : fmtBps(coverageBps, 0);
+  const label = `Contract architecture. The factory granted the issuer role to the vault and the exchange${locked ? " and locked it" : ""}. Both mint xMXN (${n(supply)} in circulation). Card, Crédito and Invest use xMXN. Admin inputs: the owner key sets risk parameters and can pause; the FX oracle relays USD/MXN.`;
+  const node = (x: number, y: number, w: number, href: string, title: string, sub: string, kind: "main" | "plain" | "admin" = "plain") => (
+    <a href={href} className="group/n">
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={56}
+        rx={8}
+        strokeWidth={1.5}
+        strokeDasharray={kind === "admin" ? "5 4" : undefined}
+        className={cn(
+          "fill-background transition-colors",
+          kind === "main" ? "stroke-[var(--accent)]" : kind === "admin" ? "stroke-muted-foreground/70" : "stroke-foreground/35",
+          "group-hover/n:stroke-foreground",
+        )}
+      />
+      <text x={x + 14} y={y + 24} className="fill-foreground text-[14px] font-semibold">
+        {title}
+      </text>
+      <text x={x + 14} y={y + 43} className="fill-muted-foreground text-[12px]">
+        {sub}
+      </text>
+    </a>
+  );
+  const edge = (d: string, kind: "main" | "admin" = "main") => (
+    <path
+      d={d}
+      fill="none"
+      strokeWidth={1.5}
+      strokeDasharray={kind === "admin" ? "5 4" : undefined}
+      markerEnd={`url(#arch-arrow-${kind})`}
+      className={kind === "main" ? "stroke-foreground/45" : "stroke-muted-foreground/60"}
+    />
+  );
+  const tag = (x: number, y: number, t: string) => (
+    <text x={x} y={y} textAnchor="middle" className="fill-muted-foreground text-[11px] tracking-wide uppercase">
+      {t}
+    </text>
+  );
+  const MINTS = ["M530 98 C585 98 590 160 640 160", "M530 232 C585 232 590 172 640 172"];
+  return (
+    <figure className="grid gap-3" aria-label={label}>
+      {/* lg+: the graph */}
+      <svg viewBox="0 0 1100 330" className="hidden h-auto w-full lg:block" aria-hidden>
+        <defs>
+          {(["main", "admin"] as const).map((k) => (
+            <marker key={k} id={`arch-arrow-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" className={k === "main" ? "fill-foreground/45" : "fill-muted-foreground/60"} />
+            </marker>
+          ))}
+        </defs>
+        {/* grants role */}
+        {edge("M210 165 C270 165 270 98 328 98")}
+        {edge("M210 165 C270 165 270 232 328 232")}
+        {tag(292, 169, "grants role")}
+        {/* mints */}
+        {MINTS.map((d) => (
+          <g key={d}>{edge(d)}</g>
+        ))}
+        {tag(572, 169, "mints")}
+        {/* uses */}
+        {edge("M810 165 C855 165 855 68 898 68")}
+        {edge("M810 165 L898 165")}
+        {edge("M810 165 C855 165 855 262 898 262")}
+        {tag(852, 155, "uses")}
+        {/* admin inputs (dashed) */}
+        {edge("M210 44 C270 44 300 84 328 84", "admin")}
+        {tag(275, 36, "sets params · pause")}
+        {edge("M210 286 C270 286 300 246 328 246", "admin")}
+        {tag(275, 304, "USD/MXN price")}
+        {node(20, 16, 190, "#c-mint", "Owner key", "risk params · can pause", "admin")}
+        {node(20, 137, 190, "#c-mint", "Factory", locked ? "issuer roles locked ✓" : "issuer roles …", "main")}
+        {node(20, 258, 190, "#c-oracle-and-sponsorship", "FX oracle", rate === undefined ? "admin-relayed" : `admin-relayed · ${rate.toFixed(2)}`, "admin")}
+        {node(330, 70, 200, "#c-mint", "Vault · Mint", `CDP debt ${n(cdpDebt)}`)}
+        {node(330, 204, 200, "#c-remesas-global", "Exchange", `coverage ${cov}`)}
+        {node(640, 137, 170, "#c-mint", "xMXN", `${n(supply)} in circulation`, "main")}
+        {node(900, 40, 180, "#c-card", "Card", "spend")}
+        {node(900, 137, 180, "#c-cr-dito", "Crédito", "borrow")}
+        {node(900, 234, 180, "#c-invest", "Invest", "save")}
+        {/* a mint travelling along each issuer edge (intentional loop; none under reduced motion) */}
+        {!reduced && (
+          <g data-loop>
+            {MINTS.map((d, i) => (
+              <circle key={d} r={4} className="fill-[var(--accent)]">
+                <animateMotion dur="2.6s" begin={`${i * 1.3}s`} repeatCount="indefinite" path={d} />
+              </circle>
+            ))}
+          </g>
+        )}
+      </svg>
+      {/* below lg: the same graph, top to bottom */}
+      <ol className="grid gap-1.5 text-[14px] lg:hidden" aria-hidden>
+        <li>
+          <a href="#c-mint" className="font-semibold">Factory</a> <span className="text-muted-foreground">· issuer roles {locked ? "locked ✓" : "…"}</span>
+        </li>
+        <li className="meta text-muted-foreground">↓ grants role</li>
+        <li>
+          <a href="#c-mint" className="font-semibold">Vault · Mint</a> <span className="text-muted-foreground">+</span>{" "}
+          <a href="#c-remesas-global" className="font-semibold">Exchange</a>
+        </li>
+        <li className="meta text-muted-foreground">↓ mints</li>
+        <li>
+          <span className="font-semibold">xMXN</span> <span className="text-muted-foreground">· {n(supply)} in circulation</span>
+        </li>
+        <li className="meta text-muted-foreground">↓ uses</li>
+        <li>
+          <a href="#c-card" className="font-semibold">Card</a> · <a href="#c-cr-dito" className="font-semibold">Crédito</a> ·{" "}
+          <a href="#c-invest" className="font-semibold">Invest</a>
+        </li>
+        <li className="text-muted-foreground border-muted-foreground/50 mt-1 border-l-2 border-dashed pl-2 text-[13px]">
+          Admin inputs: the owner key sets risk params and can pause; the FX oracle relays USD/MXN.
+        </li>
+      </ol>
+    </figure>
   );
 }
 
@@ -504,7 +664,8 @@ export function ContractsProof() {
   ];
 
   // unique deployed contracts with Solidity source (not precompile tokens, not keys)
-  const total = new Set(groups.flatMap((g) => g.items.filter((i) => i.address && !i.precompile && !i.key).map((i) => i.address!.toLowerCase()))).size;
+  const verifiable = [...new Set(groups.flatMap((g) => g.items.filter((i) => i.address && !i.precompile && !i.key).map((i) => i.address!.toLowerCase())))];
+  const total = verifiable.length;
 
   return (
     <SettingsLayout
@@ -529,17 +690,23 @@ export function ContractsProof() {
         <div className="grid gap-14">
           {/* v6 architecture: who can issue xMXN, and where it flows; each node jumps to its group below */}
           <div className="grid gap-4">
-            <FlowPath
-              active={supply !== undefined}
-              label="Contract architecture: the factory created xMXN and locked its issuers to the vault and the exchange; Card, Crédito and Invest use xMXN"
-              nodes={[
-                { label: <a href="#c-mint" className="hover:text-foreground">Factory</a>, value: L.get<boolean>("factory.locked") ? "Locked ✓" : "…", sub: "issuers fixed forever" },
-                { label: <a href="#c-mint" className="hover:text-foreground">xMXN</a>, value: supply === undefined ? "…" : fmtAmount(supply, 0), sub: "in circulation" },
-                { label: <a href="#c-remesas-global" className="hover:text-foreground">Vault · Exchange</a>, value: "2 issuers", sub: "Mint · Remesas + Global" },
-                { label: <a href="#c-card" className="hover:text-foreground">Card · Crédito · Invest</a>, value: "Use xMXN", sub: "spend · borrow · save" },
-              ]}
+            <Architecture
+              locked={L.get<boolean>("factory.locked")}
+              supply={supply}
+              cdpDebt={V2.collaterals.reduce<bigint | undefined>((t, c) => {
+                const d = L.get<readonly [bigint, bigint]>(`vault.totals.${c.symbol}`)?.[1];
+                return t === undefined || d === undefined ? undefined : t + d;
+              }, 0n)}
+              coverageBps={L.get<readonly bigint[]>("amm.state")?.[3]}
+              rate={(() => {
+                const f = L.get<readonly [bigint, bigint, boolean]>("fx.peek");
+                return f ? Number(f[0]) / 1e8 : undefined;
+              })()}
             />
-            <p className="text-muted-foreground text-[15px]">Testnet trust model: one admin key (the deployer), no timelock or multisig.</p>
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+              <VerifiedTally addresses={verifiable} />
+              <p className="text-muted-foreground text-[15px]">Testnet trust model: one admin key (the deployer), no timelock or multisig.</p>
+            </div>
             <details className="group text-[15px]">
               <summary className="meta text-muted-foreground hover:text-foreground cursor-pointer list-none">
                 How it works <span className="inline-block transition-transform group-open:rotate-90">›</span>
