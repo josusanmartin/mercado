@@ -4,17 +4,18 @@
 // money map drawn flat. English (josu 03:20); the phone apps stay Spanish.
 // Every number is read live from chain (josu's wiring rule: no fixtures, no hardcoded numbers).
 import Link from "next/link";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Route } from "lucide-react";
-import { CARD_ENABLED, PROTOCOL, useCardStats, useThreeBuckets } from "@/lib/contracts";
+import { CARD_ENABLED, PROTOCOL, useActivityFeed, useCardStats, useThreeBuckets } from "@/lib/contracts";
+import { useNow } from "@/lib/use-now";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { LiveMeta, Meta, PRODUCTS, type ProductId } from "@/components/console";
 import { useTour } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 import { BuiltOnTempo } from "./built-on-tempo";
-import { TickerText } from "@/lib/motion";
+import { TickerText, useReducedMotion } from "@/lib/motion";
 
 const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0));
 
@@ -76,11 +77,12 @@ export function EcosystemHome() {
   const { b, live } = useLive();
   const tour = useTour();
   return (
-    <div className="grid min-w-0 gap-14 pt-1">
+    // V6-TASTE #3: 16px section gaps on phones; the desktop rhythm stays.
+    <div className="grid min-w-0 gap-4 pt-1 sm:gap-14">
       {/* The hero is a size container so the display lines fit the content column (not the viewport,
           which includes the sidebar). Measured in Archivo Black: "ONE CURRENCY." is 8.86em and "PRODUCTS." 6.27em,
           so from sm up each line fits whole at 10.9cqw; on phones words wrap and the longest fits at 15cqw. */}
-      <section className="grid min-w-0 gap-6 [container-type:inline-size]">
+      <section className="grid min-w-0 gap-4 [container-type:inline-size] sm:gap-6">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-b pb-3">
           <Meta>■ 00 · Mercado · a peso economy on Tempo</Meta>
           <LiveMeta />
@@ -90,7 +92,7 @@ export function EcosystemHome() {
           data-loop // the slow texture pan is an intentional continuous loop (reduced motion: still)
           // Dark theme: a cream-for-ink variant of the texture (black bands vanish on dark and chop the letters).
           // pt: background-clip:text only paints the padding box, and the caps rise above the tight line box.
-          className="display image-type mx-pan bg-[url(/photos/sarape.webp)] pt-[0.1em] text-[clamp(2.2rem,15cqw,12rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)] dark:bg-[url(/photos/sarape-dark.webp)]"
+          className="display image-type mx-pan bg-[url(/photos/sarape.webp)] pt-[0.1em] text-[clamp(2rem,10cqw,2.5rem)] sm:text-[clamp(2.2rem,min(10.9cqw,22svh),12rem)] dark:bg-[url(/photos/sarape-dark.webp)]"
           aria-label="One currency. Six products."
         >
           One currency.
@@ -98,7 +100,7 @@ export function EcosystemHome() {
           Six products.
         </h1>
         <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <p className="max-w-2xl text-xl leading-snug text-pretty">
+          <p className="max-w-2xl text-lg leading-snug text-pretty sm:text-xl">
             Create pesos. Send them home. Borrow, spend, and save on Tempo.
           </p>
           <Button size="lg" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
@@ -106,6 +108,8 @@ export function EcosystemHome() {
             {tour.active ? "Resume the Demo Tour" : "Start the Demo Tour"}
           </Button>
         </div>
+        {/* V6-TASTE #1: the connected economy, in the first viewport, before the directory. */}
+        <EconomyScene live={live} supply={b.xmxnSupply} />
       </section>
 
       {/* lead 05:15: hero → Demo Tour → the six products in their colors with live numbers → Built on Tempo. */}
@@ -114,13 +118,124 @@ export function EcosystemHome() {
       <BuiltOnTempo />
 
       <section aria-labelledby="flow-h" className="grid gap-4 border-t pt-4">
-        <Meta>Live on Tempo Moderato · updates as transactions land</Meta>
+        <Meta>Live numbers from Tempo Moderato · the moving dots show the mechanism, not individual transfers</Meta>
         <h2 id="flow-h" className="display text-[clamp(2.2rem,5vw,4rem)]">
           How the money moves
         </h2>
         <FlowMap live={live} supply={b.xmxnSupply} />
       </section>
     </div>
+  );
+}
+
+const ago = (unix: number | undefined, now: number | undefined) => {
+  if (!unix || !now) return undefined;
+  const s = Math.max(0, Math.floor(now - unix));
+  return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s / 60)}m ago` : s < 129600 ? `${Math.round(s / 3600)}h ago` : `${Math.round(s / 86400)}d ago`;
+};
+
+const BRANCHES: { id: Pid; verb: string }[] = [
+  { id: "remesas", verb: "sends home" },
+  { id: "global", verb: "pays suppliers" },
+  { id: "credito", verb: "lends" },
+  { id: "card", verb: "spends" },
+  { id: "invest", verb: "saves" },
+];
+
+/**
+ * V6-TASTE #1: one connected economy in ≤170px. xMXN at the center: Mint issues it; it branches to the exchange
+ * (Remesas, Global), credit, spending and saving. Every node shows ITS OWN product's live number and links to it;
+ * nothing implies the numbers are one trace. One real recent receipt (the exchange's latest OUSD→xMXN swap) is
+ * shown as itself, with its time and explorer link. A static mechanism: no decorative circulation.
+ */
+function EconomyScene({ live, supply }: { live: Live; supply: bigint | undefined }) {
+  const feed = useActivityFeed("move", { limit: 30 });
+  const now = useNow(15_000);
+  const receipt = feed.rows.find((r) => r.label === "OUSD → xMXN");
+  const P = (id: Pid) => PRODUCTS.find((x) => x.id === id)!;
+  const color = (id: Pid) => (id === "invest" ? "var(--ink)" : P(id).color);
+  const ys = [10, 30, 50, 70, 90];
+  const receiptLine = feed.isPending ? (
+    <span className="text-muted-foreground">Reading Tempo…</span>
+  ) : feed.isError && !receipt ? (
+    <span className="text-muted-foreground">Couldn&apos;t read Tempo</span>
+  ) : receipt ? (
+    <a href={receipt.url} target="_blank" rel="noreferrer" className="hover:underline">
+      <span className="font-semibold tabular">
+        US${fmtAmount(receipt.amount)} → MX${fmtAmount(receipt.amountOut ?? 0n)}
+      </span>{" "}
+      <span className="text-muted-foreground">
+        · {ago(receipt.timestamp, now) ?? "recent"}
+        <span className="hidden sm:inline"> · explorer ↗</span>
+      </span>
+    </a>
+  ) : (
+    <span className="text-muted-foreground">No recent transfer to show.</span>
+  );
+  return (
+    <figure aria-label="One connected economy: xMXN flows from Mint to the five other products" className="bg-well rounded-[8px] px-4 py-2.5">
+      {/* Desktop: the mechanism as a diagram. */}
+      <div className="relative hidden h-[140px] sm:block">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
+          <path d="M17 50 L23 50" stroke="var(--c-mint)" strokeWidth="2" vectorEffect="non-scaling-stroke" fill="none" />
+          {BRANCHES.map((br, i) => (
+            <path key={br.id} d={`M35 50 C 39 50, 38 ${ys[i]}, 42 ${ys[i]}`} stroke={P(br.id).color} strokeWidth="2" vectorEffect="non-scaling-stroke" fill="none" />
+          ))}
+        </svg>
+        <Link href="/mint" className="absolute top-1/2 left-0 grid w-[17%] -translate-y-1/2 rounded-[4px] hover:underline">
+          <span className="text-[13px] font-semibold" style={{ color: P("mint").color }}>Mint issues</span>
+          <span className="text-[1.15rem] leading-tight font-semibold tabular">{live.mint.value}</span>
+          <span className="text-muted-foreground text-[12px] leading-tight">{live.mint.caption}</span>
+        </Link>
+        <div className="absolute top-1/2 left-[23%] grid w-[12%] -translate-y-1/2 justify-items-center rounded-[8px] border-2 border-current bg-background px-2 py-1.5 text-center">
+          <span className="display text-[1.1rem] leading-none">xMXN</span>
+          <span className="text-[13px] font-semibold tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</span>
+          <span className="text-muted-foreground text-[11px] leading-tight">in circulation</span>
+        </div>
+        {BRANCHES.map((br, i) => (
+          <Link
+            key={br.id}
+            href={P(br.id).href}
+            className="absolute left-[43%] flex w-[30%] -translate-y-1/2 items-baseline gap-2 truncate text-[13px] hover:underline"
+            style={{ top: `${ys[i]}%` }}
+          >
+            <span className="font-semibold" style={{ color: color(br.id) }}>
+              {P(br.id).short}
+            </span>
+            <span className="text-muted-foreground">{br.verb}</span>
+            <span className="ml-auto font-semibold tabular">{live[br.id].value}</span>
+          </Link>
+        ))}
+        <div className="absolute top-1/2 right-0 grid w-[24%] -translate-y-1/2 gap-0.5 text-[13px]">
+          <span className="text-muted-foreground text-[12px]">Latest exchange receipt (Remesas or Global)</span>
+          {receiptLine}
+        </div>
+      </div>
+      {/* Phone: hub, the five branches as linked chips, the receipt. */}
+      <div className="grid gap-2 sm:hidden">
+        <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
+          <Link href="/mint" className="font-semibold" style={{ color: P("mint").color }}>
+            Mint
+          </Link>
+          <span className="text-muted-foreground">issues</span>
+          <span className="display text-[1rem]">xMXN</span>
+          <span className="font-semibold tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</span>
+          <span className="text-muted-foreground">in circulation</span>
+        </p>
+        <div className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4">
+          {BRANCHES.map((br) => (
+            <Link key={br.id} href={P(br.id).href} className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold">
+              <span className="size-2 rounded-full" style={{ background: P(br.id).color }} aria-hidden />
+              {P(br.id).short}
+            </Link>
+          ))}
+        </div>
+        <p className="text-[13px]">
+          <span className="text-muted-foreground">Latest exchange receipt </span>
+          {receiptLine}
+        </p>
+      </div>
+    </figure>
   );
 }
 
@@ -140,7 +255,7 @@ function ProductIndex({ live }: { live: Live }) {
   return (
     // V5-TASTE #6: the six products scan as one system: 32px after the hero, compact rows, Archivo only for the
     // product name, a 15px sentence and a 24px tabular metric. ≥4 rows visible at 1440x900.
-    <section aria-label="Products" className="-mt-6 grid gap-3">
+    <section aria-label="Products" className="grid gap-3 sm:-mt-6">
       <Meta>Index · six products, one currency</Meta>
       <ol onKeyDown={onKey} className="border-t">
         {products.map((p, i) => (
@@ -153,7 +268,7 @@ function ProductIndex({ live }: { live: Live }) {
               tabIndex={i === sel ? 0 : -1}
               onFocus={() => setSel(i)}
               onMouseEnter={() => setSel(i)}
-              className="mx-sweep group grid grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 py-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2"
+              className="mx-sweep group grid min-h-[72px] grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 py-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:px-2"
               style={{ ["--sweep" as string]: p.color }}
               aria-label={`${p.index} ${p.name}: ${p.line}. ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
             >
@@ -167,13 +282,18 @@ function ProductIndex({ live }: { live: Live }) {
                 >
                   {p.short}
                 </span>
-                <span className="text-muted-foreground min-w-0 text-[15px]">{p.line}</span>
+                <span className="text-muted-foreground hidden min-w-0 text-[15px] sm:inline">{p.line}</span>
               </span>
-              <span className="self-center text-right">
+              <span className="text-right sm:self-center">
                 <span className="block text-[1.5rem] leading-tight font-semibold tabular" style={{ color: p.id === "invest" ? undefined : p.color }}>
                   <TickerText text={live[p.id as Pid].value} />
                 </span>
-                <span className="meta text-muted-foreground block">{live[p.id as Pid].caption}</span>
+                {/* V6-TASTE #7: qualifiers in sentence case at 13px, not tracked capitals. */}
+                <span className="text-muted-foreground hidden text-[13px] leading-snug sm:block">{live[p.id as Pid].caption}</span>
+              </span>
+              {/* Phone (V6-TASTE #3): name + metric share the first line; purpose and metric label share the second. */}
+              <span className="text-muted-foreground col-span-2 col-start-2 text-[13px] leading-snug sm:hidden">
+                {p.line} · {live[p.id as Pid].caption}
               </span>
             </Link>
           </li>
@@ -206,17 +326,7 @@ const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   return `M${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
 };
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const m = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(m.matches);
-    const on = () => setReduced(m.matches);
-    m.addEventListener("change", on);
-    return () => m.removeEventListener("change", on);
-  }, []);
-  return reduced;
-}
+
 
 /** Flat money map: thin colored lines, small moving dots, live numbers as plain text (no boxes). */
 function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {

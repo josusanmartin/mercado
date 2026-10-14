@@ -3,7 +3,7 @@
 // read from Tempo Moderato or our own API on page load (josu's wiring rule: no fixtures). Text only, no
 // Tempo logo. A proof that can't be read shows "—" and still links to where it can be checked.
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Coins, Fuel, KeyRound, MessageSquareText, Receipt, Zap, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient, useReadContract } from "wagmi";
@@ -11,6 +11,7 @@ import { hexToBytes, parseAbiItem, type Address, type Hex } from "viem";
 import { explorerAddress, explorerTx, TEMPO_EXPLORER_URL } from "@mercado/shared";
 import { ADDR, CHAIN_ID, tokenAbi, useActivityFeed } from "@/lib/contracts";
 import { Pulse, useReducedMotion } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 import { fmtAmount, fmtNumber } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { Meta } from "@/components/console";
@@ -111,74 +112,156 @@ const ago = (unix: number | undefined, now: number | undefined) => {
   return s < 90 ? `${s}s ago` : s < 5400 ? `${Math.round(s / 60)}m ago` : s < 129600 ? `${Math.round(s / 3600)}h ago` : `${Math.round(s / 86400)}d ago`;
 };
 
+type ProofQuery = { isPending: boolean; isError: boolean; dataUpdatedAt: number; refetch: () => unknown; data?: unknown };
+export type ProofState = "loading" | "ready" | "empty" | "stale" | "error";
+
+/** V6-TASTE #11: one state contract for every proof visual. A failed read never looks like "no activity". */
+function proofState(q: ProofQuery, empty = false): ProofState {
+  if (q.isPending) return "loading";
+  if (q.isError) return q.data !== undefined ? "stale" : "error";
+  return empty ? "empty" : "ready";
+}
+
+/** V6-TASTE #12: hover and keyboard focus show the same accent border/background; only actionable tiles lift (≤2px). */
+const TILE = "bg-well grid content-start rounded-[8px] border border-transparent p-4 outline-none";
+const TILE_ACTION =
+  "transition-[transform,border-color,background-color] duration-150 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-[color-mix(in_oklab,var(--accent)_6%,var(--well))] focus-visible:-translate-y-0.5 focus-visible:border-[var(--accent)] focus-visible:bg-[color-mix(in_oklab,var(--accent)_6%,var(--well))] motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0";
+
 /** v6: one compact proof tile: icon, a live number, one short label; the whole tile links to the proof. */
-function Tile({ icon: Icon, value, label, href, external = true, pulse, loading }: { icon: LucideIcon; value: ReactNode; label: string; href?: string; external?: boolean; pulse?: unknown; loading?: boolean }) {
+function Tile({
+  icon: Icon,
+  value,
+  label,
+  href,
+  external = true,
+  pulse,
+  q,
+  empty,
+}: {
+  icon: LucideIcon;
+  value: ReactNode;
+  label: string;
+  href?: string;
+  external?: boolean;
+  pulse?: unknown;
+  q: ProofQuery;
+  empty?: boolean;
+}) {
+  const state = proofState(q, empty);
+  const now = useNow(30_000);
+  const checked = q.dataUpdatedAt ? ago(Math.floor(q.dataUpdatedAt / 1000), now) : undefined;
+  const big =
+    state === "loading" ? (
+      // Fixed slot: an amount-shaped skeleton, so nothing moves when the number arrives (V6-TASTE #10).
+      <span className="bg-border inline-block h-[0.9em] w-24 animate-pulse rounded-[4px] align-middle" />
+    ) : state === "error" ? (
+      <span className="text-muted-foreground text-[1.05rem]">Couldn&apos;t read Tempo</span>
+    ) : state === "empty" ? (
+      <span className="text-muted-foreground text-[1.05rem]">No transfers in this window.</span>
+    ) : pulse === undefined ? (
+      value
+    ) : (
+      <Pulse value={pulse}>{value}</Pulse>
+    );
+  const sub =
+    state === "loading" ? (
+      "Reading Tempo…"
+    ) : state === "stale" ? (
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-1.5 rounded-full bg-[var(--warning)]" aria-hidden />
+        Last checked {checked ?? "earlier"}
+      </span>
+    ) : (
+      label
+    );
   const body = (
     <>
       <Icon className="size-5 text-[var(--accent)]" strokeWidth={1.75} aria-hidden />
-      <span className="mt-3 block text-[1.6rem] leading-[1.05] font-semibold break-words tabular">
-        {/* v6: a designed loading state (shimmer), never a dash while Tempo is still being read. */}
-        {loading ? (
-          <span className="bg-border inline-block h-[0.9em] w-24 animate-pulse rounded-[4px] align-middle" aria-label="Reading Tempo" />
-        ) : pulse === undefined ? (
-          value
-        ) : (
-          <Pulse value={pulse}>{value}</Pulse>
-        )}
-      </span>
-      <span className="text-muted-foreground mt-1.5 block text-[13px] leading-snug">{label}</span>
+      <span className="mt-3 block min-h-[1.7rem] text-[1.6rem] leading-[1.05] font-semibold break-words tabular">{big}</span>
+      <span className="text-muted-foreground mt-1.5 block text-[13px] leading-snug">{sub}</span>
     </>
   );
-  const cls = "bg-well grid content-start rounded-[8px] p-4 transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0";
+  if (state === "error")
+    return (
+      <div className={TILE}>
+        {body}
+        <button type="button" onClick={() => void q.refetch()} className="mt-2 justify-self-start text-[13px] font-semibold underline underline-offset-2">
+          Retry
+        </button>
+      </div>
+    );
   return href ? (
-    <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className={cls}>
+    <Link href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className={cn(TILE, TILE_ACTION)}>
       {body}
     </Link>
   ) : (
-    <div className={cls}>{body}</div>
+    <div className={TILE}>{body}</div>
   );
 }
 
 /**
- * v6: a US → MX arc built from the exchange's real recent OUSD→xMXN swaps (Remesas and Global use the same
- * exchange): one travelling dot per swap, with the totals they add up to. Reduced motion: dots stay put.
+ * A US → MX arc from the exchange's real recent OUSD→xMXN swaps (Remesas and Global share the exchange).
+ * V6-TASTE #2/#11: a FINITE, labeled replay (each dot travels once, then the arc is still; "Replay" runs it
+ * again), never perpetual circulation. The route is illustrative (tokens don't prove geography); totals are
+ * scoped to the swaps observed in the window. Reduced motion: dots shown at rest. A failed read is not "none".
  */
 function MoneyArc() {
   const feed = useActivityFeed("move", { limit: 200 });
   const now = useNow(30_000);
+  const reduced = useReducedMotion();
+  const [run, setRun] = useState(0);
   const dayAgo = (now ?? 0) - 86_400;
   const recent = feed.rows.filter((r) => r.label === "OUSD → xMXN" && (r.timestamp ?? 0) >= dayAgo);
   const sent = recent.reduce((a, r) => a + r.amount, 0n);
   const delivered = recent.reduce((a, r) => a + (r.amountOut ?? 0n), 0n);
   const dots = recent.slice(0, 8);
-  const reduced = useReducedMotion(); // SMIL ignores CSS media queries: reduced motion keeps the dots still
+  const state = proofState(feed, recent.length === 0);
   const d = "M60 130 C 220 10, 460 10, 640 130";
   return (
-    <figure className="bg-well col-span-full grid gap-3 rounded-[8px] p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center" aria-label="Dollars to pesos on Mercado's exchange, last 24 hours">
+    <figure className="bg-well col-span-full grid gap-3 rounded-[8px] p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center" aria-label="Recent dollar to peso swaps on Mercado's exchange">
       <svg viewBox="0 0 700 150" className="h-24 w-full" aria-hidden>
         <path d={d} fill="none" stroke="var(--c-remesas)" strokeWidth="2" strokeDasharray="4 6" opacity="0.6" />
         <circle cx="60" cy="130" r="6" fill="var(--c-global)" />
         <circle cx="640" cy="130" r="6" fill="var(--c-remesas)" />
         <text x="60" y="148" textAnchor="middle" className="fill-current text-[12px] font-semibold">US</text>
         <text x="640" y="148" textAnchor="middle" className="fill-current text-[12px] font-semibold">MX</text>
-        {dots.map((r, i) => (
-          reduced ? (
-            <circle key={r.txHash + r.logIndex} r="4.5" fill="var(--c-remesas)" cx={60 + ((i + 1) * 580) / (dots.length + 1)} cy={44} />
-          ) : (
-            <circle key={r.txHash + r.logIndex} r="4.5" fill="var(--c-remesas)">
-              <animateMotion dur="3.2s" begin={`${(i * 3.2) / Math.max(dots.length, 1)}s`} repeatCount="indefinite" path={d} />
-            </circle>
-          )
-        ))}
+        {state === "ready" &&
+          dots.map((r, i) =>
+            reduced ? (
+              <circle key={`${r.txHash}-${r.logIndex}`} r="4.5" fill="var(--c-remesas)" cx={640 - i * 9} cy={130 - i * 2} />
+            ) : (
+              // One pass per swap, staggered; it freezes at MX (a replay, not a live feed).
+              <circle key={`${run}-${r.txHash}-${r.logIndex}`} r="4.5" fill="var(--c-remesas)">
+                <animateMotion dur="1.6s" begin={`${i * 0.35}s`} repeatCount="1" fill="freeze" path={d} />
+              </circle>
+            ),
+          )}
       </svg>
-      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+      <figcaption className="grid gap-1">
         <span className="text-[15px] font-semibold">
-          {feed.isPending ? "Reading Tempo…" : recent.length ? `${recent.length} dollar → peso swaps in the last 24 h` : "No dollar → peso swaps in the last 24 h"}
+          {state === "loading"
+            ? "Reading Tempo…"
+            : state === "error"
+              ? "Couldn't read Tempo"
+              : state === "empty"
+                ? "No transfers in this window."
+                : `${recent.length} recent swaps observed · last 24 h`}
         </span>
-        {recent.length > 0 && (
+        {(state === "ready" || state === "stale") && (
           <span className="text-muted-foreground text-[13px] tabular">
-            US${fmtAmount(sent, 0)} in · MX${fmtAmount(delivered, 0)} out · Mercado&apos;s exchange (Remesas + Global)
+            US${fmtAmount(sent, 0)} in · MX${fmtAmount(delivered, 0)} out
           </span>
+        )}
+        <span className="text-muted-foreground text-[13px]">Illustrative route · on-chain OUSD→xMXN swaps</span>
+        {state === "ready" && !reduced && (
+          <button type="button" onClick={() => setRun((k) => k + 1)} className="justify-self-start text-[13px] font-semibold underline underline-offset-2">
+            Replay
+          </button>
+        )}
+        {state === "error" && (
+          <button type="button" onClick={() => void feed.refetch()} className="justify-self-start text-[13px] font-semibold underline underline-offset-2">
+            Retry
+          </button>
         )}
       </figcaption>
     </figure>
@@ -203,26 +286,27 @@ export function BuiltOnTempo() {
         <Meta>Every number below is read live from Tempo Moderato testnet</Meta>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Tile icon={Coins} loading={supply.isPending} value={supply.data === undefined ? dash : fmtAmount(supply.data as bigint, 0)} pulse={supply.data?.toString()} label="xMXN on TIP-20" href={explorerAddress(ADDR.xmxn)} />
-        <Tile icon={Zap} loading={bt.isPending} value={bt.data ? `${fmtNumber(bt.data.seconds, 2)} s` : dash} label="per block, settled" href={bt.data ? `${TEMPO_EXPLORER_URL}/block/${bt.data.block}` : undefined} />
+        <Tile icon={Coins} q={supply} value={supply.data === undefined ? dash : fmtAmount(supply.data as bigint, 0)} pulse={supply.data?.toString()} label="xMXN on TIP-20" href={explorerAddress(ADDR.xmxn)} />
+        <Tile icon={Zap} q={bt} value={bt.data ? `${fmtNumber(bt.data.seconds, 2)} s` : dash} label="per block, settled" href={bt.data ? `${TEMPO_EXPLORER_URL}/block/${bt.data.block}` : undefined} />
         <Tile
           icon={Fuel}
-          loading={mp.isPending}
+          q={mp}
+          empty={!!mp.data && !m?.sponsored}
           value={m?.sponsored ? (ago(m.sponsored.at, now) ?? "✓") : dash}
           label="last fee paid by Mercado"
           href={m?.sponsored ? explorerTx(m.sponsored.hash) : m?.sponsor ? explorerAddress(m.sponsor) : undefined}
         />
-        <Tile icon={MessageSquareText} loading={mp.isPending} value={m?.memo ? `“${m.memo.text}”` : dash} label="latest note on-chain" href={m?.memo ? explorerTx(m.memo.hash) : "/remesas"} external={!!m?.memo} />
+        <Tile icon={MessageSquareText} q={mp} empty={!!mp.data && !m?.memo} value={m?.memo ? `“${m.memo.text}”` : dash} label="latest note on-chain" href={m?.memo ? explorerTx(m.memo.hash) : "/remesas"} external={!!m?.memo} />
         <Tile
           icon={Receipt}
-          loading={p402.isPending}
+          q={p402}
           value={p402.data ? String(p402.data.status) : dash}
           label={p402.data?.price ? `pay per API call · ${p402.data.price}` : "pay per API call"}
           href="/developers"
           external={false}
         />
         <WalletDialog>
-          <button type="button" className="bg-well grid content-start rounded-[8px] p-4 text-left transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0">
+          <button type="button" className={cn(TILE, TILE_ACTION, "text-left")}>
             <KeyRound className="size-5 text-[var(--accent)]" strokeWidth={1.75} aria-hidden />
             <span className="mt-3 block text-[1.6rem] leading-none font-semibold">Passkey</span>
             <span className="text-muted-foreground mt-1.5 block text-[13px] leading-snug">sign in, no seed phrase</span>
