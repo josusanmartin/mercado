@@ -8,6 +8,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtMoney, haptic } from "../format";
+import { usePresent } from "@/components/console/present";
 import { Display as KitDisplay, Pressable } from "../primitives";
 import "./editorial.css";
 
@@ -382,4 +383,11 @@ export function Flag({ code, className }: { code: "mx" | "us"; className?: strin
       <rect width="15" height="10" fill="none" stroke="#0a0a0a" strokeOpacity="0.15" strokeWidth="0.6" />
     </svg>
   );
+}
+
+/** Capture mode (?present=1, deck screenshots only): H("Testnet") → undefined so joined meta parts drop it cleanly.
+ *  Without the flag every label renders exactly as before. */
+export function useH() {
+  const present = usePresent();
+  return <T,>(x: T): T | undefined => (present ? undefined : x);
 }

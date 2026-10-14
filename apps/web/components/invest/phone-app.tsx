@@ -32,6 +32,7 @@ import {
   RoundAction,
   SectionHead,
   hora,
+  useH,
 } from "@/components/mobile/extra/editorial";
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
 
@@ -144,6 +145,7 @@ function useTotals() {
 }
 
 function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Product, m: Mode) => void }) {
+  const H = useH();
   const { fx, total } = useTotals();
   const r = useReturns();
   return (
@@ -152,7 +154,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
       <section className="px-5 pt-8" aria-live="polite">
         <BalanceHead label="Total invertido" />
         <Money value={total} currency="USD" size={50} className="mt-3" />
-        <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, "Pesos al tipo del oráculo demo", "No canjeable"]} />
+        <Meta className="mt-2" parts={[fx.rate ? `1 USD = ${fx.rate.toFixed(2)} MXN` : undefined, H("Pesos al tipo del oráculo demo"), H("No canjeable")]} />
       </section>
       <div className="px-4 pt-7">
         <ActionRow>
@@ -191,7 +193,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
             />
           );
         })}
-        <Meta className="mt-3">{"Ahorro: se acumula cada segundo en la cadena, de una reserva demo · Tasas configuradas, no garantizadas · Acciones: token demo, precio del administrador · Testnet"}</Meta>
+        <Meta className="mt-3">{["Se acumula cada segundo en la cadena", H("de una reserva demo"), "Tasas configuradas, no garantizadas", H("Acciones: token demo, precio del administrador"), H("Testnet")].filter(Boolean).join(" · ")}</Meta>
       </div>
       <div className="px-5 pt-7">
         <SectionHead>Actividad</SectionHead>
@@ -204,6 +206,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
 /* ─────────────────────────────── Product ─────────────────────────────── */
 
 function ProductScreen({ product, back, trade }: { product: Product; back: () => void; trade: (m: Mode) => void }) {
+  const H = useH();
   const p = useInvestPositions();
   const pesos = useVaultPosition(SXMXN, INVEST.xmxn);
   const r = useReturns();
@@ -211,34 +214,34 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
   const view = {
     dolares: {
       live: r.usd,
-      meta: ["OUSD", r.line.dolares, "Fondeado por admin"],
+      meta: ["OUSD", r.line.dolares, H("Fondeado por admin")],
       facts: [
         { k: "Retirable ahora", v: `US${fmtMoney(p.dollars?.value)}` },
         { k: "Reserva de rendimiento", v: `US${fmtMoney(p.dollars?.yieldReserve, 0)}` },
         { k: "Fuente", v: "Reserva demo" },
       ],
-      note: ["Se acumula cada segundo en la cadena", "Tasa configurada por el admin, no garantizada"],
+      note: ["Se acumula cada segundo en la cadena", H("Tasa configurada por el admin"), "No garantizada"],
     },
     pesos: {
       live: r.mxn,
-      meta: ["xMXN", r.line.pesos, "Fondeado por admin", "No canjeable"],
+      meta: ["xMXN", r.line.pesos, H("Fondeado por admin"), H("No canjeable")],
       facts: [
         { k: "Retirable ahora", v: `MX${fmtMoney(pesos.withdrawable)}` },
         { k: "Reserva de rendimiento", v: `MX${fmtMoney(pesos.yieldReserve, 0)}` },
         { k: "Fuente", v: "Reserva demo" },
       ],
-      note: ["Se acumula cada segundo en la cadena", "Tasa configurada por el admin, no garantizada"],
+      note: ["Se acumula cada segundo en la cadena", H("Tasa configurada por el admin"), "No garantizada"],
     },
     acciones: {
       live: undefined,
-      meta: ["mIDX", r.line.acciones, "Token demo, no es un valor"],
+      meta: ["mIDX", r.line.acciones, H("Token demo, no es un valor")],
       facts: [
         { k: "Tienes", v: `${r.st.balance === undefined ? "—" : fmtAmount(r.st.balance, 4)} mIDX` },
         { k: "Puedes vender", v: `${r.st.sellable === undefined ? "—" : fmtAmount(r.st.sellable, 4)} mIDX` },
         { k: "Spread", v: pct(r.st.spreadBps) },
         { k: "Mesa", v: r.st.closed ? "En pausa" : "Abierta" },
       ],
-      note: ["Mercado US Equity Index: token demo con precio del administrador", "Solo recompra lo que compraste aquí", "Sirve como colateral en Mint"],
+      note: ["Mercado US Equity Index", H("token demo con precio del administrador"), "Solo recompra lo que compraste aquí", "Sirve como colateral en Mint"],
     },
   }[product];
   const ok = ready(product);
@@ -283,7 +286,7 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
         </dl>
       )}
       {/* plain Meta (children) so long notes wrap; parts stay on one line each */}
-      <Meta className="px-5 pt-3">{view.note.join(" · ")}</Meta>
+      <Meta className="px-5 pt-3">{view.note.filter(Boolean).join(" · ")}</Meta>
       <div className="px-5 pt-7">
         <SectionHead>Movimientos</SectionHead>
         <ActivityList product={product} limit={5} />
@@ -295,6 +298,7 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
 /* ─────────────────────────────── Trade sheet ─────────────────────────────── */
 
 function TradeSheet({ state, setState, onDone }: { state?: { product: Product; mode: Mode }; setState: (s?: { product: Product; mode: Mode }) => void; onDone: (d: Done) => void }) {
+  const H = useH();
   const p = useInvestPositions();
   const bal = useBalances();
   const act = useInvestActions();
@@ -426,7 +430,7 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
         >
           {busy ? busyLabel(tx.status) : mode === "in" ? P.inLabel : P.outLabel}
         </Pill>
-        <Meta className="justify-center">{"Transacción real en Tempo testnet · Sin valor real"}</Meta>
+        <Meta className="justify-center">{["Transacción real en Tempo", H("Testnet · sin valor real")].filter(Boolean).join(" · ")}</Meta>
       </div>
     </BottomSheet>
   );
@@ -435,6 +439,7 @@ function TradeSheet({ state, setState, onDone }: { state?: { product: Product; m
 /* ─────────────────────────────── Success ─────────────────────────────── */
 
 function Listo({ done, close }: { done: Done; close: () => void }) {
+  const H = useH();
   const P = PRODUCT[done.product];
   const verb = done.mode === "in" ? (done.product === "acciones" ? "Comprado." : "Depositado.") : done.product === "acciones" ? "Vendido." : "Retirado.";
   const digits = done.symbol === "mIDX" ? 4 : 2;
@@ -449,7 +454,7 @@ function Listo({ done, close }: { done: Done; close: () => void }) {
             {fmtAmount(done.amount, digits)} <span className="font-[family-name:var(--font-phone)] text-[16px] font-semibold tracking-normal normal-case">{done.symbol}</span>
           </span>
         }
-        caption={`${P.title} · Confirmado en Tempo · Testnet · sin valor real`}
+        caption={[P.title, "Confirmado en Tempo", H("Testnet · sin valor real")].filter(Boolean).join(" · ")}
         action={<Pill onClick={close}>Listo</Pill>}
       >
         <dl className="border-t border-[var(--m-on-surface)]">
@@ -478,15 +483,18 @@ const ROW_LABEL: Record<string, string> = {
   "Retiro · ahorro en pesos": "Retiro de pesos",
   "Depósito · ahorro en dólares": "Depósito en dólares",
   "Retiro · ahorro en dólares": "Retiro de dólares",
-  "Compra · T-bills": "Compra de T-bills",
-  "Venta · T-bills": "Venta de T-bills",
+  "Compra · acciones": "Compra de acciones",
+  "Venta · acciones": "Venta de acciones",
 };
+type Row = Omit<InvestActivity, "product"> & { product: Product };
 
 function ActivityList({ limit, product }: { limit?: number; product?: Product }) {
   const { address } = useConnection();
   const h = useInvestHistory();
   const now = useNow(60_000);
-  const rows = (h.data?.rows ?? []).filter((r) => r.product !== "tbills" && (!product || r.product === product)).slice(0, limit ?? 30);
+  // T-bills are gone from the product (legacy trades are hidden); Stocks trades arrive as product "acciones".
+  const all: Row[] = (h.data?.rows ?? []).flatMap((r) => (r.product === "tbills" ? [] : [{ ...r, product: r.product }]));
+  const rows = all.filter((r) => !product || r.product === product).slice(0, limit ?? 30);
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
   if (!h.data)
     return (
@@ -503,11 +511,11 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   return (
     <DayGroups
       items={rows}
-      ts={(r: InvestActivity) => r.timestamp}
+      ts={(r: Row) => r.timestamp}
       now={now}
       render={(r) => {
         const into = r.label.startsWith("Depósito") || r.label.startsWith("Compra");
-        const P = PRODUCT[r.product === "tbills" ? "acciones" : r.product]; // tbills rows are filtered out above
+        const P = PRODUCT[r.product];
         return (
           <BankRow
             key={`${r.txHash}-${r.logIndex}`}
@@ -522,7 +530,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
             }
             title={ROW_LABEL[r.label] ?? r.label}
             sub={[hora(r.timestamp), "On-chain"].filter(Boolean).join(" · ")}
-            amount={`${into ? "+" : "−"}${fmtAmount(r.amount, r.symbol === "tTBILL" ? 4 : 2)}`}
+            amount={`${into ? "+" : "−"}${fmtAmount(r.amount, r.symbol === "mIDX" ? 4 : 2)}`}
             amountSub={r.symbol}
           />
         );
@@ -549,6 +557,7 @@ function Actividad() {
 /* ─────────────────────────────── Perfil ─────────────────────────────── */
 
 function Perfil() {
+  const H = useH();
   const { address } = useConnection();
   const bal = useBalances();
   const rows: { k: string; v: ReactNode }[] = [
@@ -562,7 +571,7 @@ function Perfil() {
       <TopMeta title="Perfil" />
       <div className="px-5 pt-6">
         <Display size={44} fit>Ahorrador</Display>
-        <Meta className="mt-2" parts={["Cuenta demo", "Tempo testnet"]} />
+        <Meta className="mt-2" parts={[H("Cuenta demo"), H("Tempo testnet")]} />
         <dl className="mt-6 border-t border-[var(--m-on-surface)]">
           {rows.map((r) => (
             <div key={r.k} className="flex min-h-14 items-center justify-between gap-3 border-b border-[var(--m-outline-variant)]">
@@ -571,8 +580,9 @@ function Perfil() {
             </div>
           ))}
         </dl>
-        <Meta
-          className="mt-6">{"OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables · Rendimientos variables, no garantizados · Dólares: APR configurado por el admin, reserva demo · Pesos: rendimiento histórico del pool"}</Meta>
+        <div data-honesty>
+          <Meta className="mt-6">{"OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables · Rendimientos no garantizados · Dólares y pesos: APR configurado por el admin, reserva demo · Acciones: token demo, no es un valor, precio del administrador"}</Meta>
+        </div>
       </div>
     </div>
   );

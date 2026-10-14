@@ -32,6 +32,7 @@ import {
   SplitStats,
   Flag,
   hora,
+  useH,
 } from "@/components/mobile/extra/editorial";
 import { PLATFORMS, useAdvance, useDriverData, type Platform } from "./use-driver";
 
@@ -169,10 +170,11 @@ const firstName = (d: Props["data"]["data"]) => d?.driver.firstName;
 /* ─────────────────────────────── Conectar ─────────────────────────────── */
 
 function Conectar({ ask }: Props) {
+  const H = useH();
   const { address } = useConnection();
   return (
     <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
-      <Meta mark={ROSA} parts={["Mercado Crédito", "Testnet · sin valor real", "No canjeable"]} />
+      <Meta mark={ROSA} parts={["Mercado Crédito", H("Testnet · sin valor real"), H("No canjeable")]} />
       <Display as="h1" size={50} className="mt-10">
         Adelanta
         <br />
@@ -192,7 +194,7 @@ function Conectar({ ask }: Props) {
         {PLATFORMS.map((p) => (
           <PlatformButton key={p.id} id={p.id} disabled={!address} onClick={() => ask(p.id)} />
         ))}
-        <Meta className="mt-1 justify-center text-center">{"Demo · consentimiento simulado · Sin afiliación con Uber, DiDi ni Rappi · Nunca pedimos tu contraseña"}</Meta>
+        <Meta className="mt-1 justify-center text-center">{[H("Demo · consentimiento simulado"), "Sin afiliación con Uber, DiDi ni Rappi", "Nunca pedimos tu contraseña"].filter(Boolean).join(" · ")}</Meta>
       </div>
     </div>
   );
@@ -246,6 +248,7 @@ function TopMeta({ platform, title }: { platform?: Platform; title?: string }) {
 }
 
 function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
+  const H = useH();
   const bal = useBalances();
   const s = adv.score.data;
   const debt = adv.pool.debt;
@@ -271,7 +274,7 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
             <div className="mt-4 h-[3px] bg-[var(--m-surface-3)]">
               <div className="h-full bg-[var(--m-on-surface)] transition-[width] duration-700" style={{ width: `${paidPct}%` }} />
             </div>
-            <Meta className="mt-2" parts={["xMXN · no canjeable", "Incluye comisión 2%", `${paidPct}% pagado`]} />
+            <Meta className="mt-2" parts={["xMXN", H("No canjeable"), "Incluye comisión 2%", `${paidPct}% pagado`]} />
           </>
         ) : !platform ? (
           <>
@@ -310,7 +313,8 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
             <Meta
               className="mt-2"
               parts={[
-                "xMXN · no canjeable",
+                "xMXN",
+                H("No canjeable"),
                 s && `Línea MX${fmtMoney(BigInt(s.maxAmount), 0)}`,
                 s?.attestationWithheld ? "Oferta no disponible ahora" : adv.att && (adv.expired ? "Oferta vencida" : `Oferta vence en ${mmss(adv.secondsLeft)}`),
               ]}
@@ -400,6 +404,7 @@ function EarningsBars({ weeks, height = 112 }: { weeks: { weekStart: string; net
 }
 
 function Ganancias({ platform, data, adv }: Props) {
+  const H = useH();
   const d = data.data;
   const s = adv.score.data;
   const f = s?.features;
@@ -435,7 +440,7 @@ function Ganancias({ platform, data, adv }: Props) {
           <section className="px-5 pt-6">
             <p className="m-meta">Semana típica · neto</p>
             <Money value={f?.medianWeeklyNetMxn ?? median(d.weeks.map((w) => w.netMxn))} digits={0} currency="MXN" size={48} className="mt-2" />
-            <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, "Datos sintéticos", "Testnet"]} />
+            <Meta className="mt-2" parts={[d.label, `${d.weeks.length} semanas`, H("Datos sintéticos"), H("Testnet")]} />
           </section>
           <div className="px-5 pt-6">
             <EarningsBars weeks={d.weeks} />
@@ -471,7 +476,7 @@ function Ganancias({ platform, data, adv }: Props) {
                 ))}
               </ol>
             )}
-            {s && <Meta className="mt-3">{`Puntaje ${fmtNumber(s.score, 0)}/100 · Mínimo ${s.scoreFloor} · Ilustrativo, no es un modelo de crédito`}</Meta>}
+            {s && <Meta className="mt-3">{[`Puntaje ${fmtNumber(s.score, 0)}/100`, `Mínimo ${s.scoreFloor}`, H("Ilustrativo, no es un modelo de crédito")].filter(Boolean).join(" · ")}</Meta>}
           </div>
         </>
       )}
@@ -532,12 +537,13 @@ function ActivityList({ limit }: { limit?: number }) {
 }
 
 function Actividad({ platform }: Props) {
+  const H = useH();
   return (
     <div className="pb-6">
       <TopMeta platform={platform} title="Actividad" />
       <div className="px-5 pt-6">
         <Display size={40}>Actividad</Display>
-        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo testnet", "Sin valor real"]} />
+        <Meta className="mt-2" parts={["Adelantos y pagos", "On-chain · Tempo", H("Testnet · sin valor real")]} />
         <div className="pt-3">
           <ActivityList />
         </div>
@@ -549,6 +555,7 @@ function Actividad({ platform }: Props) {
 /* ─────────────────────────────── Perfil ─────────────────────────────── */
 
 function Perfil({ platform, data, disconnect }: Props) {
+  const H = useH();
   const { address } = useConnection();
   const d = data.data;
   const rows: { k: string; v: ReactNode }[] = [
@@ -578,8 +585,9 @@ function Perfil({ platform, data, disconnect }: Props) {
             </Pill>
           </div>
         )}
-        <Meta
-          className="mt-6">{"Consentimiento simulado · Sin afiliación con Uber, DiDi ni Rappi · Ganancias: datos demo sintéticos · xMXN: token demo sin valor real, no canjeable por pesos"}</Meta>
+        <div data-honesty>
+          <Meta className="mt-6">{"Consentimiento simulado · Sin afiliación con Uber, DiDi ni Rappi · Ganancias: datos demo sintéticos · xMXN: token demo sin valor real, no canjeable por pesos"}</Meta>
+        </div>
       </div>
     </div>
   );
@@ -601,6 +609,7 @@ function SheetRows({ rows }: { rows: { k: string; v: ReactNode }[] }) {
 }
 
 function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
+  const H = useH();
   const [pct, setPct] = useState(100);
   const busy = adv.tx.isBusy;
   const available = adv.available ?? 0n;
@@ -613,10 +622,10 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
   return (
     <BottomSheet open={openSheet} onClose={close} dismissable={!busy} ariaLabel="Pedir adelanto">
       <div className="grid gap-5 px-6 pb-2">
-        <Meta mark={ROSA} parts={["Adelanto", feeBps !== undefined ? `Comisión fija ${fmtNumber(Number(feeBps) / 100, 0)}%` : undefined, "Testnet"]} />
+        <Meta mark={ROSA} parts={["Adelanto", feeBps !== undefined ? `Comisión fija ${fmtNumber(Number(feeBps) / 100, 0)}%` : undefined, H("Testnet")]} />
         <div>
           <Money value={amount} currency="MXN" size={48} />
-          <Meta className="mt-2" parts={["xMXN", "Testnet · sin valor real"]} />
+          <Meta className="mt-2" parts={["xMXN", H("Testnet · sin valor real")]} />
         </div>
         <div className="flex gap-2">
           {[25, 50, 100].map((p) => (
@@ -657,6 +666,7 @@ function AdelantoSheet({ adv, setFlow, openSheet, close }: Props & { openSheet: 
 }
 
 function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openSheet: boolean; close: () => void }) {
+  const H = useH();
   const bal = useBalances();
   const debt = adv.pool.debt ?? 0n;
   const busy = adv.tx.isBusy;
@@ -666,10 +676,10 @@ function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openS
   return (
     <BottomSheet open={openSheet} onClose={close} dismissable={!busy} ariaLabel="Pagar adelanto">
       <div className="grid gap-5 px-6 pb-2">
-        <Meta mark={ROSA} parts={["Pagar adelanto", "Testnet"]} />
+        <Meta mark={ROSA} parts={["Pagar adelanto", H("Testnet")]} />
         <div>
           <Money value={amount} currency="MXN" size={48} />
-          <Meta className="mt-2" parts={["xMXN", "Testnet · sin valor real"]} />
+          <Meta className="mt-2" parts={["xMXN", H("Testnet · sin valor real")]} />
         </div>
         <SheetRows
           rows={[
@@ -706,6 +716,7 @@ function PagarSheet({ adv, setFlow, setPaid, openSheet, close }: Props & { openS
 /* ─────────────────────────────── Success screens ─────────────────────────────── */
 
 function Receipt({ title, amount, rows, action, adv }: { title: string; amount: bigint | undefined; rows: { k: string; v: ReactNode }[]; action: ReactNode; adv: Props["adv"] }) {
+  const H = useH();
   const last = adv.tx.steps.at(-1);
   // kit SuccessScreen is min-h-full; let it fill the flex column so the action sits low
   return (
@@ -713,7 +724,7 @@ function Receipt({ title, amount, rows, action, adv }: { title: string; amount: 
     <SuccessScreen
       title={title}
       amount={amount !== undefined ? `MX${fmtMoney(amount)}` : undefined}
-      caption="xMXN · Confirmado en Tempo · Testnet · sin valor real"
+      caption={["xMXN", "Confirmado en Tempo", H("Testnet · sin valor real")].filter(Boolean).join(" · ")}
       action={action}
     >
       <SheetRows
