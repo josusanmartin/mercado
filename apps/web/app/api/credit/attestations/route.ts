@@ -1,5 +1,5 @@
 import { recentAttestations } from "@/lib/server/credit";
-import { jsonError } from "@/lib/server/http";
+import { edgeCached, jsonError } from "@/lib/server/http";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 
 // GET /api/credit/attestations → eligibility attestations this API signed for the active pool (newest first),
@@ -8,7 +8,7 @@ export async function GET() {
   try {
     return Response.json(
       { attestations: await recentAttestations(20) },
-      { headers: { "Cache-Control": "no-store" } },
+      { headers: edgeCached(10) },
     );
   } catch (e) {
     if (e instanceof ProtocolUnavailableError)

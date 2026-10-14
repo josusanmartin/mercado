@@ -261,6 +261,17 @@ async function getLogsWithBackoff(client: PublicClient, args: Record<string, unk
   }
 }
 
+// One head lookup per refresh, shared by every kind (useFlowTotals asks for five at once).
+let head: { at: number; p: Promise<bigint> } | undefined;
+function latestBlock(client: PublicClient): Promise<bigint> {
+  if (!head || Date.now() - head.at > 2_000) {
+    const p = client.getBlockNumber({ cacheTime: 2_000 });
+    head = { at: Date.now(), p };
+    p.catch(() => (head?.p === p ? (head = undefined) : undefined));
+  }
+  return head.p;
+}
+
 /** All rows of a kind for the active protocol, newest first. Usable outside React (pass any viem client). */
 export async function fetchActivity(client: PublicClient, kind: ActivityKind): Promise<ActivityRow[]> {
   const key = `${A.protocol}:${kind}`;
@@ -269,7 +280,7 @@ export async function fetchActivity(client: PublicClient, kind: ActivityKind): P
   if (kind === "card" && NO_CARD) return [];
   if (kind === "invest" && INVEST_ADDRS.length === 0) return [];
   const p = (async () => {
-    const latest = await client.getBlockNumber();
+    const latest = await latestBlock(client);
     const c = cache.get(key) ?? { rows: [], toBlock: BigInt(A.startBlock) - 1n };
     const s = source(kind);
     const fresh: ActivityRow[] = [];

@@ -1,4 +1,4 @@
-import { jsonError } from "@/lib/server/http";
+import { edgeCached, jsonError } from "@/lib/server/http";
 import { getInvestRates } from "@/lib/server/invest/rates";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 
@@ -6,7 +6,7 @@ import { ProtocolUnavailableError } from "@/lib/server/protocol";
 // realized annualized APR (MXN), and the equity index price + 24h change (Stocks; null until deployed).
 export async function GET() {
   try {
-    return Response.json(await getInvestRates(), { headers: { "Cache-Control": "no-store" } });
+    return Response.json(await getInvestRates(), { headers: edgeCached(15) });
   } catch (e) {
     if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
     throw e;

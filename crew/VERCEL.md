@@ -32,6 +32,7 @@ Client build-time (inlined into the bundle, so set them before the build; testne
 - `NEXT_PUBLIC_DEMO_SAVER_PRIVATE_KEY`, `NEXT_PUBLIC_DEMO_SAVER_ADDRESS`
 - `NEXT_PUBLIC_DEMO_PARTNER_PRIVATE_KEY`, `NEXT_PUBLIC_DEMO_PARTNER_ADDRESS`
 - `NEXT_PUBLIC_DEMO_PAPA_ADDRESS`, `NEXT_PUBLIC_DEMO_ANA_ADDRESS`, `NEXT_PUBLIC_MERCHANT_ADDRESS`
+- `NEXT_PUBLIC_RPC_DIRECT=1` (round 2, production only): browser JSON-RPC goes to the public Tempo node, not /api/rpc
 - Optional: `NEXT_PUBLIC_CHAIN_ID` (default 42431), `NEXT_PUBLIC_FEE_SPONSOR` (`0` turns sponsorship off)
 
 Vercel sets `VERCEL` itself. Do NOT set `MERCADO_NO_WARM` or `NEXT_DIST_DIR`; they are dev-only.
@@ -48,3 +49,30 @@ Deployed: https://mercado-lovat-eight.vercel.app (project josus-projects-42b794d
 2. Cut polling: no refetch while the tab is hidden (`refetchIntervalInBackground: false`, `refetchOnWindowFocus` sane), block-watch/poll intervals ≥ 4 s, and no duplicate queries for the same read (log what the 72 calls actually are first, then fix the top offenders).
 3. Target: an idle landing tab ≤ 10 function invocations/min in production mode; measure before/after with `next start` locally (same method: count requests for 30 s) and post the numbers.
 Commit, then `@lead VERCEL r2 ready`. Don't deploy; lead does.
+
+### Round 2 result (api, 14 Oct)
+
+Method: `next build` + `VERCEL=1 next start -p 3102`, then headless Chromium at 1440x900. Every request to the origin was counted, except /_next/static and assets. Page prefetches (`?_rsc=`) are listed separately: all of them are prerendered (`x-nextjs-cache: HIT`, `s-maxage=31536000`), so on Vercel they're CDN hits, not functions.
+
+| idle tab | /api/rpc | other /api | public-node HTTP (calls) |
+|---|---|---|---|
+| landing, before, 30 s | **71** | 4 | 0 |
+| landing, after, proxy mode (local default), 30 s | 27 | 4 | 0 |
+| landing, after, `NEXT_PUBLIC_RPC_DIRECT=1`, 60 s | **0** | 6 (pricing is static, so 5 functions) | 30 (46) |
+| landing, after, direct, tab hidden, 30 s | 0 | 0 | 0 |
+| /global, /invest, /credito, direct, 60 s | 0 | 4 / 6 / 4 | 12 / 15 / 15 |
+
+What the 71 were: 45 `eth_blockNumber` (two NetworkBadges mounted at once, each with viem `watch` polling every 4 s plus a 4 s refetch, and still polling in hidden tabs; plus one head lookup per activity kind), 13 multicalls, 10 `eth_getLogs` (activity indexer, built-on-tempo), 3 misc.
+
+Fixes:
+- NetworkBadge: one shared 15 s query, no `watch`.
+- Activity indexer: one shared head lookup per refresh.
+- QueryClient: `refetchIntervalInBackground: false` set explicitly.
+- `NEXT_PUBLIC_RPC_DIRECT=1`: transports go to the public node, batched ≤5 calls (the node returns 413 above 10). The paced lane is metered per call in direct mode: 2 in flight, 8 calls/s, burst 10, and the 429 backoff stays on.
+- CDN caching: `edgeCached()` adds `s-maxage` + `stale-while-revalidate` to the public polled GETs (/api/fx 15 s, /api/invest/rates 15 s, /api/credit/loans 10 s, /api/credit/attestations 10 s, /api/mpp/calls 5 s). Many visitors then cost about one invocation per window, not one each.
+
+CR-08 check: the proxy guarded against ONE IP's limit (crew, e2e runs, stage laptop and server all behind one NAT). It also shared and cached identical reads across tabs. With distributed visitors the first reason mostly goes away; visitors behind a shared NAT still get the lane's backoff. The second is the cost: in direct mode every visitor runs the history `eth_getLogs` scans itself.
+
+Measured from this box (IP shared with the crew's :3100 traffic): the first ~2 s of a landing load get 2–3 `429 rate limited, try again in Nms`. The lane retries them and the page renders fine, but they show red in devtools. If that matters, move the history scans (activity indexer, built-on-tempo) behind a CDN-cached GET.
+
+Not exercised in direct mode: a real write. Fills still go to /api/sponsor; sends and receipts go to the node.

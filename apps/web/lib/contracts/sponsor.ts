@@ -15,15 +15,18 @@
 // at most 4 requests in flight, ~20 requests/s with a burst of 20, and a 429/403 (proxy, Cloudflare edge or the
 // node's -32005 "rate limited") pauses the whole lane and retries the same request with backoff. A rate-limited
 // request never reached the node, so retrying is safe even for sends. Network errors are retried for reads only.
-// No JSON-RPC batching: measured on Moderato, the limiter counts every call inside a batch and a 429 fails the
+// No JSON-RPC batching through the proxy: measured on Moderato, the limiter counts every call inside a batch and a 429 fails the
 // whole batch. Reads are already batched by wagmi's multicall (one eth_call for many contract reads).
 import { createTransport, http as viemHttp, type Transport } from "viem";
 import { withRelay } from "viem/tempo";
 import { TEMPO_RPC_URL } from "@mercado/shared";
 
-const MAX_INFLIGHT = 4;
-const RATE_PER_SEC = 20;
-const BURST = 20;
+// Direct mode (below) talks to the public node itself: measured 14 Oct, it answers 413 above 10 calls per batch and
+// 429s once ~15-20 calls land at once from one IP (batch items count), so pace by CALLS and more gently there.
+const DIRECT = process.env.NEXT_PUBLIC_RPC_DIRECT === "1";
+const MAX_INFLIGHT = DIRECT ? 2 : 4;
+const RATE_PER_SEC = DIRECT ? 8 : 20;
+const BURST = DIRECT ? 10 : 20;
 const MAX_ATTEMPTS = 6;
 const SENDS = new Set(["eth_sendRawTransaction", "eth_sendRawTransactionSync", "eth_sendTransaction"]);
 
@@ -32,7 +35,7 @@ let tokens = BURST;
 let refilledAt = Date.now();
 let pausedUntil = 0;
 let timer: ReturnType<typeof setTimeout> | undefined;
-const waiting: (() => void)[] = [];
+const waiting: { need: number; go: () => void }[] = [];
 
 function pump() {
   timer = undefined;
@@ -43,17 +46,19 @@ function pump() {
     timer = setTimeout(pump, pausedUntil - now);
     return;
   }
-  while (waiting.length && inflight < MAX_INFLIGHT && tokens >= 1) {
-    tokens -= 1;
+  while (waiting.length && inflight < MAX_INFLIGHT && tokens >= waiting[0].need) {
+    tokens -= waiting[0].need;
     inflight += 1;
-    waiting.shift()!();
+    waiting.shift()!.go();
   }
-  if (waiting.length && inflight < MAX_INFLIGHT && !timer) timer = setTimeout(pump, Math.ceil(((1 - tokens) / RATE_PER_SEC) * 1000));
+  if (waiting.length && inflight < MAX_INFLIGHT && !timer)
+    timer = setTimeout(pump, Math.ceil(((waiting[0].need - tokens) / RATE_PER_SEC) * 1000));
 }
 
-function acquire() {
+/** Wait for a lane slot and `calls` tokens (a JSON-RPC batch spends one per call). */
+function acquire(calls = 1) {
   return new Promise<void>((resolve) => {
-    waiting.push(resolve);
+    waiting.push({ need: Math.min(Math.max(calls, 1), BURST), go: resolve });
     pump();
   });
 }
@@ -69,20 +74,21 @@ const sleep = (ms: number, signal?: AbortSignal | null) =>
     signal?.addEventListener("abort", () => (clearTimeout(t), reject(signal.reason)), { once: true });
   });
 
-function isSend(body: unknown) {
+function inspect(body: unknown): { send: boolean; calls: number } {
   try {
     const j = JSON.parse(String(body));
-    return (Array.isArray(j) ? j : [j]).some((r: { method?: string }) => SENDS.has(r?.method ?? ""));
+    const list = Array.isArray(j) ? j : [j];
+    return { send: list.some((r: { method?: string }) => SENDS.has(r?.method ?? "")), calls: list.length };
   } catch {
-    return true; // unknown body: treat as a send (no network-error retry)
+    return { send: true, calls: 1 }; // unknown body: treat as a send (no network-error retry)
   }
 }
 
 /** fetch for the public RPC: paced lane + backoff on rate limits (see RPC LANE above). */
 export const pacedFetch: typeof fetch = async (input, init) => {
-  const send = isSend(init?.body);
+  const { send, calls } = inspect(init?.body);
   for (let attempt = 1; ; attempt++) {
-    await acquire();
+    await acquire(calls);
     let res: Response;
     try {
       res = await fetch(input, init);
@@ -107,9 +113,26 @@ export const pacedFetch: typeof fetch = async (input, init) => {
 
 const origin = (o?: string) => o ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost:3100");
 
-/** JSON-RPC through the paced lane (default: our caching proxy). The timeout covers queueing and backoff. */
-export const rpcTransport = (rpcUrl: string = `${origin()}/api/rpc`) =>
-  viemHttp(rpcUrl, { fetchFn: pacedFetch, retryCount: 2, retryDelay: 400, timeout: 30_000 });
+// DIRECT MODE (Vercel r2): NEXT_PUBLIC_RPC_DIRECT=1 sends browser JSON-RPC straight to the public Tempo node
+// (CORS *, preflight cached 24 h) instead of /api/rpc, so reads cost no serverless invocations and each visitor
+// spends its own IP's RPC budget. The proxy existed (CR-08) because the whole crew, every e2e run and the stage
+// laptop shared ONE IP's limit; distributed visitors don't, but one NAT (office, venue wifi) still can, so the
+// paced lane and its 429 backoff stay on, metered per call. Direct mode batches (≤5 calls/POST; the node refuses >10):
+// the limiter counts each call anyway, but it saves round trips, and a 429 retries the whole batch (none of it ran).
+// What's lost: the proxy's cross-tab dedupe and its "latest" invalidation after sends; tx.ts already refetches after
+// receipts. Fee-sponsored fills keep going to /api/sponsor (writes only). Locally the proxy stays the default.
+const browserRpcUrl = (base?: string) => (DIRECT ? TEMPO_RPC_URL : `${origin(base)}/api/rpc`);
+
+/** JSON-RPC through the paced lane (default: our caching proxy, or the node in direct mode). The timeout covers
+ *  queueing and backoff. */
+export const rpcTransport = (rpcUrl: string = browserRpcUrl()) =>
+  viemHttp(rpcUrl, {
+    fetchFn: pacedFetch,
+    retryCount: 2,
+    retryDelay: 400,
+    timeout: 30_000,
+    batch: DIRECT && rpcUrl === TEMPO_RPC_URL ? { batchSize: 5, wait: 16 } : false,
+  });
 
 /** Relay transport that falls back to an unsponsored fill on the node when the relay itself errors. */
 // The unsponsored fill fallback tries our /api/rpc proxy first, then the public node (paced lane either way).
@@ -143,8 +166,8 @@ export function resilientRelay(relayUrl: string, rpcUrl: string = TEMPO_RPC_URL)
 }
 
 export function sponsoredTransport(base?: string) {
-  return withRelay(rpcTransport(`${origin(base)}/api/rpc`), resilientRelay(`${origin(base)}/api/sponsor`));
+  return withRelay(rpcTransport(browserRpcUrl(base)), resilientRelay(`${origin(base)}/api/sponsor`));
 }
 
-/** Plain RPC transport (sender pays fees), same proxy + lane. */
+/** Plain RPC transport (sender pays fees), same lane and endpoint. */
 export const directTransport = () => rpcTransport();

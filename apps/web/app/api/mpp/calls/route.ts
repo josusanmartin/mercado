@@ -1,5 +1,5 @@
 import { paidCalls, type PaidProduct } from "@/lib/mpp/ledger";
-import { jsonError } from "@/lib/server/http";
+import { edgeCached, jsonError } from "@/lib/server/http";
 
 const PRODUCTS: PaidProduct[] = ["underwriting", "move-quote"];
 
@@ -13,6 +13,6 @@ export async function GET(request: Request) {
       "VALIDATION",
     );
   return Response.json(paidCalls(p as PaidProduct | undefined), {
-    headers: { "Cache-Control": "no-store" },
+    headers: edgeCached(5),
   });
 }

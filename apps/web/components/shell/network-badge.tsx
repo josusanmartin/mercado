@@ -6,7 +6,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export function NetworkBadge({ className }: { className?: string }) {
   const { chainId, isConnected } = useConnection();
-  const block = useBlockNumber({ chainId: TEMPO_MODERATO_CHAIN_ID, watch: true, query: { refetchInterval: 4_000 } });
+  // One shared query, no `watch`: viem's block watcher polls per mounted badge (the console mounts two) and keeps
+  // polling in hidden tabs; react-query shares the key and pauses with the tab. The block only feeds the tooltip.
+  const block = useBlockNumber({ chainId: TEMPO_MODERATO_CHAIN_ID, query: { refetchInterval: 15_000 } });
   const wrong = isConnected && chainId !== undefined && chainId !== TEMPO_MODERATO_CHAIN_ID;
   const live = block.data !== undefined && !block.isError;
   return (

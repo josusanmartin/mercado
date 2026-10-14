@@ -7,8 +7,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
 export function Providers({ children }: { children: ReactNode }) {
+  // Polling stops while the tab is hidden (stated explicitly: production RPC budget, crew/VERCEL.md round 2).
   const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, staleTime: 4_000 } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { refetchOnWindowFocus: false, refetchIntervalInBackground: false, staleTime: 4_000 } },
+      }),
   );
   return (
     <WagmiProvider config={wagmiConfig}>

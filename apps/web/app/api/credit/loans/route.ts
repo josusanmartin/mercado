@@ -1,5 +1,5 @@
 import { loanBook } from "@/lib/server/credit";
-import { jsonError } from "@/lib/server/http";
+import { edgeCached, jsonError } from "@/lib/server/http";
 import { ProtocolUnavailableError } from "@/lib/server/protocol";
 
 // GET /api/credit/loans → the active pool's loan book from Borrowed/Repaid logs: per-loan principal, fee,
@@ -7,7 +7,7 @@ import { ProtocolUnavailableError } from "@/lib/server/protocol";
 export async function GET() {
   try {
     const book = await loanBook(25);
-    return Response.json(book, { headers: { "Cache-Control": "no-store" } });
+    return Response.json(book, { headers: edgeCached(10) });
   } catch (e) {
     if (e instanceof ProtocolUnavailableError)
       return jsonError(503, e.message, e.code);
