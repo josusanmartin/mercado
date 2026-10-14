@@ -44,13 +44,16 @@ export function KeyboardNav() {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const active = document.activeElement as HTMLElement | null;
       const typing = editable(active);
+      // Inside a dialog only its own keys apply (Esc closes it); page and tour shortcuts are off.
+      const dialogOpen = !!document.querySelector("[role=dialog]");
+      if (dialogOpen && e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
 
       if (!typing && (e.key === "+" || e.key === "t")) {
         e.preventDefault();
         if (!tour.active) tour.start();
         return;
       }
-      if ((e.key === "Escape" && !document.querySelector("[role=dialog]")) || (e.key === "Backspace" && !typing)) {
+      if (e.key === "Escape" || (e.key === "Backspace" && !typing)) {
         if (e.key === "Escape" && typing) {
           active?.blur();
           return;
