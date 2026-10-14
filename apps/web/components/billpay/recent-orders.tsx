@@ -1,10 +1,10 @@
 "use client";
 // Orders started from this browser, with their state history (CREATED → PAYMENT_VERIFIED → FULFILLED_SIMULATED).
 import type { BillOrder } from "@mercado/shared";
-import type { RecentOrder } from "./use-bill-pay";
+import { Panel } from "@/components/console";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtAmount } from "@/lib/format";
+import type { RecentOrder } from "./use-bill-pay";
 
 const STATUS_LABEL: Record<BillOrder["status"], string> = {
   CREATED: "Awaiting payment",
@@ -25,50 +25,56 @@ export function RecentOrders({
   checks: Record<string, string>;
 }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Recent payments</CardTitle>
-        <Button variant="ghost" size="sm" onClick={onRefresh}>
+    <Panel
+      title="Recent payments"
+      description="Payments started from this browser, with their full state history."
+      aside={
+        <Button variant="outline" size="sm" onClick={onRefresh}>
           Refresh
         </Button>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        {orders.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No payments from this browser yet.
-          </p>
-        )}
+      }
+    >
+      {orders.length === 0 && (
+        <p className="text-muted-foreground py-6 text-[15px]">
+          No payments from this browser yet.
+        </p>
+      )}
+      <div className="grid" data-nav="list">
         {orders.map((o) => (
           <details
             key={o.orderId}
-            className="min-w-0 overflow-hidden rounded-lg border p-2 text-sm"
+            className="min-w-0 border-b py-3 last:border-b-0"
           >
-            <summary className="flex min-w-0 cursor-pointer justify-between gap-2">
-              <span className="min-w-0 truncate">
+            <summary
+              data-nav-item=""
+              className="flex min-h-10 min-w-0 cursor-pointer items-center justify-between gap-4"
+            >
+              <span className="min-w-0 truncate text-[15px]">
                 {o.description.split(" (")[0]}
               </span>
               <span
-                className={`shrink-0 ${o.status === "FAILED" ? "text-destructive" : "text-muted-foreground"}`}
+                className={`shrink-0 text-[15px] font-medium ${o.status === "FAILED" ? "text-destructive" : "text-muted-foreground"}`}
               >
                 {STATUS_LABEL[o.status]}
               </span>
             </summary>
-            <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+            <div className="text-muted-foreground mt-2 grid gap-1 text-sm">
               <span>
-                {fmtAmount(BigInt(o.amount))} · order {o.orderId.slice(0, 12)}…
+                {fmtAmount(BigInt(o.amount))} xMXN · order{" "}
+                <span className="font-mono">{o.orderId.slice(0, 12)}…</span>
               </span>
               {o.receipt?.explorerUrl && (
                 <a
                   href={o.receipt.explorerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-primary hover:underline"
+                  className="text-foreground hover:underline"
                 >
-                  payment tx ↗
+                  Payment tx ↗
                 </a>
               )}
               {o.status === "CREATED" && (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   <Button
                     variant="outline"
                     size="sm"
@@ -86,13 +92,13 @@ export function RecentOrders({
               )}
               {o.paidButUnfulfilled && (
                 <span className="text-destructive">
-                  Paid but unfulfilled: flagged for refund.
+                  Paid but not fulfilled: flagged for a refund.
                 </span>
               )}
               {(o.unappliedPayments?.length ?? 0) > 0 && (
                 <span className="text-destructive">
                   {o.unappliedPayments!.length} extra payment(s) not applied:
-                  flagged for refund.
+                  flagged for a refund.
                 </span>
               )}
               <ol className="mt-1 grid gap-0.5">
@@ -106,7 +112,7 @@ export function RecentOrders({
             </div>
           </details>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

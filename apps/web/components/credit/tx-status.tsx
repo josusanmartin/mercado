@@ -22,7 +22,7 @@ export function TxStatus({ tx }: { tx: ReturnType<typeof useTx> }) {
           href={s.url}
           target="_blank"
           rel="noreferrer"
-          className="text-primary underline-offset-4 hover:underline"
+          className="text-foreground underline-offset-4 hover:underline"
         >
           {s.label} {s.receipt ? "✓" : "…"} · view on explorer ↗
         </a>

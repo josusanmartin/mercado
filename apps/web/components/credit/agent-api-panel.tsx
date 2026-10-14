@@ -2,13 +2,7 @@
 // no API key or signup. Shows a RECORDED trace of scripts/underwriter-agent.ts (qa, live on Moderato),
 // not a live call from this page.
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Panel } from "@/components/console";
 
 const EXPLORER = "https://explore.testnet.tempo.xyz/tx/";
 const SETTLE_TX =
@@ -50,29 +44,20 @@ const TRACE: Line[] = [
 ];
 
 const WHO_STYLE: Record<Line["who"], string> = {
-  agent: "text-sky-300",
-  mercado: "text-emerald-300",
-  tempo: "text-amber-300",
+  agent: "text-muted-foreground",
+  mercado: "text-foreground font-medium",
+  tempo: "text-muted-foreground",
 };
 
 export function AgentApiPanel() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          Agent API: third-party underwriters pay per report{" "}
-          <Badge variant="mock">Recorded trace</Badge>
-        </CardTitle>
-        <CardDescription>
-          Any bot can buy a driver&apos;s demo underwriting report for 2 xMXN
-          over MPP: it gets an HTTP 402, pays on Tempo and receives the report
-          with a receipt. No API key, account or card. The report is the same
-          illustrative score on Demo Uber Data and never includes a borrow
-          attestation.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        <div className="overflow-x-auto rounded-lg bg-neutral-950 p-4 font-mono text-xs leading-relaxed text-neutral-200">
+    <Panel
+      title="Agent API"
+      description="Third-party underwriters pay per report. Any bot can buy a driver's demo underwriting report for 2 xMXN over MPP: it gets an HTTP 402, pays on Tempo and receives the report with a receipt. No API key, account or card. Same illustrative score on Demo Uber Data, and never a borrow attestation."
+      aside={<Badge variant="mock">Recorded trace</Badge>}
+    >
+      <div className="grid gap-3 pt-2">
+        <div className="overflow-x-auto rounded-lg bg-muted p-4 font-mono text-xs leading-relaxed text-foreground">
           {TRACE.map((l, i) => (
             <div key={i} className="whitespace-pre">
               <span className={`inline-block w-16 ${WHO_STYLE[l.who]}`}>
@@ -84,7 +69,7 @@ export function AgentApiPanel() {
                   href={EXPLORER + l.tx}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-2 text-sky-300 underline"
+                  className="ml-2 underline"
                 >
                   {l.tx.slice(0, 10)}…{l.tx.slice(-4)} ↗
                 </a>
@@ -110,13 +95,13 @@ export function AgentApiPanel() {
               href={EXPLORER + SETTLE_TX}
               target="_blank"
               rel="noreferrer"
-              className="text-primary hover:underline"
+              className="text-foreground underline-offset-4 hover:underline"
             >
               on the Tempo explorer ↗
             </a>
           </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

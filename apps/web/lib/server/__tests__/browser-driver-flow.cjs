@@ -12,10 +12,9 @@ const S = process.env.SHOTS_DIR ?? "/tmp/";
   try {
     await p.goto("http://localhost:3100/credit", { waitUntil: "domcontentloaded", timeout: 90000 }); await p.getByText("Steady driver").waitFor({ timeout: 90000 });
     await step("connect driver", async () => {
-      await p.waitForTimeout(8000); await p.getByRole("button", { name: /connect/i }).first().click({ noWaitAfter: true, timeout: 60000 });
-      await p.getByRole("button", { name: new RegExp(process.argv[2] || "driver", "i") }).first().click({ timeout: 60000 });
-      await p.waitForTimeout(2500);
-      await p.keyboard.press("Escape");
+      await p.waitForTimeout(4000);
+      await p.getByRole("button", { name: new RegExp("^" + (process.argv[2] || "Javier")) }).first().click({ timeout: 60000 });
+      await p.getByRole("button", { name: /\(active\)/ }).first().waitFor({ timeout: 60000 });
     });
     if (!process.env.SKIP_DRAW) {
     await step("pick steady", () => p.getByText("Steady driver").click());
@@ -24,6 +23,7 @@ const S = process.env.SHOTS_DIR ?? "/tmp/";
       await p.getByText("Available now").waitFor({ timeout: 20000 });
     });
     await step("draw 50", async () => {
+      await p.getByRole("button", { name: "Draw an advance" }).click();
       await p.getByPlaceholder("Amount in xMXN").fill("50");
       await p.getByRole("button", { name: "Draw advance" }).click();
       await p.getByText(/Draw advance ✓/).waitFor({ timeout: 60000 });
@@ -32,10 +32,14 @@ const S = process.env.SHOTS_DIR ?? "/tmp/";
     await p.screenshot({ path: S + "e2e-credit.png", fullPage: true });
     }
     await step("pay page quote", async () => {
-      await p.getByRole("link", { name: "Pay bills" }).click();
+      await p.goto("http://localhost:3100/pay", { waitUntil: "domcontentloaded" });
+      await p.waitForTimeout(4000);
+      if (!(await p.getByRole("button", { name: /\(active\)/ }).count()))
+        await p.getByRole("button", { name: new RegExp("^" + (process.argv[2] || "Javier")) }).first().click({ timeout: 60000 });
+      await p.getByRole("button", { name: /\(active\)/ }).first().waitFor({ timeout: 60000 });
       await p.getByRole("button", { name: "$20", exact: true }).click();
       await p.getByRole("button", { name: "Get quote" }).click();
-      await p.getByText("Checkout").waitFor();
+      await p.getByRole("heading", { name: "Checkout" }).waitFor();
     });
     await step("pay", async () => {
       await p.waitForTimeout(3000);
