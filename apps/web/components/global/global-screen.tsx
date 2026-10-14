@@ -50,7 +50,7 @@ import {
   useExchangeState,
   useMercado,
 } from "@/lib/contracts";
-import { fmtAmount, toUnits } from "@/lib/format";
+import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { PartnerApi } from "./partner-api";
 import { useMoveQuote, useSecondsLeft } from "./use-move-quote";
 
@@ -163,15 +163,25 @@ function QuoteRows({
 
 /**
  * Inline account status for an action well (review V5-TASTE #1): the form never swaps for a gate, so its
- * geometry is stable from first paint. Renders nothing once the right chain is connected.
+ * geometry is stable from first paint: the row keeps its height in every state, and once connected it says
+ * which account pays (review: a row that collapsed on connect still moved the Pay button on a cold arrival).
  */
 function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
-  const { isConnected, chainId, status } = useConnection();
+  const { isConnected, chainId, status, address } = useConnection();
   const { switchTo } = usePersona();
   const { on, setOn } = useDemoMode();
   const { mutate: switchChain } = useSwitchChain();
   const p = personaById(persona);
-  if (isConnected && chainId === TEMPO_MODERATO_CHAIN_ID) return null;
+  if (isConnected && chainId === TEMPO_MODERATO_CHAIN_ID)
+    return (
+      <p className="text-muted-foreground flex min-h-10 items-center text-[13px]">
+        Paying from{" "}
+        {p.address && address?.toLowerCase() === p.address.toLowerCase()
+          ? p.name
+          : "your wallet"}
+        {address && ` · ${shortAddr(address)}`}
+      </p>
+    );
   const connecting = status === "connecting" || status === "reconnecting";
   return (
     <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
@@ -331,6 +341,10 @@ function PaySupplier() {
               <span className="text-destructive">
                 The business account holds {fmtAmount(bal.ousd)} OUSD.
               </span>
+            ) : quote.formatError ? (
+              <span className="text-destructive">{quote.formatError}</span>
+            ) : !quote.valid ? (
+              "Enter an amount"
             ) : quote.error ? (
               <span className="text-destructive">
                 {(quote.error as Error).message}
@@ -577,7 +591,12 @@ function Redeem() {
         title="Indicative quote"
         description="Live from the exchange at this size."
       >
-        {quote.isLoading && (
+        {quote.formatError && (
+          <p className="text-destructive py-4 text-[15px]">
+            {quote.formatError}
+          </p>
+        )}
+        {quote.isLoading && quote.valid && (
           <p className="text-muted-foreground py-4 text-[15px]">Pricing…</p>
         )}
         {quote.error && (

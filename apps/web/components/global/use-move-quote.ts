@@ -6,8 +6,29 @@ import { useQuery } from "@tanstack/react-query";
 import { Fetch } from "mppx/client";
 import type { MoveQuoteResponse, MoveSide } from "@mercado/shared";
 
-export function useMoveQuote(side: MoveSide, amount: string) {
-  const valid = /^\d+(\.\d{1,6})?$/.test(amount) && Number(amount) > 0;
+/**
+ * "1000", "1,000" and "1,000.50" are the same amount; "1,0,00" or "1.2.3" are not amounts. Returns the plain
+ * decimal string, or an error a person can act on (review: a grouped amount used to sit on "Pricing…").
+ */
+export function normalizeAmount(raw: string): {
+  clean?: string;
+  error?: string;
+} {
+  const s = raw.trim();
+  if (s === "") return {};
+  const grouped = /^\d{1,3}(,\d{3})+(\.\d*)?$/.test(s);
+  const clean = grouped ? s.replace(/,/g, "") : s;
+  if (!/^\d+(\.\d*)?$/.test(clean))
+    return { error: "Use digits with an optional dot for cents, e.g. 1000.50" };
+  if ((clean.split(".")[1] ?? "").length > 6)
+    return { error: "At most 6 decimals." };
+  return { clean: clean.replace(/\.$/, "") };
+}
+
+export function useMoveQuote(side: MoveSide, raw: string) {
+  const { clean, error: formatError } = normalizeAmount(raw);
+  const amount = clean ?? "";
+  const valid = !!clean && Number(clean) > 0;
   const q = useQuery({
     queryKey: ["move-quote", side, amount],
     enabled: valid,
@@ -23,7 +44,7 @@ export function useMoveQuote(side: MoveSide, amount: string) {
       return body as MoveQuoteResponse;
     },
   });
-  return { ...q, valid };
+  return { ...q, valid, formatError };
 }
 
 /** Seconds left until `expiresAt` (unix s); the clock is only read in effects. */
