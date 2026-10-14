@@ -14,3 +14,4 @@ broadcast/*/31337/
 review/out/
 review/cache/
 deck/PUBLISH
+deck/.last-publish
