@@ -445,3 +445,66 @@
     transform: none;
   }
 }
+
+/* ───────────────────────── v6 · Show, don't tell (crew/PRINCIPLES.md §v6) ─────────────────────────
+   Keyframes for lib/motion's Pulse, FlowPath, Stepper and the sliding tab underline. Transform/opacity only;
+   reduced motion = still final state. */
+@keyframes mx-pulse-k {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.mx-pulse-flash {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  opacity: 0;
+  animation: mx-pulse-k 700ms var(--ease-out) forwards;
+}
+/* FlowPath: a full-width carrier slides from -100% to 0, so the dot at its right edge travels the track. */
+@keyframes mx-flow-k {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.mx-flow-dot {
+  animation: mx-flow-k 1.8s var(--ease-out) infinite;
+}
+@keyframes mx-ring-k {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--accent) 0%, transparent);
+  }
+}
+.mx-step-current {
+  animation: mx-ring-k 1.6s var(--ease-out) infinite;
+}
+.mx-step-bar,
+.mx-tab-line {
+  transition: transform var(--dur) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-pulse-flash,
+  .mx-flow-dot,
+  .mx-step-current {
+    animation: none !important;
+  }
+  .mx-pulse-flash {
+    opacity: 0 !important;
+  }
+  .mx-flow-dot {
+    transform: none !important;
+  }
+  .mx-step-bar,
+  .mx-tab-line {
+    transition: none !important;
+  }
+}

@@ -5,6 +5,8 @@
 // Nothing here delays a primary action: elements are clickable while they animate, and nothing shifts layout.
 // Nothing ever RESTS hidden: every entrance is a CSS animation that ends visible without JS.
 import { Children, isValidElement, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ElementType, type ReactNode } from "react";
+import { Check, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const EASE = "cubic-bezier(.2,.8,.2,1)";
@@ -139,5 +141,157 @@ export function TickerText({ text, className }: { text: string; className?: stri
       value={value}
       format={(n) => `${m[1]}${n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: grouped })}${m[3]}`}
     />
+  );
+}
+
+// ───────────────────────────── v6 · Show, don't tell (crew/PRINCIPLES.md §v6) ─────────────────────────────
+
+/**
+ * <Pulse value={x}>: flashes an accent wash once whenever `value` changes (never on first render). The flash is
+ * an overlay that fades to nothing (pure CSS); reduced motion: no flash.
+ */
+export function Pulse({ value, children, className }: { value: unknown; children: ReactNode; className?: string }) {
+  const first = useRef(true);
+  const prev = useRef(value);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      prev.current = value;
+      return;
+    }
+    if (!Object.is(prev.current, value)) {
+      prev.current = value;
+      setN((k) => k + 1);
+    }
+  }, [value]);
+  return (
+    <span className={cn("relative inline-block", className)}>
+      {children}
+      {n > 0 && <span key={n} aria-hidden className="mx-pulse-flash pointer-events-none absolute -inset-x-1.5 -inset-y-0.5 rounded-[4px]" />}
+    </span>
+  );
+}
+
+export type FlowNode = { label: ReactNode; value?: ReactNode; sub?: ReactNode };
+
+/**
+ * <FlowPath nodes active>: a horizontal money flow A → B → C. Nodes sit on one accent track; while `active`, a
+ * dot travels along it (transform only, loops). Inactive: the track is dashed and quiet. Labels wrap under each node.
+ */
+export function FlowPath({ nodes, active = false, className, label }: { nodes: FlowNode[]; active?: boolean; className?: string; label?: string }) {
+  const n = Math.max(nodes.length, 2);
+  const inset = `${50 / n}%`;
+  return (
+    <figure className={cn("grid gap-3", className)} aria-label={label}>
+      <div className="relative h-4" aria-hidden>
+        <span className={cn("absolute top-1/2 h-0.5 -translate-y-1/2", active ? "bg-[var(--accent)]" : "border-t-2 border-dashed border-current/30")} style={{ left: inset, right: inset }} />
+        {active && (
+          <span className="mx-flow-track absolute inset-y-0 overflow-hidden" style={{ left: inset, right: inset }}>
+            <span data-loop className="mx-flow-dot absolute inset-y-0 left-0 w-full">
+              <span className="absolute top-1/2 right-0 size-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-[var(--accent)] ring-4 ring-[color-mix(in_oklab,var(--accent)_25%,transparent)]" />
+            </span>
+          </span>
+        )}
+        {nodes.map((_, i) => (
+          <span
+            key={i}
+            className={cn("absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2", active ? "border-[var(--accent)] bg-background" : "border-current/40 bg-background")}
+            style={{ left: `${((i + 0.5) / n) * 100}%` }}
+          />
+        ))}
+      </div>
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+        {nodes.map((node, i) => (
+          <div key={i} className="grid min-w-0 justify-items-center gap-0.5 text-center">
+            <span className="meta text-muted-foreground">{node.label}</span>
+            {node.value !== undefined && <span className="text-[17px] leading-tight font-semibold tabular">{node.value}</span>}
+            {node.sub !== undefined && <span className="text-muted-foreground text-[12px] leading-snug">{node.sub}</span>}
+          </div>
+        ))}
+      </div>
+    </figure>
+  );
+}
+
+/** <Stepper steps current>: progress steps. Done = filled accent, current = pulsing ring; the bar fills by transform. */
+export function Stepper({ steps, current, className, label = "Progress" }: { steps: { label: ReactNode; sub?: ReactNode }[]; current: number; className?: string; label?: string }) {
+  const n = steps.length;
+  const progress = n > 1 ? Math.min(Math.max(current, 0), n - 1) / (n - 1) : 1;
+  return (
+    <ol className={cn("relative grid gap-2", className)} aria-label={label} style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+      <span aria-hidden className="bg-border absolute top-[7px] h-0.5" style={{ left: `${50 / n}%`, right: `${50 / n}%` }} />
+      <span
+        aria-hidden
+        className="mx-step-bar absolute top-[7px] h-0.5 origin-left bg-[var(--accent)]"
+        style={{ left: `${50 / n}%`, right: `${50 / n}%`, transform: `scaleX(${progress})` }}
+      />
+      {steps.map((s, i) => {
+        const state = i < current ? "done" : i === current ? "current" : "todo";
+        return (
+          <li key={i} aria-current={state === "current" ? "step" : undefined} className="relative grid justify-items-center gap-1 text-center">
+            <span
+              aria-hidden
+              data-loop={state === "current" || undefined}
+              className={cn(
+                "relative z-10 size-4 rounded-full border-2",
+                state === "done" && "border-[var(--accent)] bg-[var(--accent)]",
+                state === "current" && "mx-step-current border-[var(--accent)] bg-background",
+                state === "todo" && "border-border bg-background",
+              )}
+            />
+            <span className={cn("text-[13px] leading-tight font-semibold", state === "todo" && "text-muted-foreground")}>{s.label}</span>
+            {s.sub && <span className="text-muted-foreground text-[12px] leading-snug">{s.sub}</span>}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** <Spark values>: a tiny sparkline in the accent; draws once, ends on a dot. Needs ≥2 values. */
+export function Spark({ values, className, label }: { values: number[]; className?: string; label?: string }) {
+  const W = 120;
+  const H = 32;
+  if (values.length < 2) return null;
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const pts = values.map((v, i) => [(i / (values.length - 1)) * (W - 4) + 2, H - 3 - ((v - lo) / span) * (H - 6)] as const);
+  const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const [lx, ly] = pts[pts.length - 1];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className={cn("h-8 w-[7.5rem] text-[var(--accent)]", className)} role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+      <path className="mx-draw" d={d} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} />
+      <circle cx={lx} cy={ly} r="2.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** <CopyAddress address>: the short address and a copy icon; click copies it and toasts "Copied". */
+export function CopyAddress({ address, className, label }: { address: string; className?: string; label?: string }) {
+  const [done, setDone] = useState(false);
+  const short = address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(address);
+      setDone(true);
+      toast.success("Copied", { description: short, duration: 1600 });
+      setTimeout(() => setDone(false), 1400);
+    } catch {
+      toast.error("Couldn't copy. Select the address instead.");
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={address}
+      aria-label={`Copy ${label ?? "address"} ${address}`}
+      className={cn("hover:text-foreground inline-flex items-center gap-1.5 rounded-[4px] font-mono text-[13px] tabular transition-colors", className)}
+    >
+      {short}
+      {done ? <Check className="size-3.5 text-[var(--success)]" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
+    </button>
   );
 }
