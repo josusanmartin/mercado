@@ -155,15 +155,25 @@ export async function senderEligible(sender: Address, personas: ReadonlySet<stri
   return ok;
 }
 
-/** Stable identity of a fill, so re-filling the same transaction doesn't burn quota again. */
+/** Identity of a fill = every field the fee payer signs over (calls, nonce/nonceKey, validBefore/validAfter, gas,
+ *  fees, fee token…) plus the sender. Only a byte-identical re-fill is deduped; expiring-nonce txs that differ in
+ *  any field (e.g. validBefore) are separate executable txs and each consume quota. */
 export function fillKey(req: SponsorRequest): string {
-  const calls = req.calls?.length ? req.calls : [{ to: req.to, data: req.data }];
-  return JSON.stringify([
-    req.from?.toLowerCase(),
-    String(req.nonceKey ?? ""),
-    String(req.nonce ?? ""),
-    calls.map((c) => [c.to?.toLowerCase(), (c.data ?? (c as Call).input ?? "").toLowerCase()]),
-  ]);
+  const skip = new Set(["signature", "feePayerSignature", "hash", "r", "s", "v", "yParity"]);
+  const norm = (v: unknown): unknown => {
+    if (typeof v === "bigint") return `${v}n`;
+    if (typeof v === "string") return v.toLowerCase();
+    if (Array.isArray(v)) return v.map(norm);
+    if (v && typeof v === "object")
+      return Object.fromEntries(
+        Object.keys(v as object)
+          .filter((k) => !skip.has(k) && (v as Record<string, unknown>)[k] !== undefined)
+          .sort()
+          .map((k) => [k, norm((v as Record<string, unknown>)[k])]),
+      );
+    return v;
+  };
+  return JSON.stringify(norm(req));
 }
 
 /** Consume one sponsorship from the sender's and the global hourly quota (no-op for a recently seen fill). */
