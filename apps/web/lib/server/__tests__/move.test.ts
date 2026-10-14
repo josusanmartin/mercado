@@ -69,7 +69,7 @@ describe("MOVE quotes (v1 SwapDesk fallback)", () => {
     expect(q.expiresAt).toBe(1_030);
     expect(q.firm).toBe(false);
     expect(q.isMock).toBe(true);
-    expect(q.label).toMatch(/mock FX feed/);
+    expect(q.label).toMatch(/admin-relayed testnet FX rate/);
     expect(q.symbolIn).toBe("OUSD");
   });
 

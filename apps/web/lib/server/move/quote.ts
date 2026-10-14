@@ -1,6 +1,6 @@
 // MOVE module: indicative FX quotes for remittances / cross-border payments.
 // Prices from the v2 vault-integrated vAMM when v2 is the active protocol (packages/shared/src/protocol.ts), otherwise
-// from the v1 capped SwapDesk at the (mock admin) oracle price. Quotes are indicative: on-chain execution is bound only by
+// from the v1 capped SwapDesk at the admin-relayed oracle price. Quotes are indicative: on-chain execution is bound only by
 // the swap's own minOut. No comparison against real-world remittance pricing is made here.
 import { BaseError, ContractFunctionRevertedError, formatUnits, parseUnits, type Address } from "viem";
 import { fxOracleAdapterAbi, moveAmmAbi, swapDeskAbi } from "@mercado/shared";
@@ -28,8 +28,8 @@ export class MoveQuoteError extends Error {
 const REASONS: Record<string, string> = {
   SwapTooLarge: "That's above the venue's per-swap size limit.",
   InsufficientReserves: "The venue doesn't have enough output inventory for that size right now.",
-  StalePrice: "The FX feed (testnet mock oracle) is stale, so quoting is paused until it updates.",
-  OraclePaused: "The FX feed (testnet mock oracle) is paused.",
+  StalePrice: "The FX feed (testnet admin relay) is stale, so quoting is paused until it updates.",
+  OraclePaused: "The FX feed (testnet admin relay) is paused.",
   InvalidPrice: "The FX feed has no valid price.",
   PriceOutOfBand: "The FX price is outside the sanity band.",
   ZeroAmount: "Amount is too small.",
@@ -129,6 +129,6 @@ export async function quoteMove(side: MoveSide, amount: string, now = Math.floor
       (source === "v1-swapdesk"
         ? "Demo quote from the capped testnet swap desk (v1 fallback), not a market."
         : "Demo quote from the testnet vault vAMM.") +
-      ` Priced off ${isMock ? "an admin-controlled mock FX feed" : "the on-chain FX oracle"}; testnet OUSD has no real value and xMXN is not redeemable for pesos. Indicative: execution is bound only by your swap's minOut.`,
+      ` Priced off ${isMock ? "an admin-relayed testnet FX rate (see /api/fx for its source and time)" : "the on-chain FX oracle"}; testnet OUSD has no real value and xMXN is not redeemable for pesos. Indicative: execution is bound only by your swap's minOut.`,
   };
 }

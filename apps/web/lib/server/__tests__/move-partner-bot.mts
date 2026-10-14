@@ -1,5 +1,5 @@
 // MOVE partner bot (machine-to-machine MPP): a remittance app asks Mercado for a signed FX quote, gets an
-// HTTP 402, pays 0.50 xMXN on Tempo, and verifies the signed indicative quote. Demo testnet pricing (mock oracle).
+// HTTP 402, pays 0.50 xMXN on Tempo, and verifies the signed indicative quote. Demo testnet pricing (admin-relayed FX rate).
 // Usage (dev server on :3100): npx tsx apps/web/lib/server/__tests__/move-partner-bot.mts [usd_to_mxn|mxn_to_usd] [amount] [PAYER]
 // PAYER is a .env.local persona prefix holding xMXN (default LP). Moves real testnet xMXN to the merchant.
 import { readFileSync } from "node:fs";

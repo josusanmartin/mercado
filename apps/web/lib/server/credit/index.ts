@@ -8,11 +8,13 @@ import { publicClient } from "../chain";
 import { demoProvider, type EarningsProvider } from "./provider";
 import { SCORE_FLOOR, SCORE_VERSION, scoreDriver } from "./score";
 import { privateKeyToAccount } from "viem/accounts";
+import { recordAttestation } from "./book";
 import { ATTESTATION_TTL_SECONDS, randomNonce, reportDataHash, signEligibility } from "./attest";
 
 export * from "./provider";
 export * from "./score";
 export * from "./attest";
+export * from "./book";
 
 const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
 
@@ -150,6 +152,19 @@ export async function assessDriver(
   const expiry = BigInt(now + ATTESTATION_TTL_SECONDS);
   const nonce = randomNonce();
   const { signature, signer } = await signEligibility(signerKey, pool, { borrower, maxAmount, expiry, nonce, dataHash }, chainId);
+  await recordAttestation({
+    at: new Date().toISOString(),
+    protocol: serverAddresses().protocol,
+    pool,
+    borrower,
+    platform,
+    profile,
+    score: result.score,
+    maxAmount: maxAmount.toString(),
+    expiry: Number(expiry),
+    nonce: nonce.toString(),
+    dataHash,
+  }).catch((e) => console.warn("[credit] attestation ledger write failed:", (e as Error).message));
   response.attestation = {
     borrower,
     maxAmount: maxAmount.toString(),
