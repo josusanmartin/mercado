@@ -46,6 +46,9 @@ const ICONS = {
   "move-quote": Repeat,
   bills: ReceiptIcon,
 } as const;
+/** A column on xl; below xl it dissolves so its children join the outer grid's action-first order. */
+const COL =
+  "contents xl:grid xl:min-w-0 xl:grid-cols-[minmax(0,1fr)] xl:content-start xl:gap-10";
 const DRIVER =
   personaById("driver")?.address ??
   "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63";
@@ -92,45 +95,66 @@ export function DevelopersScreen() {
         />
       }
     >
+      {/* Below xl the two columns dissolve (display: contents) into one grid ordered for action first
+          (review P1, lead 06:49): endpoint + price → Try it → its ledger → the reference blocks. From xl up
+          the columns are real again and the orders reset, so the desktop composition is unchanged. */}
       <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <Panel title={e.title} description={e.summary}>
-            <Rows>
-              <Row
-                label="Request"
-                value={
-                  <span className="font-mono text-[13px]">
-                    {e.method} {e.path}
-                  </span>
-                }
-              />
-              <Row
-                label="Price"
-                value={price(e.id)}
-                sub="Live from /api/mpp/pricing (what the route charges)"
-              />
-              <Row label="Returns" value={e.returns} />
-              <Row
-                label="Settles"
-                value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
-              />
-            </Rows>
-          </Panel>
-          <ChallengeShape key={e.id} endpoint={e} />
-          <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
-          <Code
-            title="mppx client: pay and get the response"
-            code={snippetFor(e, origin, DRIVER)}
-          />
-        </div>
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-10">
-          <TryIt key={e.id} endpoint={e} />
-          {e.id !== "bills" && (
-            <PaidCalls
-              product={e.id}
-              title="Paid calls ledger"
-              description="Every paid call to this endpoint, recorded when its payment was verified on-chain."
+        <p className="order-1 -mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[15px] xl:hidden">
+          <span className="font-mono text-[13px] break-all">
+            {e.method} {e.path.split("?")[0]}
+          </span>
+          <span className="font-semibold">{price(e.id)}</span>
+        </p>
+        <div className={COL}>
+          <div className="order-4 min-w-0 xl:order-none">
+            <Panel title={e.title} description={e.summary}>
+              <Rows>
+                <Row
+                  label="Request"
+                  value={
+                    <span className="font-mono text-[13px]">
+                      {e.method} {e.path}
+                    </span>
+                  }
+                />
+                <Row
+                  label="Price"
+                  value={price(e.id)}
+                  sub="Live from /api/mpp/pricing (what the route charges)"
+                />
+                <Row label="Returns" value={e.returns} />
+                <Row
+                  label="Settles"
+                  value="TIP-20 xMXN transfer on Tempo Moderato (42431), memo-bound to the challenge"
+                />
+              </Rows>
+            </Panel>
+          </div>
+          <div className="order-5 min-w-0 xl:order-none">
+            <ChallengeShape key={e.id} endpoint={e} />
+          </div>
+          <div className="order-6 min-w-0 xl:order-none">
+            <Code title="curl: see the 402" code={curlFor(e, origin, DRIVER)} />
+          </div>
+          <div className="order-7 min-w-0 xl:order-none">
+            <Code
+              title="mppx client: pay and get the response"
+              code={snippetFor(e, origin, DRIVER)}
             />
+          </div>
+        </div>
+        <div className={COL}>
+          <div className="order-2 min-w-0 xl:order-none">
+            <TryIt key={e.id} endpoint={e} />
+          </div>
+          {e.id !== "bills" && (
+            <div className="order-3 min-w-0 xl:order-none">
+              <PaidCalls
+                product={e.id}
+                title="Paid calls ledger"
+                description="Every paid call to this endpoint, recorded when its payment was verified on-chain."
+              />
+            </div>
           )}
         </div>
       </div>

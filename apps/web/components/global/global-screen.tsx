@@ -166,6 +166,9 @@ function QuoteRows({
  * geometry is stable from first paint: the row keeps its height in every state, and once connected it says
  * which account pays (review: a row that collapsed on connect still moved the Pay button on a cold arrival).
  */
+/** Same height in every state; on phones the not-connected row (text + button) wraps to two lines, so that is reserved. */
+const CONNECT_SLOT = "min-h-[3.75rem] sm:min-h-10";
+
 function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
   const { isConnected, chainId, status, address } = useConnection();
   const { switchTo } = usePersona();
@@ -174,7 +177,12 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
   const p = personaById(persona);
   if (isConnected && chainId === TEMPO_MODERATO_CHAIN_ID)
     return (
-      <p className="text-muted-foreground flex min-h-10 items-center text-[13px]">
+      <p
+        className={cn(
+          "text-muted-foreground flex items-center text-[13px]",
+          CONNECT_SLOT,
+        )}
+      >
         Paying from{" "}
         {p.address && address?.toLowerCase() === p.address.toLowerCase()
           ? p.name
@@ -184,7 +192,12 @@ function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
     );
   const connecting = status === "connecting" || status === "reconnecting";
   return (
-    <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px]",
+        CONNECT_SLOT,
+      )}
+    >
       {isConnected ? (
         <>
           <span className="text-muted-foreground">
