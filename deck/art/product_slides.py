@@ -30,6 +30,12 @@ P = [
           ("510", "xMXN repaid to lenders, realized fees 10 → 20", "repay tx", TX+"0x08854d60c176840a2e44db11aed6477354f074c2a3470f42b3015b0d9be1669d")],
   status=("#FFB547", "Demo Uber Data · illustrative score, not a credit model · repayment is manual"),
   notes="~12s. Mercado Crédito has three sides. Drivers: Demo Uber Data (synthetic) gives an illustrative score and a credit line of min(15% of median weekly net, 1,500 MXN); the server signs a 15-minute EIP-712 attestation bound to the wallet, pool, chain and nonce, and the pool lends with a 2% fee. Lenders: they fund the pool separately from the vault, can't withdraw lent cash, and earn realized fees only when drivers repay; repayments go back to the pool, not burned. Underwriting API: bots pay per report over HTTP 402 with no API key. On the v2 journey, a driver borrowed 500 xMXN, paid 100 xMXN of Telcel airtime over a real 402, and repaid 510, and realized fees went from 10 to 20. Repayment is manual; nothing is deducted from Uber payouts."),
+ dict(id="p-card", num="08", name="Mercado Card", tint="#9B82FF", base="#7C5CFF", art="product-card-v4.webp",
+  purpose="Spend xMXN at a shop.", who="Anyone holding xMXN who wants to pay at a counter: the family in Mexico, a driver, a merchant's customers.",
+  proofs=[("tap", "holder-signed charge, moved on-chain to the merchant", None, None),
+          ("limit", "spend limit, daily window and freeze, enforced on-chain", None, None)],
+  status=("#777777", "in progress: card contract and app being built · demo card, not Visa or Mastercard"),
+  notes="~8s. Mercado Card is the fifth product: spend xMXN at a shop. The design: a holder issues a virtual card with an on-chain spend limit and daily window and can freeze it; an allowlisted demo merchant terminal charges it, the holder approves with a tap signature, xMXN moves on-chain from holder to merchant, and refunds are real too. Only the card network and the card number are simulated: it's a demo virtual card, not Visa or Mastercard, and it works only at Mercado demo merchants, with no physical card and no ATM. Status: the contract and the app are being built now; don't claim a live charge until it's deployed and its journey passes."),
 ]
 
 def slide(p):
@@ -44,7 +50,7 @@ def slide(p):
                + ("" if i == 0 else "padding:0 0 0 32px;border-left:1px solid rgba(255,255,255,0.12);") + '">'
                f'<p style="font-size:120px;font-weight:500;line-height:1;letter-spacing:-5px;color:{p["tint"]}">{big}</p>'
                f'<p style="font-family:{M};font-size:24px;line-height:1.4;color:#999999">{cap}</p>'
-               f'<p style="font-family:{M};font-size:24px;color:#F2F0EA"><a href="{url}">{lk} ↗</a></p></div>\n')
+               + (f'<p style="font-family:{M};font-size:24px;color:#F2F0EA"><a href="{url}">{lk} ↗</a></p>' if url else '') + '</div>\n')
     dot, st = p["status"]
     return f'''<section id="{p["id"]}" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
 <div style="position:absolute;left:0;top:0;width:1920px;height:10px;background:{p["base"]}"></div>

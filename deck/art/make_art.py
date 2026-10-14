@@ -255,6 +255,7 @@ PRODUCTS = {
     "remesas": ((255, 138, 31), ["Mercado Remesas", "50 OUSD → 995 xMXN", "para mamá · Guadalajara", "Tiempo Aire 100 MXN"]),
     "global": ((47, 107, 255), ["Mercado Global", "USD ⇄ MXN · oracle mid", "quote 250 → 4,975 xMXN", "402 · partner API"]),
     "credito": ((242, 53, 125), ["Mercado Crédito", "score 96.5 · line 1,500", "draw 300 · owed 306", "EIP-712 · nonce burned"]),
+    "card": ((124, 92, 255), ["Mercado Card", "demo card ···· 4821", "cobrar 250 xMXN", "freeze · limit · refund"]),
 }
 
 
@@ -314,7 +315,7 @@ def home_art(rng, w, h, fade):
     accents = [c for c, _ in PRODUCTS.values()]
     PALETTE = np.array([INK, CREAM, GREY] + accents, dtype=np.float32)
     a = np.full((h, w, 3), INK, dtype=np.float32)
-    strip = w // 4
+    strip = w // len(PRODUCTS)
     for i, (name, (acc, lines)) in enumerate(PRODUCTS.items()):
         src = product_source(strip, h, acc, lines[1:3], rng, bars=(name == "credito"))
         a[:, i * strip:(i + 1) * strip] = src
