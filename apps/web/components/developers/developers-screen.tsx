@@ -25,6 +25,7 @@ import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { personaById } from "@/components/wallet/personas";
+import { Honesty, usePresent } from "@/components/console/present";
 import { PaidCalls } from "@/components/credito/paid-calls";
 import { usePricing } from "@/components/credito/use-pricing";
 import { fmtAmount } from "@/lib/format";
@@ -51,6 +52,7 @@ const DRIVER =
 export function DevelopersScreen() {
   const [tab, setTab] = useState<EndpointId>("underwriting");
   const pricing = usePricing();
+  const present = usePresent();
   // client-only page (ClientOnly wrapper), so window is defined
   const [origin] = useState(() => window.location.origin);
   const e = ENDPOINTS.find((x) => x.id === tab)!;
@@ -71,7 +73,7 @@ export function DevelopersScreen() {
       demo="partner"
       meta={
         pricing.data
-          ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value · Testnet · sin valor real`
+          ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value${present ? "" : " · Testnet · sin valor real"}`
           : undefined
       }
       purpose={
@@ -260,7 +262,16 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
     <Panel
       variant="card"
       title="Try it: a real paid call"
-      description={`Pays from the API partner demo account (${partner?.address ? `${partner.address.slice(0, 6)}…${partner.address.slice(-4)}` : "testnet"}) to Mercado's merchant on Tempo. Real testnet transfer; nothing of real value.`}
+      description={
+        <>
+          Pays from the API partner account (
+          {partner?.address
+            ? `${partner.address.slice(0, 6)}…${partner.address.slice(-4)}`
+            : "testnet"}
+          ) to Mercado&apos;s merchant on Tempo.
+          <Honesty> Real testnet transfer; nothing of real value.</Honesty>
+        </>
+      }
     >
       <ConnectGate
         persona="partner"

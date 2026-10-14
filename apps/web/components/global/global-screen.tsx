@@ -22,6 +22,7 @@ import { ConnectGate } from "@/components/shell/connect-gate";
 import { TokenInput } from "@/components/shell/token-input";
 import { TxProgress } from "@/components/shell/tx-progress";
 import { ActivityTable } from "@/components/mint/activity-table";
+import { Honesty } from "@/components/console/present";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +64,7 @@ export function GlobalScreen() {
         <>
           Pay Mexican suppliers in pesos from dollars, or bring pesos home,
           through Mercado&apos;s exchange: OUSD in mints xMXN, xMXN out burns
-          it. Quotes come from an admin-relayed testnet FX feed.
+          it.<Honesty> Quotes come from an admin-relayed testnet FX feed.</Honesty>
           <span className="mt-3 flex flex-wrap gap-2">
             <Badge variant="mock">Testnet OUSD · no real value</Badge>
             <Badge variant="mock">xMXN not redeemable for pesos</Badge>

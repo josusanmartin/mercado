@@ -287,11 +287,8 @@ const sold = parseAbiItem(
   "event Sold(address indexed user, bool forXmxn, uint256 tbillIn, uint256 ousdOut, uint256 received, uint256 fee, uint256 px)",
 );
 
-/** Stocks trades are a separate list (`stockRows`) so `rows` keeps its three products for existing consumers. */
-export type StockActivity = Omit<InvestActivity, "product"> & { product: "stocks" };
-
 export type InvestActivity = {
-  product: "pesos" | "dolares" | "tbills";
+  product: "pesos" | "dolares" | "acciones" | "tbills"; // tbills: legacy trades only
   label: string;
   amount: bigint;
   symbol: string;
@@ -323,7 +320,6 @@ export function useInvestHistory() {
       const c = client!;
       const latest = await c.getBlockNumber();
       const rows: InvestActivity[] = [];
-      const stockRows: StockActivity[] = [];
       let pesosIn = 0n,
         pesosOut = 0n,
         dolIn = 0n,
@@ -454,8 +450,8 @@ export function useInvestHistory() {
         for (const l of ib) {
           idxCost += l.args.ousdUsed;
           idxIn += l.args.tbillOut;
-          stockRows.push({
-            product: "stocks",
+          rows.push({
+            product: "acciones",
             label: "Compra · acciones",
             amount: l.args.tbillOut,
             symbol: "mIDX",
@@ -468,8 +464,8 @@ export function useInvestHistory() {
         for (const l of isold) {
           idxProceeds += l.args.ousdOut;
           idxOut += l.args.tbillIn;
-          stockRows.push({
-            product: "stocks",
+          rows.push({
+            product: "acciones",
             label: "Venta · acciones",
             amount: l.args.tbillIn,
             symbol: "mIDX",
@@ -569,12 +565,8 @@ export function useInvestHistory() {
             ? -1
             : 1,
       );
-      const newestFirst = (x: { block: bigint; logIndex: number }, y: { block: bigint; logIndex: number }) =>
-        x.block === y.block ? y.logIndex - x.logIndex : x.block > y.block ? -1 : 1;
-      stockRows.sort(newestFirst);
       return {
         rows,
-        stockRows,
         /** Net amounts put in (deposits − withdrawals), for "earned since deposit". */
         netPesos: pesosIn - pesosOut,
         netDolares: dolIn - dolOut,

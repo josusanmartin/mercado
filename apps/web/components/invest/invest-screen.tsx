@@ -13,6 +13,7 @@ import {
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { PhonePanel } from "@/components/mobile";
+import { Honesty } from "@/components/console/present";
 import { fmtAmount } from "@/lib/format";
 import { PhoneApp } from "./phone-app";
 import { INVEST, useInvestHistory, useInvestPositions } from "./use-invest";
@@ -87,15 +88,7 @@ function InvestV2() {
     idxScoped && p.stocks?.value !== undefined && net
       ? p.stocks.value - net.netStocksCost
       : undefined;
-  const activity = net
-    ? [...net.rows, ...net.stockRows].sort((x, y) =>
-        x.block === y.block
-          ? y.logIndex - x.logIndex
-          : x.block > y.block
-            ? -1
-            : 1,
-      )
-    : undefined;
+  const activity = net?.rows;
   const sellable =
     p.stocksDesk?.sellable === undefined || p.stocks?.balance === undefined
       ? undefined
@@ -110,7 +103,8 @@ function InvestV2() {
         <>
           Save in dollars, pesos or stocks on Tempo: dollar and peso savings
           accrue every second at a configured rate, and stocks track a demo US
-          equity index. Returns come from demo sources and are never guaranteed.
+          equity index.
+          <Honesty> Returns come from demo sources and are never guaranteed.</Honesty>
           <span className="mt-3 flex flex-wrap gap-2">
             <Badge variant="mock">Demo yield sources on testnet</Badge>
             <Badge variant="mock">mIDX: demo token, not a security</Badge>
