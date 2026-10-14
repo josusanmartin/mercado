@@ -1,0 +1,53 @@
+{
+  "file": "review/evidence/sponsor-abuse-1791940313755.json",
+  "at": "2026-10-14T01:11:53.737Z",
+  "mode": "isolated actual policy and installed viem relay, ephemeral signer, no network/shared quota",
+  "sourceSha256": "8420b06ea195b211a54d789abd9c3f4c3982249bce11d794efc30f1b60f646d4",
+  "results": [
+    {
+      "name": "normal",
+      "refusal": null
+    },
+    {
+      "name": "huge-fees",
+      "refusal": "maxFeePerGas too high"
+    },
+    {
+      "name": "MXN-fee",
+      "refusal": "fee token not allowed"
+    },
+    {
+      "name": "cost-cap",
+      "refusal": "fee cost too high"
+    },
+    {
+      "name": "mixed-target-batch",
+      "refusal": "target not a Mercado contract"
+    },
+    {
+      "name": "create",
+      "refusal": "target not a Mercado contract"
+    },
+    {
+      "name": "unknown-selector",
+      "refusal": null
+    },
+    {
+      "name": "arbitrary-approve",
+      "refusal": null
+    },
+    {
+      "name": "wrong-chain",
+      "refusal": "wrong chain"
+    }
+  ],
+  "relay": {
+    "unsignedIdenticalFillsSigned": 30,
+    "downstreamCalls": 0
+  },
+  "quota": {
+    "consumed": 500,
+    "deniedNewSender": true,
+    "senderMapResetsOnFreshProcess": true
+  }
+}

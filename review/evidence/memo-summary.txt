@@ -1,0 +1,38 @@
+{
+  "file": "review/evidence/memo-1791940314259.json",
+  "results": [
+    {
+      "utf8Length": 10,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 34,
+      "result": {
+        "error": "Memo must be at most 32 bytes."
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    }
+  ]
+}

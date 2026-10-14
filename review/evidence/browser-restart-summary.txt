@@ -1,0 +1,69 @@
+{
+  "file": "review/evidence/browser-1791940225747.json",
+  "checks": [
+    {
+      "name": "desktop",
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "title": "Mercado · synthetic pesos on Tempo"
+    },
+    {
+      "name": "desktop",
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "title": "Create pesos · Mercado"
+    },
+    {
+      "name": "desktop",
+      "path": "/send",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/send\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/send\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/credit",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/credit\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/credit\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/pay",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/pay\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/earn",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/earn\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/earn\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/mint",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/mint\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/mint\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/send",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/send\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/send\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/credit",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/credit\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/credit\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/pay",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/pay\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "mobile",
+      "path": "/earn",
+      "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/earn\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/earn\", waiting until \"networkidle\"\u001b[22m\n"
+    }
+  ]
+}

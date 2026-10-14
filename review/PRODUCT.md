@@ -79,3 +79,15 @@ Concrete corrections requested:
 - Keep the existing labels: testnet faucet OUSD/no real value/not issuer-backed/not redeemable; Demo Uber Data; mock oracle; SIMULATED top-up; manual repayment from separately disclosed funds.
 
 These narrative/copy changes were accepted and incorporated. At 00:56 the user added a stronger visual constraint: less text, preferably screenshots, video and animations. The current deck uses short captions and schematic animations while the real app screens are being built. Keep animated/example states identifiable; replace them with actual screen captures once the browser journey works, and retain the payment/fulfillment distinction in both.
+
+## Product round 2 (01:12 UTC)
+
+The on-chain and machine-to-machine MPP paths now have crew-recorded live evidence. The remaining lift is to let judges experience and inspect them quickly. No new financial product is needed.
+
+| Rank | Concrete change | Why it helps Tempo/MPP judges | Effort / acceptance |
+|---|---|---|---|
+| 1 | Finish and record a single driver flow: connect prepared Driver → draw → 402 → receipt beside remaining debt, with the fee sponsor shown from the actual transaction. | Makes Tempo usability and MPP settlement observable in one 60–90-second sequence. A green backend alone cannot deliver this. | Small–medium, uses current screens. Browser flow must complete; show actual sponsor evidence and funding provenance. Never say any fresh passkey can spend before it has xMXN. |
+| 2 | Make the paid-underwriter agent reproducible from the app/deck: a compact recorded 402 → 2 xMXN → report/receipt trace, transaction link, and exact runnable script command. | Shows a machine buying a useful API without an API key; this is a distinct MPP-native use already implemented. | Small. Link QA's existing transcript/script, label playback and Demo Uber Data, keep borrower attestation out of third-party output. Do not build a second agent UI or invent a second live run. |
+| 3 | Finish Send with a receipt card: recipient, exact xMXN delivered, OUSD spent and spread, public memo `para mamá`, and explorer link. | Makes the local-currency and Tempo memo story tangible; an inspectable artifact is more memorable than another architecture slide. | Small once Send works. Use actual Swapped/TransferWithMemo data, validate memo before swap, state onchain testnet delivery only/no cashout. |
+
+The already-approved stress preview and three separate fund balances remain useful supporting views. Keep the new deck direction airy and visual; use real screenshots and short labels. Preserve visible testnet, Demo Uber Data, mock-feed and SIMULATED fulfillment labels even when turning them into refined pills. The three requests above use existing behavior and evidence, rather than adding another contract or production-sounding integration.

@@ -1,6 +1,7 @@
 # Mercado review findings
 
-Last reviewed commit: `d6c810a` (2026-10-14, approximately 01:03 UTC).
+Last reviewed commit: `41c4347` (2026-10-14, approximately 01:12 UTC), plus sponsor/shell/screens WIP.
+Current pass: R-013 fee caps pass isolated policy checks. New R-016 quota grief and R-017 late memo validation reproduced locally. Shell has landed; first restart probe hit the server restart and is not frontend acceptance. See Pass 6 below.
 **Live redeployment, API 402, API-to-pool signature/capacity simulation, and recorded stress liquidation verified.** R-006/R-007/R-008/R-010 are resolved at the evidence levels below. R-009's two reproduced failures now pass locally; R-011 has issued-challenge recovery implemented, with real crash/restart acceptance still outstanding. New open P1: R-012 (wallet switch during multi-step transaction). Browser routes remain incomplete: home is the Next scaffold and five dashboard routes return 404 as of the 00:58 browser check. Payment correctness does not yet establish the interactive wallet journey.
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -104,7 +105,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-013 — P1 — contracts — Sponsorship limits transaction count but not fee exposure
 
-- Status: OPEN; posted to contracts and reproduced against the actual policy.
+- Status: LOCAL FIX VERIFIED in `3364196`: huge fee, aggregate fee cap and unsupported fee token are now refused; mixed batches with an external target, creation and wrong chain also refuse. `sponsor-abuse-1791940313755.json`. No live drain attempted. Quota availability and call scope remain separate below.
 - Location: `apps/web/app/api/sponsor/policy.ts:46` (`refusal`); `apps/web/app/api/sponsor/route.ts` (`Relay.feePayer` validation).
 - Scenario: a request targets an allowed Mercado contract and stays under 5M gas, but supplies an enormous `maxFeePerGas`/priority fee. It passes the policy and can consume sponsor funds in one transaction if the balance covers it; hourly transaction counts do not bound per-transaction cost. Explicit unsupported fee tokens also pass the policy.
 - Evidence: `review/sponsor-policy-check.mjs` evaluates the actual policy with a huge priority fee and with xMXN as fee token; both return no refusal. `review/evidence/sponsor-policy-1791939944157.json`. Installed viem's `tempo/internal/relay/feePayer.js` signs after application validation without adding a cost limit; raw sponsorship prefers `transaction.feeToken` over the configured default (`:279`). No live drain/signing attempt was made.
@@ -123,6 +124,31 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Location: `apps/web/components/billpay/pay-screen.tsx:85`, `:89`, `:99`, `:103` (form changes); `:129` (Pay uses existing quote).
 - Scenario: Get quote for phone A/100 MXN, change the form to phone B/200 MXN, then Pay. The previous quote and idempotency key remain active, so settlement/fulfillment still use A/100 while the edited form shows B/200. Provider buttons can also reset state during a pending payment.
 - Fix: invalidate quotes on changes to destination/amount/provider; lock those controls during quote/payment work and show the final quoted destination in checkout.
+
+### R-016 — P1 — contracts — Unsigned fill requests can exhaust everyone's sponsor quota
+
+- Status: OPEN; reproduced with the installed Relay and actual isolated policy. No request was sent to the shared sponsor.
+- Location: `apps/web/app/api/sponsor/route.ts:46` and `:52`; `policy.ts:81`; installed `viem/_esm/tempo/internal/relay/feePayer.js:91-108`.
+- Scenario: a caller supplies prepared `eth_fillTransaction` requests with invented `from` addresses. No sender signature, ownership proof or broadcast is needed. Each fill consumes a global slot; even the same sender/nonce/payload consumes another slot on every retry. Seventeen invented senders can consume all 500 slots and deny fee sponsorship to the demo wallet for the hour.
+- Evidence: `review/sponsor-abuse-check.mjs`, `sponsor-abuse-1791940313755.json`: 30 identical unsigned fills produce sponsor signatures with zero downstream RPC calls; isolated quota then accepts 500 requests across 17 senders and rejects a new legitimate sender. These signatures use a random local test key, never the deployed sponsor.
+- Fix: bound ingress before filling/signing (trusted per-session/IP controls appropriate to this single-process demo); deduplicate identical signing commitments and distinguish sender quotas from identity proof. A public sponsor needs an explicitly budgeted Sybil policy. Persist the budget if restart must preserve it. Do not claim the current in-memory $5/hour bound survives restarts or multiple processes.
+- Scope: current target checks reject arbitrary external contract calls but allow every selector on the five targets, including unknown/reverting calls and token approvals to any spender. The local relay signs an unknown vault selector without execution validation. This does not grant sponsor asset approvals or bypass target authorization: execution sender remains the caller. Restrict selectors/approval spenders and validate call shape if the policy intends only the documented app flows.
+
+### R-017 — P1 — contracts — Invalid memo is rejected only after swap has executed
+
+- Status: OPEN; actual action orchestration reproduced with local write adapters.
+- Location: `apps/web/lib/contracts/actions.ts:117-126` (`swapAndSend`, memo encoding after swap).
+- Scenario: a memo of 17 accented characters is 34 UTF-8 bytes. The helper swaps OUSD into xMXN first, then `memoToBytes32` throws and no recipient transfer occurs. Retrying the complete flow can swap again. A 32-character UI limit alone does not prevent this with Unicode.
+- Evidence: `review/memo-check.mjs`, `memo-1791940314259.json`: ASCII 32 bytes and 16 accented characters pass; 17 accented characters record one swap followed by the memo error. No real transaction was sent. The UTF-8 bytes32 encoder itself is correct for these boundaries and for `para mamá`.
+- Fix: encode/validate memo and recipient before approvals or swap, reuse the encoded memo for the final write, show a UTF-8 byte counter in Send. Preserve any completed swap receipt on later send failures and offer to finish the send without swapping again.
+
+## Pass 6 evidence (01:09–01:12 UTC; continuing)
+
+- Read the review handoff, prior findings/product notes, crew rules, SPEC and INTERFACES. Saved changed-commit stats and WIP summaries under `review/evidence/`; no edits outside reviewer files other than authorized IRC posts.
+- The first browser probe hit the dev-server restart (connection refused), preserved in `browser-restart-summary.txt`; lead confirms recovery at 01:11. A fresh browser pass is next.
+- Sponsor cost bounds independently pass locally. Its target boundary rejects mixed external batches, contract creation and wrong chain. Quota grief and late memo validation are separate reproduced findings above.
+- `/credit` has borrower matching, wallet-reset, always-visible Refresh and post-draw refresh in source (R-014); `/pay` invalidates quotes on edits and disables payable fields while busy (R-015). Browser verification follows.
+- Payment copy at `pay-screen.tsx:156` still promises “you will not be charged twice” for uncertain settlement; this overstates the currently tested recovery boundary in R-009/R-011. Requested qualified retry/reconciliation wording.
 
 ## Pass 5 evidence (01:03–01:07 UTC)
 
