@@ -1,55 +1,36 @@
-<section id="j4-bills" data-transition="fade" style="background:#F7F8FB;color:#0A2540;font-family:'Inter Tight', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:16px">
-<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#533AFD">Core flow · 02</p>
-<h2 style="font-size:72px;font-weight:600;line-height:1.05;letter-spacing:-2.5px;color:#0A2540;width:1100px">Pays over a real HTTP 402</h2>
-<div style="position:absolute;left:128px;top:320px;width:1150px;height:560px;border-radius:24px;background:#FDFDFE;border:1px solid #E6EAF0;box-shadow:0 50px 100px -20px rgba(50,50,93,0.18), 0 30px 60px -30px rgba(0,0,0,0.22)"></div>
-<x-embed style="position:absolute;left:128px;top:320px;width:1150px;height:560px"><!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:transparent;color:#0A2540;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
-.lane{position:absolute;top:40px;width:260px;margin-left:-130px;text-align:center;font-size:24px;font-weight:600;letter-spacing:.5px}
-.life{position:absolute;top:112px;bottom:36px;width:0;border-left:1px solid #E3E8EE}
-.m{position:absolute;height:2px;background:#533AFD;transform:scaleX(0);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.m.r{transform-origin:left}.m.l{transform-origin:right}
-.m.on{transform:scaleX(1)}
-.m.r:after,.m.l:before{content:"";position:absolute;top:-6px;border-top:7px solid transparent;border-bottom:7px solid transparent}
-.m.r:after{right:-2px;border-left:11px solid #533AFD}
-.m.l:before{left:-2px;border-right:11px solid #533AFD}
-.t{position:absolute;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:24px;white-space:nowrap;color:#425466;opacity:0;transform:translateY(6px);transition:all .45s}
-.t.on{opacity:1;transform:none}
-.t b{color:#0A2540;font-weight:700}
-.dot{position:absolute;width:12px;height:12px;margin:-5px 0 0 -6px;border-radius:50%;background:#533AFD;opacity:0;transition:opacity .3s}
-.dot.on{opacity:1}
+<section id="j4-bills" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Serif', Georgia, serif;padding:128px 128px 160px">
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">04 — the core flow</p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:400;line-height:1.05;letter-spacing:-3px;color:#F2F0EA">The driver pays</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:400;font-style:italic;line-height:1.05;letter-spacing:-3px;color:#999999">over a real HTTP 402.</h2>
+<hr style="position:absolute;left:128px;top:448px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:476px;width:1664px;height:300px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:26px;overflow:hidden}
+.l{display:flex;gap:28px;height:56px;align-items:center;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,text-shadow .8s}
+.l.on{opacity:1;transform:none}
+.d{width:40px;color:#666}
+.k{width:620px;color:#F2F0EA}
+.v{color:#999}
+.amber .k,.amber .v{color:#FFB547}
+.amber.on{text-shadow:0 0 18px rgba(255,181,71,.55)}
+.ok{color:#00FF00;text-shadow:0 0 10px rgba(0,255,0,.5)}
 </style></head><body>
-<div class="lane" style="left:170px">Driver wallet</div>
-<div class="lane" style="left:575px">Mercado API</div>
-<div class="lane" style="left:980px">Tempo</div>
-<div class="life" style="left:170px"></div><div class="life" style="left:575px"></div><div class="life" style="left:980px"></div>
-<div id="s"></div>
+<div class="l"><span class="d">→</span><span class="k">POST /api/bills/pay</span><span class="v">telcel · 100 MXN</span></div>
+<div class="l"><span class="d">←</span><span class="k">402 Payment Required</span><span class="v">100 xMXN · tempo/charge</span></div>
+<div class="l"><span class="d">→</span><span class="k">transfer 100 xMXN on Tempo</span><span class="v">0x10ff…a00e</span></div>
+<div class="l"><span class="d">→</span><span class="k">retry with payment credential</span><span class="v"></span></div>
+<div class="l amber"><span class="d">←</span><span class="k">200 OK · Payment-Receipt</span><span class="v"><span class="ok">✓</span> verified on-chain</span></div>
 <script>
-var X={w:170,a:575,t:980},R=[
-['w','a','POST /api/bills/pay'],
-['a','w','<b>402</b> Payment Required · 100 xMXN'],
-['w','t','transfer 100 xMXN'],
-['w','a','retry with credential'],
-['a','t','verify the receipt'],
-['a','w','<b>200</b> · Payment-Receipt']],box=document.getElementById('s'),els=[];
-R.forEach(function(r,i){var y=150+i*64,x1=X[r[0]],x2=X[r[1]],L=Math.min(x1,x2),W=Math.abs(x2-x1),d=x2>x1?'r':'l';
-var m=document.createElement('div');m.className='m '+d;m.style.cssText='left:'+L+'px;width:'+W+'px;top:'+y+'px';
-var t=document.createElement('div');t.className='t';t.innerHTML=r[2];t.style.left=(L+16)+'px';t.style.top=(y-36)+'px';
-var o=document.createElement('div');o.className='dot';o.style.left=x1+'px';o.style.top=y+'px';
-box.appendChild(m);box.appendChild(t);box.appendChild(o);els.push([m,t,o]);});
-function run(){els.forEach(function(e){e.forEach(function(x){x.classList.remove('on')})});
-els.forEach(function(e,i){setTimeout(function(){e.forEach(function(x){x.classList.add('on')})},500+i*1000)});}
-run();setInterval(run,9500);
+var L=[].slice.call(document.querySelectorAll('.l'));
+function run(){L.forEach(function(e){e.classList.remove('on')});L.forEach(function(e,i){setTimeout(function(){e.classList.add('on')},600+i*1100)})}
+run();setInterval(run,11000);
 </script></body></html></x-embed>
-<div id="wallet" style="position:absolute;left:1330px;top:320px;width:462px;display:flex;flex-direction:column;gap:6px;padding:40px;border-radius:24px;background:#FDFDFE;border:1px solid #E6EAF0;box-shadow:0 50px 100px -20px rgba(50,50,93,0.18), 0 30px 60px -30px rgba(0,0,0,0.22)">
-<p style="font-size:24px;font-weight:500;color:#6B7C93">Driver wallet</p>
-<p style="font-size:200px;font-weight:600;line-height:1;letter-spacing:-8px;color:#0A2540">400</p>
-<p style="font-size:32px;font-weight:500;color:#425466;padding:0 0 20px 0;border-bottom:1px solid #E6EAF0">xMXN left</p>
-<p style="font-size:24px;font-weight:500;color:#6B7C93;padding:16px 0 0 0">Advance outstanding</p>
-<p style="font-size:44px;font-weight:600;letter-spacing:-1px;color:#0A2540">510 xMXN</p>
+<hr style="position:absolute;left:128px;top:792px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<div id="wallet" style="position:absolute;left:128px;top:812px;width:1664px;display:flex;gap:64px;align-items:flex-end">
+<div style="width:420px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">driver balance</p><p style="font-size:72px;line-height:1;letter-spacing:-2px;color:#F2F0EA">400 xMXN</p></div>
+<div style="width:420px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">still owed</p><p style="font-size:72px;line-height:1;letter-spacing:-2px;color:#FFB547">510 xMXN</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:flex-end"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">airtime top-up: simulated</p><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#F2F0EA"><a href="https://explore.testnet.tempo.xyz/tx/0x10ff16340ab60d9e4e68917f7734495f3cc4b4bd390078149889f6d2680fa00e">live tx on Moderato ↗</a></p></div>
 </div>
-<p data-build-in="fade 1" style="position:absolute;left:1330px;top:790px;width:300px;font-size:24px;font-weight:500;padding:6px 16px;border-radius:999px;border:1px dashed #C2410C;color:#C2410C">Top-up SIMULATED</p>
-<p data-build-in="fade 2" style="position:absolute;left:1330px;top:846px;width:462px;font-size:24px;font-weight:500;color:#533AFD"><a href="https://explore.testnet.tempo.xyz/tx/0x10ff16340ab60d9e4e68917f7734495f3cc4b4bd390078149889f6d2680fa00e">Live payment on Moderato ↗</a></p>
-<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#425466"><b>Mercado</b> · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#425466">04</p>
-<aside>~25s. Slow down here. The driver spends 100 MXN of the advance on Telcel airtime. The unpaid request gets a real HTTP 402 from mppx; the wallet pays in xMXN on Tempo; the server verifies that exact payment for that exact order before calling the provider. The wallet card on the right shows 400 xMXN left and 510 still owed, so the receipt and the remaining debt sit side by side. The top-up is SIMULATED: MPP is the payment rail, not a bill-payment provider, and no airtime is delivered. A settled order returns its recorded receipt on retry; recovery from an interrupted payment is still under test, so don't claim more. The live link is the full-journey run on Moderato: the driver paid 100 xMXN to the merchant through a real 402, with an idempotent retry. Both server-broadcast (pull) and wallet-broadcast (push, what Tempo Wallet and passkeys use) modes pass live. The driver later repays 510 by hand from separate, labeled test funds.</aside>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">04</p>
+<aside>~25s. Slow down here. The driver spends 100 MXN of the advance on Telcel airtime. The unpaid request gets a real HTTP 402 from mppx; the wallet pays in xMXN on Tempo; the server verifies that exact payment for that exact order before calling the provider. The bottom row puts the receipt next to the remaining debt: 400 xMXN left, 510 still owed. The top-up is simulated: MPP is the payment rail, not a bill-payment provider, and no airtime is delivered. A settled order returns its recorded receipt on retry; recovery from an interrupted payment is still under test, so don't claim more. The live link is the full-journey run on Moderato: the driver paid 100 xMXN to the merchant through a real 402, with an idempotent retry. Both server-broadcast (pull) and wallet-broadcast (push, what Tempo Wallet and passkeys use) modes pass live. The driver later repays 510 by hand from separate, labeled test funds.</aside>
 </section>

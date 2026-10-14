@@ -1,15 +1,26 @@
-<section id="cover" data-transition="fade" style="background:#F7F8FB;color:#0A2540;font-family:'Inter Tight', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:flex-end;gap:40px">
-<div style="position:absolute;left:760px;top:-240px;width:1400px;height:900px;background:radial-gradient(ellipse at 40% 50%, #7A73FF 0%, rgba(122,115,255,0) 60%);opacity:0.9;filter:blur(20px)"></div>
-<div style="position:absolute;left:1180px;top:-120px;width:1000px;height:760px;background:radial-gradient(ellipse at 50% 50%, #FF6FA3 0%, rgba(255,111,163,0) 62%);opacity:0.85;filter:blur(20px)"></div>
-<div style="position:absolute;left:980px;top:220px;width:1100px;height:700px;background:radial-gradient(ellipse at 50% 50%, #FFB45E 0%, rgba(255,180,94,0) 60%);opacity:0.8;filter:blur(20px)"></div>
-<div style="position:absolute;left:1420px;top:-260px;width:900px;height:700px;background:radial-gradient(ellipse at 50% 50%, #62D9FF 0%, rgba(98,217,255,0) 60%);opacity:0.85;filter:blur(20px)"></div>
-<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(90deg, #F7F8FB 0%, #F7F8FB 34%, rgba(247,248,251,0) 62%)"></div>
-<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#533AFD">Paradigm Frontiers · built on Tempo</p>
-<h1 style="font-size:200px;font-weight:600;line-height:0.95;letter-spacing:-9px;color:#0A2540">Mercado</h1>
-<p style="font-size:44px;font-weight:400;line-height:1.25;letter-spacing:-1px;color:#425466;width:1000px">Local-currency money on Tempo, backed by OUSD.</p>
-<div style="display:flex;gap:12px;padding:24px 0 0 0">
-<p style="font-size:24px;font-weight:500;padding:8px 18px;border-radius:999px;border:1px solid #D5DBE5;background:rgba(255,255,255,0.75);color:#425466">Testnet prototype</p>
-<p style="font-size:24px;font-weight:500;padding:8px 18px;border-radius:999px;border:1px solid #D5DBE5;background:rgba(255,255,255,0.75);color:#425466">Testnet OUSD · no real value</p>
-</div>
-<aside>~8s. Presenter: [Team name] · [Presenter]. "Mercado lets anyone mint a local-currency stablecoin on Tempo. We start with xMXN, a synthetic peso, and put it to work: sending money to Mexico, advancing a gig driver's pay, and paying for a simulated airtime top-up with a real HTTP 402 testnet payment." This is a testnet prototype; the OUSD is Tempo's faucet token and has no real value.</aside>
+<section id="cover" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Serif', Georgia, serif;padding:128px">
+<x-embed style="position:absolute;left:0;top:0;width:1920px;height:1080px"><!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#0D0D0D;overflow:hidden}canvas{display:block}</style></head><body><canvas id="c" width="1920" height="1080"></canvas>
+<script>
+var c=document.getElementById('c'),x=c.getContext('2d'),H='0123456789abcdef',cols=[],CW=40,N=Math.ceil(1920/CW);
+function rnd(n){var s='';for(var i=0;i<n;i++)s+=H[Math.floor(Math.random()*16)];return s}
+for(var i=0;i<N;i++)cols.push({y:Math.random()*1080,v:.12+Math.random()*.25,s:rnd(40),a:.035+Math.random()*.05});
+x.font='24px "SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace';x.textBaseline='top';
+var glow=null,last=0;
+function f(t){x.fillStyle='#0D0D0D';x.fillRect(0,0,1920,1080);
+cols.forEach(function(k,i){k.y-=k.v;if(k.y<-1100){k.y=1080;k.s=rnd(40)}
+for(var j=0;j<k.s.length;j++){var yy=k.y+j*32;if(yy<-30||yy>1090)continue;
+var g=glow&&glow.i===i&&glow.j===j;x.fillStyle=g?'rgba(255,181,71,'+glow.a+')':'rgba(242,240,234,'+k.a+')';x.fillText(k.s[j],i*CW+8,yy)}});
+if(!glow&&t-last>1800){glow={i:Math.floor(N*.55+Math.random()*N*.45),j:Math.floor(Math.random()*40),a:0,d:1};last=t}
+if(glow){glow.a+=glow.d*.008;if(glow.a>.55)glow.d=-1;if(glow.a<=0)glow=null}
+requestAnimationFrame(f)}
+requestAnimationFrame(f);
+</script></body></html></x-embed>
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(90deg, rgba(13,13,13,0.92) 0%, rgba(13,13,13,0.75) 45%, rgba(13,13,13,0.2) 100%)"></div>
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">A testnet prototype on Tempo</p>
+<h1 data-build-in="rise 1" style="position:absolute;left:128px;top:470px;width:1400px;font-size:200px;font-weight:400;line-height:1;letter-spacing:-6px;color:#F2F0EA">Mercado</h1>
+<p data-build-in="rise 2" style="position:absolute;left:128px;top:700px;width:1500px;font-size:72px;line-height:1.1;letter-spacing:-2px;color:#F2F0EA">Local-currency money on Tempo,</p>
+<p data-build-in="rise 3" style="position:absolute;left:128px;top:780px;width:1500px;font-size:72px;font-style:italic;line-height:1.1;letter-spacing:-2px;color:#999999">backed by OUSD.</p>
+<div style="position:absolute;left:128px;top:928px;width:12px;height:12px;border-radius:50%;background:#00FF00;box-shadow:0 0 12px rgba(0,255,0,0.6)"></div>
+<p style="position:absolute;left:156px;top:914px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">Live on Moderato · testnet OUSD, no real value</p>
+<aside>~8s. Presenter: [Team name] · [Presenter]. "Mercado lets anyone mint a local-currency stablecoin on Tempo. We start with xMXN, a synthetic peso, and put it to work: sending money to Mexico, advancing a gig driver's pay, and paying for a simulated airtime top-up with a real HTTP 402 testnet payment." This is a testnet prototype; the OUSD is Tempo's faucet token and has no real value. The background is a slow drift of hex characters, decoration only.</aside>
 </section>
