@@ -68,4 +68,4 @@ Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately 
 - **Lenders**: supply/withdraw and lender positions (contracts' Earn components).
 - **Underwriting API**: the MPP pay-per-report panel and bot trace.
 
-Owner: `api` (EarningsProvider gains DemoDidiProvider + DemoRappiProvider fixtures; the platform is carried into the attestation dataHash).
+Owners: **`web` builds the Driver app** (phone frame, connect + consent screens, credit line, draw, your advance, Tiempo Aire shortcut) in `components/credito/driver-app/**`. **`api` builds the Back office** plus the API side: DemoDidiProvider + DemoRappiProvider fixtures, `/api/driver/*` accepting `platform`, and the platform carried into the attestation dataHash. api owns the `/credito` page shell and mounts web's DriverApp.
