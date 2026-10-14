@@ -2,6 +2,7 @@
 // Mercado Invest (crew/DESIGN-ECOSYSTEM.md §7): the savings phone app beside a Portfolio panel. v2-only:
 // sOUSD, the peso savings vault and the Stocks desk exist only in the v2 deployment, so on v1 the page fails closed.
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { explorerTx } from "@mercado/shared";
 import {
   Panel,
@@ -11,12 +12,12 @@ import {
   SettingsLayout,
 } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
-import { Badge } from "@/components/ui/badge";
 import { PhonePanel } from "@/components/mobile";
 import { Honesty } from "@/components/console/present";
 import { fmtAmount } from "@/lib/format";
 import { PhoneApp } from "./phone-app";
 import { INVEST, useInvestHistory, useInvestPositions } from "./use-invest";
+import { useLiveDollars, useLivePesos, type LiveValue } from "./use-live-yield";
 
 const v = (x: bigint | undefined, unit: string, d = 2) =>
   x === undefined ? "…" : `${fmtAmount(x, d)} ${unit}`;
@@ -43,6 +44,44 @@ const EN_LABEL: Record<string, string> = {
 const pct = (bps: bigint | undefined) =>
   bps === undefined ? "…" : `${(Number(bps) / 100).toFixed(2)}%`;
 
+/**
+ * "Earned since deposit", live: the vault value at this second (exact accrual) minus what this wallet put in,
+ * ticking every 50ms with 8 decimals like the phone (once a second under reduced motion). Written to the DOM
+ * directly, so React doesn't re-render 20×/s. `fallback` until the first chain read.
+ */
+function LiveEarned({
+  live,
+  base,
+  unit,
+  fallback,
+}: {
+  live: LiveValue;
+  base: bigint | undefined;
+  unit: string;
+  fallback: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (base === undefined) return;
+    const paint = () => {
+      const v = live.at(Date.now() / 1000);
+      if (v === undefined || !ref.current) return;
+      const e = v - Number(base) / 1e6;
+      const abs = Math.abs(e) < 5e-9 ? 0 : e; // no "−0.00000000"
+      ref.current.textContent = `${abs < 0 ? "−" : "+"}${Math.abs(abs).toFixed(8)} ${unit}`;
+    };
+    paint();
+    const slow = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const t = setInterval(paint, slow ? 1000 : 50);
+    return () => clearInterval(t);
+  }, [live, base, unit]);
+  return (
+    <span ref={ref} className="tabular">
+      {fallback}
+    </span>
+  );
+}
+
 export function InvestScreen() {
   if (INVEST.protocol !== "v2" || !INVEST.sOUSD || !INVEST.deskIdx)
     return (
@@ -65,6 +104,9 @@ export function InvestScreen() {
 
 function InvestV2() {
   const p = useInvestPositions();
+  // exact per-second accrual (StakedOUSD formula), the same source as the phone's ticking counters
+  const liveDol = useLiveDollars();
+  const livePes = useLivePesos();
   const h = useInvestHistory();
   const net = h.data;
   const vault = p.pesosVault; // sxMXN once deployed; until then peso savings is the lending pool
@@ -74,7 +116,9 @@ function InvestV2() {
     p.dollars?.shares !== undefined &&
     p.dollars.shares === net.sharesFromEvents;
   const pesoScoped = vault
-    ? !!net && vault.shares !== undefined && vault.shares === net.sxSharesFromEvents
+    ? !!net &&
+      vault.shares !== undefined &&
+      vault.shares === net.sxSharesFromEvents
     : true;
   const idxScoped =
     !!net &&
@@ -114,14 +158,8 @@ function InvestV2() {
       title="Grow your money"
       purpose={
         <>
-          Save in dollars, pesos or stocks on Tempo: dollar and peso savings
-          accrue every second at a configured rate, and stocks track a demo US
-          equity index.
-          <Honesty> Returns come from demo sources and are never guaranteed.</Honesty>
-          <span className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="mock">Demo yield sources on testnet</Badge>
-            <Badge variant="mock">mIDX: demo token, not a security</Badge>
-          </span>
+          Save in dollars (5%) or pesos (8%), earning every second, or buy a
+          stocks index.<Honesty> Demo-funded rates, never guaranteed.</Honesty>
         </>
       }
     >
@@ -131,7 +169,12 @@ function InvestV2() {
             persona="saver"
             why="Mercado Invest runs on the saver's wallet. Use the demo account or connect your own."
           >
-            <PhoneFrame label="Mercado Invest on Android" accent="#E5A823" onAccent="#0a0a0a" statusBar="#E5A823">
+            <PhoneFrame
+              label="Mercado Invest on Android"
+              accent="#E5A823"
+              onAccent="#0a0a0a"
+              statusBar="#E5A823"
+            >
               <PhoneApp />
             </PhoneFrame>
           </ConnectGate>
@@ -155,8 +198,14 @@ function InvestV2() {
               <Row
                 label="Earned since deposit"
                 value={
-                  unscoped(dolScoped, "sOUSD shares") ??
-                  signed(earnedDol, "OUSD")
+                  unscoped(dolScoped, "sOUSD shares") ?? (
+                    <LiveEarned
+                      live={liveDol}
+                      base={net?.netDolares}
+                      unit="OUSD"
+                      fallback={signed(earnedDol, "OUSD")}
+                    />
+                  )
                 }
                 sub={`Source: admin-funded demo yield reserve (${v(p.dollars?.yieldReserve, "OUSD", 0)} left). Accrual stops if it runs out.`}
               />
@@ -175,8 +224,14 @@ function InvestV2() {
                 <Row
                   label="Earned since deposit"
                   value={
-                    unscoped(pesoScoped, "sxMXN shares") ??
-                    signed(earnedPesos, "xMXN")
+                    unscoped(pesoScoped, "sxMXN shares") ?? (
+                      <LiveEarned
+                        live={livePes}
+                        base={net?.netPesosVault}
+                        unit="xMXN"
+                        fallback={signed(earnedPesos, "xMXN")}
+                      />
+                    )
                   }
                   sub={`Source: admin-funded demo yield reserve (${v(vault.yieldReserve, "xMXN", 0)} left). Accrual stops if it runs out.`}
                 />
