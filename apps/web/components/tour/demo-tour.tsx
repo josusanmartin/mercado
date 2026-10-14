@@ -1,5 +1,6 @@
 "use client";
-// One-click Demo Tour: SPEC §0 steps in the order of DEMO.md. The spine is one xMXN flow:
+// One-click Demo Tour: SPEC §0 steps in the order of DEMO.md, named by the v0.2 modules
+// (Create · Move · Lend · Spend). The spine is one xMXN flow:
 // pesos are created and sent, a lender funds the pool, the driver draws an advance, pays a bill
 // through a real HTTP 402 receipt, then repays. Each step switches to its persona and page, and
 // pre-fills the amounts the script uses (screens read them via useTourPrefill).
@@ -27,7 +28,7 @@ export const TOUR: TourStep[] = [
     spec: 1,
     persona: "lp",
     href: "/mint",
-    title: "Lock OUSD, mint pesos",
+    title: "Create: lock OUSD, mint pesos",
     doThis: "Deposit 1,000 OUSD and mint 8,000 xMXN, a 250% ratio. Then drag the peso slider to see where it turns red.",
     prefill: { deposit: "1000", mint: "8000" },
   },
@@ -35,7 +36,7 @@ export const TOUR: TourStep[] = [
     spec: 3,
     persona: "sender",
     href: "/send",
-    title: "Send pesos home",
+    title: "Move: send pesos home",
     doThis: "Swap 50 OUSD for xMXN on the swap desk and send it to Rosa in one go.",
     prefill: { amount: "50", memo: "para mamá" },
   },
@@ -43,7 +44,7 @@ export const TOUR: TourStep[] = [
     spec: 4,
     persona: "lender",
     href: "/earn",
-    title: "A lender funds the pool",
+    title: "Lend: a lender funds the pool",
     doThis: "Check the pool has cash to lend. Supply 2,000 xMXN if it's running low.",
     prefill: { supply: "2000" },
   },
@@ -51,28 +52,28 @@ export const TOUR: TourStep[] = [
     spec: 4,
     persona: "driver",
     href: "/credit",
-    title: "Driver gets an advance",
+    title: "Lend: the driver gets an advance",
     doThis: "Connect the demo driver, check eligibility, then draw the advance.",
   },
   {
     spec: 5,
     persona: "driver",
     href: "/pay",
-    title: "Pay the phone bill over HTTP 402",
+    title: "Spend: pay the phone bill over HTTP 402",
     doThis: "Buy 100 MXN of Telcel airtime. Payment is real on Tempo; the top-up is SIMULATED.",
   },
   {
     spec: 6,
     persona: "driver",
     href: "/credit",
-    title: "Repay the advance",
+    title: "Lend: repay the advance",
     doThis: "Repay the full balance. Nothing is deducted from Uber payouts automatically.",
   },
   {
     spec: 6,
     persona: "lender",
     href: "/earn",
-    title: "The lender sees the fee",
+    title: "Lend: the lender sees the fee",
     doThis: "Realized fees went up and loans out went down. No APY is promised.",
   },
 ];
