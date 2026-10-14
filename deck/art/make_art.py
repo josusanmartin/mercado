@@ -256,6 +256,7 @@ PRODUCTS = {
     "global": ((47, 107, 255), ["Mercado Global", "USD ⇄ MXN · oracle mid", "quote 250 → 4,975 xMXN", "402 · partner API"]),
     "credito": ((242, 53, 125), ["Mercado Crédito", "score 96.5 · line 1,500", "draw 300 · owed 306", "EIP-712 · nonce burned"]),
     "card": ((124, 92, 255), ["Mercado Card", "demo card ···· 4821", "cobrar 250 xMXN", "freeze · limit · refund"]),
+    "invest": ((242, 184, 7), ["Mercado Invest", "ahorro en pesos · dólares", "tTBILL · demo T-bill", "rendimiento variable"]),
 }
 
 
