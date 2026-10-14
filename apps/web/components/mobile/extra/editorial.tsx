@@ -7,7 +7,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fmtMoney, haptic } from "../format";
+import { fmtMoney, haceTiempo, haptic } from "../format";
 import { usePresent } from "@/components/console/present";
 import { Display as KitDisplay, Pressable } from "../primitives";
 import "./editorial.css";
@@ -390,4 +390,29 @@ export function Flag({ code, className }: { code: "mx" | "us"; className?: strin
 export function useH() {
   const present = usePresent();
   return <T,>(x: T): T | undefined => (present ? undefined : x);
+}
+
+/** A list that couldn't load at all: say so and offer a retry (never an endless skeleton). */
+export function LoadError({ text = "No pudimos cargar tus movimientos.", onRetry, busy }: { text?: string; onRetry: () => void; busy?: boolean }) {
+  return (
+    <div role="alert" className="grid justify-items-start gap-2 py-5">
+      <p className="text-[14px] text-[var(--m-on-surface-variant)]">{text}</p>
+      <button type="button" onClick={onRetry} disabled={busy} className="text-[14px] font-semibold underline underline-offset-4 disabled:opacity-40">
+        {busy ? "Reintentando…" : "Reintentar"}
+      </button>
+    </div>
+  );
+}
+
+/** Last good data is still on screen but the latest refresh failed: show its age + a retry. */
+export function StaleLine({ updatedAt, now, onRetry }: { updatedAt: number; now: number | undefined; onRetry: () => void }) {
+  return (
+    <p role="status" className="m-meta flex flex-wrap items-center gap-x-1.5 pt-3">
+      <span>Sin conexión · actualizado {now ? haceTiempo(updatedAt / 1000, now) : "antes"}</span>
+      <span aria-hidden>·</span>
+      <button type="button" onClick={onRetry} className="font-semibold underline underline-offset-2">
+        Reintentar
+      </button>
+    </p>
+  );
 }

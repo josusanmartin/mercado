@@ -33,6 +33,8 @@ import {
   SectionHead,
   hora,
   useH,
+  LoadError,
+  StaleLine,
 } from "@/components/mobile/extra/editorial";
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
 
@@ -496,6 +498,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   const all: Row[] = (h.data?.rows ?? []).flatMap((r) => (r.product === "tbills" ? [] : [{ ...r, product: r.product }]));
   const rows = all.filter((r) => !product || r.product === product).slice(0, limit ?? 30);
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
+  if (!h.data && h.isError) return <LoadError onRetry={() => h.refetch()} busy={h.isFetching} />;
   if (!h.data)
     return (
       <div className="grid gap-3 pt-3" aria-busy="true">
@@ -509,6 +512,8 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
     );
   if (!rows.length) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Sin movimientos todavía.</p>;
   return (
+    <>
+      {h.isRefetchError && <StaleLine updatedAt={h.dataUpdatedAt} now={now} onRetry={() => h.refetch()} />}
     <DayGroups
       items={rows}
       ts={(r: Row) => r.timestamp}
@@ -536,6 +541,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
         );
       }}
     />
+    </>
   );
 }
 

@@ -33,6 +33,8 @@ import {
   Flag,
   hora,
   useH,
+  LoadError,
+  StaleLine,
 } from "@/components/mobile/extra/editorial";
 import { PLATFORMS, useAdvance, useDriverData, type Platform } from "./use-driver";
 
@@ -496,6 +498,7 @@ function ActivityList({ limit }: { limit?: number }) {
   const now = useNow(60_000);
   const feed = useActivityFeed("credit", { account: address, limit: 100 });
   const rows = feed.rows.filter((r) => r.event === "Borrowed" || r.event === "Repaid").slice(0, limit ?? 30);
+  if (!feed.data && feed.isError) return <LoadError onRetry={() => feed.refetch()} busy={feed.isFetching} />;
   if (feed.isLoading)
     return (
       <div className="grid gap-3 pt-3" aria-busy="true">
@@ -509,6 +512,8 @@ function ActivityList({ limit }: { limit?: number }) {
     );
   if (!rows.length) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Sin movimientos todavía.</p>;
   return (
+    <>
+      {feed.isRefetchError && <StaleLine updatedAt={feed.dataUpdatedAt} now={now} onRetry={() => feed.refetch()} />}
     <DayGroups
       items={rows}
       ts={(r) => r.timestamp}
@@ -533,6 +538,7 @@ function ActivityList({ limit }: { limit?: number }) {
         );
       }}
     />
+    </>
   );
 }
 
