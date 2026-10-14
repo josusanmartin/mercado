@@ -6,9 +6,9 @@ import {
   ProtocolUnavailableError,
   activeProtocolName,
 } from "@/lib/server/protocol";
-import { recordPaidCall } from "@/lib/mpp/ledger";
+import { paidOnce } from "@/lib/mpp/paid-once";
 import { PRICES } from "@/lib/mpp/pricing";
-import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
+import { billPaymentToken, merchantAddress } from "@/lib/mpp/server";
 
 const UNDERWRITER_FEE = PRICES.underwriting;
 
@@ -33,51 +33,51 @@ export async function POST(request: Request) {
       );
 
     const token = billPaymentToken();
-    const outcome = await charge(request, {
-      amount: UNDERWRITER_FEE,
-      currency: token.address,
-      recipient: merchantAddress(),
-      externalId: `score:${body.borrower.toLowerCase()}:${body.platform}:${body.profile}`,
-      description: `Mercado demo underwriting report (${body.profile}), illustrative only`,
-      meta: { product: "underwriting-report" },
-      expiresMinutes: 5,
-    });
-    if (!outcome.paid) return outcome.challenge;
-    const report = await assessDriver(body.borrower as Address, body.profile, {
-      borrowCapacityMxn: null,
-      platform: body.platform,
-    });
-    await recordPaidCall({
+    return await paidOnce(request, {
       product: "underwriting",
-      txHash: outcome.txHash,
-      payer: outcome.payer,
-      amount: parseUnits(UNDERWRITER_FEE, 6).toString(),
+      charge: {
+        amount: UNDERWRITER_FEE,
+        currency: token.address,
+        recipient: merchantAddress(),
+        externalId: `score:${body.borrower.toLowerCase()}:${body.platform}:${body.profile}`,
+        description: `Mercado demo underwriting report (${body.profile}), illustrative only`,
+        meta: { product: "underwriting-report" },
+        expiresMinutes: 5,
+      },
+      feeUnits: parseUnits(UNDERWRITER_FEE, 6).toString(),
       token: token.address,
       protocol: activeProtocolName(),
-      summary: `${body.platform} · ${body.profile} · score ${report.score}`,
-      at: new Date().toISOString(),
+      summary: `${body.platform} · ${body.profile}`,
+      // post-payment work (deterministic): re-run on a recovery retry without a new charge
+      produce: () =>
+        assessDriver(body.borrower as Address, body.profile, {
+          borrowCapacityMxn: null,
+          platform: body.platform,
+        }),
+      respond: (report, p) => {
+        const { attestation, attestationWithheld, ...rest } = report;
+        void attestation;
+        void attestationWithheld;
+        return Response.json(
+          {
+            ...rest,
+            access: "underwriter",
+            payment: {
+              txHash: p.txHash,
+              payer: p.payer,
+              token: token.address,
+              tokenSymbol: token.symbol,
+            },
+          },
+          {
+            headers: {
+              "Payment-Receipt": p.receiptHeader,
+              "Cache-Control": "private, no-store",
+            },
+          },
+        );
+      },
     });
-    const { attestation, attestationWithheld, ...rest } = report;
-    void attestation;
-    void attestationWithheld;
-    return Response.json(
-      {
-        ...rest,
-        access: "underwriter",
-        payment: {
-          txHash: outcome.txHash,
-          payer: outcome.payer,
-          token: token.address,
-          tokenSymbol: token.symbol,
-        },
-      },
-      {
-        headers: {
-          "Payment-Receipt": outcome.receiptHeader,
-          "Cache-Control": "private, no-store",
-        },
-      },
-    );
   } catch (e) {
     if (e instanceof ProtocolUnavailableError)
       return jsonError(503, e.message, e.code);

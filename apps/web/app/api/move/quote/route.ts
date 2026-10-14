@@ -1,13 +1,13 @@
 import { MoveQuoteQuerySchema } from "@mercado/shared";
-import { formatUnits, parseUnits, type Hex } from "viem";
+import { parseUnits, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { billPaymentToken, charge, merchantAddress } from "@/lib/mpp/server";
+import { billPaymentToken, merchantAddress } from "@/lib/mpp/server";
+import { paidOnce } from "@/lib/mpp/paid-once";
 import { canonicalJson } from "@/lib/server/credit";
 import { env } from "@/lib/server/env";
 import { jsonError } from "@/lib/server/http";
-import { ProtocolUnavailableError } from "@/lib/server/protocol";
+import { activeProtocolName, ProtocolUnavailableError } from "@/lib/server/protocol";
 import { MoveQuoteError, quoteMove } from "@/lib/server/move/quote";
-import { recordPaidCall } from "@/lib/mpp/ledger";
 import { PRICES } from "@/lib/mpp/pricing";
 
 const PARTNER_FEE = PRICES["move-quote"];
@@ -29,41 +29,38 @@ export async function GET(request: Request) {
   try {
     if (!partner) return Response.json(await quoteMove(side, amount), { headers: { "Cache-Control": "no-store" } });
 
-    // Price first, so a partner never pays for a quote we can't give.
+    // Fail closed BEFORE the 402: a partner must never pay for a quote we can't sign or price.
+    const key = env("ATTESTATION_SIGNER_PRIVATE_KEY") as Hex | undefined;
+    if (!key) return jsonError(503, "The quote signing key isn't configured.", "SIGNER_UNAVAILABLE");
+    const signer = privateKeyToAccount(key);
     await quoteMove(side, amount);
     const token = billPaymentToken();
-    const outcome = await charge(request, {
-      amount: PARTNER_FEE,
-      currency: token.address,
-      recipient: merchantAddress(),
-      externalId: `move-quote:${side}:${amount}`,
-      description: `Mercado signed indicative quote (${side}, ${amount}): 30s expiry, minimum received bound on-chain`,
-      meta: { product: "move-quote" },
-      expiresMinutes: 5,
-    });
-    if (!outcome.paid) return outcome.challenge;
-
-    const quote = await quoteMove(side, amount);
-    await recordPaidCall({
+    return await paidOnce(request, {
       product: "move-quote",
-      txHash: outcome.txHash,
-      payer: outcome.payer,
-      amount: parseUnits(PARTNER_FEE, 6).toString(),
+      charge: {
+        amount: PARTNER_FEE,
+        currency: token.address,
+        recipient: merchantAddress(),
+        externalId: `move-quote:${side}:${amount}`,
+        description: `Mercado signed indicative quote (${side}, ${amount}): 30s expiry, minimum received bound on-chain`,
+        meta: { product: "move-quote" },
+        expiresMinutes: 5,
+      },
+      feeUnits: parseUnits(PARTNER_FEE, 6).toString(),
       token: token.address,
-      protocol: quote.protocol,
-      summary: `${side} ${amount} → ${formatUnits(BigInt(quote.amountOut), 6)} ${quote.symbolOut}`,
-      at: new Date().toISOString(),
+      protocol: activeProtocolName(),
+      summary: `${side} ${amount} · signed quote`,
+      // post-payment work: a fresh quote (30s expiry) signed by Mercado's quote key; re-run on a recovery retry
+      produce: async () => {
+        const quote = await quoteMove(side, amount);
+        return { quote, signature: await signer.signMessage({ message: canonicalJson(quote) }) };
+      },
+      respond: ({ quote, signature }, p) =>
+        Response.json(
+          { ...quote, signature, signer: signer.address, payment: { txHash: p.txHash, payer: p.payer, tokenSymbol: token.symbol } },
+          { headers: { "Payment-Receipt": p.receiptHeader, "Cache-Control": "private, no-store" } },
+        ),
     });
-    const key = env("ATTESTATION_SIGNER_PRIVATE_KEY") as Hex | undefined;
-    let signed: { signature?: Hex; signer?: `0x${string}` } = {};
-    if (key) {
-      const account = privateKeyToAccount(key);
-      signed = { signature: await account.signMessage({ message: canonicalJson(quote) }), signer: account.address };
-    }
-    return Response.json(
-      { ...quote, ...signed, payment: { txHash: outcome.txHash, payer: outcome.payer, tokenSymbol: token.symbol } },
-      { headers: { "Payment-Receipt": outcome.receiptHeader, "Cache-Control": "private, no-store" } },
-    );
   } catch (e) {
     if (e instanceof MoveQuoteError) return jsonError(e.status, e.message, e.code);
     if (e instanceof ProtocolUnavailableError) return jsonError(503, e.message, e.code);
