@@ -145,6 +145,8 @@ export const DriverScoreResponseSchema = z.object({
   capReason: z.enum(["income-share", "absolute-cap", "pool-liquidity", "ineligible"]),
   dataHash: Bytes32Schema,
   attestation: EligibilityAttestationSchema.optional(),
+  /** Why an eligible driver got no attestation (pool not deployed, liquidity unreadable, …). */
+  attestationWithheld: z.string().optional(),
 });
 
 // ---------- /api/bills/* ----------
