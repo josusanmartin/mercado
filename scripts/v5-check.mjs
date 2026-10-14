@@ -5,6 +5,7 @@
 // Screenshots go to review/qa-v5/<label>/ for before/after comparison.
 //   node scripts/v5-check.mjs before        # baseline
 //   node scripts/v5-check.mjs after-<sha>   # after a push; exit 1 on any FAIL
+//   node scripts/v5-check.mjs x --only nojs # one pass: desktop | 390 | nojs
 import { createRequire } from 'node:module'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -13,6 +14,8 @@ const require = createRequire(new URL('../apps/web/package.json', import.meta.ur
 const { chromium } = require('@playwright/test')
 const BASE = process.env.MERCADO_APP_URL ?? 'http://localhost:3100'
 const label = process.argv[2] ?? 'run'
+// --only desktop|390|nojs runs one pass (the full gate is all three)
+const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : undefined
 const OUT = new URL(`../review/qa-v5/${label}/`, import.meta.url).pathname
 mkdirSync(OUT, { recursive: true })
 
@@ -35,7 +38,7 @@ const RUNS = [
   ...['dark', 'light'].flatMap((theme) => ['no-preference', 'reduce'].map((motion) => ({ theme, motion, w: 1440, h: 900 }))),
   { theme: 'dark', motion: 'no-preference', w: 390, h: 844 },
 ]
-for (const { theme, motion, w, h } of RUNS) {
+for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390' ? x.w < 1000 : ONLY === 'desktop' && x.w >= 1000))) {
   {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, reducedMotion: motion, ...(w < 500 ? { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : {}) })
     await ctx.addInitScript((t) => {
@@ -104,6 +107,39 @@ for (const { theme, motion, w, h } of RUNS) {
     }
     await ctx.close()
   }
+}
+// lead 05:22 P0: content must be visible WITHOUT JS (slow/failed hydration). JS off: count text blocks hidden by opacity 0.
+if (!ONLY || ONLY === 'nojs') {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, javaScriptEnabled: false })
+  for (const r of ROUTES) {
+    const page = await ctx.newPage()
+    const row = { route: r.path, vp: 'noJS', theme: 'ssr', motion: '-', status: 0, errors: 0, overflowX: 0, fold: '-', anims: '-', ok: true, notes: [] }
+    try {
+      const res = await page.goto(BASE + r.path, { waitUntil: 'load', timeout: 60_000 })
+      row.status = res?.status() ?? 0
+      await page.waitForTimeout(2500) // a CSS failsafe (if any) gets ~1.5 s
+      const hidden = await page.evaluate(() => {
+        const out = []
+        for (const el of document.querySelectorAll('main h1, main h2, main h3, main p, main li, main button, main a')) {
+          if (!el.textContent?.trim()) continue
+          let n = el, op = 1
+          while (n && n !== document.body) { op *= Number(getComputedStyle(n).opacity); n = n.parentElement }
+          if (op < 0.05) out.push(el.textContent.trim().replace(/\s+/g, ' ').slice(0, 40))
+        }
+        return { n: out.length, total: document.querySelectorAll('main h1, main h2, main h3, main p, main li, main button, main a').length, sample: out.slice(0, 2) }
+      })
+      row.fold = `${hidden.n}/${hidden.total} hidden`
+      if (hidden.n) row.notes.push(`no-JS: ${hidden.n} text blocks invisible (e.g. "${hidden.sample.join('", "')}")`)
+      await page.screenshot({ path: join(OUT, `${r.name}-nojs.png`) })
+    } catch (e) {
+      row.notes.push(`error: ${e.message.split('\n')[0].slice(0, 120)}`)
+    }
+    if (row.status !== 200) row.notes.push(`HTTP ${row.status}`)
+    row.ok = row.notes.length === 0
+    results.push(row)
+    await page.close()
+  }
+  await ctx.close()
 }
 await browser.close()
 
