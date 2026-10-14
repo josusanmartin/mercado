@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-14T01:30:15.510Z",
+  "mode": "browser read-RPC failure injection, no broadcast",
+  "blocked": 114,
+  "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Connect', exact: true })\u001b[22m\n\u001b[2m    - waiting for \"http://localhost:3100/\" navigation to finish...\u001b[22m\n"
+}

@@ -1,0 +1,21 @@
+ M apps/web/components/credit/agent-api-panel.tsx
+ M apps/web/components/credit/credit-screen.tsx
+ M packages/contracts/broadcast/StressDemo.s.sol/42431/run-latest.json
+?? packages/contracts/broadcast/DemoReset.s.sol/
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939475945.json
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939611680.json
+?? packages/contracts/broadcast/StressDemo.s.sol/42431/run-1791939794794.json
+?? packages/contracts/script/DemoReset.s.sol
+?? packages/contracts/script/demo-reset
+?? packages/contracts/script/demo-state.mjs
+?? review/evidence/changes-pass8.txt
+?? review/evidence/home-rpc-unavailable-1791941415510.json
+?? review/evidence/home-unavailable-summary.txt
+?? review/evidence/irc-pass22.txt
+?? review/evidence/irc-pass23.txt
+?? review/evidence/irc-redesign-start.txt
+?? review/evidence/receipt-helper-1791941324880.json
+?? review/evidence/receipt-helper-summary.txt
+?? review/evidence/wip-redesign-start.txt
+?? review/home-unavailable-check.mjs
+?? review/receipt-helper-check.mjs

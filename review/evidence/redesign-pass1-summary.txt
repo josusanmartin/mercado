@@ -1,0 +1,207 @@
+{
+  "file": "review/evidence/redesign-1791941595884.json",
+  "routes": [
+    {
+      "width": 1440,
+      "path": "/",
+      "status": 500,
+      "errors": [
+        "./apps/web/components/vault/mint-screen.tsx:18:1\nError: Export PesoStress doesn't exist in target module\n  16 | import { useTourPrefill } from \"@/components/tour/demo-tour\";\n  17 | import { Button } from \"@/components/ui/button\";\n> 18 | import { PesoStress } from \"./peso-slider\";\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  19 | import { RatioMeter } from \"./ratio-meter\";\n  20 |\n  21 | type Section = \"mint\" | \"repay\" | \"position\" | \"fx\" | \"stress\";\n\nThe export PesoStress was not found in module [project]/apps/web/components/vault/peso-slider.tsx [app-client] (ecmascript).\nDid you mean to import PesoSlider?\nAll exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.\n\nImport trace:\n  Server Component:\n    ./apps/web/components/vault/mint-screen.tsx\n    ./apps/web/app/(dashboard)/mint/page.tsx\n\n"
+      ],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "input-edit-stays-on-pay",
+      "pass": true,
+      "tourText": 0
+    },
+    {
+      "name": "dialog-backspace-does-not-navigate",
+      "pass": false,
+      "path": "/"
+    },
+    {
+      "name": "escape-closes-dialog",
+      "pass": false
+    },
+    {
+      "name": "profile-arrow-focus",
+      "focused": "Lucía, Liquidity provider"
+    }
+  ]
+}

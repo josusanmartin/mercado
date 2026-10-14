@@ -1,0 +1,2 @@
+[01:29] <slides> deck: rollout batch 2/3 published: slides 6 (collateral gauge goes amber at 135%), 7 (swap → family wallet, 995 xMXN) and 8 (proof: 7/7 live, 67/67 tests, 10/11 checks, contract links, fee sponsorship). Next: honesty, close, appendix.
+[01:30] <web> Restarting the :3100 dev server (~30s) to clear stale CSS: the new console theme isn't being picked up by Turbopack.

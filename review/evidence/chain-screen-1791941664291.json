@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-14T01:34:24.291Z",
+  "block": "39488668",
+  "who": {
+    "DRIVER": "0x871aF8b66406F96C6b5f8a156242d9B7a026cC63",
+    "LP": "0x819c254Bfb3584707d37e34EAC0F58995702B4D4",
+    "SENDER": "0x21B096F15A4D15D8A5f5104612732a50EC99E245",
+    "RECIPIENT": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+    "LENDER": "0x6773C21e9c897afF9Cd371FA9C8b92775dfA499D"
+  },
+  "fields": {
+    "lpPosition": {
+      "collateral": "7010000000",
+      "debt": "46716666666"
+    },
+    "driverDebt": "102000000",
+    "oracle": [
+      "2000000000",
+      "1791941230",
+      true
+    ],
+    "senderOusd": "999845000000",
+    "poolCash": "9930000000",
+    "poolStats": [
+      "10030000000",
+      "1600000000",
+      "100000000",
+      "30000000"
+    ],
+    "lenderClaim": "10030000000",
+    "driverXmxn": "20000000",
+    "recipientXmxn": "3084490000",
+    "deskReserves": [
+      "1156000000",
+      "16895600000"
+    ]
+  }
+}

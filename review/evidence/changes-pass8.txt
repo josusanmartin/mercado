@@ -1,0 +1,156 @@
+commit 6e8b614bcf7ecfb8c660ff2fa2d9e5610b950f20
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:28:07 2026 +0000
+
+    review: pass 8 findings and evidence
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ review/FINDINGS.md                                 |  77 +++++++++++++--
+ review/PRODUCT.md                                  |   8 +-
+ review/browser-flows-check.mjs                     |  22 +++++
+ review/credit-browser-check.mjs                    |   7 ++
+ review/evidence/browser-1791940402694.json         | 105 +++++++++++++++++++++
+ review/evidence/browser-flows-1791940479311.json   |  46 +++++++++
+ review/evidence/browser-flows-1791940545735.json   |  89 +++++++++++++++++
+ review/evidence/browser-flows-pass7-summary.txt    |  81 ++++++++++++++++
+ review/evidence/browser-flows-summary.txt          |  45 +++++++++
+ review/evidence/browser-mobile-1791940402694.png   | Bin 0 -> 21946 bytes
+ review/evidence/browser-pass6-summary.txt          |  81 ++++++++++++++++
+ review/evidence/credit-browser-1791940615629.json  |  30 ++++++
+ review/evidence/credit-browser-summary.txt         |  28 ++++++
+ review/evidence/credit-connected-1791940615629.png | Bin 0 -> 202945 bytes
+ review/evidence/irc-pass10.txt                     |   2 +
+ review/evidence/irc-pass11.txt                     |   2 +
+ review/evidence/irc-pass12.txt                     |   2 +
+ review/evidence/irc-pass13.txt                     |   9 ++
+ review/evidence/irc-pass14.txt                     |   1 +
+ review/evidence/irc-pass15.txt                     |   5 +
+ review/evidence/irc-pass16.txt                     |   1 +
+ review/evidence/irc-pass17.txt                     |   7 ++
+ review/evidence/irc-pass18.txt                     |  12 +++
+ review/evidence/irc-pass19.txt                     |   3 +
+ review/evidence/irc-pass20.txt                     |   3 +
+ review/evidence/irc-pass21.txt                     |   4 +
+ review/evidence/memo-1791941049318.json            |  81 ++++++++++++++++
+ review/evidence/memo-recheck-summary.txt           |  36 +++++++
+ review/evidence/mobile-label-summary.txt           |  20 ++++
+ review/evidence/mobile-labels-1791940702612.json   |  20 ++++
+ review/evidence/mobile-labels-1791940702612.png    | Bin 0 -> 73061 bytes
+ review/evidence/no-active-account-sources.txt      |   5 +
+ review/evidence/recovery-ui-1791940880144.json     |  18 ++++
+ review/evidence/recovery-ui-1791940880144.png      | Bin 0 -> 90354 bytes
+ review/evidence/recovery-ui-1791941099162.json     |  18 ++++
+ review/evidence/recovery-ui-1791941099162.png      | Bin 0 -> 92471 bytes
+ review/evidence/recovery-ui-recheck-summary.txt    |  19 ++++
+ review/evidence/recovery-ui-summary.txt            |  19 ++++
+ review/evidence/screen-credit-1791940545735.png    | Bin 0 -> 91685 bytes
+ review/evidence/screen-earn-1791940545735.png      | Bin 0 -> 121553 bytes
+ review/evidence/screen-home-1791940545735.png      | Bin 0 -> 38553 bytes
+ review/evidence/screen-mint-1791940545735.png      | Bin 0 -> 97709 bytes
+ review/evidence/screen-mobile-1791940479311.png    | Bin 0 -> 65440 bytes
+ review/evidence/screen-mobile-1791940545735.png    | Bin 0 -> 67586 bytes
+ review/evidence/screen-pay-1791940545735.png       | Bin 0 -> 83981 bytes
+ review/evidence/screen-send-1791940545735.png      | Bin 0 -> 42067 bytes
+ review/evidence/send-receipt-1791940814658.json    |   8 ++
+ review/evidence/send-receipt-1791941132553.json    |   8 ++
+ review/evidence/send-receipt-recheck-summary.txt   |  13 +++
+ review/evidence/send-receipt-recheck2-summary.txt  |   9 ++
+ review/evidence/send-receipt-summary.txt           |   9 ++
+ review/evidence/sponsor-live-policy.json           |   1 +
+ review/evidence/sponsor-recheck-1791941049183.json |  41 ++++++++
+ review/evidence/sponsor-recheck-summary.txt        |  42 +++++++++
+ review/evidence/typecheck-pass7.txt                |   2 +
+ review/evidence/typecheck-pass8.txt                |   0
+ review/memo-check.mjs                              |   2 +-
+ review/recovery-ui-check.mjs                       |   6 ++
+ review/send-receipt-check.mjs                      |  10 ++
+ review/sponsor-recheck.mjs                         |  20 ++++
+ 60 files changed, 1066 insertions(+), 11 deletions(-)
+
+commit 65a8d82f3ab51e4a61d250bc7b5c131e7a9f3f96
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:28:02 2026 +0000
+
+    slides: dark editorial rollout batch 1 (problem, advance, machine-to-machine)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ deck/project/slides/j3-advance.html | 83 ++++++++++++++++---------------------
+ deck/project/slides/j5-agent.html   | 58 +++++++++++++-------------
+ deck/project/slides/problem.html    | 61 ++++++++++++++-------------
+ 3 files changed, 93 insertions(+), 109 deletions(-)
+
+commit 25c5200ea507ad67f42a41692cb625e0f1870961
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:26:24 2026 +0000
+
+    bills: gate archive-orders on a quiescent store (no paid-unfulfilled orders, no unresolved attempts, 30s idle); --force to override
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/server/bills/archive-orders.mts | 53 ++++++++++++++++++++++------
+ 1 file changed, 43 insertions(+), 10 deletions(-)
+
+commit 345c3cb2b9b533e3f59fc4d1edc8b94bdff7be4e
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:54 2026 +0000
+
+    pay: wrap provider toggle on mobile (no horizontal overflow at 390px)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/billpay/pay-screen.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit f5842ffd727f9c4e8bcf155c2fe61f3f6c2f3c9b
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:48 2026 +0000
+
+    web: disable the accounts provider's global mppx fetch polyfill on all Tempo connectors
+    
+    tempoWallet/webAuthn/dangerous_secp256k1 now get { mpp: false }, so a
+    connected wallet never auto-pays an arbitrary same-origin 402; payments go
+    only through the explicit payBill checkout. Verified: window.fetch stays
+    native after connecting and an unpaid POST /api/bills/pay returns 402.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/wallet/use-persona.ts | 3 ++-
+ apps/web/lib/tempo/config.ts              | 9 ++++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+commit 5405d24dcbcbf9340b32b69672139bdf00815fb8
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:29 2026 +0000
+
+    Design brief: console-menu (Switch-inspired) platform redesign
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ crew/DESIGN-SWITCH.md | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+commit 5a0e26b5c3b1f55b29664e43d25c6de93072b7b1
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:25:04 2026 +0000
+
+    web: no horizontal overflow on /mint and /send at 390px
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/components/shell/connect-gate.tsx   | 1 +
+ apps/web/components/transfer/send-screen.tsx | 2 +-
+ apps/web/components/vault/mint-screen.tsx    | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+commit cce23cbeea9a31b7a33e937c7b54bd0ed9a90cc2
+Author: josu <5554649+josusanmartin@users.noreply.github.com>
+Date:   Wed Oct 14 01:24:48 2026 +0000
+
+    bills: archive-orders reset helper for demo:reset (moves .data/orders.json to .data/archive/)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+ apps/web/lib/server/bills/archive-orders.mts | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)

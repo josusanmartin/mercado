@@ -1,0 +1,12 @@
+{
+  "file": "review/evidence/receipt-helper-1791941324880.json",
+  "hash": "0x41283da992aca84fecae6e58187d1da08e377588a479376def324a9ad7c0348a",
+  "status": "success",
+  "feePayer": "0xab92445749db8459ebf5eb7cf64e461c533f8bdf",
+  "helper": {
+    "amount": "99500000",
+    "memo": "0x70617261206d616dc3a100000000000000000000000000000000000000000000",
+    "memoText": "para mamá"
+  },
+  "pass": true
+}

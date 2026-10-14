@@ -97,3 +97,31 @@ Lead accepted all three: API owns driver/402 flow and the recorded paid-report p
 ## Visual direction update (01:25 UTC)
 
 The earlier airy/Stripe suggestion is superseded by the user's accepted directions. The app moves to the original console-menu language in `crew/DESIGN-SWITCH.md`; the deck uses dark, near-sans editorial layouts with original procedural glitch artwork. The three approved product priorities are unchanged. Capture new screenshots only after the app redesign; keep existing evidence labeled as the prior UI. Reviewer will check persistent disclosures and keyboard behavior after the shared shell lands.
+
+## Judge Q&A (round 2, 01:32 UTC)
+
+1. **Why does this need Tempo and MPP, instead of a token transfer and an API key?**
+   Tempo gives this demo native TIP-20 transfers, public payment memos, USD-token fees and sponsorship. MPP makes the HTTP request itself payable: an unpaid call returns 402, then a verified xMXN payment unlocks the response. We demonstrate a bill endpoint and a separate bot buying an underwriting report without an API key. We have not proved better economics than existing payment rails.
+
+2. **Is xMXN a real peso stablecoin, and is your OUSD issuer-backed?**
+   No. This is Moderato testnet. Our collateral is faucet OUSD with no real value or issuer backing; xMXN is a synthetic, peso-denominated debt token. Minting requires at least 150% collateralization, but neither the token nor its oracle guarantees a market peg, fiat redemption or cash-out.
+
+3. **What happens when the peso strengthens or the oracle is wrong?**
+   Fewer pesos per dollar means less collateral value against peso debt. Below 135%, the vault permits liquidation, with a capped collateral bonus; insufficient collateral can limit what a liquidator receives. The live feed is an admin mock with staleness and sanity guards. Real price discovery, reliable feeds, liquidation participation and stressed liquidity remain production work.
+
+4. **Are you lending the collateral backing xMXN to fund the demo?**
+   No. The vault holds collateral for minting debt. The swap desk has separately seeded inventory, and lenders separately supply xMXN to the advance pool. Their balances and contract addresses are visible. Pool loans are unsecured; lenders cannot withdraw cash that is currently lent out, and fees become realized when borrowers repay.
+
+5. **What stops someone inventing Uber income or taking many unsecured loans?**
+   This prototype does not solve identity or credit fraud. Every income series is labeled Demo Uber Data, and the heuristic is illustrative. A trusted backend signs a borrower/chain/pool/limit/expiry/nonce-bound attestation; the contract enforces those bounds and exposure caps. Those checks prevent signature misuse, not fake income or one person controlling many wallets. Repayment is manual, and lenders bear credit risk.
+
+6. **If the client or server crashes after paying, can you charge or fulfill twice?**
+   The server binds the quote and challenge to one order, records issued challenges, serializes settlement per order, and reconciles interrupted attempts before retrying. Real pull-mode crash tests recovered one settlement and one fulfillment across retries. Browser recovery now checks the same saved order without auto-paying. That is bounded single-process evidence, not a universal exactly-once payment claim: duplicate push transfers can still need reconciliation/refund handling, and the actual airtime fulfillment is always SIMULATED.
+
+7. **Can anybody drain your fee sponsor? Is “gasless” unconditional?**
+   Sponsorship is conditional: only Moderato, approved functions/targets and eligible senders, with gas/fee caps and quotas. The current maximum is 0.01 USD in test-token fee units per sponsored transaction, with 30 transactions per sender/hour and 500 globally/hour in one process. Budgets reset on restart. Unsigned fills can still consume another eligible sender's quota, so this is a bounded demo sponsor, not a production anti-abuse system. Users still need xMXN to spend; fee sponsorship does not fund purchases.
+
+8. **What is the strongest proof today, and what must change before real users or real money?**
+   Deployed contracts, recorded transfer/borrow/repay/liquidation receipts, real 402 settlement and paid API calls, source verification, contract tests and browser journeys are the proof. The real-world links are missing: approved income access and underwriting, default/collections design, robust oracle/liquidity, production payment recovery and sponsor controls, and commercial/legal arrangements for actual fulfillment or fiat rails. We demonstrate testnet coordination and settlement, not a production credit product or paid utility bill.
+
+Evidence pointers: `review/FINDINGS.md` separates independent checks from owner-run evidence; `ACCEPTANCE.md` and `scripts/evidence/` hold the crew's test/run records. Preserve those distinctions when answering follow-ups. The newest console restyle is a UI change and needs fresh browser acceptance.
