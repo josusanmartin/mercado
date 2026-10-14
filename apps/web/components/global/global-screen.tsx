@@ -4,11 +4,24 @@
 // Everything is live: quotes from /api/move/quote, execution through lib/contracts, backing from contract
 // views, activity from the getLogs indexer, partner calls from the paid-call ledger.
 import { useState } from "react";
-import { ArrowDownUp, Building2, Landmark, Plug, Receipt } from "lucide-react";
+import {
+  ArrowDownUp,
+  Building2,
+  Landmark,
+  Loader2,
+  Plug,
+  Receipt,
+  Wallet,
+} from "lucide-react";
+import { toast } from "sonner";
 import type { Address } from "viem";
 import { isAddress } from "viem";
-import { useConnection, useReadContracts } from "wagmi";
-import { moveAmmAbi, type MoveQuoteResponse } from "@mercado/shared";
+import { useConnection, useReadContracts, useSwitchChain } from "wagmi";
+import {
+  moveAmmAbi,
+  TEMPO_MODERATO_CHAIN_ID,
+  type MoveQuoteResponse,
+} from "@mercado/shared";
 import {
   BigNumber,
   ListPane,
@@ -25,7 +38,12 @@ import { ActivityTable } from "@/components/mint/activity-table";
 import { Honesty } from "@/components/console/present";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { personaById } from "@/components/wallet/personas";
+import { personaById, type PersonaId } from "@/components/wallet/personas";
+import { usePersona } from "@/components/wallet/use-persona";
+import { WalletDialog } from "@/components/wallet/wallet-menu";
+import { useDemoMode } from "@/components/console/demo-mode";
+import { TickerText } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 import {
   ADDR,
   CHAIN_ID,
@@ -144,147 +162,314 @@ function QuoteRows({
   );
 }
 
+/**
+ * Inline account status for an action well (review V5-TASTE #1): the form never swaps for a gate, so its
+ * geometry is stable from first paint. Renders nothing once the right chain is connected.
+ */
+function InlineConnect({ persona, why }: { persona: PersonaId; why: string }) {
+  const { isConnected, chainId, status } = useConnection();
+  const { switchTo } = usePersona();
+  const { on, setOn } = useDemoMode();
+  const { mutate: switchChain } = useSwitchChain();
+  const p = personaById(persona);
+  if (isConnected && chainId === TEMPO_MODERATO_CHAIN_ID) return null;
+  const connecting = status === "connecting" || status === "reconnecting";
+  return (
+    <div className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
+      {isConnected ? (
+        <>
+          <span className="text-muted-foreground">
+            Your wallet is on another network.
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => switchChain({ chainId: TEMPO_MODERATO_CHAIN_ID })}
+          >
+            Switch to Tempo Moderato
+          </Button>
+        </>
+      ) : on ? (
+        <>
+          <span className="text-muted-foreground">
+            {connecting
+              ? "Connecting the demo account…"
+              : `Not connected: ${why}.`}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!p.privateKey || connecting}
+            onClick={() =>
+              switchTo(persona).catch((e) =>
+                toast.error(String(e?.message ?? e).split("\n")[0]),
+              )
+            }
+          >
+            {connecting && <Loader2 className="animate-spin" />}
+            Use {p.name}
+          </Button>
+        </>
+      ) : (
+        <>
+          <span className="text-muted-foreground">Not connected: {why}.</span>
+          <WalletDialog>
+            <Button size="sm" variant="outline">
+              <Wallet />
+              Connect wallet
+            </Button>
+          </WalletDialog>
+          <Button size="sm" variant="ghost" onClick={() => setOn(true)}>
+            Turn on Demo mode
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Pay a supplier, money first (review V5-TASTE #5): You pay → Supplier receives → recipient → Pay. */
 function PaySupplier() {
-  const { address } = useConnection();
+  const { isConnected, chainId } = useConnection();
   const bal = useBalances();
   const m = useMercado();
+  const ex = useExchangeState();
   const [amount, setAmount] = useState("100");
   const [to, setTo] = useState("");
   const [memo, setMemo] = useState("");
+  const [withRef, setWithRef] = useState(false);
   const quote = useMoveQuote("usd_to_mxn", amount);
   const q = quote.data;
   const secondsLeft = useSecondsLeft(q?.expiresAt);
   const amountIn = toUnits(amount);
   const supplier = personaById("recipient");
   const toOk = isAddress(to);
-  const insufficient = bal.ousd !== undefined && amountIn > bal.ousd;
+  const ready = isConnected && chainId === TEMPO_MODERATO_CHAIN_ID;
+  const insufficient = ready && bal.ousd !== undefined && amountIn > bal.ousd;
   const canPay =
+    ready &&
     !!q &&
     secondsLeft !== 0 &&
     toOk &&
     amountIn > 0n &&
     !insufficient &&
     !m.tx.isBusy;
+  const payId = "pay-amount";
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <Panel
-        variant="card"
-        title="Pay a supplier in pesos"
-        description="You pay OUSD; the supplier receives xMXN at the quoted rate. On v2 the exchange mints straight to the supplier in one transaction; on v1 the desk swaps, then the xMXN is sent with your memo."
-      >
-        <ConnectGate persona="merchant" why="to pay from the business account">
-          <div className="grid gap-4 pt-2">
-            <TokenInput
-              label="You pay"
-              symbol="OUSD"
-              value={amount}
-              onChange={setAmount}
-              max={bal.ousd}
-              invalid={insufficient}
-            />
-            <label className="grid gap-1 text-[15px]">
-              <span className="text-muted-foreground">Supplier address</span>
-              <Input
-                value={to}
-                onChange={(e) => setTo(e.target.value.trim())}
-                placeholder="0x…"
-                className="font-mono"
-              />
-              {supplier?.address && (
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+      <Panel variant="card">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 pt-2">
+          {/* You pay: the big editable amount */}
+          <div className="grid gap-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <label
+                htmlFor={payId}
+                className="text-muted-foreground text-[13px] font-medium"
+              >
+                You pay
+              </label>
+              {ready && bal.ousd !== undefined && (
                 <button
                   type="button"
-                  className="text-product w-fit text-[13px] hover:underline"
-                  onClick={() => setTo(supplier.address!)}
+                  onClick={() =>
+                    setAmount(
+                      fmtAmount(bal.ousd!, 6)
+                        .replace(/,/g, "")
+                        .replace(/\.?0+$/, ""),
+                    )
+                  }
+                  className="text-muted-foreground hover:text-foreground tabular text-xs"
                 >
-                  Use the demo supplier account ({supplier.address.slice(0, 6)}…
-                  {supplier.address.slice(-4)})
+                  Max: {fmtAmount(bal.ousd)}
                 </button>
               )}
-              {to && !toOk && (
-                <span className="text-destructive text-[13px]">
-                  Not a valid address.
-                </span>
-              )}
-            </label>
-            <label className="grid gap-1 text-[15px]">
-              <span className="text-muted-foreground">
-                Reference (optional, public on v1)
+            </div>
+            <div className="flex items-baseline gap-2 border-b pb-1 focus-within:border-foreground">
+              <input
+                id={payId}
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="0.00"
+                value={amount}
+                aria-label="You pay (OUSD)"
+                size={1}
+                aria-invalid={insufficient || undefined}
+                onChange={(e) =>
+                  setAmount(e.target.value.replace(/[^\d.,]/g, ""))
+                }
+                className={cn(
+                  "tabular w-full min-w-0 flex-1 bg-transparent text-[2.5rem] leading-tight font-semibold outline-none",
+                  insufficient && "text-destructive",
+                )}
+              />
+              <span className="text-muted-foreground text-[14px] font-medium">
+                OUSD
               </span>
+            </div>
+          </div>
+
+          {/* one fixed-height line for: not enough balance / quote error / pricing / the live quote */}
+          <p
+            className="tabular text-muted-foreground min-h-5 text-[13px]"
+            aria-live="polite"
+          >
+            {insufficient ? (
+              <span className="text-destructive">
+                The business account holds {fmtAmount(bal.ousd)} OUSD.
+              </span>
+            ) : quote.error ? (
+              <span className="text-destructive">
+                {(quote.error as Error).message}
+              </span>
+            ) : q ? (
+              <>
+                {q.rate.toLocaleString("en-US", { maximumFractionDigits: 4 })}{" "}
+                xMXN per OUSD · cost {(q.effectiveSpreadBps / 100).toFixed(2)}%
+                vs mid ·{" "}
+                {secondsLeft === 0
+                  ? "refreshing"
+                  : `expires in ${secondsLeft ?? "…"}s`}
+              </>
+            ) : (
+              "Pricing…"
+            )}
+          </p>
+
+          {/* Supplier receives: the big quoted amount */}
+          <div className="grid gap-1">
+            <p className="text-muted-foreground text-[13px] font-medium">
+              Supplier receives
+            </p>
+            <p className="flex items-baseline gap-2">
+              <span className="text-product tabular text-[2.5rem] leading-tight font-semibold">
+                {q ? <TickerText text={fmtAmount(BigInt(q.amountOut))} /> : "—"}
+              </span>
+              <span className="text-muted-foreground text-[14px] font-medium">
+                xMXN
+              </span>
+            </p>
+            <p className="text-muted-foreground min-h-5 text-[13px]">
+              {q
+                ? `At least ${fmtAmount(BigInt(q.minOutSuggested))} xMXN, enforced on-chain`
+                : " "}
+            </p>
+          </div>
+
+          {/* recipient */}
+          <div className="grid gap-1">
+            <label
+              htmlFor="pay-to"
+              className="text-muted-foreground text-[13px] font-medium"
+            >
+              Supplier address
+            </label>
+            <Input
+              id="pay-to"
+              value={to}
+              onChange={(e) => setTo(e.target.value.trim())}
+              placeholder="0x…"
+              className="font-mono"
+            />
+            <div className="flex min-h-5 flex-wrap items-center gap-x-4 text-[13px]">
+              {to && !toOk ? (
+                <span className="text-destructive">Not a valid address.</span>
+              ) : (
+                supplier?.address && (
+                  <button
+                    type="button"
+                    className="text-product hover:underline"
+                    onClick={() => setTo(supplier.address!)}
+                  >
+                    Use demo supplier ({supplier.address.slice(0, 6)}…
+                    {supplier.address.slice(-4)})
+                  </button>
+                )
+              )}
+              {!withRef && (
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => setWithRef(true)}
+                >
+                  Add reference
+                </button>
+              )}
+            </div>
+            {withRef && (
               <Input
+                aria-label="Reference (optional, public on v1)"
                 value={memo}
                 onChange={(e) => setMemo(e.target.value)}
                 maxLength={32}
-                placeholder="Invoice 1042"
+                placeholder="Reference, e.g. Invoice 1042"
+                autoFocus
               />
-            </label>
+            )}
           </div>
-          <PanelActions>
-            <Button
-              size="lg"
-              disabled={!canPay}
-              onClick={() =>
-                q &&
-                m.exchangeUsdToMxn(
-                  amountIn,
-                  BigInt(q.amountOut),
-                  to as Address,
-                  memo || undefined,
-                )
-              }
-            >
-              {m.tx.isBusy
-                ? "Paying…"
-                : q
-                  ? `Pay ${fmtAmount(amountIn)} OUSD → ${fmtAmount(BigInt(q.amountOut))} xMXN`
-                  : "Pay supplier"}
-            </Button>
-          </PanelActions>
-          {insufficient && (
-            <p className="text-destructive pt-2 text-[13px]">
-              The business account holds {fmtAmount(bal.ousd)} OUSD.
-            </p>
-          )}
-          <TxProgress
-            tx={m.tx}
-            className="mt-4"
-            successNote="Paid. The supplier's xMXN is on-chain."
+
+          <InlineConnect
+            persona="merchant"
+            why="pay from the business account"
           />
-        </ConnectGate>
+        </div>
+
+        <PanelActions>
+          <Button
+            size="lg"
+            disabled={!canPay}
+            onClick={() =>
+              q &&
+              m.exchangeUsdToMxn(
+                amountIn,
+                BigInt(q.amountOut),
+                to as Address,
+                memo || undefined,
+              )
+            }
+          >
+            {m.tx.isBusy
+              ? "Paying…"
+              : q
+                ? `Pay ${fmtAmount(amountIn)} OUSD → ${fmtAmount(BigInt(q.amountOut))} xMXN`
+                : "Pay supplier"}
+          </Button>
+        </PanelActions>
+        <TxProgress
+          tx={m.tx}
+          className="mt-4"
+          successNote="Paid. The supplier's xMXN is on-chain."
+        />
+
+        <details className="mt-5 text-[13px]">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer">
+            How this payment settles
+          </summary>
+          <p className="text-muted-foreground mt-2 max-w-prose">
+            You pay OUSD; the supplier receives xMXN at the quoted rate.{" "}
+            {ex.protocol === "v2"
+              ? "On v2 the exchange mints straight to the supplier in one transaction, and your reference travels in the transfer memo."
+              : "On v1 the desk swaps, then the xMXN is sent with your memo."}{" "}
+            The quote is indicative: only the minimum received is binding.
+          </p>
+        </details>
       </Panel>
 
       <Panel
-        title="Indicative quote"
+        title="Quote details"
         description="Live from the exchange at this size. For a quote signed by Mercado (cotización indicativa firmada), use the Partner API."
       >
-        {!address && (
-          <p className="text-muted-foreground pb-2 text-[13px]">
-            Quotes don&apos;t need a wallet.
-          </p>
-        )}
-        {quote.isLoading && (
-          <p className="text-muted-foreground py-4 text-[15px]">Pricing…</p>
-        )}
-        {quote.error && (
-          <p className="text-destructive py-4 text-[15px]">
-            {(quote.error as Error).message}
-          </p>
-        )}
-        {q && (
-          <>
-            <div className="py-4">
-              <p className="text-muted-foreground text-[13px]">
-                Supplier receives
-              </p>
-              <BigNumber
-                value={fmtAmount(BigInt(q.amountOut))}
-                unit="xMXN"
-                className="text-product"
-              />
-            </div>
-            <QuoteRows q={q} secondsLeft={secondsLeft} />
-          </>
-        )}
+        <div className="min-h-[22rem]">
+          {quote.isLoading && (
+            <p className="text-muted-foreground py-4 text-[15px]">Pricing…</p>
+          )}
+          {quote.error && (
+            <p className="text-destructive py-4 text-[15px]">
+              {(quote.error as Error).message}
+            </p>
+          )}
+          {q && <QuoteRows q={q} secondsLeft={secondsLeft} />}
+        </div>
       </Panel>
     </div>
   );

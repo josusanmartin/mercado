@@ -70,19 +70,13 @@ export function DevelopersScreen() {
 
   return (
     <SettingsLayout
-      title="Mercado APIs over HTTP 402"
+      title="APIs over HTTP 402"
+      purpose="Pay per call in xMXN. Inspect the challenge, response and on-chain receipt."
       demo="partner"
       meta={
         pricing.data
           ? `Underwriting ${fmtAmount(BigInt(pricing.data.underwriting.amount))} xMXN · FX quote ${fmtAmount(BigInt(pricing.data["move-quote"].amount))} xMXN · Bills at face value${present ? "" : " · Testnet · no real value"}`
           : undefined
-      }
-      purpose={
-        <>
-          Pay per call with MPP, no API key or account: each endpoint answers
-          HTTP 402, your client pays in xMXN on Tempo and retries, and the
-          response carries a Payment-Receipt you can check on the explorer.
-        </>
       }
       list={
         <ListPane
