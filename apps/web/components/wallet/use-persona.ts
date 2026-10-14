@@ -6,6 +6,7 @@ import { useConfig, useConnection } from "wagmi";
 import { connect, disconnect } from "wagmi/actions";
 import { dangerous_secp256k1 } from "wagmi/tempo";
 import { CHAIN_ID } from "@/lib/contracts/addresses";
+import { NO_MPP_POLYFILL } from "@/lib/tempo/config";
 import { personaByAddress, personaById, type PersonaId } from "./personas";
 
 export function usePersona() {
@@ -20,7 +21,7 @@ export function usePersona() {
       if (active?.id === id) return;
       await disconnect(config).catch(() => {});
       await connect(config, {
-        connector: dangerous_secp256k1({ privateKey: p.privateKey, name: `Demo · ${p.name}` }),
+        connector: dangerous_secp256k1({ privateKey: p.privateKey, name: `Demo · ${p.name}`, ...NO_MPP_POLYFILL }),
         chainId: CHAIN_ID,
       });
     },
