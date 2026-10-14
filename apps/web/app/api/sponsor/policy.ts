@@ -69,6 +69,7 @@ const APPROVE = TOKEN_SELECTORS[0];
 const sym = (s: string) => A.collaterals.find((c) => c.symbol === s)?.token;
 const SOUSD = sym("sOUSD");
 const TTBILL = sym("tTBILL");
+const MIDX = sym("mIDX");
 
 /** target → allowed function selectors */
 export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
@@ -92,13 +93,16 @@ export const ALLOWED_CALLS: ReadonlyMap<string, ReadonlySet<string>> = new Map(
           ...(TTBILL ? [[TTBILL, [APPROVE]] as const] : []),
           ...(A.card ? [[A.card, sel(mercadoCardAbi as Abi, "issueCard", "setDailyLimit", "setFrozen", "charge", "refund")] as const] : []),
           ...(A.investDesk ? [[A.investDesk, sel(investDeskAbi as Abi, "buy", "sell", "buyWithXmxn", "sellForXmxn")] as const] : []),
+          ...(A.investDeskIdx ? [[A.investDeskIdx, sel(investDeskAbi as Abi, "buy", "sell", "buyWithXmxn", "sellForXmxn")] as const] : []),
+          // gated mIDX (owner-only issuance): approvals only, to the vault or the Stocks desk
+          ...(MIDX ? [[MIDX, [APPROVE]] as const] : []),
         ]) as ReadonlyArray<readonly [string, readonly string[]]>
   ).map(([a, s]) => [getAddress(a), new Set<string>(s)]),
 );
 export const ALLOWED_TARGETS: ReadonlySet<string> = new Set(ALLOWED_CALLS.keys());
 /** Approvals are sponsored only toward the active protocol's own contracts. */
 const APPROVE_SPENDERS = new Set(
-  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card, A.investDesk].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
+  [A.vault, A.creditPool, A.swapDesk, A.vamm, SOUSD, A.card, A.investDesk, A.investDeskIdx].filter((a): a is `0x${string}` => !!a).map((a) => getAddress(a)),
 );
 
 // ---------------------------------------------------------------- state (single process)
@@ -261,10 +265,11 @@ export async function senderEligible(sender: Address, personas: ReadonlySet<stri
     const extra = await Promise.all([
       SOUSD ? client.readContract({ address: SOUSD, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
       TTBILL ? client.readContract({ address: TTBILL, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
+      MIDX ? client.readContract({ address: MIDX, abi: tip20Abi, functionName: "balanceOf", args: [sender] }) : 0n,
       A.card
         ? client.readContract({ address: A.card, abi: cardAbiLite, functionName: "cardsOf", args: [sender] }).then((ids) => BigInt(ids.length))
         : 0n,
-    ]).catch(() => [0n, 0n, 0n]);
+    ]).catch(() => [0n, 0n, 0n, 0n]);
     ok = extra.some((v) => v > 0n);
   }
   state.eligible.set(key, { ok, at: Date.now() });

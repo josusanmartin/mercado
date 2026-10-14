@@ -524,17 +524,17 @@ export function useExchangeState() {
 
 /** InvestDesk state + the wallet's buy-back eligibility: the desk buys back at most `sellableTbill` (what this
  *  address bought from it and hasn't sold), regardless of the wallet's tTBILL balance (review R-042). */
-export function useInvestDesk(user?: Address) {
+export function useInvestDesk(user?: Address, desk: Address = ADDR.investDesk) {
   const who = useWho(user);
-  const enabled = V2 && ADDR.investDesk !== "0x0000000000000000000000000000000000000000";
+  const enabled = V2 && desk !== "0x0000000000000000000000000000000000000000";
   const q = useReadContracts({
     contracts: [
-      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
-      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "spreadBps", chainId: CHAIN_ID },
-      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "maxTradeUsd", chainId: CHAIN_ID },
-      { address: ADDR.investDesk, abi: investDeskAbi, functionName: "paused", chainId: CHAIN_ID },
+      { address: desk, abi: investDeskAbi, functionName: "reserves", chainId: CHAIN_ID },
+      { address: desk, abi: investDeskAbi, functionName: "spreadBps", chainId: CHAIN_ID },
+      { address: desk, abi: investDeskAbi, functionName: "maxTradeUsd", chainId: CHAIN_ID },
+      { address: desk, abi: investDeskAbi, functionName: "paused", chainId: CHAIN_ID },
       {
-        address: ADDR.investDesk,
+        address: desk,
         abi: investDeskAbi,
         functionName: "bought",
         args: [who ?? "0x0000000000000000000000000000000000000000"],

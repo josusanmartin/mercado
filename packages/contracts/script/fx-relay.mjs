@@ -111,7 +111,7 @@ async function relayOnce() {
   console.log(new Date().toISOString(), out.label, `rate ${s.rate}`, `https://explore.testnet.tempo.xyz/tx/${txHash}`);
 }
 
-// Demo tTBILL ADMIN price feed (v2): a demo asset with an admin-set price, not a market. Re-assert the current price
+// Demo tTBILL / mIDX ADMIN price feeds (v2): demo assets with admin-set prices, not markets. Re-assert the current price
 // (no change) when it's older than 12h so the 24h max-age doesn't take Invest/Mint down. Never invents a new price.
 const feedAbi = parseAbi(["function px() view returns (uint256)", "function updatedAt() view returns (uint256)", "function setPrice(uint256)"]);
 async function refreshDemoFeeds() {
@@ -121,12 +121,14 @@ async function refreshDemoFeeds() {
   } catch {
     return;
   }
-  if (!v2.tTBILLFeed) return;
-  const [px, at] = await Promise.all(["px", "updatedAt"].map((f) => pub.readContract({ address: v2.tTBILLFeed, abi: feedAbi, functionName: f })));
-  if (Date.now() / 1000 - Number(at) < 12 * 3600) return;
-  const h = await wallet.writeContract({ address: v2.tTBILLFeed, abi: feedAbi, functionName: "setPrice", args: [px] });
-  await pub.waitForTransactionReceipt({ hash: h });
-  console.log(new Date().toISOString(), `re-asserted demo tTBILL admin price ${Number(px) / 1e8} (unchanged)`, h);
+  for (const [name, feed] of [["tTBILL", v2.tTBILLFeed], ["mIDX", v2.mIDXFeed]]) {
+    if (!feed) continue;
+    const [px, at] = await Promise.all(["px", "updatedAt"].map((f) => pub.readContract({ address: feed, abi: feedAbi, functionName: f })));
+    if (Date.now() / 1000 - Number(at) < 12 * 3600) continue;
+    const h = await wallet.writeContract({ address: feed, abi: feedAbi, functionName: "setPrice", args: [px] });
+    await pub.waitForTransactionReceipt({ hash: h });
+    console.log(new Date().toISOString(), `re-asserted demo ${name} admin price ${Number(px) / 1e8} (unchanged)`, h);
+  }
 }
 
 const loopIdx = process.argv.indexOf("--loop");

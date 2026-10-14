@@ -22,6 +22,8 @@ export const ADDR = {
   card: (A.card ?? zeroAddress) as Address,
   /** v2 only (zero address in v1) */
   investDesk: (A.investDesk ?? zeroAddress) as Address,
+  /** v2 only: the Stocks desk (mIDX) */
+  investDeskIdx: (A.investDeskIdx ?? zeroAddress) as Address,
   creditPool: A.creditPool,
   factory: A.factory,
   merchant: A.merchant,

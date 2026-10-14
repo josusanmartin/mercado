@@ -78,7 +78,7 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
     const v2txs = {};
     let v2At;
     let v2Start;
-    for (const stage of ["core", "seed", "credit", "cardStage", "investStage", "gateTbill"]) {
+    for (const stage of ["core", "seed", "credit", "cardStage", "investStage", "gateTbill", "equityStage"]) {
       const f = join(root, "broadcast", "DeployV2.s.sol", chainId, `${stage}-latest.json`);
       if (!existsSync(f)) continue;
       const run = JSON.parse(readFileSync(f, "utf8"));
@@ -100,6 +100,8 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
       xMXN: a.xMXN, factory: a.factory, vault: a.vault, vamm: a.vamm, creditPool: a.creditPool, fxOracle: a.fxOracle,
       card: a.card && a.card !== "0x0000000000000000000000000000000000000000" ? a.card : undefined,
       investDesk: a.investDesk && a.investDesk !== "0x0000000000000000000000000000000000000000" ? a.investDesk : undefined,
+      investDeskIdx: a.investDeskIdx && a.investDeskIdx !== "0x0000000000000000000000000000000000000000" ? a.investDeskIdx : undefined,
+      mIDX: a.mIDX, mIDXFeed: a.mIDXFeed,
       tTBILLFeed: a.tTBILLFeed, sOUSD: a.sOUSD, tTBILL: a.tTBILL, tTBILLLegacy: a.tTBILLLegacy,
       collaterals: [
         { symbol: "OUSD", token: a.ousd, feed: a.ousdFeed, demo: false, label: "Testnet OUSD (Tempo faucet, no real value)" },
@@ -107,6 +109,9 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
         { symbol: "tTBILL", token: a.tTBILL, feed: a.tTBILLFeed, demo: true, label: "Demo tokenized T-bill (testnet, not a security)" },
         ...(a.tTBILLLegacy && a.tTBILLLegacy !== "0x0000000000000000000000000000000000000000" && a.tTBILLLegacy !== a.tTBILL
           ? [{ symbol: "tTBILL-legacy", token: a.tTBILLLegacy, feed: a.tTBILLFeed, demo: true, label: "Demo T-bill, legacy faucet issue (minting paused; repay/withdraw only)" }]
+          : []),
+        ...(a.mIDX && a.mIDX !== "0x0000000000000000000000000000000000000000"
+          ? [{ symbol: "mIDX", token: a.mIDX, feed: a.mIDXFeed, demo: true, label: "Mercado US Equity Index (demo token, admin price, not a security)" }]
           : []),
       ],
       attestationSigner: addrs.attestationSigner, merchant: addrs.merchant,

@@ -61,6 +61,9 @@ export const deployment42431 = {
     "fxOracle": "0xe5Be428047904C5aB50C38EeeBF8645D0E11f14B",
     "card": "0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6",
     "investDesk": "0xD4662343deeE28B4d4a9E4be8E718d9C7d5E4c32",
+    "investDeskIdx": "0x5711C155A5C5D70A1867676DFC0bcE5B8A36811A",
+    "mIDX": "0x42c7b204D17cbc578cFff3FeE56de469D146d2e8",
+    "mIDXFeed": "0xaa2ceDbBd726426B9003dD6a0911944A6e025922",
     "tTBILLFeed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
     "sOUSD": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
     "tTBILL": "0x4D2c7dE11782614759800d5d58AFfDFc23BdA342",
@@ -93,6 +96,13 @@ export const deployment42431 = {
         "feed": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
         "demo": true,
         "label": "Demo T-bill, legacy faucet issue (minting paused; repay/withdraw only)"
+      },
+      {
+        "symbol": "mIDX",
+        "token": "0x42c7b204D17cbc578cFff3FeE56de469D146d2e8",
+        "feed": "0xaa2ceDbBd726426B9003dD6a0911944A6e025922",
+        "demo": true,
+        "label": "Mercado US Equity Index (demo token, admin price, not a security)"
       }
     ],
     "attestationSigner": "0xbDdc0C3CA4120579fE9dD013C9465dC39fbdd8Ee",
@@ -153,7 +163,16 @@ export const deployment42431 = {
       "gateTbill.mint#2": "0x6bdfd7400fab211b740fec75cefdbe23189edfb2aaa58af334723bdb07aca8a0",
       "gateTbill.approve": "0x707db4449d14707b2abd5bf5e5690af0c1f6f1ac518434f44ee7bfac34d9ac8c",
       "gateTbill.approve#2": "0x14e44be9fac408b0c9598eaaf28d13c22cae6447f8ee63b7583309fa0841e13d",
-      "gateTbill.seed": "0xd829174890561d97abb6b6f3c718531e1d72d8ac88c3adb2d3f95a07017c3176"
+      "gateTbill.seed": "0xd829174890561d97abb6b6f3c718531e1d72d8ac88c3adb2d3f95a07017c3176",
+      "equityStage.deployDemoRWA": "0x483ae84d7067b657a94d954b37084d99e4628f6c51bb28a28be24516fb68874f",
+      "equityStage.deployAdminPriceFeed": "0x30ee2688c7e58e720a2a13a121734d357d0cdc7311bd413c3178675a9ab0646b",
+      "equityStage.addCollateral": "0xf506cd88b8eedfedc2bcbbb82aaa337b5a26e525df7c8af147677324259b1d3b",
+      "equityStage.deployInvestDesk": "0x8bbd5b47ded6e29ce8389ee3ae400b5638facca9872e848670b6392b08630b50",
+      "equityStage.mint": "0x1895846b0764b4bbe8428b139067cd0d757a7ca30b3d080ad83f246426049b52",
+      "equityStage.mint#2": "0x3de0d938f8a9c41f40abcf03a85117cff07cfaa777419d486d4550de6c62a70c",
+      "equityStage.approve": "0x6e239116dc01c6f6b0b2555535458356612042ad2d6b7bbcd225db259459096f",
+      "equityStage.approve#2": "0x21f6172658fdc8c5cfa3011cc31a8e6867d290769f035826f61a824c333431d9",
+      "equityStage.seed": "0xc2d74842daf691e0e989db1d5e23a032b769fa6c0d3bc1a1ede3c5b7fc66c5ba"
     }
   }
 } as const;

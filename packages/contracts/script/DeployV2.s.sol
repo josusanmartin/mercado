@@ -41,6 +41,9 @@ contract DeployV2 is Script {
     address card;
     address investDesk;
     address tbillLegacy;
+    address midx;
+    address midxFeed;
+    address investDeskIdx;
 
     function setUp() public {
         string memory root = vm.projectRoot();
@@ -63,6 +66,9 @@ contract DeployV2 is Script {
             card = _a(j, ".card");
             investDesk = _a(j, ".investDesk");
             tbillLegacy = _a(j, ".tTBILLLegacy");
+            midx = _a(j, ".mIDX");
+            midxFeed = _a(j, ".mIDXFeed");
+            investDeskIdx = _a(j, ".investDeskIdx");
         }
     }
 
@@ -230,6 +236,29 @@ contract DeployV2 is Script {
         _save();
     }
 
+    /// Invest v2 STOCKS: demo tokenized US large-cap equity index (generic, no real index name), gated issuance
+    /// (faucet disabled), owner price feed (band 10–1,000, 10% max move, 24h staleness), a second InvestDesk for it,
+    /// and a Mint collateral entry at 300% / 220% / 15% penalty, 250k xMXN ceiling (V2-DESIGN tEQX params).
+    function equityStage() external {
+        uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPk);
+        address lp = vm.envAddress("LP_ADDRESS");
+        vm.startBroadcast(deployerPk);
+        DemoRWA t = new DemoRWA("Mercado US Equity Index (demo, testnet, not a security)", "mIDX", deployer, 0);
+        midx = address(t);
+        midxFeed = address(new AdminPriceFeed(deployer, "mIDX demo price (admin)", 100e8, 1 days, 10e8, 1_000e8, 1_000));
+        MultiCollateralVault(vault).addCollateral(midx, IPriceFeed(midxFeed), 30_000, 22_000, 1_500, 250_000e6);
+        InvestDesk d = new InvestDesk(deployer, IERC20(ousd), IERC20(midx), IERC20(xmxn), IPriceFeed(midxFeed), MoveAMM(vamm));
+        investDeskIdx = address(d);
+        t.mint(deployer, 2_000e6);
+        t.mint(lp, 500e6);
+        IERC20(midx).approve(investDeskIdx, 2_000e6);
+        IERC20(ousd).approve(investDeskIdx, 20_000e6);
+        d.seed(20_000e6, 2_000e6);
+        vm.stopBroadcast();
+        _save();
+    }
+
     function _save() internal {
         string memory k = "v2";
         vm.serializeAddress(k, "factory", factory);
@@ -246,6 +275,9 @@ contract DeployV2 is Script {
         vm.serializeAddress(k, "card", card);
         vm.serializeAddress(k, "investDesk", investDesk);
         vm.serializeAddress(k, "tTBILLLegacy", tbillLegacy);
+        vm.serializeAddress(k, "mIDX", midx);
+        vm.serializeAddress(k, "mIDXFeed", midxFeed);
+        vm.serializeAddress(k, "investDeskIdx", investDeskIdx);
         string memory out = vm.serializeAddress(k, "tTBILLFeed", tbillFeed);
         vm.writeJson(out, path);
         console.log("wrote", path);
