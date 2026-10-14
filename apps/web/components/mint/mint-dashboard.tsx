@@ -512,7 +512,8 @@ export function MintDashboard() {
       )}
       {section === "risk" && <Risk />}
       {section === "activity" && (
-        <section className="grid gap-3">
+        // min-w-0 down the grid chain: the table scrolls inside its own overflow box at 390px instead of widening the page
+        <section className="grid min-w-0 gap-3 [&>*]:min-w-0">
           <SectionLabel index="01">On-chain activity</SectionLabel>
           <ActivityTable
             kind="mint"

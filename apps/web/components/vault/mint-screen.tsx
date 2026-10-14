@@ -18,6 +18,7 @@ import { useFxLabel } from "@/lib/use-fx-label";
 import { Badge } from "@/components/ui/badge";
 import { useTourPrefill } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
+import { SuccessCheck } from "@/lib/motion";
 import { PesoStress } from "./peso-slider";
 import { CollateralPicker } from "./collateral-picker";
 import { USE_V2, useCollaterals } from "@/lib/v2/collaterals";
@@ -104,7 +105,11 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const mintLabel = dep > 0n && mnt > 0n ? "Deposit and mint" : dep > 0n ? `Deposit ${sym}` : "Mint xMXN";
   const pct = (b: bigint) => `${Number(b) / 100}%`;
 
+  // which action owns the running tx, so only that button shows the (stable-slot) spinner
+  const [act, setAct] = useState<"mint" | "repay" | "withdraw">();
+
   async function onMint() {
+    setAct("mint");
     const ok = USE_V2
       ? col?.address && (await m2.depositAndMint(col.address, sym, dep, mnt))
       : dep > 0n && mnt > 0n
@@ -188,11 +193,12 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
               )}
               {!oracleOk && fx.valid !== undefined && <p className="text-destructive text-sm">Minting is blocked while the exchange rate is stale or paused.</p>}
               <PanelActions>
-                <Button size="lg" disabled={mintDisabled} onClick={onMint}>
+                <Button size="lg" disabled={mintDisabled} onClick={onMint} pending={tx.isBusy && act === "mint"}>
                   {mintLabel}
                 </Button>
               </PanelActions>
               <TxProgress tx={tx} successNote="Done. Your position is updated." />
+              {tx.status === "success" && act === "mint" && <SuccessCheck size={44} label="Minted" className="text-product" />}
             </div>
           </ConnectGate>
         </Panel>
@@ -223,7 +229,11 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
                     variant="outline"
                     className="sm:justify-self-start sm:min-w-56"
                     disabled={tx.isBusy || rep === 0n || (repayMax !== undefined && rep > repayMax)}
-                    onClick={async () => (await (USE_V2 && col?.address ? m2.repayAndBurn(col.address, rep) : m1.repayAndBurn(rep))) && setRepay("")}
+                    pending={tx.isBusy && act === "repay"}
+                    onClick={async () => {
+                      setAct("repay");
+                      if (await (USE_V2 && col?.address ? m2.repayAndBurn(col.address, rep) : m1.repayAndBurn(rep))) setRepay("");
+                    }}
                   >
                     Repay and burn
                   </Button>
@@ -244,12 +254,19 @@ export function MintScreen({ embedded = false }: { embedded?: boolean } = {}) {
                     variant="outline"
                     className="sm:justify-self-start sm:min-w-56"
                     disabled={tx.isBusy || wd === 0n || (pos.maxWithdrawable !== undefined && wd > pos.maxWithdrawable)}
-                    onClick={async () => (await (USE_V2 && col?.address ? m2.withdrawCollateral(col.address, sym, wd) : m1.withdrawCollateral(wd))) && setWithdraw("")}
+                    pending={tx.isBusy && act === "withdraw"}
+                    onClick={async () => {
+                      setAct("withdraw");
+                      if (await (USE_V2 && col?.address ? m2.withdrawCollateral(col.address, sym, wd) : m1.withdrawCollateral(wd))) setWithdraw("");
+                    }}
                   >
                     Withdraw {sym}
                   </Button>
                 </div>
                 <TxProgress tx={tx} successNote="Done. Your position is updated." />
+                {tx.status === "success" && (act === "repay" || act === "withdraw") && (
+                  <SuccessCheck size={44} label={act === "repay" ? "Repaid" : "Withdrawn"} className="text-product" />
+                )}
               </div>
             )}
           </ConnectGate>

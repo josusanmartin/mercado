@@ -69,7 +69,7 @@ export function ActivityTable({
             </thead>
             <tbody>
               {feed.rows.map((r) => (
-                <tr key={`${r.txHash}-${r.logIndex}`} className="mx-sweep border-t">
+                <tr key={`${r.txHash}-${r.logIndex}`} className="hover:bg-[color-mix(in_oklab,var(--accent)_9%,transparent)] border-t transition-colors">
                   <td className="px-1 py-2.5">{r.label}</td>
                   <td className="px-1 py-2.5 text-right tabular">
                     {render ? render(r) : `${fmtAmount(r.amount)} ${r.token}`}
