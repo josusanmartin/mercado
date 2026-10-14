@@ -1,8 +1,12 @@
 """Generate Mercado's own sarape-inspired woven texture (no third-party imagery).
 Used inside the Home hero type (CSS background-clip:text). Seeded and reproducible:
-  python3 apps/web/art/make_sarape.py  ->  apps/web/public/photos/sarape.webp
+  python3 apps/web/art/make_sarape.py         ->  apps/web/public/photos/sarape.webp
+  python3 apps/web/art/make_sarape.py --dark  ->  apps/web/public/photos/sarape-dark.webp
+The dark variant has the same seed and bands, but ink becomes cream: black bands vanish inside type on the
+dark background (letters look chopped), cream ones read.
 """
 import random
+import sys
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageFilter
@@ -12,6 +16,9 @@ PALETTE = {  # PRINCIPLES.md cultural palette + product accents
     "jade": (31, 61, 43), "terracotta": (226, 96, 63), "cream": (242, 230, 201), "ink": (10, 10, 10),
     "gold": (229, 168, 35), "rosa": (217, 58, 122), "cobalt": (36, 72, 200),
 }
+DARK = "--dark" in sys.argv[1:]
+if DARK:
+    PALETTE["ink"] = PALETTE["cream"]
 rng = random.Random(1812)
 img = np.zeros((H, W, 3), dtype=np.float32)
 y = 0
@@ -32,6 +39,6 @@ grain = np.random.default_rng(1812).normal(1.0, 0.035, (H, W, 1)).astype(np.floa
 weave = (1 + 0.04 * np.sin(np.arange(W) / 2.0))[None, :, None].astype(np.float32)
 img = np.clip(img * cols * grain * weave, 0, 255).astype(np.uint8)
 out = Image.fromarray(img).filter(ImageFilter.GaussianBlur(0.6))
-dest = Path(__file__).resolve().parents[1] / "public" / "photos" / "sarape.webp"
+dest = Path(__file__).resolve().parents[1] / "public" / "photos" / ("sarape-dark.webp" if DARK else "sarape.webp")
 out.save(dest, "WEBP", quality=82)
 print(dest, out.size)
