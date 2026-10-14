@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
 import { useConnection } from "wagmi";
 import type { DriverProfileId } from "@mercado/shared";
+import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,19 +80,17 @@ export function CreditScreen() {
           : undefined;
 
   return (
-    <div className="grid gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Get an advance</h1>
-          <p className="text-sm text-muted-foreground">
-            A small xMXN cash-flow advance against your driving income, repaid manually.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">Demo Uber Data</Badge>
-          <Badge variant="outline">Illustrative score, not a credit model</Badge>
-        </div>
-      </header>
+    <div>
+      <PageHeader
+        title="Get an advance"
+        lede="A small xMXN cash-flow advance against your driving income, repaid manually."
+        aside={
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="mock">Demo Uber Data</Badge>
+            <Badge variant="mock">Illustrative score, not a credit model</Badge>
+          </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="grid gap-6">

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useConnection } from "wagmi";
 import type { BillProviderId } from "@mercado/shared";
 import { explorerAddress } from "@mercado/shared";
+import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,19 +54,17 @@ export function PayScreen() {
   };
 
   return (
-    <div className="grid gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Pay bills</h1>
-          <p className="text-sm text-muted-foreground">
-            Pay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">Payment: real testnet transfer</Badge>
-          <Badge variant="outline">Fulfillment: SIMULATED</Badge>
-        </div>
-      </header>
+    <div>
+      <PageHeader
+        title="Pay bills"
+        lede="Pay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated."
+        aside={
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="success">Payment: real testnet transfer</Badge>
+            <Badge variant="mock">Fulfillment: SIMULATED</Badge>
+          </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="grid content-start gap-6">
@@ -166,7 +165,7 @@ export function PayScreen() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    Payment <Badge>on-chain</Badge>
+                    Payment <Badge variant="success">on-chain</Badge>
                   </CardTitle>
                   <CardDescription>Verified by the server before anything was fulfilled.</CardDescription>
                 </CardHeader>
@@ -182,7 +181,7 @@ export function PayScreen() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    Top-up <Badge variant="outline">SIMULATED</Badge>
+                    Top-up <Badge variant="mock">SIMULATED</Badge>
                   </CardTitle>
                   <CardDescription>{r.fulfillment?.label ?? "SIMULATED fulfillment, no real top-up"}</CardDescription>
                 </CardHeader>

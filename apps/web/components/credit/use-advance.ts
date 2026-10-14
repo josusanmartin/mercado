@@ -40,11 +40,14 @@ export function useEligibility() {
 
 /** Seconds until `expiry` (unix seconds), ticking every second. */
 export function useCountdown(expiry: number | undefined) {
-  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  // Clock is read only in effects (never during render/prerender).
+  const [now, setNow] = useState<number>();
   useEffect(() => {
     if (!expiry) return;
-    const t = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000);
+    const tick = () => setNow(Math.floor(Date.now() / 1000));
+    tick();
+    const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, [expiry]);
-  return expiry ? Math.max(0, expiry - now) : undefined;
+  return expiry && now !== undefined ? Math.max(0, expiry - now) : undefined;
 }
