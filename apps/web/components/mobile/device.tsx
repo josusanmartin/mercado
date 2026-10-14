@@ -24,6 +24,7 @@ export function AndroidDevice({
   children,
   label = "Android phone preview",
   accent,
+  onAccent,
   statusBar = "var(--m-surface)",
   theme = "paper",
 }: {
@@ -31,6 +32,8 @@ export function AndroidDevice({
   label?: string;
   /** App accent (sets --m-accent for the kit). */
   accent?: string;
+  /** Text/icons on accent fills (default white). */
+  onAccent?: string;
   /** Status bar background, to match the app's top surface. */
   statusBar?: string;
   /** "paper" = white canvas, ink type (default); "ink" = black canvas (Card). */
@@ -45,7 +48,7 @@ export function AndroidDevice({
     setTimeout(() => setSnacks((s) => s.map((x) => (x.id === id ? { ...x, closing: true } : x))), 3800);
     setTimeout(() => setSnacks((s) => s.filter((x) => x.id !== id)), 4000);
   }, []);
-  const style = accent ? ({ "--m-accent": accent } as CSSProperties) : undefined;
+  const style = { ...(accent && { "--m-accent": accent }), ...(onAccent && { "--m-on-accent": onAccent }) } as CSSProperties;
   // On a real phone the overlays live on <body> so they cover the site's sticky chrome too.
   const [small, setSmall] = useState(false);
   useEffect(() => {

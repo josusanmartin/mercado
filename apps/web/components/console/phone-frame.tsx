@@ -10,17 +10,20 @@ export function PhoneFrame({
   children,
   label,
   accent,
+  onAccent,
   statusBar,
   theme,
 }: {
   children: ReactNode;
   label?: string;
   accent?: string;
+  /** Text on accent fills (default white; ink for cream/gold). */
+  onAccent?: string;
   statusBar?: string;
   theme?: "paper" | "ink";
 }) {
   return (
-    <AndroidDevice label={label} accent={accent} statusBar={statusBar} theme={theme}>
+    <AndroidDevice label={label} accent={accent} onAccent={onAccent} statusBar={statusBar} theme={theme}>
       {children}
     </AndroidDevice>
   );
