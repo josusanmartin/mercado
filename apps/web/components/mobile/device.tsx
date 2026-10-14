@@ -58,6 +58,32 @@ export function AndroidDevice({
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
+  // CR-04: on desktop the whole phone (and so its primary action) must fit the first screen. Scale the
+  // device with CSS zoom (layout-aware) to the room between its top and the viewport bottom, 0.7–1.
+  const frame = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  useEffect(() => {
+    const el = frame.current;
+    if (!el || small) return setZoom(1);
+    const NATURAL = 790; // device body height at zoom 1 (766 screen + bezel + rim + bottom pad)
+    const RESERVE = 48; // the sticky honesty footer + a little air
+    const fit = () => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const room = window.innerHeight - top - RESERVE;
+      setZoom(Math.min(1, Math.max(0.7, Math.floor((room / NATURAL) * 100) / 100)));
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    const ro = new ResizeObserver(fit);
+    if (el.parentElement) ro.observe(el.parentElement);
+    const above = el.closest("main")?.firstElementChild;
+    if (above) ro.observe(above);
+    return () => {
+      window.removeEventListener("resize", fit);
+      ro.disconnect();
+    };
+  }, [small]);
+
   // Real-phone mode: the app is the page (mobile.css hides [data-phone-hide] site chrome; see PhonePanel).
   useEffect(() => {
     if (!small) return;
@@ -93,7 +119,7 @@ export function AndroidDevice({
 
   return (
     <Ctx.Provider value={{ overlay, snack }}>
-      <div className="relative sm:mx-auto sm:w-[360px] sm:pb-1" role="group" aria-label={label}>
+      <div ref={frame} className="relative sm:mx-auto sm:w-[360px] sm:pb-1" style={zoom < 1 ? { zoom } : undefined} role="group" aria-label={label}>
         {/* side keys: power + volume rocker on the right edge */}
         <span aria-hidden className="absolute top-[150px] -right-[3px] hidden h-[62px] w-[4px] rounded-r-[3px] bg-gradient-to-b from-[#3b4048] via-[#272a30] to-[#3b4048] sm:block" />
         <span aria-hidden className="absolute top-[236px] -right-[3px] hidden h-[104px] w-[4px] rounded-r-[3px] bg-gradient-to-b from-[#3b4048] via-[#272a30] to-[#3b4048] sm:block" />
