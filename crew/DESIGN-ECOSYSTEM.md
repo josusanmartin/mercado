@@ -52,3 +52,20 @@ Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately 
 - `qa`: e2e for the new routes, recapture screenshots and the hero video once the products land, and keep the v2 journey going.
 - `review`: IA/UX pass (does each product make sense to its user? can a judge grasp the ecosystem from `/` in 10 seconds?) plus labels.
 - **Target v2:** the new products build against `activeAddresses()`. lead flips to v2 when crew/V2-SWITCH.md is green.
+
+## 5. Crédito v2 (josu, 02:27): driver phone app + back office
+`/credito` has two sections (one tab row): **Driver app** (default) and **Back office**.
+
+**Driver app**, shown inside the same generic **Android phone frame** as Remesas (reuse web's PhoneFrame; web exports it from `@/components/console`), with a "what just happened" panel beside it on desktop and full-screen on a real phone. Spanish-first.
+1. **Connect your work account:** three buttons, "Continuar con Uber", "Continuar con DiDi" and "Continuar con Rappi". **No official logos or brand marks** (plain neutral buttons with the name, optionally a small generic car/bike/bag icon), and a line under them: "Demo connection: simulated consent, not affiliated with Uber, DiDi or Rappi. We never ask for your password."
+2. Tapping one opens a **simulated consent screen** inside the phone (scopes listed: profile, trips, earnings; "Demo" badge), then loads that platform's **Demo earnings** (Demo Uber Data / Demo DiDi Data / Demo Rappi Data: synthetic fixtures, allowed mocks; add them to MOCKS.md).
+3. Then: weekly earnings mini-chart → "Tu línea de crédito: 1,500 xMXN" with why (plain language) → **draw advance** (real on-chain borrow with the signed attestation) → **"Tu adelanto"** (owed, fee, repay button, real repay) → a shortcut to pay Tiempo Aire (opens /remesas?screen=aire).
+
+**Back office**: the credit platform (desktop, clean Brand v4, few boxes):
+- KPIs: pool liquidity, outstanding advances, utilization vs 80% cap, realized fees, repayment count. All live from chain.
+- **Loan book**: a table of advances from Borrowed/Repaid events (borrower short address, platform, amount, fee, status, opened, explorer link). Live.
+- **Underwriting**: recent attestations issued by the API (score, cap, platform, expiry, nonce used yes/no), with the scoring rule explained, labeled "illustrative, not a credit model".
+- **Lenders**: supply/withdraw and lender positions (contracts' Earn components).
+- **Underwriting API**: the MPP pay-per-report panel and bot trace.
+
+Owner: `api` (EarningsProvider gains DemoDidiProvider + DemoRappiProvider fixtures; the platform is carried into the attestation dataHash).
