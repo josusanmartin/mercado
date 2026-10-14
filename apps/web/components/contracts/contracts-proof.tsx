@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
+import { usePresent } from "@/components/console/present";
 
 const V2 = activeAddresses("v2");
 const V1 = activeAddresses("v1");
@@ -212,6 +213,7 @@ export function ContractsProof() {
     staleTime: 60_000,
   });
   const now = useNow(15_000);
+  const present = usePresent(); // ?present=1 (deck captures only) drops the testnet label
   const x = (v?: bigint, u = "xMXN") => (v === undefined ? "…" : `${fmtAmount(v)} ${u}`);
   const deployer = L.get<Address>("vault.owner");
   const OWNER = deployer ? `the deployer key (${shortAddr(deployer)})` : "the deployer key";
@@ -470,7 +472,7 @@ export function ContractsProof() {
     <SettingsLayout
       title="Every contract, live and verified"
       statement="Cada contrato, verificado."
-      meta={`${total} contratos con código · verificados en Sourcify, en vivo · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID} · Testnet · sin valor real`}
+      meta={`${total} contratos con código · verificados en Sourcify, en vivo · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID}${present ? "" : " · Testnet · sin valor real"}`}
       purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state. Testnet trust model: one admin key (the deployer), no timelock or multisig. 'No direct sweep' is not 'no control', so the control paths are spelled out per contract."
       list={
         <ListPane
