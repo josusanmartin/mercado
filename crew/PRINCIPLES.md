@@ -47,3 +47,11 @@ josu: "keep improving the UI to make it sleeker, more transitions, colors, anima
 - No layout shift, no animation that delays a primary action (≤200ms before anything is clickable), and no change to tx logic, copy, honesty labels (data-honesty), testids or the accessible names qa/review scripts use.
 - One small lib is allowed: `motion` (motion.dev), installed via `flock .npm.lock`; or pure CSS + View Transitions. Nothing else.
 - Every PR keeps the 1440x900 fold (CR-04) and the light/dark contrast rules.
+
+## v6 · Show, don't tell (josu: "keep going", 07:50)
+v5 gave each product color and motion. The desktop side panels are still walls of gray sentences ("What just happened", "Quote details", "Portfolio", "What will happen", Home's "Built on Tempo" grid). josu's standing rule: **less text, more showing**. v6 turns explanation into visuals. Same guardrails as v5 (no tx-logic/copy-meaning changes, keep data-honesty labels, testids, fold, reduced motion, AA).
+- **Every side panel leads with one visual**: a stepper/timeline with animated progress, a money-flow diagram where a dot travels along the path, a gauge, a sparkline or a stacked bar. Text drops to ≤1 short line per item; long explanations go behind a "How it works" disclosure.
+- **Live data feels alive**: numbers that change pulse their accent once; on-chain links show a tiny "confirmed ✓ 0.6s" chip; new activity rows slide in at the top.
+- **Empty/loading states are designed**: illustrated (CSS/SVG in product color), never a dash.
+- **Home**: "Built on Tempo" becomes a live proof strip (6 compact tiles with a live number + icon), not 6 paragraphs; consider an animated money map (US → MX arc with travelling dots, from real recent transfers).
+- **Micro-interactions**: hover lifts on rows, focus rings in the accent, copy-to-clipboard on addresses with a "Copied" toast, smooth tab underline that slides.
