@@ -109,6 +109,16 @@ test('card: Javier pays MX$450 at Tienda Doña Mary (one real charge) → phone 
   await go(page, '/card?holder=driver')
   const phone = phoneOf(page)
   await expect(phone.getByText(/Hola, Javier/i)).toBeVisible({ timeout: 60_000 })
+  // lead 04:29: Javier raises HIS OWN daily limit (one holder-signed tx) so 'Disponible hoy' covers MX$450
+  const limitRow = phone.getByRole('button', { name: /Límite diario/ }).first()
+  if (!/5,000/.test((await limitRow.textContent()) ?? '')) {
+    await limitRow.click()
+    await phone.getByLabel('Límite diario en xMXN').fill('5000')
+    await phone.getByRole('button', { name: /Guardar límite/ }).click()
+    await expect(limitRow).toContainText('5,000', { timeout: 120_000 })
+    await page.waitForTimeout(2500) // sheet closes, availableToday refreshes
+    await phone.getByText(/Hola, Javier/i).scrollIntoViewIfNeeded() // back to the top of the app
+  }
   const pos = page.getByLabel('Shop terminal')
   for (const k of '450') await pos.getByRole('button', { name: k, exact: true }).click()
   await pos.getByRole('button', { name: /Cobrar con Mercado Card/ }).click()

@@ -8,6 +8,7 @@
 
 - [ ] **:3100 is up** and compiles: `curl -s localhost:3100/api/fx` returns 200 (one dev server, tmux `mercado:dev`).
 - [ ] **Reset:** `packages/contracts/script/demo-reset` (add `DEMO_RESET_SKIP_ORDERS=1` if a bill order is mid-settlement). Check the state table: Javier owes 0 and his card is active, Familia's card is active, and pool v2 has cash ≥ 10k. The reset never touches the oracle.
+- [ ] **Preflight is all green:** `npx tsx scripts/preflight.ts` (exit 0). Mandatory after every rehearsal or recapture: it checks Javier's card *available today* (not just his balance), debts, oracle age, sponsor budget, exchange/desk/pool capacity and every page/API.
 - [ ] **FX is fresh:** `/api/fx` label reads "Admin-relayed from Coinbase … fetched <t> · on-chain <t>" within the last ~10 min. If not, ask contracts to restart `fx-relay.mjs`. Don't hand-set the price.
 - [ ] **Demo mode is ON** (top bar toggle), so each product uses its own testnet demo account automatically.
 - [ ] Browser at 1440×900, no extensions, explorer tab open (https://explore.testnet.tempo.xyz).
@@ -16,7 +17,7 @@
 
 ## Stage flow (CR-03, lead-approved): 6 beats + one 45 s spending proof, ≤230 spoken words
 
-Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (the deck's speaker notes are the source of truth if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
+Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (synced with the deck's speaker notes at 04:35; the deck wins if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
 
 ### 1 · 0:00 Cover (10 s)
 
@@ -39,12 +40,12 @@ Play `deck/assets/hero-spend-final.mp4` (41 s, all real txs). Live alternative: 
 ### 5 · 1:50 Why it compounds, and the risk (30 s)
 
 Optional live: **/mint** → **Risk** tab (or the deck's `panel-mint-risk`).
-- *"Every product feeds the next: savings fund drivers, T-bills become collateral, collateral mints pesos. The one risk that matters is the peso strengthening, and we show exactly where the system breaks."*
+- *"An advance becomes a shop receipt; a remittance can become peso savings. On Mint, eligible assets support separate collateralized debt. We show what peso appreciation does to backing; credit, liquidity and admin-control risks remain."*
 
-### 6 · 2:20 Close (15 s)
+### 6 · 2:20 Close: one corridor, one driver platform, one merchant pilot (25 s)
 
 Optional live: **/contracts**, every v2 contract "Verified ✓ exact match".
-- *"Every contract is source-verified. Built and running end-to-end on Tempo testnet."*
+- *"Six modules, one shared infrastructure, not six launch markets. Next is one corridor, one driver platform and one merchant pilot: we are looking for a licensed MXN payout partner and a driver-platform pilot, and we will measure completed cash-outs, repeat spend and repayment. Every contract is source-verified, and it is built and running end-to-end on Tempo testnet."*
 
 ## Appendix: live product walkthrough (Q&A only)
 
