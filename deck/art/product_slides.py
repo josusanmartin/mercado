@@ -8,32 +8,35 @@ assets = json.load(open(os.path.join(ROOT, "assets.json")))
 P = [
  dict(id="j1-mint", num="04", name="Mercado Mint", tint="#00A68A", base="#00A68A", art="product-mint-v4.webp",
   purpose="Institutions mint xMXN.", who="Institutions and sophisticated holders with collateral that should be working.",
-  proofs=[("8,600", "xMXN minted against 200 staked OUSD at 250%", "mint tx", TX+"0x38c8f545a41d9083e3580854fab635ce07e8a66aeefdfb53ff75cf95b3a37935"),
-          ("200%", "minimum mint ratio for the demo tokenized T-bill", "tTBILL mint tx", TX+"0x2deb7284b2a176eca8b49cf2b4585fb2fe4643b613520429cfea7aa9dac8d480")],
+  proofs=[("1,469.93", "xMXN minted against 200 staked OUSD at 250%, USD/MXN 18.37", "mint tx", TX+"0xcff60f04384cf61cc073b504a717d51fa719b9a31bf68a0eb38cbe71ed820166"),
+          ("6,124.71", "xMXN minted against 10 demo T-bills at 300%", "tTBILL mint tx", TX+"0xaeaacdf5e0dbddfbfff3f5f29dca4dd63f970915712bc8df2be407c24fbff179")],
   status=("#FFB547", "v2 live on testnet · sOUSD and tTBILL are demo tokens, admin-set yield and price"),
-  notes="~10s. Mercado Mint is for institutions and sophisticated holders: lock collateral, mint xMXN, keep the collateral's own yield. On the v2 journey on Moderato, 200 OUSD was staked into demo sOUSD and 8,600 xMXN minted against it at 250%; a separate position used the demo tokenized T-bill, which needs at least 200% to mint and liquidates below 170%. Over-mint and over-withdraw simulations revert, and only the vault and exchange can issue. sOUSD and tTBILL are demo tokens with admin-set yield and prices: no real T-bill backing, no real yield. Repaying burns the xMXN."),
+  notes="~10s. Mercado Mint is for institutions and sophisticated holders: lock collateral, mint xMXN, keep the collateral's own yield. On the v2 journey on Moderato, at the real rate (USD/MXN 18.37, admin-relayed from Coinbase), 200 OUSD was staked into demo sOUSD and 1,469.93 xMXN minted against it at 250%; a separate position deposited 10 demo tokenized T-bills (priced at $100 each, about 18,374 xMXN of value) and minted 6,124.71 xMXN at 300%. T-bills need at least 200% to mint and liquidate below 170%. Over-mint and over-withdraw simulations revert, and only the vault and exchange can issue. sOUSD and tTBILL are demo tokens with admin-set yield and prices: no real T-bill backing, no real yield. Repaying burns the xMXN."),
  dict(id="j2-send", num="05", name="Mercado Remesas", tint="#FF8A1F", base="#FF8A1F", art="product-remesas-v4.webp",
   purpose="Send money home in one transaction.", who="A sender in the US paying family in Mexico, plus Tiempo Aire and bills for them.",
-  proofs=[("997.8", "xMXN minted straight to the family for 50 OUSD, one tx", "remittance tx", TX+"0x88234960716451e0fdb4837dd5242b153fb9b10fbb0e1ba141916c77bc0419da"),
-          ("402", "bill paid in xMXN over HTTP 402, top-up simulated", "payment tx", TX+"0xb956c7998e1bd7e4ca20af26fa5bcfcabca069ac122209746480a5de5fed8077")],
+  proofs=[("916.69", "xMXN minted straight to the family for 50 OUSD at 18.37, one tx", "remittance tx", TX+"0xabd8478e4955955be052d92016181070650130f0337e88e9df9e485cec8789f2"),
+          ("402", "bill paid in xMXN over HTTP 402, top-up simulated", "payment tx", TX+"0x4d08f4097f7a4bf4f05212cc4304585f4603cd0e8c1020a5695f746c31e17fd0")],
   status=("#00FF00", "v2 live on testnet · on-chain delivery only, no cash-out · airtime fulfillment simulated"),
-  notes="~10s. Mercado Remesas is mobile-first, for a sender in the US paying family in Mexico. On the v2 journey, 50 testnet OUSD went into the vault's exchange and 997.8 xMXN was minted straight to the recipient in one transaction, with slippage and size limits enforced. The same app pays Tiempo Aire and services for the family through HTTP 402; the payment is real testnet xMXN, the Telcel top-up is SIMULATED. Delivery is on-chain only: there's no SPEI or bank cash-out in this prototype. The app shows it inside an Android phone."),
+  notes="~10s. Mercado Remesas is mobile-first, for a sender in the US paying family in Mexico. On the v2 journey, 50 testnet OUSD went into the vault's exchange and 916.69 xMXN was minted straight to the recipient in one transaction: the oracle mid of USD/MXN 18.37 (admin-relayed from Coinbase) less a 20 bps fee (1.84 xMXN) and 2 bps of size impact, with slippage and size limits enforced. The same app pays Tiempo Aire and services for the family through HTTP 402; the payment is real testnet xMXN, the Telcel top-up is SIMULATED. Delivery is on-chain only: there's no SPEI or bank cash-out in this prototype. The app shows it inside an Android phone."),
  dict(id="p-global", num="06", name="Mercado Global", tint="#5C8BFF", base="#2F6BFF", art="product-global-v4.webp",
   purpose="Move MXN and USD across borders.", who="Businesses and fintech partners paying suppliers and settling MXN ⇄ USD.",
-  proofs=[("9.98", "OUSD redeemed for 200 xMXN, burned in the exchange", "redeem tx", TX+"0x4b1af6f4bbdd9c95646f6908caaf7f77ef26fc3d7e6721c5058d8c1bf2cdc7de"),
+  proofs=[("10.86", "OUSD out for 200 xMXN redeemed and burned, at 18.37", "redeem tx", TX+"0xaf270ccf37d94806ed8f97f791f068029a63a9b5021920a44b344199a615af68"),
           ("0.50", "xMXN paid over 402 for a signed indicative quote", "paid quote tx", TX+"0x77feed29cd83ee9b269df19f1919286449d55a76531dd054bc5c92a80eb073c8")],
   status=("#00FF00", "v2 live on testnet · quotes are indicative, 30s expiry, minimum received shown"),
-  notes="~10s. Mercado Global is B2B cross-border: MXN to USD and back through the vault's exchange, priced off the oracle with a size-dependent impact and a fee. On the v2 journey, 200 xMXN was redeemed for 9.98 OUSD and burned; redemptions are bounded by what the exchange issued and by a rolling daily bucket. Partners get a signed indicative quote (30-second expiry, minimum received) through an API they pay for over HTTP 402: the payment buys the quote response, not the supplier payment and not a guaranteed fill. Never call it a firm quote. The FX rate is an admin-relayed reference rate on testnet, not a decentralized oracle."),
+  notes="~10s. Mercado Global is B2B cross-border: MXN to USD and back through the vault's exchange, priced off the oracle with a size-dependent impact and a fee. On the v2 journey, 200 xMXN was redeemed for 10.86 OUSD at USD/MXN 18.37 and burned, with exchange coverage at 307%; redemptions are bounded by what the exchange issued and by a rolling daily bucket. Partners get a signed indicative quote (30-second expiry, minimum received) through an API they pay for over HTTP 402: the payment buys the quote response, not the supplier payment and not a guaranteed fill. Never call it a firm quote. The FX rate is real (Coinbase, about 18.37) but admin-relayed on-chain on testnet, not a decentralized oracle."),
  dict(id="j3-advance", num="07", name="Mercado Crédito", tint="#F2357D", base="#F2357D", art="product-credito-v4.webp",
   purpose="Credit for the gig economy.", who="Gig drivers who need small advances, the lenders who fund them, and bots that buy scores.",
-  proofs=[("500", "xMXN borrowed from pool v2 on a signed attestation", "borrow tx", TX+"0xff722d0c3b2c94509ce2174bdc7f494a31cf0604c09c9063159eeb2811c35703"),
-          ("510", "xMXN repaid to lenders, realized fees 0 → 10", "repay tx", TX+"0xcca5832d15f85f026ec7307c5911177488d840943118e470338a127e3308711b")],
+  proofs=[("500", "xMXN borrowed from pool v2 on a signed attestation", "borrow tx", TX+"0x96244a9a1c8e792f547bf638f6658ee9a948bfaaecc6c43d80e3c62926339ad8"),
+          ("510", "xMXN repaid to lenders, realized fees 10 → 20", "repay tx", TX+"0x08854d60c176840a2e44db11aed6477354f074c2a3470f42b3015b0d9be1669d")],
   status=("#FFB547", "Demo Uber Data · illustrative score, not a credit model · repayment is manual"),
-  notes="~12s. Mercado Crédito has three sides. Drivers: Demo Uber Data (synthetic) gives an illustrative score and a credit line of min(15% of median weekly net, 1,500 MXN); the server signs a 15-minute EIP-712 attestation bound to the wallet, pool, chain and nonce, and the pool lends with a 2% fee. Lenders: they fund the pool separately from the vault, can't withdraw lent cash, and earn realized fees only when drivers repay; repayments go back to the pool, not burned. Underwriting API: bots pay per report over HTTP 402 with no API key. On the v2 journey, a driver borrowed 500 xMXN and repaid 510, and realized fees went from 0 to 10. Repayment is manual; nothing is deducted from Uber payouts."),
+  notes="~12s. Mercado Crédito has three sides. Drivers: Demo Uber Data (synthetic) gives an illustrative score and a credit line of min(15% of median weekly net, 1,500 MXN); the server signs a 15-minute EIP-712 attestation bound to the wallet, pool, chain and nonce, and the pool lends with a 2% fee. Lenders: they fund the pool separately from the vault, can't withdraw lent cash, and earn realized fees only when drivers repay; repayments go back to the pool, not burned. Underwriting API: bots pay per report over HTTP 402 with no API key. On the v2 journey, a driver borrowed 500 xMXN, paid 100 xMXN of Telcel airtime over a real 402, and repaid 510, and realized fees went from 10 to 20. Repayment is manual; nothing is deducted from Uber payouts."),
 ]
 
 def slide(p):
-    art = assets.get(p["art"], "ART_" + p["art"])
+    key = p["art"].replace("product-", "screen-").replace("-v4.webp", "-v4.png")
+    shot = key in assets
+    art = assets[key] if shot else assets.get(p["art"], "ART_" + p["art"])
+    alt = (p["name"] + " in the Mercado app: product header, live KPIs and the first tab") if shot else ""
     pr = ""
     for i, (big, cap, lk, url) in enumerate(p["proofs"]):
         left = 128 + i * 480
@@ -51,7 +54,7 @@ def slide(p):
 <hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
 <p style="position:absolute;left:128px;top:470px;width:960px;font-family:{M};font-size:24px;color:#999999">for</p>
 <p style="position:absolute;left:128px;top:506px;width:960px;font-size:32px;font-weight:500;line-height:1.3;color:#F2F0EA">{p["who"]}</p>
-{pr}<img data-build-in="fade 5" src="{art}" alt="" style="position:absolute;left:1152px;top:470px;width:640px;height:404px;object-fit:cover;border:1px solid rgba(255,255,255,0.12)">
+{pr}<img data-build-in="fade 5" src="{art}" alt="{alt}" style="position:absolute;left:1152px;top:470px;width:640px;height:404px;object-fit:cover;border:1px solid rgba(255,255,255,0.12)">
 <div style="position:absolute;left:128px;top:900px;width:12px;height:12px;border-radius:50%;background:{dot};box-shadow:0 0 10px {dot}"></div>
 <p style="position:absolute;left:152px;top:886px;width:1640px;font-family:{M};font-size:24px;color:#999999">{st}</p>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:{M};font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
