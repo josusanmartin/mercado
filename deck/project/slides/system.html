@@ -1,0 +1,63 @@
+<section id="system" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/43f886d7093f469dc1d8680cd904ef9d" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">03 — the system</p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Four modules,</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">one synthetic peso.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:460px;width:1664px;height:430px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+.mono{font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace}
+svg{position:absolute;left:0;top:0}
+.box{position:absolute;display:flex;flex-direction:column;gap:4px}
+.t{font-size:40px;font-weight:500;letter-spacing:-1px}
+.s{font-size:24px;color:#999}
+.st{font-size:24px;display:flex;gap:10px;align-items:center;color:#999}
+.d{width:12px;height:12px;border-radius:50%;flex:none}
+.live{background:#00FF00;box-shadow:0 0 10px rgba(0,255,0,.6)}
+.demo{background:#FFB547;box-shadow:0 0 10px rgba(255,181,71,.6)}
+.prog{border:2px solid #777;width:9px;height:9px}
+.col{position:absolute;left:0;top:96px;display:flex;flex-direction:column;gap:18px}
+.col small{font-size:24px;color:#666}
+#x{position:absolute;left:700px;top:105px;width:220px;height:220px;border-radius:50%;border:1px solid rgba(255,181,71,.6);display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:500;color:#FFB547;letter-spacing:-1px;box-shadow:0 0 60px rgba(255,181,71,.18);animation:p 3.2s ease-in-out infinite}
+@keyframes p{50%{box-shadow:0 0 90px rgba(255,181,71,.35)}}
+.mod{opacity:.35;transition:opacity .6s}.mod.on{opacity:1}
+</style></head><body>
+<svg width="1664" height="430" viewBox="0 0 1664 430">
+<g stroke="rgba(255,255,255,0.18)" stroke-width="1.5" fill="none">
+<path id="p0" d="M330 215 L700 215"/>
+<path id="p1" d="M920 215 C1000 215 1000 60 1080 60"/>
+<path id="p2" d="M920 215 L1080 215"/>
+<path id="p3" d="M920 215 C1000 215 1000 370 1080 370"/>
+</g></svg>
+<div class="col mono">
+<small>collateral</small>
+<div class="st" style="color:#F2F0EA"><span class="d live"></span>OUSD</div>
+<div class="st" style="color:#F2F0EA"><span class="d demo"></span>staked OUSD</div>
+<div class="st" style="color:#F2F0EA"><span class="d demo"></span>tokenized T-bills</div>
+</div>
+<div class="box mod" id="m0" style="left:420px;top:120px;width:260px"><span class="t">Create</span><span class="s">institutions mint</span></div>
+<div id="x">xMXN</div>
+<div class="box mod" id="m1" style="left:1100px;top:14px;width:564px"><span class="t">Move</span><span class="st mono"><span class="d prog"></span>vault becomes the exchange</span></div>
+<div class="box mod" id="m2" style="left:1100px;top:168px;width:564px"><span class="t">Lend</span><span class="st mono"><span class="d live"></span>driver advances, live</span></div>
+<div class="box mod" id="m3" style="left:1100px;top:322px;width:564px"><span class="t">Spend</span><span class="st mono"><span class="d live"></span>402 bills and agents, live</span></div>
+<script>
+var paths=[0,1,2,3].map(function(i){return document.getElementById('p'+i)}),mods=[0,1,2,3].map(function(i){return document.getElementById('m'+i)}),dots=[];
+paths.forEach(function(p){var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r','7');c.setAttribute('fill','#FFB547');c.setAttribute('opacity','0');document.querySelector('svg').appendChild(c);dots.push(c)});
+var t0=0,CY=8000;
+function f(t){if(!t0)t0=t;var e=(t-t0)%CY;
+mods.forEach(function(m,i){m.classList.toggle('on',e>i*1400+200)});
+dots.forEach(function(c,i){var s=i*1400,k=(e-s)/1300;if(k<0||k>1){c.setAttribute('opacity','0');return}
+var L=paths[i].getTotalLength(),pt=paths[i].getPointAtLength(k*L);c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);c.setAttribute('opacity','1')});
+requestAnimationFrame(f)}
+requestAnimationFrame(f);
+</script></body></html></x-embed>
+<div style="position:absolute;left:128px;top:900px;width:12px;height:12px;border-radius:50%;background:#00FF00;box-shadow:0 0 10px rgba(0,255,0,0.6)"></div>
+<p style="position:absolute;left:152px;top:886px;width:330px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">live on testnet</p>
+<div style="position:absolute;left:470px;top:900px;width:12px;height:12px;border-radius:50%;background:#FFB547;box-shadow:0 0 10px rgba(255,181,71,0.6)"></div>
+<p style="position:absolute;left:494px;top:886px;width:520px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">demo token, admin-set yield/price</p>
+<div style="position:absolute;left:1052px;top:898px;width:12px;height:12px;border-radius:50%;border:2px solid #777777"></div>
+<p style="position:absolute;left:1078px;top:886px;width:714px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">in progress (v2, alongside the live v1)</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">03</p>
+<aside>~15s. The whole system on one slide. Create: institutions lock collateral and mint xMXN; the collateral can be yield-bearing (staked OUSD, tokenized T-bills) so it keeps earning inside its own token while locked. Today the OUSD vault is live on testnet; staked OUSD and T-bills are demo tokens with admin-set yield and prices, being built as v2 alongside v1, with no claim of real T-bill backing or real yield. Move: the vault becomes the exchange, so OUSD in mints xMXN and xMXN out burns it and redeems OUSD, priced off the oracle; that vAMM is in progress, and today's live path is the separately funded swap desk. Lend: driver advances from the lender pool, live. Spend: HTTP 402 payments for bills and agent APIs, live. Testnet prototype: no peg, no fiat redemption, no real yield.</aside>
+</section>
