@@ -2,9 +2,9 @@
 // Mercado Crédito · Underwriting API: third parties buy a driver's demo underwriting report per call over
 // MPP (HTTP 402). Shows how to call it, a LIVE unpaid probe (the real 402 challenge, decoded; never pays),
 // and the live ledger of paid calls (PaidCalls).
+import { probeChallenge } from "@/lib/mpp/client";
 import { useState } from "react";
 import { Challenge } from "mppx";
-import { Fetch } from "mppx/client";
 import { Panel, Row, Rows } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,12 +45,9 @@ export function UnderwritingApi() {
     setBusy(true);
     setError(undefined);
     try {
-      const res = await Fetch.unwrapFetch(globalThis.fetch)(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ borrower: DEMO_BORROWER, profile: "steady" }),
-      });
-      const www = res.headers.get("WWW-Authenticate");
+      // the server makes the unpaid call, so the browser doesn't log a red 402
+      const res = await probeChallenge("underwriting", { borrower: DEMO_BORROWER, profile: "steady" });
+      const www = res.wwwAuthenticate;
       if (res.status !== 402 || !www) {
         setProbe({ status: res.status });
         return;

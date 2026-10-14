@@ -2,9 +2,9 @@
 // Mercado Global · Partner API: remittance apps and bots buy a signed indicative quote per call over MPP.
 // MPP pays for the API response (the quote), not for the payment itself. Live 402 probe (never pays) and
 // the live ledger of paid calls.
+import { probeChallenge } from "@/lib/mpp/client";
 import { useState } from "react";
 import { Challenge } from "mppx";
-import { Fetch } from "mppx/client";
 import { Panel, Row, Rows } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,12 +38,12 @@ export function PartnerApi() {
     setBusy(true);
     setError(undefined);
     try {
-      // Unwrapped fetch, no credential: this only ever sees the 402. Nothing is paid.
-      const res = await Fetch.unwrapFetch(globalThis.fetch)(PATH);
-      const www = res.headers.get("WWW-Authenticate");
+      // The server makes the unpaid call (no credential): only ever the 402, nothing is paid, and the
+      // browser doesn't log a red 402.
+      const res = await probeChallenge("move-quote", { side: "usd_to_mxn", amount: "250" });
+      const www = res.wwwAuthenticate;
       if (res.status !== 402 || !www) {
-        const body = await res.json().catch(() => ({}));
-        setProbe({ status: res.status, description: body?.error });
+        setProbe({ status: res.status, description: (res.body as { error?: string } | null)?.error });
         return;
       }
       const c = Challenge.deserialize(www);

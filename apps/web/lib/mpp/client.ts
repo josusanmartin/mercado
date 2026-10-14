@@ -248,3 +248,18 @@ export async function checkBillSettlement(
     body.code,
   );
 }
+
+/**
+ * The live 402 an MPP endpoint answers to an UNPAID call, fetched via GET /api/mpp/challenge (the server makes
+ * the unpaid call), so UI probes show the real challenge without the browser logging a red 402. Never pays.
+ */
+export async function probeChallenge(
+  product: "underwriting" | "move-quote",
+  params: Record<string, string> = {},
+  baseUrl = "",
+): Promise<{ status: number; wwwAuthenticate: string | null; body: unknown }> {
+  const q = new URLSearchParams({ product, ...params });
+  const res = await rawFetch(`${baseUrl}/api/mpp/challenge?${q}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Challenge probe failed (${res.status})`);
+  return res.json();
+}

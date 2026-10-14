@@ -2,6 +2,7 @@
 // /developers: Mercado APIs over HTTP 402 (MPP). Every paid endpoint with its live price, the real 402
 // challenge (decoded from a no-payment call), copy-paste curl + an mppx client snippet, and a LIVE "Try it"
 // that pays from the API partner demo account and shows 402 → pay → 200 + Payment-Receipt.
+import { probeChallenge } from "@/lib/mpp/client";
 import { useEffect, useState } from "react";
 import {
   Check,
@@ -11,7 +12,6 @@ import {
   Repeat,
 } from "lucide-react";
 import { Challenge } from "mppx";
-import { Fetch } from "mppx/client";
 import { explorerTx } from "@mercado/shared";
 import {
   ListPane,
@@ -157,18 +157,14 @@ function ChallengeShape({ endpoint }: { endpoint: PaidEndpoint }) {
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (endpoint.needsQuote) return; // bills: shown in the Try-it trace (a probe would open an order)
-    const raw = Fetch.unwrapFetch(globalThis.fetch);
-    const init: RequestInit =
-      endpoint.method === "POST"
-        ? {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(endpoint.body!({ borrower: DRIVER })),
-          }
-        : {};
-    raw(endpoint.path, init)
+    // the server makes the unpaid call (GET /api/mpp/challenge), so the browser doesn't log a red 402
+    const probe =
+      endpoint.id === "move-quote"
+        ? probeChallenge("move-quote", Object.fromEntries(new URL(endpoint.path, "http://x").searchParams))
+        : probeChallenge("underwriting", Object.fromEntries(Object.entries(endpoint.body!({ borrower: DRIVER })).map(([k, v]) => [k, String(v)])));
+    probe
       .then(async (res) => {
-        const header = res.headers.get("WWW-Authenticate") ?? "";
+        const header = res.wwwAuthenticate ?? "";
         if (res.status !== 402 || !header)
           throw new Error(`Expected 402, got ${res.status}`);
         const c = Challenge.deserialize(header);
@@ -184,7 +180,7 @@ function ChallengeShape({ endpoint }: { endpoint: PaidEndpoint }) {
             description: c.description,
             opaque: c.meta,
           },
-          body: await res.json().catch(() => undefined),
+          body: res.body ?? undefined,
         });
       })
       .catch((e) => setError((e as Error).message));
