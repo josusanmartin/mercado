@@ -23,7 +23,6 @@ import { TokenInput } from "@/components/shell/token-input";
 import { TxProgress } from "@/components/shell/tx-progress";
 import { ActivityTable } from "@/components/mint/activity-table";
 import { Honesty } from "@/components/console/present";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { personaById } from "@/components/wallet/personas";
@@ -66,11 +65,8 @@ export function GlobalScreen() {
         <>
           Pay Mexican suppliers in pesos from dollars, or bring pesos home,
           through Mercado&apos;s exchange: OUSD in mints xMXN, xMXN out burns
-          it.<Honesty> Quotes come from an admin-relayed testnet FX feed.</Honesty>
-          <span className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="mock">Testnet OUSD · no real value</Badge>
-            <Badge variant="mock">xMXN not redeemable for pesos</Badge>
-          </span>
+          it.
+          <Honesty> Quotes come from an admin-relayed testnet FX feed.</Honesty>
         </>
       }
       list={
@@ -115,9 +111,11 @@ function QuoteRows({
         label="FX mid (oracle)"
         value={`${q.oracleMidRate.toLocaleString("en-US", { maximumFractionDigits: 4 })} MXN/USD`}
         sub={
-          q.oracleStale
-            ? "STALE: the exchange will refuse to trade"
-            : <Honesty>Admin-relayed testnet feed</Honesty>
+          q.oracleStale ? (
+            "STALE: the exchange will refuse to trade"
+          ) : (
+            <Honesty>Admin-relayed testnet feed</Honesty>
+          )
         }
       />
       <Row
@@ -401,7 +399,8 @@ function useSizeSpread(maxSwapUsd: bigint | undefined) {
     query: { refetchInterval: 30_000 },
   });
   const bps = (i: number) => {
-    const r = q.data?.[i] as { status: string; result?: readonly bigint[] } | undefined;
+    const r = q.data?.[i] as
+      { status: string; result?: readonly bigint[] } | undefined;
     return r?.status === "success" ? r.result![3] : undefined;
   };
   return { at1k: bps(0), atMax: maxSwapUsd ? bps(1) : undefined };
@@ -409,7 +408,9 @@ function useSizeSpread(maxSwapUsd: bigint | undefined) {
 
 function Backing() {
   const ex = useExchangeState();
-  const spread = useSizeSpread(ex.protocol === "v2" ? ex.maxSwapUsd : undefined);
+  const spread = useSizeSpread(
+    ex.protocol === "v2" ? ex.maxSwapUsd : undefined,
+  );
   if (ex.protocol === "v2")
     return (
       <Panel
