@@ -18,6 +18,12 @@ test.setTimeout(420_000)
 const top = (page: Page) => page.evaluate(() => window.scrollTo({ top: 0 }))
 
 async function hideDevOverlay(page: Page) {
+  // v5 take (lead 07:05): dark theme + capture mode, like every other v5 deck visual
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('mercado.theme', 'dark')
+    } catch {}
+  })
   await page.addInitScript(() => {
     document.addEventListener('DOMContentLoaded', () => {
       const st = document.createElement('style')
@@ -35,7 +41,7 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   mkdirSync(OUT, { recursive: true })
 
   // 1) Crédito · driver app (restyled): connect Uber (simulated consent) → draw an advance (25% ≈ 375 xMXN)
-  await page.goto('/credito?tab=driver', { waitUntil: 'domcontentloaded' })
+  await page.goto('/credito?tab=driver&present=1', { waitUntil: 'domcontentloaded' })
   const phone = page.getByLabel(/Driver app/)
   await expect(phone).toBeVisible({ timeout: 90_000 })
   await pause(1200)
@@ -65,7 +71,7 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   await page.screenshot({ path: join(OUT, 'hero-spend-final-advance.png') })
 
   // 2) Mercado Card as Javier at Tienda Doña Mary
-  await page.goto('/card?holder=driver', { waitUntil: 'domcontentloaded' })
+  await page.goto('/card?holder=driver&present=1', { waitUntil: 'domcontentloaded' })
   const holderPhone = page.getByLabel('Cardholder phone, Android preview')
   await expect(holderPhone.getByText(/Hola, Javier/i)).toBeVisible({ timeout: 90_000 })
   const pos = page.getByLabel('Shop terminal')
@@ -107,7 +113,7 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   await pause(2000) // receipts on both sides + 'Adelanto pendiente'
 
   // 3) back to Crédito: the advance is still owed (spending didn't touch the debt)
-  await page.goto('/credito?tab=driver', { waitUntil: 'domcontentloaded' })
+  await page.goto('/credito?tab=driver&present=1', { waitUntil: 'domcontentloaded' })
   await expect(page.getByLabel(/Driver app/).getByText(/^Debes$/i).first()).toBeVisible({ timeout: 60_000 })
   await top(page)
   await pause(2500)
