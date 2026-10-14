@@ -121,8 +121,11 @@ contract CollateralVault is ReentrancyGuard {
 
     /// @notice Repay up to `debtToCover` xMXN of `user`'s debt and seize collateral worth that much plus
     ///         LIQUIDATION_PENALTY_BPS. Only allowed while the position ratio < LIQUIDATION_THRESHOLD_BPS at a
-    ///         valid oracle price. Partial liquidations are allowed. If the collateral can't cover debt + bonus,
-    ///         the liquidator receives all remaining collateral.
+    ///         valid oracle price. Partial liquidations are allowed and there is no close factor. If the
+    ///         collateral can't cover debt + bonus, the liquidator receives all remaining collateral.
+    /// @dev Demo simplification: below ~110% (1 + penalty) a position is insolvent. Each partial liquidation then
+    ///      worsens its ratio, and a capped seize can leave debt with zero collateral (bad debt stays on the
+    ///      position; there is no socialization or backstop). Liquidating the full debt clears such a position.
     function liquidate(address user, uint256 debtToCover) external nonReentrant {
         if (debtToCover == 0) revert ZeroAmount();
         Position storage p = _positions[user];
@@ -174,8 +177,10 @@ contract CollateralVault is ReentrancyGuard {
         Position memory p = _positions[user];
         if (p.debt == 0) return p.collateral;
         (uint256 px,) = oracle.price();
-        // required collateral = debt * MIN_RATIO * 1e8 / (BPS * px), rounded up
-        uint256 required = Math.mulDiv(p.debt * MIN_MINT_RATIO_BPS, PRICE_SCALE, px * BPS, Math.Rounding.Ceil);
+        // Mirror withdrawCollateral's two-step rounding exactly: the ratio check passes iff
+        // floor(c * px / 1e8) >= ceil(debt * MIN_RATIO / BPS), i.e. c >= ceil(requiredValue * 1e8 / px).
+        uint256 requiredValue = Math.mulDiv(p.debt, MIN_MINT_RATIO_BPS, BPS, Math.Rounding.Ceil);
+        uint256 required = Math.mulDiv(requiredValue, PRICE_SCALE, px, Math.Rounding.Ceil);
         return p.collateral > required ? p.collateral - required : 0;
     }
 

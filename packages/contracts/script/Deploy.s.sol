@@ -25,12 +25,13 @@ contract Deploy is Script {
     uint256 constant INITIAL_PX = 20e8; // 20.00 MXN/USD, mock admin feed, not a quotation
 
     // demo sizing (6dp)
-    uint256 constant LP_COLLATERAL = 2_000e6;
-    uint256 constant LP_MINT = 20_000e6; // 200% at 20
+    // LP and lender positions sit at 400% so the FX stress demo (20 → 13) never brings them near 135%.
+    uint256 constant LP_COLLATERAL = 4_000e6;
+    uint256 constant LP_MINT = 20_000e6;
     uint256 constant DESK_OUSD = 1_000e6;
     uint256 constant DESK_XMXN = 20_000e6;
-    uint256 constant LENDER_COLLATERAL = 1_000e6;
-    uint256 constant LENDER_MINT = 10_000e6; // 200% at 20
+    uint256 constant LENDER_COLLATERAL = 2_000e6;
+    uint256 constant LENDER_MINT = 10_000e6;
     uint256 constant POOL_SUPPLY = 10_000e6;
 
     string path;
@@ -90,15 +91,14 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    /// Stage B: SwapDesk owned and seeded by LP. The desk's xMXN is minted through the LP's OWN vault
-    /// position (separate collateral); the desk has no access to vault collateral.
+    /// Stage B: SwapDesk (owner = DEPLOYER: pause/params/withdraw), seeded by LP. The desk's xMXN is minted
+    /// through the LP's OWN vault position (separate collateral); the desk has no access to vault collateral.
     function swap() external {
         uint256 lpPk = vm.envUint("LP_PRIVATE_KEY");
         uint256 deployerPk = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        address lp = vm.addr(lpPk);
 
         vm.startBroadcast(deployerPk);
-        swapDesk = address(new SwapDesk(lp, IERC20(ousd), IERC20(xmxn), FXOracleAdapter(oracle)));
+        swapDesk = address(new SwapDesk(vm.addr(deployerPk), IERC20(ousd), IERC20(xmxn), FXOracleAdapter(oracle)));
         vm.stopBroadcast();
 
         vm.startBroadcast(lpPk);

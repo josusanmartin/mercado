@@ -36,9 +36,12 @@ for (const file of readdirSync(join(root, "deployments")).filter((f) => /^\d+\.j
   const bdir = join(root, "broadcast", "Deploy.s.sol", chainId);
   const txs = {};
   let deployedAt;
-  const stages = ["core", "smoke", "swap", "credit"];
+  const stages = ["core", "smoke", "swap", "credit", "stress"];
   for (const stage of stages) {
-    const f = join(bdir, `${stage}-latest.json`);
+    const f =
+      stage === "stress"
+        ? join(root, "broadcast", "StressDemo.s.sol", chainId, "run-latest.json")
+        : join(bdir, `${stage}-latest.json`);
     if (!existsSync(f)) continue;
     const run = JSON.parse(readFileSync(f, "utf8"));
     if (stage === "core") deployedAt = new Date(run.timestamp).toISOString();

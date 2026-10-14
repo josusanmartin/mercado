@@ -180,6 +180,40 @@ contract VaultTest is Base {
         }
     }
 
+    /// R-007 regression: maxWithdrawable must mirror withdrawCollateral's rounding exactly.
+    function test_maxWithdrawableIsExecutable_R007() public {
+        _open(alice, 10e6, 14_000_007);
+        vm.prank(admin);
+        oracle.forceSet(10_5e7);
+        uint256 maxW = vault.maxWithdrawable(alice);
+        vm.prank(alice);
+        vault.withdrawCollateral(maxW);
+        assertGe(vault.collateralRatio(alice), 15_000);
+        assertEq(vault.maxWithdrawable(alice), 0);
+    }
+
+    function testFuzz_maxWithdrawableIsExact(uint64 coll, uint64 debt, uint256 px) public {
+        coll = uint64(bound(coll, 1e6, 1e12));
+        px = bound(px, 5e8, 50e8);
+        _open(alice, coll, 0);
+        debt = uint64(bound(debt, 1, vault.maxMintable(alice) == 0 ? 1 : vault.maxMintable(alice)));
+        if (vault.maxMintable(alice) == 0) return;
+        vm.prank(alice);
+        vault.mint(debt);
+        vm.prank(admin);
+        oracle.forceSet(px);
+        uint256 maxW = vault.maxWithdrawable(alice);
+        if (maxW < coll) {
+            vm.prank(alice);
+            vm.expectRevert();
+            vault.withdrawCollateral(maxW + 1); // one unit more must fail
+        }
+        if (maxW > 0) {
+            vm.prank(alice);
+            vault.withdrawCollateral(maxW);
+        }
+    }
+
     // ------------------------------------------------------------ repay edge cases
 
     function test_cannotRepayMoreThanDebt() public {

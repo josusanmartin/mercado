@@ -26,6 +26,9 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 ///      Lender accounting is share-based: claim = shares * totalAssets / totalShares, where
 ///      totalAssets = cash + outstanding principal (unrealized fees are excluded). Lenders can only withdraw
 ///      idle cash, never xMXN currently lent out. Cash is tracked internally, so direct transfers are ignored.
+///      Demo simplifications: because unrealized fees are excluded from the share price, a lender who supplies
+///      just before a repayment shares in fees they didn't fund. There is no default/write-off path, so
+///      `lenderBalance` keeps counting principal that may never be repaid.
 contract CreditPool is Ownable2Step, ReentrancyGuard, EIP712 {
     using SafeERC20 for IERC20;
 
@@ -197,6 +200,24 @@ contract CreditPool is Ownable2Step, ReentrancyGuard, EIP712 {
     function getDebt(address borrower) external view returns (uint256) {
         Loan memory l = loans[borrower];
         return l.principal + l.fee;
+    }
+
+    /// @notice Largest draw `borrower` could execute right now under an attestation with `maxAmount`: the min
+    ///         of attested headroom, per-user cap headroom, idle cash, and pool utilization headroom.
+    function borrowCapacity(address borrower, uint256 maxAmount) public view returns (uint256 cap) {
+        uint256 principal = loans[borrower].principal;
+        cap = maxAmount > principal ? maxAmount - principal : 0;
+        uint256 userRoom = perUserCap > principal ? perUserCap - principal : 0;
+        if (userRoom < cap) cap = userRoom;
+        if (cash < cap) cap = cash;
+        uint256 limit = Math.mulDiv(totalAssets(), maxUtilizationBps, BPS);
+        uint256 utilRoom = limit > outstandingPrincipal ? limit - outstandingPrincipal : 0;
+        if (utilRoom < cap) cap = utilRoom;
+    }
+
+    /// @notice `borrowCapacity` ignoring the attestation (per-user cap, cash and utilization only).
+    function maxBorrowable(address borrower) external view returns (uint256) {
+        return borrowCapacity(borrower, type(uint256).max);
     }
 
     function availableLiquidity() external view returns (uint256) {

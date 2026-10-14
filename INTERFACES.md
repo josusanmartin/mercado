@@ -29,7 +29,7 @@ This is the contract between the four workstreams. **Change it only by posting t
 | `LIQUIDATION_PENALTY_BPS` | 1000 (10% bonus to liquidator, paid from the position's collateral) |
 | `ORACLE_MAX_AGE` | 3600 s (stale → revert) |
 | Oracle sanity band | 5.00 – 50.00 MXN/USD; max jump per update 20% unless admin `forceSet` in stress mode |
-| SwapDesk spread | 50 bps per side, max 10,000 xMXN-equivalent per swap |
+| SwapDesk spread | 50 bps per side, max 10,000 xMXN-equivalent per swap, max 2,000 OUSD-equivalent per address per 24h |
 | CreditPool borrow fee | 200 bps flat, added to debt at borrow time (realized when repaid) |
 | CreditPool caps | per-user 1,500 xMXN; pool-wide outstanding ≤ 80% of supplied |
 
@@ -42,6 +42,7 @@ interface IFXOracleAdapter {
     function decimals() external pure returns (uint8); // 8
     function maxAge() external view returns (uint256);
     function isMock() external view returns (bool);     // true on testnet admin feed → UI must label it
+    function peek() external view returns (uint256 mxnPerUsd, uint256 updatedAt, bool valid); // never reverts
     // admin (testnet mock): setPrice(uint256), pause(), unpause()
     event PriceUpdated(uint256 mxnPerUsd, uint256 updatedAt);
 }
@@ -56,6 +57,10 @@ interface ICollateralVault {
     function getPosition(address user) external view returns (Position memory);
     function collateralRatio(address user) external view returns (uint256 bps); // type(uint256).max if no debt
     function maxMintable(address user) external view returns (uint256 xmxn);
+    function maxWithdrawable(address user) external view returns (uint256 ousd);   // exact: MAX always executes
+    function isLiquidatable(address user) external view returns (bool);
+    function totalCollateral() external view returns (uint256);  // OUSD locked (three-buckets view)
+    function totalDebt() external view returns (uint256);        // == xMXN totalSupply
     event Deposited(address indexed user, uint256 amount);
     event Minted(address indexed user, uint256 amount);
     event Repaid(address indexed user, uint256 amount);
@@ -69,7 +74,10 @@ interface ISwapDesk {
     function swapOusdForXmxn(uint256 amountIn, uint256 minOut) external returns (uint256 amountOut);
     function swapXmxnForOusd(uint256 amountIn, uint256 minOut) external returns (uint256 amountOut);
     function reserves() external view returns (uint256 ousd, uint256 xmxn);
-    // owner: seed(uint256 ousd, uint256 xmxn), withdrawReserves(...)
+    function remainingDailyCap(address user) external view returns (uint256 ousdEquivalent); // 24h per-address cap
+    function seed(uint256 ousd, uint256 xmxn) external;  // PERMISSIONLESS (a gift; pulls via transferFrom)
+    function paused() external view returns (bool);
+    // owner (DEPLOYER): withdrawReserves(ousd, xmxn, to), setParams(spreadBps, maxSwapXmxn, dailyCapOusd), pause(), unpause()
     event Swapped(address indexed user, bool ousdToXmxn, uint256 amountIn, uint256 amountOut, uint256 fee);
 }
 
@@ -88,6 +96,11 @@ interface ICreditPool {
                                             uint256 outstanding, uint256 realizedFees);
     function attestationSigner() external view returns (address);
     function nonceUsed(address borrower, uint256 nonce) external view returns (bool);
+    // largest draw executable right now: min(attested headroom, per-user cap, cash, 80% utilization headroom)
+    function borrowCapacity(address borrower, uint256 maxAmount) external view returns (uint256);
+    function maxBorrowable(address borrower) external view returns (uint256);  // same, ignoring the attestation
+    function eligibilityDigest(address borrower, uint256 maxAmount, uint256 expiry, uint256 nonce, bytes32 dataHash)
+        external view returns (bytes32);
     event Supplied(address indexed lender, uint256 amount);
     event Withdrawn(address indexed lender, uint256 amount);
     event Borrowed(address indexed borrower, uint256 amount, uint256 fee, uint256 nonce, bytes32 dataHash);
