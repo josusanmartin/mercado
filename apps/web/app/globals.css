@@ -96,6 +96,9 @@
   --primary-foreground: #0a0a0a;
   --c-mint: #4f8f68;
   --c-card: #f2e6c9;
+  /* review P1: cobalt #2448c8 is 2.67:1 on #0a0a0a; this lighter cobalt is 8.67:1. Rosa (4.56), jade
+     #4f8f68 (5.15), terracotta (5.64) and maize (9.39) already pass ≥3:1 for large type on dark. */
+  --c-global: #8ea8ff;
   --accent-soft: color-mix(in oklab, var(--accent) 16%, #0a0a0a);
   --destructive: #ff6b57;
   --warning: #f0a53a;
@@ -104,8 +107,9 @@
   --focus: #7d99ff;
   color-scheme: dark;
 }
-.dark [data-product="card"] {
-  --accent-fg: #0a0a0a;
+.dark [data-product="card"],
+.dark [data-product="global"] {
+  --accent-fg: #0a0a0a; /* light fills in dark mode carry ink text (white on #8ea8ff would be 2.28:1) */
 }
 
 @theme inline {

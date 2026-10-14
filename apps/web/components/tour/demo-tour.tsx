@@ -9,7 +9,7 @@
 // exactly that interval, so the balance change and the trail reconcile; any part of the change the
 // transfers don't explain is shown, not hidden. It ends on a summary listing every transfer of the tour.
 // No dead ends: Back/Next/Open everywhere.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useConfig, usePublicClient } from "wagmi";
@@ -99,6 +99,9 @@ type TourCtx = {
   step: TourStep | undefined;
   visits: Visit[];
   going: boolean;
+  /** The current step's proof couldn't be anchored to a block (RPC down): the panel says so and can retry. */
+  proofUnavailable: boolean;
+  retryProof: () => void;
   /** The panel is tucked away (desktop pill / top-bar chip on phones). */
   minimized: boolean;
   setMinimized: (v: boolean) => void;
@@ -136,6 +139,37 @@ export function TourProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [state, loaded]);
 
+  // Review error-state P1: navigation and the step's instructions never wait on the chain. The step's proof
+  // (its visit's starting block) is anchored in the background; if the RPC is down the panel shows "Proof
+  // unavailable" with a retry instead of blocking the tour. A newer step supersedes a pending anchor: it
+  // closes whatever visit is open at its own block, so intervals still never overlap.
+  const anchorSeq = useRef(0);
+  const [proofFailedFor, setProofFailedFor] = useState<number>();
+  const anchor = useCallback(
+    async (index: number) => {
+      const step = TOUR[index];
+      if (!step) return;
+      const account = personaById(step.persona).address;
+      const seq = ++anchorSeq.current;
+      setProofFailedFor(undefined);
+      try {
+        if (!client) throw new Error("No chain client");
+        const at = (await client.getBlockNumber()).toString();
+        if (seq !== anchorSeq.current) return;
+        setState((s) => {
+          const open = s.visits.find((v) => v.to === undefined);
+          if (open?.step === index) return s; // e.g. "Open Crédito" while already on that step
+          let visits = closeOpen(s.visits, at);
+          if (account) visits = [...visits, { step: index, account, from: at }];
+          return { ...s, visits };
+        });
+      } catch {
+        if (seq === anchorSeq.current) setProofFailedFor(index);
+      }
+    },
+    [client],
+  );
+
   const go = useCallback(
     async (index: number, fresh = false) => {
       const step = TOUR[index];
@@ -148,27 +182,16 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setMinimized(false); // every step opens expanded so its instruction is read
       try {
         if (!demo.on) demo.setOn(true);
-        const account = personaById(step.persona).address;
-        // One block number both closes the visit we're leaving and opens the new one: no gap, no overlap.
-        const at = client ? (await client.getBlockNumber()).toString() : undefined;
-        setState((s) => {
-          const open = s.visits.find((v) => v.to === undefined);
-          const stay = !fresh && open?.step === index; // e.g. "Open Crédito" while already on that step
-          let visits = fresh ? [] : s.visits;
-          if (!stay && at) {
-            visits = closeOpen(visits, at);
-            if (account) visits = [...visits, { step: index, account, from: at }];
-          }
-          return { active: true, finished: false, index, visits };
-        });
+        setState((s) => ({ active: true, finished: false, index, visits: fresh ? [] : s.visits }));
         router.push(step.href);
+        void anchor(index);
       } catch (e) {
         toast.error(e instanceof Error ? e.message.split("\n")[0] : "Could not open that step");
       } finally {
         setGoing(false);
       }
     },
-    [busy, demo, router, client],
+    [busy, demo, router, anchor],
   );
 
   /** Close the open visit at the current block (finish / stop), so nothing after it is attributed. */
@@ -190,12 +213,14 @@ export function TourProvider({ children }: { children: ReactNode }) {
       going,
       minimized,
       setMinimized,
+      proofUnavailable: proofFailedFor === state.index,
+      retryProof: () => void anchor(state.index),
       start: () => void go(0, true),
       stop: () => void close({ active: false, finished: false }),
       finish: () => void close({ finished: true }),
       go: (i: number) => go(i),
     }),
-    [state, going, go, close, minimized],
+    [state, going, go, close, minimized, proofFailedFor, anchor],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -371,7 +396,7 @@ function Unexplained({ trace }: { trace: StepTrace }) {
 // ---------------------------------------------------------------- panel
 
 export function TourPanel() {
-  const { active, finished, index, step, visits, stop, go, going, finish, start, minimized: min, setMinimized: setMin } = useTour();
+  const { active, finished, index, step, visits, stop, go, going, finish, start, minimized: min, setMinimized: setMin, proofUnavailable, retryProof } = useTour();
   const path = usePathname();
   const busy = useAnyBusy();
   const mine = useMemo(() => visits.filter((v) => v.step === index), [visits, index]);
@@ -463,7 +488,16 @@ export function TourPanel() {
           <BalanceCell label="OUSD" now={bal.ousd} d={trace.delta.ousd} />
         </div>
         <p className="meta text-muted-foreground">On-chain during this step{mine.length > 1 ? ` · ${mine.length} visits` : ""}</p>
-        <TraceList trace={trace} limit={5} empty="No transfers yet. Each one will appear here with its explorer link." />
+        {proofUnavailable && mine.length === 0 ? (
+          <p className="text-muted-foreground text-[13px]">
+            Proof unavailable: Tempo can&apos;t be read right now, so this step isn&apos;t anchored to a block yet.{" "}
+            <button type="button" onClick={retryProof} className="text-foreground underline underline-offset-2">
+              Retry
+            </button>
+          </p>
+        ) : (
+          <TraceList trace={trace} limit={5} empty="No transfers yet. Each one will appear here with its explorer link." />
+        )}
       </div>
 
       <div className="mt-4 flex items-center gap-2">
