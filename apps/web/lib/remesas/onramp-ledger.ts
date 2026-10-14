@@ -4,11 +4,11 @@
 //   1. FAIL CLOSED: a missing ledger is empty, but an existing ledger that is unreadable or malformed
 //      throws LedgerUnavailable. It is never treated as empty, because that would forget signed or
 //      delivered top-ups and could sign a second transfer for the same key.
-//   2. SINGLE WRITER across processes: every read-modify-write runs inside an OS-level lock file created
-//      with O_EXCL ("wx") holding {pid, token, at}. A held lock is reclaimed only when its owner pid is
-//      gone (same host), or when it is unreadable and older than a few seconds (crash between create and
-//      write). A live owner is never preempted, however long it holds the lock; waiters fail closed.
-import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+//   2. SINGLE WRITER across processes: every read-modify-write runs inside an OS-level lock file holding
+//      {pid, token, at}, created atomically (claim file + link(), which fails if the lock exists). There
+//      is NO automatic reclaim: a lock left by a dead process fails closed until an operator removes it
+//      with every server stopped; a live owner is never preempted; waiters fail closed after a timeout.
+import { existsSync, linkSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import type { Hex } from "viem";
@@ -65,7 +65,6 @@ export function saveLedger(file: string, ledger: OnrampLedger) {
 }
 
 type Held = { pid: number; token: string; at: number };
-const UNREADABLE_GRACE_MS = 5_000;
 
 function pidAlive(pid: number) {
   try {
@@ -84,57 +83,40 @@ function readHeld(lock: string): Held | null {
   }
 }
 
-/**
- * Reclaim a stale lock without stealing a fresh one: move it aside under a unique name, check it is the
- * same lock we judged stale, and put it back (link fails if the name is taken) if it was not.
- */
-function reclaim(lock: string, judged: Held | null) {
-  const aside = `${lock}.reclaim.${process.pid}.${randomBytes(4).toString("hex")}`;
-  try {
-    renameSync(lock, aside);
-  } catch {
-    return; // someone else already moved it
-  }
-  const moved = readHeld(aside);
-  if (judged && moved?.token !== judged.token) {
-    try {
-      linkSync(aside, lock);
-    } catch {}
-  }
-  try {
-    unlinkSync(aside);
-  } catch {}
-}
+/** The manual repair step a stale lock needs (logged and returned in the error). */
+export const STALE_LOCK_HELP = "stop every server process, then delete the .lock file next to the on-ramp ledger";
 
 export async function withFileLock<T>(file: string, fn: () => Promise<T>, opts: { waitMs?: number; pollMs?: number } = {}): Promise<T> {
   const lock = `${file}.lock`;
   const token = randomBytes(12).toString("hex");
   mkdirSync(path.dirname(file), { recursive: true });
+  // Write our claim to a private temp file, then link() it to the lock name. link is atomic and fails
+  // with EEXIST if the lock exists, so the lock is never observable empty or half-written.
+  const claim = `${lock}.${process.pid}.${token}`;
+  writeFileSync(claim, JSON.stringify({ pid: process.pid, token, at: Date.now() } satisfies Held));
   const deadline = Date.now() + (opts.waitMs ?? 60_000);
-  for (;;) {
-    try {
-      const fd = openSync(lock, "wx");
+  try {
+    for (;;) {
       try {
-        writeFileSync(fd, JSON.stringify({ pid: process.pid, token, at: Date.now() } satisfies Held));
-      } finally {
-        closeSync(fd);
+        linkSync(claim, lock);
+        break;
+      } catch (e) {
+        if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
+        // No automatic reclaim (review): a lock whose owner is gone FAILS CLOSED until an operator,
+        // with all servers stopped, removes it. Anything else we wait for, then fail closed too.
+        const held = readHeld(lock);
+        if (held && !pidAlive(held.pid)) {
+          console.error(`[onramp] stale ledger lock held by dead pid ${held.pid}: ${STALE_LOCK_HELP}`);
+          throw new LedgerUnavailable(`on-ramp ledger lock is stale (pid ${held.pid} is gone): ${STALE_LOCK_HELP}`);
+        }
+        if (Date.now() > deadline) throw new LedgerUnavailable("on-ramp ledger is locked by another process");
+        await new Promise((r) => setTimeout(r, opts.pollMs ?? 200));
       }
-      break;
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
-      const held = readHeld(lock);
-      if (held) {
-        if (!pidAlive(held.pid)) reclaim(lock, held);
-      } else {
-        let age = 0;
-        try {
-          age = Date.now() - statSync(lock).mtimeMs;
-        } catch {}
-        if (age > UNREADABLE_GRACE_MS) reclaim(lock, null);
-      }
-      if (Date.now() > deadline) throw new LedgerUnavailable("on-ramp ledger is locked by another process");
-      await new Promise((r) => setTimeout(r, opts.pollMs ?? 200));
     }
+  } finally {
+    try {
+      unlinkSync(claim);
+    } catch {}
   }
   try {
     return await fn();

@@ -1,6 +1,6 @@
 // On-ramp ledger review follow-up: fail closed on a corrupt ledger; single writer across processes.
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -62,12 +62,23 @@ describe("withFileLock", () => {
     expect(codes).toEqual([0, 0, 0]);
     expect(Object.keys(loadLedger(f))).toHaveLength(45);
     expect(existsSync(`${f}.lock`)).toBe(false);
+    expect(readdirSync(d).filter((n) => n.includes(".lock"))).toEqual([]); // no claim files left behind
   }, 30_000);
 
-  it("reclaims a lock whose owner process is gone", async () => {
+  it("never auto-reclaims a lock whose owner is gone: fails closed, lock left for the operator", async () => {
     const f = path.join(dir(), "l.json");
     writeFileSync(`${f}.lock`, JSON.stringify({ pid: 2 ** 22 + 12345, token: "dead", at: Date.now() }));
-    await expect(withFileLock(f, async () => "ran", { waitMs: 2_000, pollMs: 10 })).resolves.toBe("ran");
+    let ran = false;
+    await expect(withFileLock(f, async () => (ran = true), { waitMs: 2_000, pollMs: 10 })).rejects.toThrow(/stale/);
+    expect(ran).toBe(false);
+    expect(JSON.parse(readFileSync(`${f}.lock`, "utf8")).token).toBe("dead");
+  });
+
+  it("an unreadable lock is waited on, then fails closed (never reclaimed)", async () => {
+    const f = path.join(dir(), "l.json");
+    writeFileSync(`${f}.lock`, "");
+    await expect(withFileLock(f, async () => "ran", { waitMs: 200, pollMs: 20 })).rejects.toThrow(LedgerUnavailable);
+    expect(readFileSync(`${f}.lock`, "utf8")).toBe("");
   });
 
   it("never preempts a live owner: waiters fail closed", async () => {
