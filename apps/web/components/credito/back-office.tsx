@@ -2,6 +2,7 @@
 // Mercado Crédito · Back office: the credit platform, all live. Pool KPIs, the loan book (Borrowed/Repaid
 // logs + the attestation that authorized each loan), recent underwriting attestations with on-chain
 // nonce use, the lenders' side (contracts' Earn) and the pay-per-report Underwriting API.
+import { Honesty } from "@/components/console/present";
 import { useQuery } from "@tanstack/react-query";
 import { Fetch } from "mppx/client";
 import { explorerTx } from "@mercado/shared";
@@ -54,11 +55,17 @@ const get = async <T,>(url: string) => {
   return body as T;
 };
 
-const PLATFORM: Record<string, string> = {
-  uber: "Uber (demo)",
-  didi: "DiDi (demo)",
-  rappi: "Rappi (demo)",
-};
+const PLATFORM_NAME: Record<string, string> = { uber: "Uber", didi: "DiDi", rappi: "Rappi" };
+/** "Uber (demo)"; the "(demo)" suffix hides only in capture mode (?present=1). */
+const platform = (p: string) =>
+  PLATFORM_NAME[p] ? (
+    <>
+      {PLATFORM_NAME[p]}
+      <Honesty> (demo)</Honesty>
+    </>
+  ) : (
+    p
+  );
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const when = (s?: number) => (s ? new Date(s * 1000).toLocaleString() : "—");
 
@@ -172,7 +179,7 @@ export function BackOffice() {
                     </td>
                     <td className="py-2 pr-4">
                       {l.platform ? (
-                        PLATFORM[l.platform]
+                        platform(l.platform)
                       ) : (
                         <span className="text-muted-foreground">unknown</span>
                       )}
@@ -258,7 +265,7 @@ export function BackOffice() {
                       {short(a.borrower)}
                     </td>
                     <td className="py-2 pr-4">
-                      {PLATFORM[a.platform] ?? a.platform}
+                      {platform(a.platform)}
                     </td>
                     <td className="tabular py-2 pr-4 text-right">{a.score}</td>
                     <td className="tabular py-2 pr-4 text-right">

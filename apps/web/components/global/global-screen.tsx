@@ -115,7 +115,7 @@ function QuoteRows({
         sub={
           q.oracleStale
             ? "STALE: the exchange will refuse to trade"
-            : "Admin-relayed testnet feed"
+            : <Honesty>Admin-relayed testnet feed</Honesty>
         }
       />
       <Row
