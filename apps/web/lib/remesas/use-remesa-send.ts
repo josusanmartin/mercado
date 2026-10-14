@@ -5,9 +5,11 @@
 // path runs (R-034); every input is validated before the first write (R-017/R-032); the delivered
 // amount is frozen from the confirmed transfer log, never a balance diff (R-020).
 import { useCallback, useEffect, useState } from "react";
-import { isAddress, zeroAddress, type Address } from "viem";
+import { isAddress, zeroAddress, type Address, type Hex } from "viem";
+import { usePublicClient } from "wagmi";
 import {
   ADDR,
+  CHAIN_ID,
   deliveredFromReceipt,
   MEMO_MAX_BYTES,
   memoByteLength,
@@ -23,19 +25,22 @@ import { USE_V2, V2 } from "@/lib/v2/addresses";
 import { useMercadoV2 } from "@/lib/v2/actions";
 import { useMoveQuote } from "@/lib/v2/reads";
 import { useReportBusy } from "@/lib/busy";
+import { explorerTx } from "@mercado/shared";
 
 export const SLIPPAGE_BPS = 50n;
+const PENDING_NOTE = "Tu entrega anterior aún se está confirmando en Tempo. No la enviaremos de nuevo hasta que se confirme.";
 
-/** Converted pesos that never reached the recipient. Persisted per sender until delivered (R-039). */
-export type Stranded = { account: Address; to: Address; amount: bigint; memo?: string };
+import { reconcile, type ReconcileClient, type Stranded } from "./reconcile-delivery";
+export type { Stranded };
 const strandedKey = (a: Address) => `mercado.remesas.stranded.${a.toLowerCase()}`;
-function loadStranded(a: Address | undefined): Stranded | undefined {
+function loadStranded(a: Address | undefined, fallbackToken: Address): Stranded | undefined {
   if (!a) return undefined;
   try {
     const raw = localStorage.getItem(strandedKey(a));
     if (!raw) return undefined;
     const v = JSON.parse(raw) as Omit<Stranded, "amount"> & { amount: string };
-    return { ...v, amount: BigInt(v.amount) };
+    if (v.chainId !== undefined && v.chainId !== CHAIN_ID) return undefined; // another network's record
+    return { ...v, amount: BigInt(v.amount), chainId: v.chainId ?? CHAIN_ID, token: v.token ?? fallbackToken };
   } catch {
     return undefined;
   }
@@ -54,9 +59,11 @@ export function useRemesaSend(amountIn: bigint) {
   const m2 = useMercadoV2();
   const sendTx = USE_V2 ? m2.tx : m1.tx;
   const me = useWho();
+  const client = usePublicClient({ chainId: CHAIN_ID });
+  const xmxnToken = (USE_V2 ? V2.xmxn : ADDR.xmxn) ?? ADDR.xmxn;
   const [stranded, setStranded] = useState<Stranded>();
-  useEffect(() => setStranded(loadStranded(me)), [me]);
-  const [active, setActive] = useState<"send" | "recover">("send");
+  const [recoveryNote, setRecoveryNote] = useState<string>();
+  const [active, setActive] = useState<"send" | "convert" | "recover">("send");
   const tx = active === "recover" ? m1.tx : sendTx;
   useReportBusy(m1.tx.isBusy || m2.tx.isBusy);
   const fx = useOracle();
@@ -115,6 +122,7 @@ export function useRemesaSend(amountIn: bigint) {
       if (stranded) throw new Error("You have converted pesos waiting for delivery. Deliver them first.");
       const mid = fx.mxnPerUsd; // the shared FX oracle (same feed in v1 and v2)
       if (!mid) throw new Error("No exchange rate yet.");
+      setActive("convert"); // a mint to yourself on purpose: never a stranded delivery
       const raw = (neededXmxn * 10n ** 8n * 102n) / (mid * 100n);
       const amountUsd = ((raw + 9_999n) / 10_000n) * 10_000n; // round up to the cent
       const estOut = (amountUsd * mid * 98n) / (10n ** 8n * 100n); // conservative expected output
@@ -124,35 +132,94 @@ export function useRemesaSend(amountIn: bigint) {
   );
 
   /**
-   * Recovery (review): the conversion confirmed but the delivery failed, so the pesos sit in the
-   * sender's own wallet. Exposes exactly what was converted (from that tx's own log) and delivers it
-   * to the frozen recipient with one transfer. It never converts again.
+   * Recovery (review, R-039): the conversion confirmed but the delivery isn't confirmed, so the pesos sit
+   * in (or are leaving) the sender's own wallet. The record is persisted as soon as the conversion
+   * confirms, gains the delivery hash the moment one is broadcast, and is shown when the flow fails or
+   * after a reload. A delivery is only (re)sent after reconcile() says the earlier one provably didn't land.
    */
-  const xmxnToken = (USE_V2 ? V2.xmxn : ADDR.xmxn) ?? ADDR.xmxn;
-  // Detect: a failed send whose conversion confirmed but whose delivery didn't. Persist it.
-  const convertStep =
-    active === "send" && sendTx.status === "error" ? sendTx.steps.find((st) => st.receipt && /^(Mint xMXN|Swap OUSD)/.test(st.label)) : undefined;
-  const delivered = sendTx.steps.some((st) => st.receipt && /^Send xMXN/.test(st.label));
+  const convertStep = active === "send" ? sendTx.steps.find((st) => st.receipt && /^(Mint xMXN|Swap OUSD)/.test(st.label)) : undefined;
+  const sendStep = active === "send" ? sendTx.steps.find((st) => /^Send/.test(st.label)) : undefined;
+  const converted = convertStep && me ? deliveredFromReceipt(convertStep, xmxnToken, me).amount : undefined; // 0 when minted straight to the recipient
+
+  // Load (and quietly reconcile) the record for this sender.
   useEffect(() => {
-    if (!convertStep || delivered || !attempt || !me || stranded) return;
-    const amount = deliveredFromReceipt(convertStep, xmxnToken, me).amount;
-    if (!amount) return;
-    const v = { account: me, to: attempt.to, amount, memo: attempt.memo };
-    saveStranded(me, v);
+    const v = loadStranded(me, xmxnToken);
     setStranded(v);
-  }, [convertStep, delivered, attempt, me, stranded, xmxnToken]);
+    setRecoveryNote(undefined);
+    if (!v || !client) return;
+    let live = true;
+    reconcile(client as unknown as ReconcileClient, v)
+      .then((rc) => {
+        if (!live) return;
+        if (rc.state === "delivered") {
+          saveStranded(v.account, undefined);
+          setStranded(undefined);
+        } else if (rc.state === "pending") setRecoveryNote(PENDING_NOTE);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [me, client, xmxnToken]);
+
+  // Persist from the moment the conversion confirms; add the delivery hash once broadcast; clear on success.
+  useEffect(() => {
+    if (!convertStep || !converted || !attempt || !me) return;
+    if (sendStep?.receipt) {
+      saveStranded(me, undefined);
+      setStranded(undefined);
+      return;
+    }
+    const v: Stranded = {
+      account: me,
+      to: attempt.to,
+      amount: converted,
+      memo: attempt.memo,
+      chainId: CHAIN_ID,
+      token: xmxnToken,
+      convertHash: convertStep.hash,
+      fromBlock: convertStep.receipt!.blockNumber.toString(),
+      delivery: sendStep ? { hash: sendStep.hash, at: Date.now() } : undefined,
+    };
+    // Keep when a delivery was first seen (the drop timer must not restart on re-renders).
+    const prev = loadStranded(me, xmxnToken);
+    if (v.delivery && prev?.delivery?.hash === v.delivery.hash) v.delivery = prev.delivery;
+    saveStranded(me, v);
+    if (sendTx.status === "error") setStranded(v); // surface it only once the flow has failed
+  }, [convertStep, converted, sendStep, attempt, me, xmxnToken, sendTx.status]);
+
+  // Recovery delivery broadcast: record its hash immediately (it may time out before a receipt).
+  const recoverStep = active === "recover" ? m1.tx.steps.find((st) => /^Send/.test(st.label)) : undefined;
+  useEffect(() => {
+    if (!recoverStep || !stranded || stranded.delivery?.hash === recoverStep.hash) return;
+    const v: Stranded = { ...stranded, delivery: { hash: recoverStep.hash, at: Date.now() } };
+    saveStranded(v.account, v);
+    setStranded(v);
+  }, [recoverStep, stranded]);
+
   const deliverStranded = useCallback(async () => {
-    if (!stranded) return undefined;
+    if (!stranded || !client) return undefined;
     setActive("recover");
-    const steps = await m1.transfer(xmxnToken, stranded.to, stranded.amount, stranded.memo);
+    setRecoveryNote(undefined);
+    const done = (hash: Hex, steps: TxStep[], delivered: bigint) => {
+      saveStranded(stranded.account, undefined);
+      setStranded(undefined);
+      const r: SendReceipt = { to: stranded.to, amountIn, delivered, memo: stranded.memo, steps, at: Date.now() };
+      setReceipt(r);
+      return r;
+    };
+    const rc = await reconcile(client as unknown as ReconcileClient, stranded);
+    if (rc.state === "delivered") return done(rc.hash, [{ label: "Send xMXN", hash: rc.hash, url: explorerTx(rc.hash) }], stranded.amount);
+    if (rc.state === "pending") {
+      setRecoveryNote(PENDING_NOTE);
+      return undefined;
+    }
+    // Provably not delivered: send exactly the converted amount, once, with the same token and note.
+    const steps = await m1.transfer(stranded.token, stranded.to, stranded.amount, stranded.memo);
     const last = steps?.at(-1);
-    if (!last) return undefined; // failed: keep it stranded (persisted) for another try
-    saveStranded(stranded.account, undefined);
-    setStranded(undefined);
-    const r: SendReceipt = { to: stranded.to, amountIn, delivered: deliveredFromReceipt(last, xmxnToken, stranded.to).amount, memo: stranded.memo, steps: steps ?? [], at: Date.now() };
-    setReceipt(r);
-    return r;
-  }, [stranded, m1, xmxnToken, amountIn]);
+    if (!last) return undefined; // failed or unconfirmed: the record (with its delivery hash) stays for reconciliation
+    return done(last.hash, steps ?? [], deliveredFromReceipt(last, stranded.token, stranded.to).amount ?? stranded.amount);
+  }, [stranded, client, m1, amountIn]);
 
   return {
     tx,
@@ -162,6 +229,8 @@ export function useRemesaSend(amountIn: bigint) {
     receipt,
     stranded,
     deliverStranded,
+    /** Spanish, for the phone: shown when an earlier delivery is still settling and nothing is re-sent. */
+    recoveryNote,
     reset: () => (setReceipt(undefined), setAttempt(undefined), setActive("send"), m1.tx.reset(), m2.tx.reset()),
   };
 }
