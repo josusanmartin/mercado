@@ -30,7 +30,7 @@ async function honesty(page: Page) {
 test('home: the ecosystem map names all four products around xMXN', async ({ page }) => {
   const errors = trackErrors(page)
   expect((await page.goto('/'))?.status()).toBeLessThan(400)
-  for (const p of PRODUCTS) await expect(visible(page, p.name)).toBeVisible()
+  for (const n of [/Mint/, /Remesas/, /Global/, /Cr[ée]dito/]) await expect(visible(page, n)).toBeVisible()
   await expect(visible(page, /xMXN/)).toBeVisible()
   await honesty(page)
   expect(errors).toEqual([])
@@ -64,7 +64,9 @@ test('product-specific mock labels', async ({ page }) => {
   await expect(visible(page, /indicativ/i)).toBeVisible() // "signed indicative quote", never "firm"
   await expect(page.getByText(/\bfirm quote\b/i)).toHaveCount(0)
   await page.goto('/mint')
-  await expect(visible(page, /mock|admin-relayed|reference rate/i)).toBeVisible()
+  await expect(visible(page, /assumed \$1\.00/i)).toBeVisible() // OUSD valuation assumption (MOCKS.md B2)
+  await page.getByRole('tab', { name: /Issue/ }).or(page.getByRole('button', { name: /^Issue/ })).first().click()
+  await expect(visible(page, /relayed|mock|reference rate|oracle/i)).toBeVisible() // FX provenance where minting is priced
 })
 
 test.describe('old routes redirect into the products', () => {
