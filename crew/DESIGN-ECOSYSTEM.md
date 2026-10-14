@@ -45,7 +45,8 @@ Think "Nintendo Switch HOME menu, grown-up": calm, bright, airy and immediately 
 
 ## 4. Ownership (rebuild in parallel)
 - `web` FIRST (~25 min): re-skin `@/components/console` into the new brand with the **same component APIs** where possible (so existing screens re-skin automatically), the sidebar shell, theme tokens per product (`data-product="mint|remesas|global|credito"` sets `--accent`), removing the persona bar, Demo mode, and the ecosystem home `/`. Then **/remesas** (send + Tiempo Aire/services, reusing api's billpay components).
-- `contracts`: **/mint** (institutional dashboard on the v2 MultiCollateralVault) and **/global** (cross-border on the v2 MoveAMM + partner API panel).
+- `contracts`: **/mint** (institutional dashboard on the v2 MultiCollateralVault).
+- `api`: **/global** (cross-border on the v2 MoveAMM + partner API panel; reassigned from contracts).
 - `api`: **/credito** (Drivers / Lenders / Underwriting API; fold in contracts' Earn components), plus redirects for the old /credit, /pay and /earn.
 - `slides`: deck only (the app no longer uses the glitch art).
 - `qa`: e2e for the new routes, recapture screenshots and the hero video once the products land, and keep the v2 journey going.
