@@ -130,19 +130,11 @@ test('invest: phone with the real-time counters', async ({ page }) => {
   await shootPhone(page, 'phone-invest')
 })
 
-test('panels: Mint Risk numbers, Global quote, Crédito loan book, 402 trace, verified contracts', async ({ page }) => {
+test('panels: Mint Risk numbers, Crédito loan book, 402 trace, verified contracts', async ({ page }) => {
   await go(page, '/mint')
   await page.getByRole('tab', { name: /^(Risk|Riesgo)/i }).or(page.getByRole('button', { name: /^(Risk|Riesgo)/i })).first().click()
   await page.waitForTimeout(2500)
   await shootPanel(panel(page, [/01 · Respaldo del intercambio/i, /02 · Respaldo del sistema/i]), 'panel-mint-risk')
-
-  await go(page, '/global')
-  // match the deck copy: a US$10,000 supplier payment (quote only, nothing is sent)
-  const pay = page.getByLabel(/You pay/i).or(page.getByRole('textbox').first()).first()
-  await pay.fill('10000')
-  await page.waitForTimeout(3000) // quote refresh
-  await expect(sectionOf(page, /^Indicative quote/i).getByText(/1\d\d,\d{3}\.\d\d/).first()).toBeVisible({ timeout: 20_000 })
-  await shootPanel(sectionOf(page, /^Indicative quote/i), 'panel-global-quote')
 
   await go(page, '/credito?tab=backoffice')
   await shootPanel(sectionOf(page, /^Loan book/i), 'panel-credito-loanbook')
@@ -163,4 +155,14 @@ test('panels: Mint Risk numbers, Global quote, Crédito loan book, 402 trace, ve
   const next = (await page.getByText(/Collateral\s*·\s*OUSD/).first().boundingBox())!
   const left = 272 // content column (sidebar excluded)
   await page.screenshot({ path: join(OUT, 'panel-contracts-verified.png'), clip: { x: left, y: b1.y - 16, width: 1440 - left - 32, height: next.y - 14 - (b1.y - 16) } })
+})
+
+// lead 04:24: the deck's Global example is US$1,000 (quote only, nothing is sent)
+test('global: US$1,000 supplier quote panel', async ({ page }) => {
+  await go(page, '/global')
+  const pay = page.getByLabel(/You pay/i).or(page.getByRole('textbox').first()).first()
+  await pay.fill('1000')
+  await page.waitForTimeout(3000) // quote refresh
+  await expect(sectionOf(page, /^Indicative quote/i).getByText(/18,\d{3}\.\d\d/).first()).toBeVisible({ timeout: 20_000 })
+  await shootPanel(sectionOf(page, /^Indicative quote/i), 'panel-global-quote')
 })
