@@ -62,7 +62,7 @@ export function PhoneApp() {
   const [done, setDone] = useState<Done>();
   const key = done ? "done" : view.product ? `p-${view.product}` : view.tab;
   return (
-    <EdApp style={ON_MAIZ}>
+    <EdApp style={ON_MAIZ} screen={key}>
       <ScreenTransition className="flex-1" id={key} dir={done || view.product ? "fwd" : "fade"}>
         {done ? (
           <Listo done={done} close={() => setDone(undefined)} />
@@ -123,7 +123,7 @@ function Inicio({ open, trade }: { open: (p: Product) => void; trade: (p: Produc
   const { p, fx, usdSide, total } = useTotals();
   const deskOpen = !!INVEST.desk && p.desk?.paused === false;
   const rows: { id: Product; sub: string; value: string; unit: string }[] = [
-    { id: "pesos", sub: "Rendimiento variable · financia choferes", value: fmtMoney(p.pesos.balance), unit: "xMXN" },
+    { id: "pesos", sub: "Variable · financia choferes", value: fmtMoney(p.pesos.balance), unit: "xMXN" },
     { id: "dolares", sub: `APR demo ${pct(p.dollars?.aprBps)} · sOUSD`, value: fmtMoney(p.dollars?.value), unit: "OUSD" },
     { id: "tbills", sub: `Precio ${px(p.tbill?.px8)} · feed admin`, value: p.tbill?.balance === undefined ? "—" : fmtAmount(p.tbill.balance, 4), unit: "tTBILL" },
   ];
@@ -461,6 +461,9 @@ function useBlockTimes(blocks: bigint[]) {
   return q.data;
 }
 
+/** The log's own timestamp when use-invest carries it, else the fetched block time. */
+const stamp = (r: InvestActivity, times?: Record<string, number>) => (r as InvestActivity & { timestamp?: number }).timestamp ?? times?.[String(r.block)];
+
 const ROW_LABEL: Record<string, string> = {
   "Depósito · ahorro en pesos": "Depósito en pesos",
   "Retiro · ahorro en pesos": "Retiro de pesos",
@@ -475,7 +478,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   const h = useInvestHistory();
   const now = useNow(60_000);
   const rows = (h.data?.rows ?? []).filter((r) => !product || r.product === product).slice(0, limit ?? 30);
-  const times = useBlockTimes(rows.map((r) => r.block));
+  const times = useBlockTimes(rows.filter((r) => (r as { timestamp?: number }).timestamp === undefined).map((r) => r.block));
   if (!address) return <p className="py-5 text-[14px] text-[var(--m-on-surface-variant)]">Conecta tu cuenta para ver tus movimientos.</p>;
   if (!h.data)
     return (
@@ -492,8 +495,8 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
   return (
     <DayGroups
       items={rows}
-      ts={(r: InvestActivity) => times?.[String(r.block)]}
-      now={times ? now : undefined}
+      ts={(r: InvestActivity) => stamp(r, times)}
+      now={now}
       render={(r) => {
         const into = r.label.startsWith("Depósito") || r.label.startsWith("Compra");
         const P = PRODUCT[r.product];
@@ -510,7 +513,7 @@ function ActivityList({ limit, product }: { limit?: number; product?: Product })
               </span>
             }
             title={ROW_LABEL[r.label] ?? r.label}
-            sub={[hora(times?.[String(r.block)]), "On-chain"].filter(Boolean).join(" · ")}
+            sub={[hora(stamp(r, times)), "On-chain"].filter(Boolean).join(" · ")}
             amount={`${into ? "+" : "−"}${fmtAmount(r.amount, r.symbol === "tTBILL" ? 4 : 2)}`}
             amountSub={r.symbol}
           />

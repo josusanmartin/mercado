@@ -4,7 +4,7 @@
 //   <ActionRow>/<RoundAction> 56px round actions · <BankRow> + <DayGroups> bank-style lists
 //   <Pill> black pill button · <SplitStats> side-by-side figures on hairlines · <DotNav> bottom nav
 // Built for Crédito + Invest (mobile2) on the kit's paper theme; generic enough for mobile to promote into the kit.
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtMoney, haptic } from "../format";
@@ -14,9 +14,18 @@ import "./editorial.css";
 /** Marker class for editorial app roots (fonts + tokens come from the kit's .m-root theme). */
 export const edClass = "m-ed";
 
-export function EdApp({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
+/** Pass `screen` (any key that changes per screen) to scroll the phone back to the top on navigation. */
+export function EdApp({ children, className, style, screen }: { children: ReactNode; className?: string; style?: CSSProperties; screen?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (screen === undefined) return;
+    const el = ref.current?.closest(".m-scroll");
+    if (el) el.scrollTop = 0;
+    // on a real phone the app is the page
+    else if (window.matchMedia("(max-width: 639px)").matches) ref.current?.scrollIntoView({ block: "start" });
+  }, [screen]);
   return (
-    <div className={cn(edClass, "flex min-h-full flex-1 flex-col bg-[var(--m-surface)] text-[var(--m-on-surface)]", className)} style={style}>
+    <div ref={ref} className={cn(edClass, "flex min-h-full flex-1 flex-col bg-[var(--m-surface)] text-[var(--m-on-surface)]", className)} style={style}>
       {children}
     </div>
   );
@@ -29,7 +38,7 @@ export function Meta({ parts, mark, className }: { parts: (ReactNode | false | u
     <p className={cn("m-meta flex flex-wrap items-center gap-x-1.5", className)}>
       {mark && <span aria-hidden className="inline-block size-[7px]" style={{ background: mark }} />}
       {items.map((p, i) => (
-        <span key={i} className="whitespace-nowrap">
+        <span key={i} className={typeof p === "string" && p.length > 30 ? undefined : "whitespace-nowrap"}>
           {p}
           {i < items.length - 1 && <span aria-hidden className="ml-1.5">·</span>}
         </span>
@@ -137,7 +146,7 @@ export function RoundAction({
     <span
       className={cn(
         "grid size-14 place-items-center rounded-full [&_svg]:size-[22px]",
-        primary ? "bg-[var(--m-accent)] text-white" : "border border-[var(--m-on-surface)] text-[var(--m-on-surface)]",
+        primary ? "bg-[var(--m-accent)] text-[var(--m-on-accent)]" : "border border-[var(--m-on-surface)] text-[var(--m-on-surface)]",
       )}
     >
       {icon}
@@ -188,7 +197,7 @@ export function Pill({
       disabled={disabled}
       className={cn(
         "inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold",
-        variant === "solid" && (accent ? "bg-[var(--m-accent)] text-white" : "bg-[#0a0a0a] text-white"),
+        variant === "solid" && (accent ? "bg-[var(--m-accent)] text-[var(--m-on-accent)]" : "bg-[#0a0a0a] text-white"),
         variant === "line" && "border border-[#0a0a0a] text-[#0a0a0a]",
         // busy keeps its color (with a spinner); only a truly unavailable action greys out
         loading ? "cursor-progress" : "disabled:border-transparent disabled:bg-[#ebebe8] disabled:text-[#8a8a85]",

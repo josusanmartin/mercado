@@ -106,7 +106,7 @@ function DriverAppInner() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
       <div className="-mx-4 sm:mx-0">
         <PhoneFrame label="Driver app, Android phone preview" accent={ROSA} statusBar="#ffffff">
-          <EdApp>
+          <EdApp screen={flow === "app" ? `app-${tab}` : flow}>
             <ScreenTransition className="flex-1" id={flow === "app" ? `app-${tab}` : flow} dir={flow === "app" && prev === "app" ? "fade" : prev && FLOW.indexOf(flow) < FLOW.indexOf(prev) ? "back" : "fwd"}>
               {flow === "conectar" && <Conectar {...props} />}
               {flow === "app" && <AppShell {...props} />}
