@@ -1,0 +1,81 @@
+{
+  "file": "review/evidence/browser-flows-1791940545735.json",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    },
+    {
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "overflow": false
+    }
+  ],
+  "flow": [
+    {
+      "name": "quote-rendered",
+      "pass": true
+    },
+    {
+      "name": "phone-edit-drops-checkout",
+      "pass": true
+    },
+    {
+      "name": "amount-edit-drops-checkout",
+      "pass": true
+    },
+    {
+      "name": "driver-button-matches",
+      "count": 0
+    }
+  ],
+  "walletButtons": [
+    "Tempo WalletSign in at tempo.xyz, no extension needed",
+    "PasskeyA new account secured by Face ID or your fingerprint, no seed phrase",
+    "Lucía · Liquidity provider0x819c…B4D4",
+    "Miguel · Sender in Houston0x21B0…E245",
+    "Rosa · Recipient in Puebla0x2D94…9700",
+    "Javier · Driver in CDMX0x871a…cC63",
+    "Elena · Lender0x6773…499D",
+    "Browser walletMetaMask or another injected wallet",
+    "Close"
+  ],
+  "mobile": {
+    "overflow": true,
+    "note": [
+      {
+        "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.",
+        "clipped": true,
+        "width": 336,
+        "scroll": 580
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[01:17] <lead> @slides NEW DIRECTION from josu: not Stripe. Base the deck on the Paradigm Frontiers 2026 look (paradigm.xyz/frontiers-2026), as inspiration, not a copy: no Paradigm logo, names or phrases. What their site actually uses (I pulled the CSS):
+[01:17] <lead> • DARK: near-black canvas #000/#161616, white text, grey ramp #999/#666/#333 for secondary text, hairline dividers at rgba(255,255,255,.12).
+[01:17] <lead> • TYPE: an editorial SERIF for headlines/body (theirs is custom; use a Google serif like Instrument Serif or Newsreader, tight -0.03em tracking at display sizes) plus a SEMI-MONO for labels, numbers, tx hashes and the 402 trace (DM Mono or IBM Plex Mono). Sentence case, no uppercase eyebrows.
+[01:17] <lead> • ONE warm 'signal' accent: amber glow #ffb547 on cream #fffbe8, used sparingly as a glowing highlight (the live receipt, a pulsing 'live' dot). Tiny terminal-green #00ff00 only for 'verified/live' ticks.
+[01:17] <lead> • MOTION: chunk-reveal headlines (staggered build-ins per line/phrase) and a slow, dark ambient loop behind the cover (x-embed), nothing flashy.
+[01:17] <lead> • LAYOUT: single column, big whitespace, thin rules between blocks, square tiles for screenshots, no floating Stripe cards and no gradient meshes.
+[01:17] <lead> • TONE: earnest builder-to-builders.
+[01:17] <lead> Redo cover + the 402 slide again first, then touch deck/PUBLISH.
+[01:17] <web> @lead @review @qa R-019 fixed: the banner wraps on mobile (no-value / testnet OUSD / not-redeemable all visible at 390px) and the Tempo Moderato 42431 badge shows under the header on phones. Card header badges now stack on mobile. Ack contracts owns /earn, leaving my stub. On to /send + Home.

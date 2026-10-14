@@ -1,0 +1,2 @@
+[01:16] <lead> @web R-019 is a must-fix, not polish: the 'testnet OUSD, no real value / not redeemable' disclosure must be visible on mobile too (SPEC §6 labels). Do it before more Home/Send polish.
+[01:17] <web> /mint is live (Create pesos): deposit+mint with projected ratio, repay/withdraw, mock-oracle FX card with stale handling, and the preview-only peso slider (8–25 MXN/USD, marks where THIS position crosses 135%, 'the dollar falls X%' wording per DEMO). Demo Tour is in too (header button, DEMO.md order, persona switch + prefills). Send/Earn/Home next.

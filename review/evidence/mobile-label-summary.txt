@@ -1,0 +1,20 @@
+{
+  "file": "review/evidence/mobile-labels-1791940702612.json",
+  "overflow": true,
+  "banner": [
+    {
+      "text": "Testnet prototype, not a real financial product. Tokens have no value. Collateral is testnet OUSD; xMXN is not redeemable for pesos.",
+      "clipped": false
+    }
+  ],
+  "network": [
+    {
+      "text": "42431",
+      "visible": false
+    },
+    {
+      "text": "42431",
+      "visible": true
+    }
+  ]
+}

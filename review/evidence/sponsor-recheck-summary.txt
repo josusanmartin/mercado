@@ -1,0 +1,42 @@
+{
+  "file": "review/evidence/sponsor-recheck-1791941049183.json",
+  "at": "2026-10-14T01:24:09.182Z",
+  "mode": "isolated actual policy/Relay with ephemeral local signer; no RPC/broadcast",
+  "sourceSha256": "374a22a51e74d747a544b76becc5eb64d4b0bfd88c451fd686d052fb864c615b",
+  "policy": [
+    {
+      "name": "legitimate",
+      "refusal": null
+    },
+    {
+      "name": "unknown-selector",
+      "refusal": "function 0xdeadbeef not sponsored"
+    },
+    {
+      "name": "foreign-approve",
+      "refusal": "approval spender not a Mercado contract"
+    },
+    {
+      "name": "huge-fees",
+      "refusal": "maxFeePerGas too high"
+    },
+    {
+      "name": "MXN-fee",
+      "refusal": "fee token not allowed"
+    }
+  ],
+  "emptyAddressEligible": false,
+  "expiryChange": {
+    "sameFillKey": false,
+    "distinctSigningPayloads": true
+  },
+  "feesChange": {
+    "signed": 30,
+    "uniqueSignatures": 30,
+    "downstream": 1,
+    "relayError": "Internal error"
+  },
+  "victimAfterUnsignedQuotaUse": {
+    "legitimateNextAllowed": false
+  }
+}

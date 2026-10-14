@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-14T01:21:20.144Z",
+  "mode": "live unpaid order / reload / credential-free settlement check",
+  "requests": [
+    {
+      "method": "POST",
+      "body": {
+        "quoteId": "q_4c74d166-ec24-4e22-8241-a4e358de7df0",
+        "idempotencyKey": "review-reload-56c9f908-c3ab-4cf2-8489-3ca447a0a91d"
+      },
+      "authorizationPresent": false
+    }
+  ],
+  "quoteId": "q_4c74d166-ec24-4e22-8241-a4e358de7df0",
+  "initialStatus": 402,
+  "finalText": "Telcel airtime 20 MXN → 55****5678\nAwaiting payment\n20.00 · order ord_4417ed62…\nCheck settlement\nLooks for this order's payment on-chain. Never pays.\nNo active account.\n1:21:20 AM · CREATED",
+  "pass": true
+}

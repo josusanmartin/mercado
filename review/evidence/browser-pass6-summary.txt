@@ -1,0 +1,81 @@
+{
+  "file": "review/evidence/browser-1791940402694.json",
+  "checks": [
+    {
+      "name": "desktop",
+      "path": "/",
+      "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/mint",
+      "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/mint\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/send",
+      "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/send\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "desktop",
+      "path": "/credit",
+      "error": "Cannot read properties of null (reading 'status')"
+    },
+    {
+      "name": "desktop",
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "title": "Pay bills · Mercado"
+    },
+    {
+      "name": "desktop",
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "title": "Earn · Mercado"
+    },
+    {
+      "name": "mobile",
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "title": "Mercado · synthetic pesos on Tempo"
+    },
+    {
+      "name": "mobile",
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "title": "Create pesos · Mercado"
+    },
+    {
+      "name": "mobile",
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "title": "Send money · Mercado"
+    },
+    {
+      "name": "mobile",
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "title": "Get an advance · Mercado"
+    },
+    {
+      "name": "mobile",
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "title": "Pay bills · Mercado"
+    },
+    {
+      "name": "mobile",
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "title": "Earn · Mercado"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "file": "review/evidence/memo-1791941049318.json",
+  "results": [
+    {
+      "utf8Length": 10,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "utf8Length": 34,
+      "result": {
+        "error": "The note is 34 bytes; the limit is 32 (accented letters count as 2)."
+      },
+      "writes": []
+    }
+  ]
+}

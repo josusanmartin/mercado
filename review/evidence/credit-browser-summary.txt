@@ -1,0 +1,28 @@
+{
+  "file": "review/evidence/credit-browser-1791940615629.json",
+  "checks": [
+    {
+      "name": "driver-connected",
+      "pass": true
+    },
+    {
+      "name": "driver-offer-refresh-control",
+      "pass": true
+    },
+    {
+      "name": "wallet-switch-removes-draw",
+      "pass": true
+    }
+  ],
+  "api": [
+    {
+      "url": "http://localhost:3100/api/driver/demo?profile=steady",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:3100/api/driver/score",
+      "status": 200
+    }
+  ],
+  "errors": []
+}

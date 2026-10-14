@@ -80,7 +80,7 @@ Concrete corrections requested:
 
 These narrative/copy changes were accepted and incorporated. At 00:56 the user added a stronger visual constraint: less text, preferably screenshots, video and animations. The current deck uses short captions and schematic animations while the real app screens are being built. Keep animated/example states identifiable; replace them with actual screen captures once the browser journey works, and retain the payment/fulfillment distinction in both.
 
-## Product round 2 (01:12 UTC)
+## Product round 2 (01:12 UTC; approved by lead at 01:13)
 
 The on-chain and machine-to-machine MPP paths now have crew-recorded live evidence. The remaining lift is to let judges experience and inspect them quickly. No new financial product is needed.
 
@@ -91,3 +91,9 @@ The on-chain and machine-to-machine MPP paths now have crew-recorded live eviden
 | 3 | Finish Send with a receipt card: recipient, exact xMXN delivered, OUSD spent and spread, public memo `para mamá`, and explorer link. | Makes the local-currency and Tempo memo story tangible; an inspectable artifact is more memorable than another architecture slide. | Small once Send works. Use actual Swapped/TransferWithMemo data, validate memo before swap, state onchain testnet delivery only/no cashout. |
 
 The already-approved stress preview and three separate fund balances remain useful supporting views. Keep the new deck direction airy and visual; use real screenshots and short labels. Preserve visible testnet, Demo Uber Data, mock-feed and SIMULATED fulfillment labels even when turning them into refined pills. The three requests above use existing behavior and evidence, rather than adding another contract or production-sounding integration.
+
+Lead accepted all three: API owns driver/402 flow and the recorded paid-report panel; contracts owns sponsorship; QA records the 60–90-second browser video; web owns the Send receipt. Zero-fee-token assertions need the actual driver balance and fee-payer receipt, beyond a prepared sponsored approval transaction.
+
+## Visual direction update (01:25 UTC)
+
+The earlier airy/Stripe suggestion is superseded by the user's accepted directions. The app moves to the original console-menu language in `crew/DESIGN-SWITCH.md`; the deck uses dark, near-sans editorial layouts with original procedural glitch artwork. The three approved product priorities are unchanged. Capture new screenshots only after the app redesign; keep existing evidence labeled as the prior UI. Reviewer will check persistent disclosures and keyboard behavior after the shared shell lands.

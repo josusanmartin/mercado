@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-14T01:16:55.629Z",
+  "checks": [
+    {
+      "name": "driver-connected",
+      "pass": true
+    },
+    {
+      "name": "driver-offer-refresh-control",
+      "pass": true
+    },
+    {
+      "name": "wallet-switch-removes-draw",
+      "pass": true
+    }
+  ],
+  "api": [
+    {
+      "url": "http://localhost:3100/api/driver/demo?profile=steady",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:3100/api/driver/score",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "driverText": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nJavier\n0x871a…cC63\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nGet an advance\n\nA small xMXN cash-flow advance against your driving income, repaid manually.\n\nDemo Uber Data\nIllustrative score, not a credit model\n1 · Connect a demo driver\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for your Uber password.\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nLupita · Ciudad de México · Nissan Versa 2021 · ★ 4.93\nSynthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.\n0\n8k\n16k\n07-20\n08-03\n08-17\n08-31\n09-14\n09-28\nmedian net 10,077\nnet (after Uber fee)\ngross\nMXN per week · Demo Uber Data\n2 · Why you get a credit line\nDeterministic rule from median weekly net, earnings volatility, active weeks and trip consistency. These are fake underwriting parameters for a testnet demo.\nScore\n96.5 / 100\nfloor 50\nCredit line\n1,500 xMXN\n1,500 MXN ceiling\nAvailable now\n1,400 xMXN\npool cash, 80% utilization and what you already owe\nIncome level\n35/35\nEarnings stability\n27.7/30\nActive weeks\n20/20\nTrip consistency\n13.8/15\n•\nMedian weekly net earnings: 10,077.31 MXN over 12 weeks (35/35 pts).\n•\nEarnings volatility (CV) 0.05: very steady income (27.7/30 pts).\n•\nActive in 12 of 12 weeks (20/20 pts).\n•\nTrip-count consistency (CV 0.04, median 114.5 trips/week) (13.8/15 pts).\n•\n15% of median weekly net is 1,511.6 MXN, so the 1,500 MXN ceiling applies.\n•\nScore 96.5 ≥ floor 50: credit line of 1,500 xMXN. Illustrative demo heuristic only, not a validated credit model.\n•\nYou can draw up to 1400 xMXN right now (limited by pool liquidity/utilization or your outstanding advance).\n\nSigned eligibility (EIP-712) for 0x871a…cC63 · nonce 25782142… · data hash 0x2129…b31d · expires in 15:00. Only the hash of your income report goes on-chain.\n\nRefresh offer\n3 · Draw your advance\nPaid in xMXN from the credit pool (funded by lenders, separate from the peso vault). A flat 2% fee is added to what you owe.\nMax 1,400\nDraw advance\nYour advance\nRepayment is manual. Nothing is deducted from Uber payouts.\nYou owe\n0.00 xMXN\n  principal\n— xMXN\n  fee\n— xMXN\nYour xMXN balance\n— xMXN\nLender side\nThe pool is funded by lenders' xMXN deposits, separate from the vault and the swap desk.\nPool cash available\n— xMXN\nLoans out\n— xMXN\nLender claims\n— xMXN\nRealized fees\n— xMXN\n\nNo guaranteed yield. Testnet prototype.",
+  "senderText": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nMiguel\n0x21B0…E245\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nGet an advance\n\nA small xMXN cash-flow advance against your driving income, repaid manually.\n\nDemo Uber Data\nIllustrative score, not a credit model\n1 · Connect a demo driver\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for your Uber password.\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nLupita · Ciudad de México · Nissan Versa 2021 · ★ 4.93\nSynthetic earnings generated for a testnet demo. Not real Uber data and not obtained from Uber.\n0\n8k\n16k\n07-20\n08-03\n08-17\n08-31\n09-14\n09-28\nnet (after Uber fee)\ngross\nMXN per week · Demo Uber Data\n2 · Why you get a credit line\nDeterministic rule from median weekly net, earnings volatility, active weeks and trip consistency. These are fake underwriting parameters for a testnet demo.\nCheck eligibility\nYour advance\nRepayment is manual. Nothing is deducted from Uber payouts.\nYou owe\n0.00 xMXN\n  principal\n— xMXN\n  fee\n— xMXN\nYour xMXN balance\n— xMXN\nLender side\nThe pool is funded by lenders' xMXN deposits, separate from the vault and the swap desk.\nPool cash available\n— xMXN\nLoans out\n— xMXN\nLender claims\n— xMXN\nRealized fees\n— xMXN\n\nNo guaranteed yield. Testnet prototype."
+}

@@ -1,0 +1,20 @@
+{
+  "text": "Testnet prototype, not a real financial product. Tokens have no value. Collateral is testnet OUSD; xMXN is not redeemable for pesos.\n\nMercado\nConnect\nTempo Moderato\n42431\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nPay bills\n\nPay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated.\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\nWhat do you want to pay?\nMock providers. No real airtime is sent and no real bill is paid.\nTelcel airtime (mock)\nCFE electricity (mock)\nMobile number (10 digits)\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n$300\n$500\nGet quote\nYour money\nUpdates after each payment.\nxMXN balance\n—\nAdvance outstanding\n—\n\nRepay on the Get an advance tab. Nothing is deducted automatically.\n\nRecent payments\nRefresh\n\nNo payments from this browser yet.",
+  "overflow": true,
+  "banner": [
+    {
+      "text": "Testnet prototype, not a real financial product. Tokens have no value. Collateral is testnet OUSD; xMXN is not redeemable for pesos.",
+      "clipped": false
+    }
+  ],
+  "network": [
+    {
+      "text": "42431",
+      "visible": false
+    },
+    {
+      "text": "42431",
+      "visible": true
+    }
+  ]
+}

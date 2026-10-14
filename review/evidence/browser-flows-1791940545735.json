@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-14T01:15:45.735Z",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nHome\n\nBalances, collateral health and recent receipts.",
+      "overflow": false
+    },
+    {
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nCreate pesos\n\nLock Testnet OUSD (Tempo faucet, no real value) in the vault and mint xMXN, a synthetic peso, against it. Every xMXN in circulation is debt from an over-collateralized position like this one.\n\nConnect a wallet holding testnet OUSD to open a position.\n\nContinue as Lucía, liquidity provider\n\nDemo personas use testnet demo keys with no real value. Or use Connect, top right.\n\nWhat if the peso gets stronger?\nYour collateral is in dollars and your debt is in pesos. When the peso strengthens, each dollar covers fewer pesos and your ratio falls.\nMock scenario, preview only\n\nEnter an amount to mint, or open a position, to see how it holds up.\n\nYour vault position\nTracked separately for each wallet\n\nConnect a wallet to see its position.\n\nExchange rate\nUsed for minting limits and swap quotes\nMock admin oracle\n\n20.0000 MXN per USD\n\nUpdated 8m ago by the testnet admin feed. Not a market price.",
+      "overflow": false
+    },
+    {
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nSend money\n\nSwap OUSD for xMXN and send it to another wallet.",
+      "overflow": false
+    },
+    {
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nGet an advance\n\nA small xMXN cash-flow advance against your driving income, repaid manually.\n\nDemo Uber Data\nIllustrative score, not a credit model\n1 · Connect a demo driver\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for your Uber password.\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nYour advance\nRepayment is manual. Nothing is deducted from Uber payouts.\nYou owe\n—\n  principal\n—\n  fee\n—\nYour xMXN balance\n—\nLender side\nThe pool is funded by lenders' xMXN deposits, separate from the vault and the swap desk.\nPool cash available\n9,980 xMXN\nLoans out\n50 xMXN\nLender claims\n10,030 xMXN\nRealized fees\n30.00 xMXN\n\nNo guaranteed yield. Testnet prototype.",
+      "overflow": false
+    },
+    {
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nPay bills\n\nPay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated.\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\nWhat do you want to pay?\nMock providers. No real airtime is sent and no real bill is paid.\nTelcel airtime (mock)\nCFE electricity (mock)\nMobile number (10 digits)\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n$300\n$500\nGet quote\nYour money\nUpdates after each payment.\nxMXN balance\n—\nAdvance outstanding\n—\n\nRepay on the Get an advance tab. Nothing is deducted automatically.\n\nRecent payments\nRefresh\n\nNo payments from this browser yet.",
+      "overflow": false
+    },
+    {
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nTempo Moderato\n42431\nDemo Tour\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nEarn\n\nSupply xMXN to the pool that funds driver advances. Lenders share the flat 2% fee drivers pay when they repay.\n\nNo guaranteed return\n\nConnect a wallet to supply xMXN to the advance pool.\n\nContinue as Elena, lender\n\nDemo personas use testnet demo keys with no real value. Or use Connect, top right.\n\nAdvance pool\nLive from the CreditPool contract on Tempo Moderato.\nLender claims\n— xMXN\nidle cash + principal lent out\nCash available\n— xMXN\nwhat lenders can withdraw now\nLent to drivers\n— xMXN\nopen exposure, unsecured\nRealized fees\n— xMXN\n2% flat, counted only when repaid\n\nTotal ever lent: — xMXN. Advances are capped at 1,500 xMXN per driver, and at most 80% of the pool can be lent out at once.\n\nTestnet prototype: this is not a yield product\nAdvances are unsecured and repaid manually by drivers. Eligibility comes from an illustrative score on Demo Uber Data, not a validated credit model. There's no promised APY, and losses from unpaid advances aren't covered. xMXN is a synthetic testnet token with no market peg.\nWhere the money sits\n\nThree separately funded pools. None of them can spend another's balance.\n\nVault collateral\nTestnet OUSD locked by people minting xMXN. It backs only their own debt and is never lent or swapped.\nOUSD locked\nxMXN minted against it\nContract on explorer\nSwap desk inventory\nSeeded separately by a liquidity provider from its own vault position. A capped demo desk, not a market.\nOUSD\nxMXN\nContract on explorer\nAdvance pool\nxMXN supplied by lenders. It funds driver advances only and is repaid manually by drivers.\nCash available\nLent to drivers\nContract on explorer",
+      "overflow": false
+    }
+  ],
+  "flow": [
+    {
+      "name": "quote-rendered",
+      "pass": true
+    },
+    {
+      "name": "phone-edit-drops-checkout",
+      "pass": true
+    },
+    {
+      "name": "amount-edit-drops-checkout",
+      "pass": true
+    },
+    {
+      "name": "driver-button-matches",
+      "count": 0
+    }
+  ],
+  "walletOptions": "Choose a wallet\n\nEverything runs on Tempo Moderato testnet. Fees are paid in a USD test token or sponsored.\n\nTempo Wallet\nSign in at tempo.xyz, no extension needed\nPasskey\nA new account secured by Face ID or your fingerprint, no seed phrase\nDemo personas\nTestnet demo keys, no real value\nLucía · Liquidity provider\n0x819c…B4D4\nMiguel · Sender in Houston\n0x21B0…E245\nRosa · Recipient in Puebla\n0x2D94…9700\nJavier · Driver in CDMX\n0x871a…cC63\nElena · Lender\n0x6773…499D\nBrowser wallet\nMetaMask or another injected wallet\nClose",
+  "walletButtons": [
+    "Tempo WalletSign in at tempo.xyz, no extension needed",
+    "PasskeyA new account secured by Face ID or your fingerprint, no seed phrase",
+    "Lucía · Liquidity provider0x819c…B4D4",
+    "Miguel · Sender in Houston0x21B0…E245",
+    "Rosa · Recipient in Puebla0x2D94…9700",
+    "Javier · Driver in CDMX0x871a…cC63",
+    "Elena · Lender0x6773…499D",
+    "Browser walletMetaMask or another injected wallet",
+    "Close"
+  ],
+  "mobile": {
+    "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nPay bills\n\nPay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated.\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\nWhat do you want to pay?\nMock providers. No real airtime is sent and no real bill is paid.\nTelcel airtime (mock)\nCFE electricity (mock)\nMobile number (10 digits)\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n$300\n$500\nGet quote\nYour money\nUpdates after each payment.\nxMXN balance\n—\nAdvance outstanding\n—\n\nRepay on the Get an advance tab. Nothing is deducted automatically.\n\nRecent payments\nRefresh\n\nNo payments from this browser yet.",
+    "overflow": true,
+    "note": [
+      {
+        "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.",
+        "clipped": true,
+        "width": 336,
+        "scroll": 580
+      }
+    ]
+  }
+}

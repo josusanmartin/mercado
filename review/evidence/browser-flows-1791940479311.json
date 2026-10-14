@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-14T01:14:39.311Z",
+  "checks": [
+    {
+      "path": "/",
+      "error": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
+    },
+    {
+      "path": "/mint",
+      "error": "page.goto: Navigation to \"http://localhost:3100/mint\" is interrupted by another navigation to \"http://localhost:3100/\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/mint\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/send",
+      "error": "page.goto: Navigation to \"http://localhost:3100/send\" is interrupted by another navigation to \"http://localhost:3100/mint\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/send\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/credit",
+      "error": "page.goto: Navigation to \"http://localhost:3100/credit\" is interrupted by another navigation to \"http://localhost:3100/send\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/credit\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/pay",
+      "error": "page.goto: Navigation to \"http://localhost:3100/pay\" is interrupted by another navigation to \"http://localhost:3100/credit\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/earn",
+      "error": "page.goto: Navigation to \"http://localhost:3100/earn\" is interrupted by another navigation to \"http://localhost:3100/pay\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/earn\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    }
+  ],
+  "flow": [
+    {
+      "error": "page.goto: Navigation to \"http://localhost:3100/pay\" is interrupted by another navigation to \"http://localhost:3100/earn\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    }
+  ],
+  "mobile": {
+    "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.\n\nMercado\nConnect\nHome\nCreate pesos\nSend money\nGet an advance\nPay bills\nEarn\nContracts\nPay bills\n\nPay with xMXN through a real HTTP 402 payment (MPP) on Tempo. The top-up itself is simulated.\n\nPayment: real testnet transfer\nFulfillment: SIMULATED\nWhat do you want to pay?\nMock providers. No real airtime is sent and no real bill is paid.\nTelcel airtime (mock)\nCFE electricity (mock)\nMobile number (10 digits)\n$20\n$30\n$50\n$80\n$100\n$150\n$200\n$300\n$500\nGet quote\nYour money\nUpdates after each payment.\nxMXN balance\n—\nAdvance outstanding\n—\n\nRepay on the Get an advance tab. Nothing is deducted automatically.\n\nRecent payments\nRefresh\n\nNo payments from this browser yet.",
+    "overflow": true,
+    "note": [
+      {
+        "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.",
+        "clipped": true,
+        "width": 336,
+        "scroll": 580
+      }
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "at": "2026-10-14T01:24:09.317Z",
+  "mode": "local actual actions orchestration, fake receipt/write adapter",
+  "sourceSha256": "55fd07ff1ba0222a8da303e4f1e97328f7d3891c334ce7725bc1690b647ee9bd",
+  "results": [
+    {
+      "memo": "para mamá",
+      "utf8Length": 10,
+      "result": true,
+      "writes": [
+        {
+          "functionName": "swapOusdForXmxn",
+          "args": [
+            "1000000",
+            "19800500"
+          ]
+        },
+        {
+          "functionName": "transferWithMemo",
+          "args": [
+            "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "19800500",
+            "0x70617261206d616dc3a100000000000000000000000000000000000000000000"
+          ]
+        }
+      ]
+    },
+    {
+      "memo": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        {
+          "functionName": "swapOusdForXmxn",
+          "args": [
+            "1000000",
+            "19800500"
+          ]
+        },
+        {
+          "functionName": "transferWithMemo",
+          "args": [
+            "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "19800500",
+            "0x6161616161616161616161616161616161616161616161616161616161616161"
+          ]
+        }
+      ]
+    },
+    {
+      "memo": "éééééééééééééééé",
+      "utf8Length": 32,
+      "result": true,
+      "writes": [
+        {
+          "functionName": "swapOusdForXmxn",
+          "args": [
+            "1000000",
+            "19800500"
+          ]
+        },
+        {
+          "functionName": "transferWithMemo",
+          "args": [
+            "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+            "19800500",
+            "0xc3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9c3a9"
+          ]
+        }
+      ]
+    },
+    {
+      "memo": "ééééééééééééééééé",
+      "utf8Length": 34,
+      "result": {
+        "error": "The note is 34 bytes; the limit is 32 (accented letters count as 2)."
+      },
+      "writes": []
+    }
+  ]
+}

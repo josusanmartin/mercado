@@ -1,0 +1,20 @@
+// Isolated actual policy/Relay; ephemeral sponsor key; no network or real sponsor use.
+import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';import * as viem from 'viem';import {tempoModerato} from 'viem/chains';import {generatePrivateKey,privateKeyToAccount} from 'viem/accounts';import {Relay} from 'viem/tempo';import {TxEnvelopeTempo} from 'ox/tempo';import {createHash} from 'node:crypto';
+const compile=s=>ts.transpileModule(s,{compilerOptions:{target:99,module:1}}).outputText;
+const d=JSON.parse(fs.readFileSync('packages/shared/src/deployments/42431.json','utf8'));
+const tokens={alphaUSD:'0x20C0000000000000000000000000000000000001',pathUSD:'0x20C0000000000000000000000000000000000000'};
+const shared={moderatoDeployment:d,TEMPO_MODERATO_CHAIN_ID:42431,TEMPO_ADDRESSES:tokens,tempoModerato,TEMPO_RPC_URL:'https://rpc.moderato.tempo.xyz'};
+for(const name of ['TIP20','CollateralVault','CreditPool','SwapDesk']){const m={exports:{}};vm.runInNewContext(compile(fs.readFileSync(`packages/shared/src/abi/${name}.ts`,'utf8')),{module:m,exports:m.exports});Object.assign(shared,m.exports);}
+const file='apps/web/app/api/sponsor/policy.ts',source=fs.readFileSync(file,'utf8');
+function policy(){const m={exports:{}};vm.runInNewContext(compile(source),{module:m,exports:m.exports,require:n=>n==='viem'?{...viem,createPublicClient:()=>({readContract:async req=>req.functionName==='getPosition'?{collateral:0n,debt:0n}:0n})}:shared,Date,BigInt,Map,Set});return m.exports;}
+const p=policy(),sender='0x1111111111111111111111111111111111111111';const personas=new Set([sender]);
+const base={from:sender,chainId:42431,calls:[{to:d.xMXN,data:viem.encodeFunctionData({abi:shared.tip20Abi,functionName:'approve',args:[d.vault,1n]})}],gas:100000n,maxFeePerGas:1000000000n,maxPriorityFeePerGas:0n,feeToken:tokens.alphaUSD,nonce:0,nonceKey:viem.maxUint256,validBefore:Math.floor(Date.now()/1000)+25};
+const ab=[base,{...base,validBefore:base.validBefore+1}];const payloads=ab.map(t=>TxEnvelopeTempo.getFeePayerSignPayload(TxEnvelopeTempo.from(t),{sender}));
+let downstream=0;const client=viem.createClient({chain:tempoModerato,transport:viem.custom({request:async()=>{downstream++;throw new Error('no downstream allowed');}},{retryCount:0})});
+const relay=Relay.create({client,plugins:[Relay.feePayer({account:privateKeyToAccount(generatePrivateKey()),feeToken:tokens.alphaUSD,validate:async tx=>!p.refusal(tx)&&await p.senderEligible(tx.from,personas)&&p.consumeQuota(tx.from,p.fillKey(tx))})]});
+let signed=0;const signatures=new Set();let relayError;
+try{for(let i=0;i<40;i++){const tx={...base,maxFeePerGas:base.maxFeePerGas+BigInt(i)};const r=await relay.request({method:'eth_fillTransaction',params:[tx]});if(r.tx?.feePayerSignature){signed++;signatures.add(JSON.stringify(r.tx.feePayerSignature));}}}catch(x){relayError=x.message.slice(0,500);}
+const q=policy();for(let i=0;i<30;i++){const tx={...base,nonce:i,nonceKey:0n};q.consumeQuota(sender,q.fillKey(tx));}const victimNext=q.consumeQuota(sender,q.fillKey({...base,nonce:31,nonceKey:0n}));
+const tests=[['legitimate',base],['unknown-selector',{...base,calls:[{to:d.vault,data:'0xdeadbeef'}]}],['foreign-approve',{...base,calls:[{to:d.xMXN,data:viem.encodeFunctionData({abi:shared.tip20Abi,functionName:'approve',args:[sender,1n]})}]}],['huge-fees',{...base,maxFeePerGas:10n**24n}],['MXN-fee',{...base,feeToken:d.xMXN}]];
+const e={at:new Date().toISOString(),mode:'isolated actual policy/Relay with ephemeral local signer; no RPC/broadcast',sourceSha256:createHash('sha256').update(source).digest('hex'),policy:tests.map(([name,t])=>({name,refusal:p.refusal(t)??null})),emptyAddressEligible:await p.senderEligible('0x9999999999999999999999999999999999999999',personas),expiryChange:{sameFillKey:p.fillKey(ab[0])===p.fillKey(ab[1]),distinctSigningPayloads:payloads[0]!==payloads[1]},feesChange:{signed,uniqueSignatures:signatures.size,downstream,relayError},victimAfterUnsignedQuotaUse:{legitimateNextAllowed:victimNext}};
+const out=`review/evidence/sponsor-recheck-${Date.now()}.json`;fs.writeFileSync(out,JSON.stringify(e,null,2));console.log(JSON.stringify({file:out,...e},null,2));

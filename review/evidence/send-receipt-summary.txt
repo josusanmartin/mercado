@@ -1,0 +1,9 @@
+{
+  "file": "review/evidence/send-receipt-1791940814658.json",
+  "at": "2026-10-14T01:20:14.397Z",
+  "mode": "actual TSX with frozen success state and isolated read adapters",
+  "sourceSha256": "d781aecfce408b5eab9dfabfef203b6bb80919e4bc4d716c85be68234c589921",
+  "originalRecipient": "Delivered 20 xMXN to Rosa with the note “para mamá”.It's in their Tempo wallet now. Turning it into pesos at a bank would need an off-ramp, which this prototype doesn't have.",
+  "afterEditingRecipient": "Delivered 2000 xMXN to Rosa with the note “para mamá”.It's in their Tempo wallet now. Turning it into pesos at a bank would need an off-ramp, which this prototype doesn't have.",
+  "afterUnrelatedReceipt": "Delivered 220 xMXN to Rosa with the note “para mamá”.It's in their Tempo wallet now. Turning it into pesos at a bank would need an off-ramp, which this prototype doesn't have."
+}

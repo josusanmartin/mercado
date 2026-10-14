@@ -1,8 +1,9 @@
 # Mercado review findings
 
-Last reviewed commit: `41c4347` (2026-10-14, approximately 01:12 UTC), plus sponsor/shell/screens WIP.
-Current pass: R-013 fee caps pass isolated policy checks. New R-016 quota grief and R-017 late memo validation reproduced locally. Shell has landed; first restart probe hit the server restart and is not frontend acceptance. See Pass 6 below.
-**Live redeployment, API 402, API-to-pool signature/capacity simulation, and recorded stress liquidation verified.** R-006/R-007/R-008/R-010 are resolved at the evidence levels below. R-009's two reproduced failures now pass locally; R-011 has issued-challenge recovery implemented, with real crash/restart acceptance still outstanding. New open P1: R-012 (wallet switch during multi-step transaction). Browser routes remain incomplete: home is the Next scaffold and five dashboard routes return 404 as of the 00:58 browser check. Payment correctness does not yet establish the interactive wallet journey.
+Last reviewed commit: `87e1143` and the later sponsor/memo/receipt changes through approximately 01:27 UTC; shared tree WIP is explicitly noted below.
+
+Current status: fee caps, call selector/spender boundaries, expiring-nonce dedupe, pre-write memo validation, quote invalidation, wallet-offer reset, mobile disclosure visibility, frozen Send receipts and credential-free recovery fetch are independently rechecked at the evidence levels below. Remaining review risks are R-016's unsigned existing-sender quota grief and R-022's reset/writer race. R-021 exposed the connector auto-payment wrapper and is fixed for the tested recovery path. No reviewer chain transaction was broadcast. The new console-menu redesign is pending; all completed browser checks below predate it.
+
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
 ## Findings
@@ -113,21 +114,21 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-014 — P1 — api — Credit screen keeps a consumed or wrong-wallet attestation active
 
-- Status: OPEN; source review of the incoming screen, posted to API. Browser reproduction pending shell/providers.
+- Status: FIX VERIFIED IN PART: browser connects Javier, gets a live offer and visible Refresh, then switches to Miguel and sees Draw removed (`credit-browser-1791940615629.json`). Post-success refresh is verified in source; no reviewer borrow was broadcast.
 - Location: `apps/web/components/credit/credit-screen.tsx:21` (mutation data), `:174` (conditional Refresh), `:210` (draw without clearing the attestation).
 - Scenario: successful draw consumes the nonce, but the screen continues to offer Draw with the same attestation and no refresh control until expiry. Switching wallets also leaves the previous borrower's offer active. Further draws revert even while the new live capacity is positive.
 - Fix: invalidate/refetch after a successful draw and on account/profile change; make Refresh available for an existing offer and ensure displayed borrower matches the connected account.
 
 ### R-015 — P1 — api — Editing payment fields leaves the old quote payable
 
-- Status: OPEN; source review of the incoming screen, posted to API. Browser reproduction pending shell/providers.
+- Status: BROWSER FIX VERIFIED: after a real quote, editing phone or amount removes Checkout; `browser-flows-1791940545735.json`. Source locks payable controls while busy.
 - Location: `apps/web/components/billpay/pay-screen.tsx:85`, `:89`, `:99`, `:103` (form changes); `:129` (Pay uses existing quote).
 - Scenario: Get quote for phone A/100 MXN, change the form to phone B/200 MXN, then Pay. The previous quote and idempotency key remain active, so settlement/fulfillment still use A/100 while the edited form shows B/200. Provider buttons can also reset state during a pending payment.
 - Fix: invalidate quotes on changes to destination/amount/provider; lock those controls during quote/payment work and show the final quoted destination in checkout.
 
 ### R-016 — P1 — contracts — Unsigned fill requests can exhaust everyone's sponsor quota
 
-- Status: OPEN; reproduced with the installed Relay and actual isolated policy. No request was sent to the shared sponsor.
+- Status: MITIGATED, RESIDUAL OPEN. `4da15ea` adds selector/spender checks, eligibility, dedupe and IP ingress limits; `34d2e1a` corrects dedupe for expiring nonces. Local recheck passes refusals and fee/expiry variant accounting. However, unsigned fills may spoof an existing eligible persona and consume that victim's 30 slots; eligibility is not ownership. Forwarded-IP headers also require a trusted overwriting proxy. Raised to contracts/lead for an explicit limited-demo risk decision. No abuse sent to shared sponsor.
 - Location: `apps/web/app/api/sponsor/route.ts:46` and `:52`; `policy.ts:81`; installed `viem/_esm/tempo/internal/relay/feePayer.js:91-108`.
 - Scenario: a caller supplies prepared `eth_fillTransaction` requests with invented `from` addresses. No sender signature, ownership proof or broadcast is needed. Each fill consumes a global slot; even the same sender/nonce/payload consumes another slot on every retry. Seventeen invented senders can consume all 500 slots and deny fee sponsorship to the demo wallet for the hour.
 - Evidence: `review/sponsor-abuse-check.mjs`, `sponsor-abuse-1791940313755.json`: 30 identical unsigned fills produce sponsor signatures with zero downstream RPC calls; isolated quota then accepts 500 requests across 17 senders and rejects a new legitimate sender. These signatures use a random local test key, never the deployed sponsor.
@@ -136,11 +137,67 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-017 — P1 — contracts — Invalid memo is rejected only after swap has executed
 
-- Status: OPEN; actual action orchestration reproduced with local write adapters.
+- Status: LOCAL FIX VERIFIED: `memo-1791941049318.json` shows zero writes for the 34-byte memo, and valid 10/32-byte notes still complete both local steps. Recipient validation also runs before writes. No reviewer swap broadcast.
 - Location: `apps/web/lib/contracts/actions.ts:117-126` (`swapAndSend`, memo encoding after swap).
 - Scenario: a memo of 17 accented characters is 34 UTF-8 bytes. The helper swaps OUSD into xMXN first, then `memoToBytes32` throws and no recipient transfer occurs. Retrying the complete flow can swap again. A 32-character UI limit alone does not prevent this with Unicode.
 - Evidence: `review/memo-check.mjs`, `memo-1791940314259.json`: ASCII 32 bytes and 16 accented characters pass; 17 accented characters record one swap followed by the memo error. No real transaction was sent. The UTF-8 bytes32 encoder itself is correct for these boundaries and for `para mamá`.
 - Fix: encode/validate memo and recipient before approvals or swap, reuse the encoded memo for the final write, show a UTF-8 byte counter in Send. Preserve any completed swap receipt on later send failures and offer to finish the send without swapping again.
+
+### R-018 — P1 — api — Browser reload loses the action needed to reconcile a pending payment
+
+- Status: BROWSER FIX VERIFIED after the additional R-021 fetch fix: `recovery-ui-1791941099162.json` loads a saved unpaid order, then sends exactly one same-key credential-free POST and shows a non-paying result. No wallet or transfer is involved. Actual settled-push recovery through this browser control remains separate from this unpaid-order check.
+- Location: `apps/web/components/billpay/use-bill-pay.ts:62-68` (saved key), `:108-118` (GET-only refresh); `recent-orders.tsx:18-28`; `apps/web/lib/server/bills/service.ts:391`.
+- Scenario: a push transfer settles, the credential POST is lost, then the browser reloads. The saved key/quoteId survives, but quote/keyRef state does not. Recent payments can only call GET, which returns stored CREATED without invoking `recoverAttempts`. The user cannot resume the same order from the UI; creating another quote can cause a second payment while the first remains unresolved.
+- Fix: expose an explicit Resume/check settlement action using the saved quote and key. First perform a credential-free POST/reconciliation; do not silently follow a 402 into another payment while the old transfer is unresolved. Show the recovered receipt or pending state and retain the original identity across navigation/reload.
+
+### R-019 — P1 — web — Mobile hides the mandatory no-value and non-redemption disclosure
+
+- Status: BROWSER FIX VERIFIED in `f29e464`: at 390px the full banner wraps with no clipping and 42431 is visibly rendered (`mobile-labels-1791940702612.json`). /pay horizontal overflow remains a separate P2 layout follow-up.
+- Location: `apps/web/components/shell/testnet-banner.tsx:8` (`truncate`).
+- Scenario: the only global disclosure uses one clipped line. At 390px it visibly ends around “Tokens h…”, hiding both “no value” and “not redeemable for pesos.” The network badge is also hidden on mobile. A screen-reader/DOM text assertion alone would misleadingly pass the complete string.
+- Evidence: `review/evidence/screen-mobile-1791940479311.png`; DOM measurement clientWidth=336 vs scrollWidth=580. Independent mobile /pay snapshot measures page width 405 vs 390; the provider/card row also overflows (P2 layout issue, same owner handoff).
+- Fix: allow disclosure text to wrap; keep Tempo Moderato/42431 visible at the mobile breakpoint. Verify rendered visibility as well as DOM presence. Preserve the not-issuer-backed collateral wording wherever OUSD is explained.
+
+### R-020 — P1 — web — A completed Send receipt changes when live balances or form recipient change
+
+- Status: LOCAL FIX VERIFIED: `send-receipt-1791941132553.json` holds the delivered value at 20 xMXN across recipient edits and unrelated balance changes. Source now takes amount/memo from confirmed transaction logs. No reviewer transfer was broadcast.
+- Location: `apps/web/components/transfer/send-screen.tsx:55-57`, `:88`, `:232-237`.
+- Scenario: after sending 20 xMXN to Rosa (100 → 120 balance), change To to a different wallet holding 2,100 xMXN. `arrived` now subtracts Rosa's old 100 from the new wallet's 2,100, while the success card still says Rosa: “Delivered 2000 xMXN to Rosa.” An unrelated incoming transfer to Rosa similarly inflates the old receipt.
+- Evidence: `review/send-receipt-check.mjs`, `send-receipt-1791940814658.json`, executes current SendScreen. Baseline says 20; editing recipient says 2,000; unrelated +200 transfer says 220. Source hashes preserved.
+- Fix: freeze the actual delivered amount, recipient, memo, swap amount/fee and transaction hash from confirmed logs. Render live wallet balance separately; later form edits or transfers must not rewrite a prior receipt.
+
+### R-021 — P0 — api / web — Settlement-only fetch reaches the wallet auto-payment wrapper
+
+- Status: BROWSER FIX VERIFIED for the affected recovery path in `87e1143`; web also disables MPP auto-polyfill on all three connectors. No unintended transfer was attempted or broadcast by the reviewer.
+- Location: `apps/web/lib/mpp/client.ts` (`checkBillSettlement` originally uses global fetch); `apps/web/lib/tempo/config.ts` (connector defaults); installed `node_modules/accounts/dist/core/Provider.js:1549-1573`.
+- Scenario: the user clicks “Check settlement / Never pays” on an unpaid saved order. The server returns 402. The accounts provider installed by Tempo wallet/passkey connectors wraps global fetch by default, so this nominal status check proceeds into payment handling. Without a wallet it throws “No active account”; with a connected account it can invoke the wallet payment flow. A payment-capable fetch cannot implement the promised no-payment action.
+- Evidence: initial disconnected browser run `recovery-ui-1791940880144.json` visibly ends “No active account.” Its `pass:true` ONLY checked request identity and absence of Authorization; that assertion was insufficient and is NOT recovery acceptance. Preserved unchanged. Installed provider source confirms default polyfill and automatic 402 handling.
+- Fix verified: API uses `Fetch.unwrapFetch(globalThis.fetch)` for quote/status/reconciliation; post-fix `recovery-ui-1791941099162.json` makes one same-key POST and reports no on-chain payment without touching a wallet. Web additionally sets `mpp:false` for Tempo Wallet, passkey and demo-persona connectors. Explicit Pay still uses its dedicated Mppx instance; QA owns the next live pay regression.
+
+### R-022 — P1 — api / contracts — Demo order reset is not serialized with the live writer
+
+- Status: MITIGATED, RESIDUAL OPEN. API now refuses PAYMENT_VERIFIED, unresolved CREATED attempts and stores written in the previous 30 seconds. The check/rename race is explicitly acknowledged and requires a quiescent writer; --force bypasses the checks. No reviewer reset executed.
+- Location: `apps/web/lib/server/bills/archive-orders.mts:21` (`renameSync`); `bills/store.ts:65` (process-local writer lock); bill settlement/recovery state in the archived store.
+- Scenario: reset renames orders.json while another process is settling an order. A store operation that already read the file can later rewrite the pre-reset database, or a post-settlement operation can find the order missing. Pending recovery is also removed from the active API even though the original transfer may still land. Keeping the archive and replay file does not by itself preserve live reconciliation.
+- Fix: require a quiescent writer and no unresolved/active payments before archiving, or provide a reset operation serialized inside the serving process with an ingress guard. Refuse/reset-later rather than presenting an unconditional safe-while-running claim. Preserve archives as evidence.
+
+## Pass 8 evidence (01:22–01:26 UTC)
+
+- Sponsor selector/spender/fee checks and empty-account eligibility pass isolated checks. Deduplication initially omitted expiring-nonce expiry/fee fields; source review flagged this and contracts corrected it before the recheck. `sponsor-recheck-1791941049183.json`: differing expiry produces distinct fee-payer payloads and distinct quota keys; 30 fee variants sign, the 31st is refused (our deliberately disabled downstream throws during unsponsored fallback). This is local policy/Relay evidence, not 30 live sponsored transactions.
+- Expiring-nonce semantics checked against [Tempo TIP-1009](https://github.com/tempoxyz/tempo/blob/main/tips/tip-1009.md): hash-based replay protection means changed expiries are not one sequential nonce commitment. No claim about the current maximum expiry window is needed for this finding.
+- The memo and frozen Send receipt regressions now pass. An earlier recheck failed because the reviewer adapter lacked the newly exported memoByteLength; that probe error is preserved separately and is not an app failure.
+- Recovery UI recheck first exposed R-021; post-fix check is green for a saved unpaid order. This does not establish a new lost-push chain settlement experiment.
+- `tsc --noEmit --incremental false -p apps/web` initially found a Send receipt type mismatch during WIP migration; next source snapshot passes (empty `typecheck-pass8.txt`). No build was run and no shared artifacts were written by review.
+- Lead announced a new console-menu redesign at 01:25. Current screen checks are pre-redesign evidence and must be rerun once the new shell lands.
+
+## Pass 7 evidence (01:15–01:21 UTC; continuing)
+
+- All six routes returned 200 without page errors in `browser-flows-1791940545735.json`. At this snapshot Home and Send were still stubs; Mint/Credit/Pay/Earn contain real screens. Send landed subsequently and its receipt bug is R-020.
+- Quote invalidation, connected-driver eligibility and wallet-switch offer reset pass browser checks. Saved real connected offer screenshot for slides; no draw/payment broadcast by review.
+- R-019 mobile disclosure/network visibility fix passes. /pay still overflows to 405px at a 390px viewport (layout follow-up only).
+- R-018 now has an incoming Check settlement control using credential-free same-key POST; reviewer browser recheck is running against an unpaid order, without any wallet/transfer.
+- Reviewed QA's `bills-crash-proof.ts` and transcript: actual child-process SIGKILL before/after pull broadcast, same-key retry and merchant-balance/fulfillment-count assertions. This supports those two pull windows; it does not independently prove lost push-credential recovery or arbitrary signed-transaction lifetime safety.
+- Read live `/api/sponsor` policy: caps, allowed USD tokens and 30/500 quotas match the reviewed source. No abusive request was sent to that live relay.
 
 ## Pass 6 evidence (01:09–01:12 UTC; continuing)
 
@@ -204,6 +261,8 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Read local `tempo-std` TIP-20 interfaces and `ForkProbe.t.sol`; issuer-gated burn operates on the caller balance. Pool/vault tests must account for the actual precompile behavior.
 - Official references consulted: [MPP server creation](https://mpp.dev/sdk/typescript/server/Mppx.create), [Tempo source](https://github.com/tempoxyz/tempo), [Tempo integration guide](https://docs.chain.link/ccip/v1/evm/tools-resources/network-specific/tempo-integration-guide). Direct docs.tempo.xyz pages redirected to a location unavailable to the browsing tool; installed source is the implementation evidence used here.
 
-## Next pass
+## Next pass (updated 01:27 UTC)
 
-Start with `IRC_NICK=review bin/irc unread`, then `git log --stat d6c810a..HEAD` and status/diff. Recheck R-012, fee sponsorship, normal push receipts and recovery boundaries. Review browser flows when dashboard pages land. Preserve completed and failed evidence separately. Lead commits review files; the reviewer does not.
+Read `crew/DESIGN-SWITCH.md`; the shared console-menu redesign was assigned at 01:25 and is expected in about 20 minutes. Recheck always-visible mobile honesty labels, new persona bar while any transaction/payment is busy, keyboard scoping (typing in inputs must not trigger navigation/tour), dialog focus, and both light/dark layouts after it lands. Keep R-016/R-022 residuals explicit and ask lead for any limited-demo acceptance decision; do not close them merely on owner mitigation claims.
+
+Prior restart note: start with `IRC_NICK=review bin/irc unread`, then `git log --stat d6c810a..HEAD` and status/diff. Recheck R-012, fee sponsorship, normal push receipts and recovery boundaries. Review browser flows when dashboard pages land. Preserve completed and failed evidence separately. Lead commits review files; the reviewer does not.

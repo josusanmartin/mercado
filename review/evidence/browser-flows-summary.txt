@@ -1,0 +1,45 @@
+{
+  "file": "review/evidence/browser-flows-1791940479311.json",
+  "checks": [
+    {
+      "path": "/",
+      "error": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
+    },
+    {
+      "path": "/mint",
+      "error": "page.goto: Navigation to \"http://localhost:3100/mint\" is interrupted by another navigation to \"http://localhost:3100/\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/mint\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/send",
+      "error": "page.goto: Navigation to \"http://localhost:3100/send\" is interrupted by another navigation to \"http://localhost:3100/mint\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/send\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/credit",
+      "error": "page.goto: Navigation to \"http://localhost:3100/credit\" is interrupted by another navigation to \"http://localhost:3100/send\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/credit\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/pay",
+      "error": "page.goto: Navigation to \"http://localhost:3100/pay\" is interrupted by another navigation to \"http://localhost:3100/credit\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/earn",
+      "error": "page.goto: Navigation to \"http://localhost:3100/earn\" is interrupted by another navigation to \"http://localhost:3100/pay\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/earn\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    }
+  ],
+  "flow": [
+    {
+      "error": "page.goto: Navigation to \"http://localhost:3100/pay\" is interrupted by another navigation to \"http://localhost:3100/earn\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/pay\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    }
+  ],
+  "mobile": {
+    "overflow": true,
+    "note": [
+      {
+        "text": "Testnet prototype, not a real financial product. Tokens have no value; xMXN is not redeemable for pesos.",
+        "clipped": true,
+        "width": 336,
+        "scroll": 580
+      }
+    ]
+  }
+}

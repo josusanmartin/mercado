@@ -1,0 +1,2 @@
+apps/web/components/transfer/send-screen.tsx(88,52): error TS2345: Argument of type 'TxReceipt | undefined' is not assignable to parameter of type 'TransactionReceipt | undefined'.
+  Type 'TxReceipt' is missing the following properties from type 'TransactionReceipt': blockHash, contractAddress, cumulativeGasUsed, effectiveGasPrice, and 6 more.
