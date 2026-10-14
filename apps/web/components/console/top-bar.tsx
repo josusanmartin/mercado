@@ -21,7 +21,7 @@ export function TopBar() {
     <div className="ml-auto flex items-center gap-2 sm:gap-3">
       {on && <PersonaRestore />}
       <NetworkBadge className="hidden sm:inline-flex" />
-      <label className={cn("flex cursor-pointer items-center gap-2 rounded-[10px] border bg-card px-2.5 py-1.5 text-sm", busy && "cursor-not-allowed opacity-60")}>
+      <label className={cn("bg-well flex cursor-pointer items-center gap-2 rounded-[12px] px-3 py-1.5 text-sm", busy && "cursor-not-allowed opacity-60")}>
         <span className="hidden sm:inline">Demo mode</span>
         <span className="sm:hidden">Demo</span>
         <button
@@ -37,7 +37,7 @@ export function TopBar() {
         </button>
       </label>
       <WalletDialog>
-        <button type="button" disabled={busy} className="bg-ink text-page flex h-9 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60">
+        <button type="button" disabled={busy} className="bg-ink text-page flex h-9 items-center gap-2 rounded-[12px] px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-60">
           <Wallet className="size-4" aria-hidden />
           {isConnected ? (
             <span className="tabular">

@@ -4,30 +4,30 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Mercado ecosystem brand (crew/DESIGN-ECOSYSTEM.md): Mexican-modern fintech.
-  Warm paper canvas, ink text, and one signature color per product, set by data-product:
-  Mint = jade, Remesas = cempasúchil, Global = talavera cobalt, Crédito = rosa mexicano.
-  The home (no data-product) uses ink as its accent and all four colors in its art and diagram.
+  Mercado Brand v4 (crew/DESIGN-ECOSYSTEM.md §3): clean, bright, Switch-menu-like and grown-up.
+  White canvas, few boxes (spacing and hairlines instead), flat product colors used as solid fills,
+  tab underlines and key numbers: Mint teal, Remesas orange, Global blue, Crédito pink.
+  data-product sets --accent for everything below it. Focus is a cyan ring, the one shared accent.
 */
 :root {
-  --page: #f5efe4;
-  --tile: #fffdf8;
-  --ink: #15110e;
-  --ink-2: #6b5e51;
-  --line: #e7dccb;
-  --well: #f1e8da;
+  --page: #ffffff;
+  --tile: #ffffff;
+  --ink: #111418;
+  --ink-2: #5b6270;
+  --line: #e6e8ec;
+  --well: #f4f5f7;
 
-  --c-mint: #0e7c66;
-  --c-remesas: #f08c00;
-  --c-global: #1e4fd6;
-  --c-credito: #e4007c;
+  --c-mint: #00a68a;
+  --c-remesas: #ff8a1f;
+  --c-global: #2f6bff;
+  --c-credito: #f2357d;
+  --focus: #00c3e3;
 
   --accent: var(--ink);
-  --accent-fg: #fffdf8;
-  /* accent tint for soft backgrounds (selected rows, chips) */
-  --accent-soft: color-mix(in oklab, var(--accent) 10%, var(--tile));
+  --accent-fg: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 9%, white);
 
-  --shadow: 0 1px 2px rgb(21 17 14 / 0.05);
+  --shadow: 0 10px 30px -12px rgb(17 20 24 / 0.25);
 
   --background: var(--page);
   --foreground: var(--ink);
@@ -42,17 +42,17 @@
   --muted: var(--well);
   --muted-foreground: var(--ink-2);
   --accent-bg: var(--well);
-  --destructive: #c4352b;
+  --destructive: #d92d20;
   --border: var(--line);
-  --input: #dccfbb;
-  --ring: var(--accent);
+  --input: #d5d9e0;
+  --ring: var(--focus);
   --radius: 12px;
 
   --brand: var(--accent);
   --brand-foreground: var(--accent-fg);
-  --warning: #c77700;
-  --warning-ink: #8a5300;
-  --success: #1f9d55;
+  --warning: #b54708;
+  --warning-ink: #93370d;
+  --success: #079455;
 }
 
 [data-product="mint"] {
@@ -60,7 +60,6 @@
 }
 [data-product="remesas"] {
   --accent: var(--c-remesas);
-  --accent-fg: #15110e;
 }
 [data-product="global"] {
   --accent: var(--c-global);
@@ -70,28 +69,26 @@
 }
 
 .dark {
-  --page: #15110e;
-  --tile: #1f1a16;
-  --ink: #f5efe4;
-  --ink-2: #b4a692;
-  --line: #3a3029;
-  --well: #28211c;
-  --input: #4a3e35;
-  --accent-fg: #15110e;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --destructive: #f0685d;
-  --warning: #f0a53a;
-  --warning-ink: #f6c776;
-  --success: #4cc985;
-  --c-mint: #2bb596;
-  --c-global: #6d8fff;
-  --c-credito: #ff4fa8;
+  --page: #0f1115;
+  --tile: #1a1d23;
+  --ink: #f3f4f6;
+  --ink-2: #a3a9b5;
+  --line: #2a2e36;
+  --well: #1a1d23;
+  --input: #3a3f49;
+  --accent-soft: color-mix(in oklab, var(--accent) 18%, #1a1d23);
+  --shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  --destructive: #f97066;
+  --warning: #fdb022;
+  --warning-ink: #fec84b;
+  --success: #47cd89;
   color-scheme: dark;
 }
-.dark [data-product="mint"],
-.dark [data-product="global"],
-.dark [data-product="credito"] {
-  --accent-fg: #15110e;
+.dark {
+  --accent-fg: #0f1115;
+}
+.dark [data-product] {
+  --accent-fg: #ffffff;
 }
 
 @theme inline {
@@ -133,13 +130,23 @@
   --color-ink-2: var(--ink-2);
   --color-line: var(--line);
   --color-well: var(--well);
+  --color-focus: var(--focus);
   --color-tinta: var(--ink);
   --color-papel: var(--page);
 
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: var(--radius);
-  --radius-xl: 14px;
+  --radius-xl: 20px;
+  --animate-ring-pulse: ring-pulse 1.4s ease-in-out infinite alternate;
+  @keyframes ring-pulse {
+    from {
+      outline-color: var(--focus);
+    }
+    to {
+      outline-color: color-mix(in oklab, var(--focus) 45%, transparent);
+    }
+  }
   --shadow-tile: var(--shadow);
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -153,16 +160,17 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-size: 15px;
+    font-size: 15.5px;
   }
   h1,
   h2,
   h3 {
     letter-spacing: -0.02em;
   }
+  /* One shared focus treatment: the cyan ring (tiles add a gentle pulse). */
   :focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
   }
   .tabular,
   [data-amount] {

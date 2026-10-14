@@ -103,10 +103,10 @@ function WhatHappened({ s }: { s: RemesasState }) {
 
 function FlowNode({ title, value, sub, accent }: { title: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className={cn("min-w-0 flex-1 rounded-[12px] border p-3", accent ? "border-product bg-product-soft" : "bg-well")}>
-      <p className="text-muted-foreground text-xs">{title}</p>
+    <div className={cn("min-w-0 flex-1 rounded-[14px] p-3", accent ? "bg-product text-white" : "bg-well")}>
+      <p className={cn("text-[13px]", accent ? "text-white/85" : "text-muted-foreground")}>{title}</p>
       <p className="truncate text-lg font-semibold tabular">{value}</p>
-      {sub && <p className="text-muted-foreground truncate text-xs">{sub}</p>}
+      {sub && <p className={cn("truncate text-[13px]", accent ? "text-white/85" : "text-muted-foreground")}>{sub}</p>}
     </div>
   );
 }
@@ -152,7 +152,7 @@ function SendFlow({ s }: { s: RemesasState }) {
               <a href={st.url} target="_blank" rel="noreferrer" className="hover:bg-well flex items-center gap-2 rounded-md px-1 py-1 text-sm">
                 <span className={cn("size-2 rounded-full", st.receipt ? "bg-success" : "bg-warning")} />
                 <span className="flex-1">{st.label}</span>
-                <span className="text-muted-foreground font-mono text-xs">{st.hash.slice(0, 10)}…</span>
+                <span className="text-muted-foreground font-mono text-[13px]">{st.hash.slice(0, 10)}…</span>
                 <ExternalLink className="text-muted-foreground size-3.5" />
               </a>
             </li>
@@ -206,9 +206,9 @@ function BillTrace({ s }: { s: RemesasState }) {
               <span className={cn("mt-1 size-2.5 shrink-0 rounded-full", done ? "bg-success" : now ? "bg-product animate-pulse" : "bg-input")} />
               <div>
                 <p className={cn("text-[15px]", !done && !now && "text-muted-foreground")}>
-                  {st.label} {now && <span className="text-muted-foreground text-xs">· {STAGE_ES[st.id] ?? ""}</span>}
+                  {st.label} {now && <span className="text-muted-foreground text-[13px]">· {STAGE_ES[st.id] ?? ""}</span>}
                 </p>
-                <p className="text-muted-foreground text-xs">{st.sub}</p>
+                <p className="text-muted-foreground text-[13px]">{st.sub}</p>
               </div>
             </li>
           );
@@ -216,10 +216,10 @@ function BillTrace({ s }: { s: RemesasState }) {
       </ol>
       {r && (
         <Rows className="mt-4">
-          <Row label="Payment (real, on Tempo)" value={<a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-xs hover:underline">{r.receipt.txHash.slice(0, 12)}… <ExternalLink className="size-3" /></a>} />
+          <Row label="Payment (real, on Tempo)" value={<a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[13px] hover:underline">{r.receipt.txHash.slice(0, 12)}… <ExternalLink className="size-3" /></a>} />
           <Row label="Amount" value={`${fmtAmount(BigInt(r.receipt.amount))} xMXN`} />
-          <Row label="Order" sub={r.status} value={<span className="font-mono text-xs">{r.orderId.slice(0, 12)}…</span>} />
-          <Row label="Top-up reference" sub="SIMULATED fulfillment, no real top-up" value={<span className="font-mono text-xs">{r.fulfillment?.reference ?? "—"}</span>} />
+          <Row label="Order" sub={r.status} value={<span className="font-mono text-[13px]">{r.orderId.slice(0, 12)}…</span>} />
+          <Row label="Top-up reference" sub="SIMULATED fulfillment, no real top-up" value={<span className="font-mono text-[13px]">{r.fulfillment?.reference ?? "—"}</span>} />
         </Rows>
       )}
       {bill.error && <p className="text-destructive mt-3 text-sm">{bill.error}</p>}

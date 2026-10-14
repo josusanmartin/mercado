@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div data-product={product.id === "home" ? undefined : product.id} className="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <Sidebar active={product.id} path={path} />
       <div className="flex min-h-dvh min-w-0 flex-col">
-        <header className="bg-background/90 supports-[backdrop-filter]:bg-background/75 sticky top-0 z-30 border-b backdrop-blur">
+        <header className="bg-background/90 supports-[backdrop-filter]:bg-background/75 sticky top-0 z-30 backdrop-blur">
           <div className="mx-auto flex max-w-[84rem] items-center gap-3 px-4 py-3 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden" aria-label="Mercado home">
               <Wordmark />
@@ -42,11 +42,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-center gap-2", className)}>
-      <span className="grid size-7 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-md" aria-hidden>
-        <span className="bg-mint" />
-        <span className="bg-remesas" />
-        <span className="bg-global" />
-        <span className="bg-credito" />
+      <span className="grid size-7 grid-cols-2 grid-rows-2 gap-[3px]" aria-hidden>
+        <span className="bg-mint rounded-[3px]" />
+        <span className="bg-remesas rounded-[3px]" />
+        <span className="bg-global rounded-[3px]" />
+        <span className="bg-credito rounded-[3px]" />
       </span>
       <span className="text-lg font-bold tracking-tight">Mercado</span>
     </span>
@@ -56,7 +56,7 @@ export function Wordmark({ className }: { className?: string }) {
 function Sidebar({ active, path }: { active: string; path: string }) {
   const { theme, toggle } = useTheme();
   return (
-    <aside className="bg-card sticky top-0 hidden h-dvh flex-col border-r px-3 py-5 lg:flex">
+    <aside className="bg-background sticky top-0 hidden h-dvh flex-col border-r px-3 py-6 lg:flex">
       <Link href="/" className="mb-7 px-2" aria-label="Mercado home">
         <Wordmark />
       </Link>
@@ -70,12 +70,13 @@ function Sidebar({ active, path }: { active: string; path: string }) {
               aria-current={on ? "page" : undefined}
               className={cn(
                 "relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[15px] transition-colors duration-150",
-                on ? "bg-well font-semibold" : "text-muted-foreground hover:bg-well/60 hover:text-foreground",
+                on ? "bg-well font-semibold" : "hover:bg-well/70",
               )}
             >
-              <span className="size-2.5 shrink-0 rounded-full" style={{ background: p.color }} aria-hidden />
+              <span className="grid size-7 shrink-0 place-items-center rounded-[8px] text-white" style={{ background: p.color }} aria-hidden>
+                <p.icon className="size-4" strokeWidth={1.75} />
+              </span>
               <span className="flex-1">{p.id === "home" ? "Overview" : p.short}</span>
-              {on && <span className="absolute inset-y-2 left-0 w-[3px] rounded-full" style={{ background: p.color }} aria-hidden />}
             </Link>
           );
         })}
@@ -108,8 +109,8 @@ function MobileTabs({ active }: { active: string }) {
         const on = p.id === active;
         const Icon = p.icon;
         return (
-          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2 text-[11px]", on ? "font-semibold" : "text-muted-foreground")}>
-            <Icon className="size-5" style={on ? { color: p.color } : undefined} aria-hidden />
+          <Link key={p.id} href={p.href} aria-current={on ? "page" : undefined} className={cn("flex flex-col items-center gap-1 py-2 text-[13px]", on ? "font-semibold" : "text-muted-foreground")}>
+            <Icon className="size-5" strokeWidth={1.75} style={on ? { color: p.color } : undefined} aria-hidden />
             {p.id === "home" ? "Inicio" : p.short}
           </Link>
         );

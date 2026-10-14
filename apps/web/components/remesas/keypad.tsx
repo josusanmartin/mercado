@@ -22,7 +22,7 @@ export function Keypad({ value, onChange, disabled }: { value: string; onChange:
           disabled={disabled}
           onClick={() => press(k)}
           aria-label={k === "del" ? "Borrar / Delete" : k}
-          className="grid h-12 place-items-center rounded-[10px] text-xl font-medium tabular hover:bg-[#f1e8da] active:bg-[#e7dccb] disabled:opacity-40"
+          className="grid h-12 place-items-center rounded-[10px] text-xl font-medium tabular hover:bg-[#f4f5f7] active:bg-[#e6e8ec] disabled:opacity-40"
         >
           {k === "del" ? <Delete className="size-5" /> : k}
         </button>

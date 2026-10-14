@@ -1,19 +1,21 @@
 "use client";
-// Mercado home: the ecosystem at a glance. One currency (xMXN) in the middle, four products around it,
-// money visibly flowing between them, and every number read live from chain (no fixtures).
+// Mercado home (Brand v4): one currency, four products. A row of four big solid product tiles, each
+// with one live number (arrow keys + Enter, cyan focus ring), then the money map drawn flat.
+// Every number is read live from chain (josu's wiring rule: no fixtures, no hardcoded numbers).
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Route } from "lucide-react";
 import { PROTOCOL, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { PRODUCTS, ProductHero, type ProductId } from "@/components/console";
+import { PRODUCTS, type ProductId } from "@/components/console";
 import { useTour } from "@/components/tour/demo-tour";
 import { Button } from "@/components/ui/button";
 
 const n0 = (v: bigint | undefined) => (v === undefined ? "—" : fmtAmount(v, 0));
 
-type Live = Record<Exclude<ProductId, "home">, { value: string; caption: string }>;
+type Pid = Exclude<ProductId, "home">;
+type Live = Record<Pid, { value: string; caption: string }>;
 
 function useLive() {
   const b = useThreeBuckets();
@@ -23,12 +25,12 @@ function useLive() {
       ? { value: n0(b.vault.collateralValueXmxn), caption: "xMXN of collateral locked" }
       : { value: n0(b.vault.collateralOusd), caption: "OUSD of collateral locked" },
     remesas: v2
-      ? { value: n0(b.move?.liabilityXmxn), caption: "xMXN issued through the exchange" }
-      : { value: n0(b.desk.xmxn), caption: "xMXN ready to send (swap desk)" },
+      ? { value: n0(b.move?.liabilityXmxn), caption: "xMXN issued by the exchange" }
+      : { value: n0(b.desk.xmxn), caption: "xMXN ready to send" },
     global: v2
-      ? { value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), caption: "exchange backing (coverage)" }
-      : { value: n0(b.desk.ousd), caption: "OUSD held by the swap desk" },
-    credito: { value: n0(b.pool.loansOut), caption: `xMXN lent · ${n0(b.pool.cash)} available` },
+      ? { value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), caption: "exchange backing" }
+      : { value: n0(b.desk.ousd), caption: "OUSD of exchange liquidity" },
+    credito: { value: n0(b.pool.cash), caption: "xMXN available to lend" },
   };
   return { b, live };
 }
@@ -37,87 +39,120 @@ export function EcosystemHome() {
   const { b, live } = useLive();
   const tour = useTour();
   return (
-    <div className="grid gap-8">
-      <ProductHero
-        product="home"
-        title="One currency. Four products."
-        purpose="Mercado is a parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP."
-        kpis={[
-          { label: "xMXN in circulation", value: n0(b.xmxnSupply), sub: "every one backed by a debt position or the exchange reserve" },
-          live.mint.value === "—" ? { label: "Collateral locked", value: "—" } : { label: "Collateral locked", value: live.mint.value, sub: live.mint.caption },
-          { label: "Lent to drivers", value: n0(b.pool.loansOut), sub: `${n0(b.pool.cash)} xMXN available to lend` },
-        ]}
-        demo={undefined}
-      />
+    <div className="grid gap-12 pt-2">
+      <section className="grid gap-3">
+        <h1 className="text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-[3.4rem]">
+          Mercado: one currency, four products.
+        </h1>
+        <p className="text-muted-foreground max-w-2xl text-lg text-pretty">
+          A parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.
+        </p>
+        <dl className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-10">
+          <Kpi label="xMXN in circulation" value={n0(b.xmxnSupply)} sub="each backed by a debt position or the exchange reserve" />
+          <Kpi label="Collateral locked" value={live.mint.value} sub={live.mint.caption} />
+          <Kpi label="Lent to drivers" value={n0(b.pool.loansOut)} sub={`${n0(b.pool.cash)} xMXN available`} />
+        </dl>
+      </section>
 
-      <section aria-labelledby="flow-h" className="bg-card shadow-tile rounded-[14px] border p-5 sm:p-6">
+      <ProductRow live={live} />
+
+      <section aria-labelledby="flow-h" className="grid gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="flow-h" className="text-lg font-semibold">
+            <h2 id="flow-h" className="text-2xl font-semibold tracking-tight">
               How money moves
             </h2>
-            <p className="text-muted-foreground text-sm">Live on Tempo Moderato. Numbers update as transactions land.</p>
+            <p className="text-muted-foreground">Live on Tempo Moderato. Numbers update as transactions land.</p>
           </div>
-          <Button onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
-            <Route />
+          <Button variant="outline" onClick={() => (tour.active ? tour.go(tour.index) : tour.start())} disabled={tour.going}>
+            <Route strokeWidth={1.75} />
             {tour.active ? "Resume the Demo Tour" : "Start the Demo Tour"}
           </Button>
         </div>
         <FlowMap live={live} supply={b.xmxnSupply} />
       </section>
-
-      <section aria-label="Products" className="grid gap-4 sm:grid-cols-2">
-        {PRODUCTS.filter((p) => p.id !== "home").map((p) => {
-          const l = live[p.id as keyof Live];
-          return (
-            <Link
-              key={p.id}
-              href={p.href}
-              data-product={p.id}
-              className="bg-card shadow-tile group relative grid gap-4 overflow-hidden rounded-[14px] border p-5 transition-colors duration-150 hover:border-product sm:p-6"
-            >
-              <span className="bg-product absolute inset-x-0 top-0 h-1" aria-hidden />
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-product flex items-center gap-2 text-sm font-semibold">
-                    <p.icon className="size-4" aria-hidden />
-                    {p.name}
-                  </p>
-                  <p className="mt-1 text-xl font-semibold tracking-tight text-pretty">{p.purpose}</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-product text-4xl font-semibold tracking-tight tabular">{l.value}</p>
-                  <p className="text-muted-foreground text-sm">{l.caption}</p>
-                </div>
-                <span className="text-muted-foreground text-sm">For: {p.audience}</span>
-              </div>
-            </Link>
-          );
-        })}
-      </section>
     </div>
   );
 }
 
-/** Product positions on the 1000×440 diagram, and the flows between them. */
-const NODES: Record<Exclude<ProductId, "home">, { x: number; y: number }> = {
-  mint: { x: 170, y: 105 },
-  remesas: { x: 830, y: 105 },
-  global: { x: 830, y: 335 },
-  credito: { x: 170, y: 335 },
+function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted-foreground text-sm">{label}</dt>
+      <dd className="mt-1 truncate text-[2.2rem] leading-none font-semibold tracking-tight tabular sm:text-[2.6rem]">{value}</dd>
+      {sub && <dd className="text-muted-foreground mt-1 text-[13px]">{sub}</dd>}
+    </div>
+  );
+}
+
+/** The Switch row: four big solid tiles; arrows move, Enter opens. */
+function ProductRow({ live }: { live: Live }) {
+  const products = PRODUCTS.filter((p) => p.id !== "home");
+  const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [sel, setSel] = useState(0);
+  useEffect(() => {
+    refs.current = refs.current.slice(0, products.length);
+  }, [products.length]);
+
+  function onKey(e: KeyboardEvent<HTMLDivElement>) {
+    const cols = window.matchMedia("(min-width: 640px)").matches ? products.length : 2;
+    const d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key as string];
+    if (d === undefined) return;
+    const next = sel + d;
+    if (next < 0 || next >= products.length) return;
+    e.preventDefault();
+    refs.current[next]?.focus();
+  }
+
+  return (
+    <section aria-label="Products">
+      <p className="mb-3 h-7 text-lg font-semibold" style={{ color: products[sel].color }} aria-hidden>
+        {products[sel].name}
+      </p>
+      <div role="toolbar" aria-label="Mercado products" onKeyDown={onKey} className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+        {products.map((p, i) => (
+          <Link
+            key={p.id}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            href={p.href}
+            tabIndex={i === sel ? 0 : -1}
+            onFocus={() => setSel(i)}
+            onMouseEnter={() => setSel(i)}
+            aria-label={`${p.name}: ${live[p.id as Pid].value} ${live[p.id as Pid].caption}`}
+            className={cn(
+              "relative flex aspect-square flex-col justify-between rounded-[20px] p-5 text-white transition-[transform,box-shadow] duration-150 ease-out sm:p-6",
+              "hover:shadow-tile focus-visible:shadow-tile hover:scale-[1.03] focus-visible:scale-[1.03] focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:animate-ring-pulse",
+            )}
+            style={{ background: p.color }}
+          >
+            <p.icon className="size-10 sm:size-12" strokeWidth={1.75} aria-hidden />
+            <span className="grid gap-1">
+              <span className="text-2xl leading-none font-semibold tracking-tight tabular sm:text-[2rem]">{live[p.id as Pid].value}</span>
+              <span className="text-[13px] leading-snug text-white/85">{live[p.id as Pid].caption}</span>
+              <span className="mt-2 text-lg font-semibold">{p.short}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const NODES: Record<Pid, { x: number; y: number }> = {
+  mint: { x: 150, y: 90 },
+  remesas: { x: 850, y: 90 },
+  global: { x: 850, y: 330 },
+  credito: { x: 150, y: 330 },
 };
-const HUB = { x: 500, y: 220 };
-
-const FLOWS: { from: keyof typeof NODES | "hub"; to: keyof typeof NODES | "hub"; label: string; product: keyof typeof NODES }[] = [
-  { from: "mint", to: "hub", label: "collateral in, xMXN minted", product: "mint" },
-  { from: "hub", to: "remesas", label: "dollars in, pesos delivered", product: "remesas" },
-  { from: "hub", to: "global", label: "MXN↔USD for businesses", product: "global" },
-  { from: "hub", to: "credito", label: "advances out, repaid with fees", product: "credito" },
+const HUB = { x: 500, y: 210 };
+const FLOWS: { product: Pid; label: string; outbound: boolean }[] = [
+  { product: "mint", label: "collateral in, xMXN minted", outbound: false },
+  { product: "remesas", label: "dollars in, pesos delivered home", outbound: true },
+  { product: "global", label: "MXN↔USD for businesses", outbound: true },
+  { product: "credito", label: "advances out, repaid with fees", outbound: true },
 ];
-
-const pt = (k: keyof typeof NODES | "hub") => (k === "hub" ? HUB : NODES[k]);
 const curve = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const mx = (a.x + b.x) / 2;
   return `M${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
@@ -135,83 +170,73 @@ function useReducedMotion() {
   return reduced;
 }
 
+/** Flat money map: thin colored lines, small moving dots, live numbers as plain text (no boxes). */
 function FlowMap({ live, supply }: { live: Live; supply: bigint | undefined }) {
   const reduced = useReducedMotion();
   return (
     <>
-      {/* Desktop: the diagram */}
-      <div className="relative mt-4 hidden aspect-[1000/440] w-full md:block">
-        <svg viewBox="0 0 1000 440" className="absolute inset-0 h-full w-full" aria-hidden>
+      <div className="relative hidden aspect-[1000/420] w-full md:block">
+        <svg viewBox="0 0 1000 420" className="absolute inset-0 h-full w-full" aria-hidden>
           {FLOWS.map((f, i) => {
-            const d = curve(pt(f.from), pt(f.to));
+            const a = f.outbound ? HUB : NODES[f.product];
+            const b = f.outbound ? NODES[f.product] : HUB;
+            const d = curve(a, b);
             const color = `var(--c-${f.product})`;
             return (
-              <g key={i}>
-                <path d={d} fill="none" stroke={color} strokeOpacity={0.25} strokeWidth={10} strokeLinecap="round" />
-                <path d={d} fill="none" stroke={color} strokeWidth={2} strokeDasharray="2 10" strokeLinecap="round" />
+              <g key={f.product}>
+                <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" />
                 {!reduced &&
                   [0, 1, 2].map((k) => (
-                    <circle key={k} r={5} fill={color}>
+                    <circle key={k} r={4} fill={color}>
                       <animateMotion dur="3.6s" begin={`-${k * 1.2 + i * 0.3}s`} repeatCount="indefinite" path={d} />
                     </circle>
                   ))}
+                <circle cx={NODES[f.product].x} cy={NODES[f.product].y} r={7} fill={color} />
               </g>
             );
           })}
-          <circle cx={HUB.x} cy={HUB.y} r={92} fill="var(--well)" stroke="var(--line)" />
+          <circle cx={HUB.x} cy={HUB.y} r={10} fill="var(--ink)" />
         </svg>
-        <div className="absolute grid -translate-x-1/2 -translate-y-1/2 place-items-center text-center" style={{ left: "50%", top: `${(HUB.y / 440) * 100}%` }}>
-          <p className="text-2xl font-bold tracking-tight">xMXN</p>
-          <p className="text-lg font-semibold tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</p>
-          <p className="text-muted-foreground text-xs">in circulation</p>
+        <div className="absolute grid -translate-x-1/2 text-center" style={{ left: "50%", top: `${((HUB.y + 20) / 420) * 100}%` }}>
+          <p className="text-xl font-semibold">xMXN</p>
+          <p className="text-[2rem] leading-none font-semibold tracking-tight tabular">{supply === undefined ? "—" : fmtAmount(supply, 0)}</p>
+          <p className="text-muted-foreground text-[13px]">in circulation</p>
         </div>
-        {(Object.keys(NODES) as (keyof typeof NODES)[]).map((id) => {
-          const p = PRODUCTS.find((x) => x.id === id)!;
-          const n = NODES[id];
+        {FLOWS.map((f) => {
+          const p = PRODUCTS.find((x) => x.id === f.product)!;
+          const n = NODES[f.product];
+          const right = n.x > 500;
           return (
             <Link
-              key={id}
+              key={f.product}
               href={p.href}
-              data-product={id}
-              className="bg-card hover:border-product absolute w-[22%] -translate-x-1/2 -translate-y-1/2 rounded-[12px] border p-3 shadow-tile transition-colors duration-150"
-              style={{ left: `${(n.x / 1000) * 100}%`, top: `${(n.y / 440) * 100}%` }}
+              className={cn("absolute grid w-[24%] rounded-[8px] focus-visible:outline-offset-4", right ? "text-right" : "text-left")}
+              style={{ left: right ? undefined : `${((n.x - 10) / 1000) * 100}%`, right: right ? `${((1000 - n.x - 10) / 1000) * 100}%` : undefined, top: `${((n.y + 16) / 420) * 100}%` }}
             >
-              <p className="text-product flex items-center gap-1.5 text-sm font-semibold">
-                <p.icon className="size-4" aria-hidden />
+              <span className="text-base font-semibold" style={{ color: p.color }}>
                 {p.short}
-              </p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight tabular">{live[id].value}</p>
-              <p className="text-muted-foreground text-xs leading-snug">{live[id].caption}</p>
+              </span>
+              <span className="text-2xl font-semibold tracking-tight tabular">{live[f.product].value}</span>
+              <span className="text-muted-foreground text-[13px] leading-snug">{live[f.product].caption}</span>
+              <span className="text-muted-foreground text-[13px] leading-snug">· {f.label}</span>
             </Link>
           );
         })}
-        {FLOWS.map((f, i) => {
-          const a = pt(f.from);
-          const b = pt(f.to);
-          return (
-            <p
-              key={i}
-              className="text-muted-foreground bg-card/80 absolute -translate-x-1/2 -translate-y-1/2 rounded px-1.5 text-[11px] whitespace-nowrap"
-              style={{ left: `${((a.x + b.x) / 2 / 1000) * 100}%`, top: `${(((a.y + b.y) / 2 + (b.y > a.y ? 18 : -18)) / 440) * 100}%` }}
-            >
-              {f.label}
-            </p>
-          );
-        })}
       </div>
-      {/* Phones: the same flows as a list */}
-      <ol className="mt-4 grid gap-2 md:hidden">
+      <ol className="grid divide-y md:hidden">
         {FLOWS.map((f) => {
           const p = PRODUCTS.find((x) => x.id === f.product)!;
           return (
-            <li key={f.product} data-product={f.product} className="bg-well flex items-center justify-between gap-3 rounded-[10px] p-3">
+            <li key={f.product} className="flex items-center justify-between gap-3 py-3">
               <div>
-                <p className="text-product text-sm font-semibold">{p.short}</p>
-                <p className="text-muted-foreground text-xs">{f.label}</p>
+                <p className="font-semibold" style={{ color: p.color }}>
+                  {p.short}
+                </p>
+                <p className="text-muted-foreground text-[13px]">{f.label}</p>
               </div>
               <div className="text-right">
-                <p className={cn("font-semibold tabular")}>{live[f.product].value}</p>
-                <p className="text-muted-foreground text-[11px]">{live[f.product].caption}</p>
+                <p className="text-lg font-semibold tabular">{live[f.product].value}</p>
+                <p className="text-muted-foreground text-[13px]">{live[f.product].caption}</p>
               </div>
             </li>
           );

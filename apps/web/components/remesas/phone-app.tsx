@@ -17,12 +17,12 @@ import { Keypad } from "./keypad";
 
 export type Screen = "inicio" | "enviar" | "enviado" | "aire" | "servicios";
 
-const ACCENT = "#f08c00";
+const ACCENT = "#ff8a1f";
 
 export function PhoneApp({ s }: { s: RemesasState }) {
   const { screen } = s;
   return (
-    <div className="flex min-h-full flex-col bg-[#fffdf8] text-[#15110e]">
+    <div className="flex min-h-full flex-col bg-[#ffffff] text-[#111418]">
       {screen === "inicio" && <Inicio s={s} />}
       {screen === "enviar" && <Enviar s={s} />}
       {screen === "enviado" && <Enviado s={s} />}
@@ -35,13 +35,13 @@ function Header({ title, sub, onBack }: { title: string; sub: string; onBack?: (
   return (
     <div className="flex items-center gap-2 px-4 pt-2 pb-3">
       {onBack && (
-        <button type="button" onClick={onBack} aria-label="Atrás / Back" className="grid size-9 place-items-center rounded-full hover:bg-[#f1e8da]">
+        <button type="button" onClick={onBack} aria-label="Atrás / Back" className="grid size-9 place-items-center rounded-full hover:bg-[#f4f5f7]">
           <ArrowLeft className="size-5" />
         </button>
       )}
       <div>
         <p className="text-[17px] leading-tight font-semibold">{title}</p>
-        <p className="text-xs text-[#6b5e51]">{sub}</p>
+        <p className="text-xs text-[#5b6270]">{sub}</p>
       </div>
     </div>
   );
@@ -56,10 +56,10 @@ function Inicio({ s }: { s: RemesasState }) {
   return (
     <div className="grid gap-4 px-4 pb-6">
       <div className="pt-3">
-        <p className="text-xs text-[#6b5e51]">Hola · Hello</p>
+        <p className="text-xs text-[#5b6270]">Hola · Hello</p>
         <p className="text-xl font-semibold">Envía a casa en segundos</p>
       </div>
-      <div className="rounded-[16px] p-4 text-[#15110e]" style={{ background: ACCENT }}>
+      <div className="rounded-[20px] p-4 text-white" style={{ background: ACCENT }}>
         <p className="text-xs font-medium opacity-80">Tu saldo · Your balance</p>
         <p className="mt-1 text-4xl font-semibold tracking-tight tabular">{bal.ousd === undefined ? "—" : `$${fmtAmount(bal.ousd)}`}</p>
         <p className="text-xs opacity-80">testnet OUSD, no real value</p>
@@ -68,7 +68,7 @@ function Inicio({ s }: { s: RemesasState }) {
       <button
         type="button"
         onClick={() => s.setScreen("enviar")}
-        className="flex items-center justify-between rounded-[14px] bg-[#15110e] px-4 py-4 text-left text-[#fffdf8]"
+        className="flex items-center justify-between rounded-[14px] bg-[#111418] px-4 py-4 text-left text-[#ffffff]"
       >
         <span>
           <span className="block text-[17px] font-semibold">Enviar a México</span>
@@ -82,18 +82,18 @@ function Inicio({ s }: { s: RemesasState }) {
       </div>
       <div>
         <p className="mb-1 text-sm font-semibold">
-          Movimientos <span className="font-normal text-[#6b5e51]">· Activity</span>
+          Movimientos <span className="font-normal text-[#5b6270]">· Activity</span>
         </p>
         {activity.length === 0 ? (
-          <p className="text-sm text-[#6b5e51]">Aún no hay movimientos desde este navegador · No activity yet</p>
+          <p className="text-sm text-[#5b6270]">Aún no hay movimientos desde este navegador · No activity yet</p>
         ) : (
-          <ul className="divide-y divide-[#e7dccb]">
+          <ul className="divide-y divide-[#e6e8ec]">
             {activity.map((a) => (
               <li key={a.hash}>
                 <a href={a.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 text-sm">
-                  <span className="size-1.5 rounded-full bg-[#1f9d55]" />
+                  <span className="size-1.5 rounded-full bg-[#079455]" />
                   <span className="flex-1 truncate">{a.label}</span>
-                  <span className="text-xs text-[#6b5e51] tabular">{now ? timeAgo(a.at / 1000, now) : ""}</span>
+                  <span className="text-xs text-[#5b6270] tabular">{now ? timeAgo(a.at / 1000, now) : ""}</span>
                 </a>
               </li>
             ))}
@@ -106,13 +106,13 @@ function Inicio({ s }: { s: RemesasState }) {
 
 function Tile({ icon, title, sub, onClick }: { icon: React.ReactNode; title: string; sub: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="grid gap-2 rounded-[14px] border border-[#e7dccb] bg-white p-3 text-left hover:border-[#f08c00]">
-      <span className="grid size-9 place-items-center rounded-full" style={{ background: `${ACCENT}22`, color: "#b36500" }}>
+    <button type="button" onClick={onClick} className="grid gap-2 rounded-[14px] border border-[#e6e8ec] bg-white p-3 text-left hover:border-[#ff8a1f]">
+      <span className="grid size-9 place-items-center rounded-[10px] text-white" style={{ background: ACCENT }}>
         {icon}
       </span>
       <span>
         <span className="block text-sm leading-tight font-semibold">{title}</span>
-        <span className="block text-xs text-[#6b5e51]">{sub}</span>
+        <span className="block text-xs text-[#5b6270]">{sub}</span>
       </span>
     </button>
   );
@@ -135,33 +135,33 @@ function Enviar({ s }: { s: RemesasState }) {
       <Header title="Enviar a México" sub="Send money home" onBack={busy ? undefined : () => s.setScreen("inicio")} />
       <div className="grid gap-3 px-4">
         <div className="text-center">
-          <p className="text-xs text-[#6b5e51]">Envías · You send</p>
+          <p className="text-xs text-[#5b6270]">Envías · You send</p>
           <p className="text-[2.6rem] leading-none font-semibold tracking-tight tabular">${amount || "0"}</p>
-          <p className="text-xs text-[#6b5e51]">USD (testnet OUSD) · saldo {bal.ousd === undefined ? "—" : `$${fmtAmount(bal.ousd)}`}</p>
+          <p className="text-xs text-[#5b6270]">USD (testnet OUSD) · saldo {bal.ousd === undefined ? "—" : `$${fmtAmount(bal.ousd)}`}</p>
         </div>
-        <div className="rounded-[12px] bg-[#f1e8da] px-3 py-2.5 text-center">
-          <p className="text-xs text-[#6b5e51]">{mama.name === "Familia (MX)" ? "Mamá" : mama.name} recibe · receives about</p>
-          <p className="text-2xl font-semibold tabular" style={{ color: "#b36500" }}>
+        <div className="rounded-[12px] bg-[#f4f5f7] px-3 py-2.5 text-center">
+          <p className="text-xs text-[#5b6270]">{mama.name === "Familia (MX)" ? "Mamá" : mama.name} recibe · receives about</p>
+          <p className="text-2xl font-semibold tabular" style={{ color: "#111418" }}>
             {q.amountOut !== undefined && amt > 0n ? `${fmtAmount(q.amountOut)} MXN` : q.loading && amt > 0n ? "…" : "0.00 MXN"}
           </p>
-          <p className="text-[11px] text-[#6b5e51]">
+          <p className="text-[13px] text-[#5b6270]">
             {rate !== undefined ? `1 USD = ${fmtNumber(rate, 4)} MXN · ${q.venue}` : "Cotización en vivo · live quote"}
           </p>
-          {q.error && amt > 0n && <p className="mt-1 text-xs text-[#c4352b]">{q.error}</p>}
-          {overBalance && <p className="mt-1 text-xs text-[#c4352b]">Saldo insuficiente · not enough balance</p>}
+          {q.error && amt > 0n && <p className="mt-1 text-xs text-[#d92d20]">{q.error}</p>}
+          {overBalance && <p className="mt-1 text-xs text-[#d92d20]">Saldo insuficiente · not enough balance</p>}
         </div>
-        <div className="flex items-center gap-3 rounded-[12px] border border-[#e7dccb] bg-white p-3">
-          <span className="grid size-9 place-items-center rounded-full bg-[#15110e] text-sm font-semibold text-[#fffdf8]">M</span>
+        <div className="flex items-center gap-3 rounded-[12px] border border-[#e6e8ec] bg-white p-3">
+          <span className="grid size-9 place-items-center rounded-full bg-[#111418] text-sm font-semibold text-[#ffffff]">M</span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold">Mamá · Guadalajara</p>
-            <p className="truncate font-mono text-[11px] text-[#6b5e51]">{mama.name}, demo wallet · {shortAddr(mama.address)}</p>
+            <p className="truncate font-mono text-[13px] text-[#5b6270]">{mama.name}, demo wallet · {shortAddr(mama.address)}</p>
           </div>
-          <ChevronRight className="size-4 text-[#6b5e51]" aria-hidden />
+          <ChevronRight className="size-4 text-[#5b6270]" aria-hidden />
         </div>
         <label className="grid gap-1">
-          <span className="flex justify-between text-xs text-[#6b5e51]">
+          <span className="flex justify-between text-xs text-[#5b6270]">
             <span>Nota · Note (on-chain, public)</span>
-            <span className={cn("tabular", memoTooLong && "text-[#c4352b]")}>
+            <span className={cn("tabular", memoTooLong && "text-[#d92d20]")}>
               {memoByteLength(memo)}/{MEMO_MAX_BYTES}
             </span>
           </span>
@@ -170,7 +170,7 @@ function Enviar({ s }: { s: RemesasState }) {
             onChange={(e) => s.setMemo(e.target.value)}
             disabled={busy}
             placeholder="para mamá"
-            className="h-10 rounded-[10px] border border-[#e7dccb] bg-white px-3 text-sm"
+            className="h-10 rounded-[10px] border border-[#e6e8ec] bg-white px-3 text-sm"
           />
         </label>
       </div>
@@ -181,7 +181,7 @@ function Enviar({ s }: { s: RemesasState }) {
           disabled={!can}
           onClick={() => s.doSend()}
           className="mt-2 mb-2 flex h-12 w-full items-center justify-center gap-2 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-          style={{ background: ACCENT, color: "#15110e" }}
+          style={{ background: ACCENT, color: "#ffffff" }}
         >
           {busy ? (
             <>
@@ -191,7 +191,7 @@ function Enviar({ s }: { s: RemesasState }) {
             <>Enviar ${amount || "0"} · Send</>
           )}
         </button>
-        {send.tx.status === "error" && send.tx.error && <p className="mb-2 px-1 text-xs text-[#c4352b]">{send.tx.error}</p>}
+        {send.tx.status === "error" && send.tx.error && <p className="mb-2 px-1 text-xs text-[#d92d20]">{send.tx.error}</p>}
       </div>
     </div>
   );
@@ -201,21 +201,21 @@ function Enviado({ s }: { s: RemesasState }) {
   const r = s.send.receipt;
   return (
     <div className="flex min-h-full flex-col items-center px-5 pt-10 pb-6 text-center">
-      <span className="grid size-16 place-items-center rounded-full" style={{ background: ACCENT }}>
+      <span className="grid size-16 place-items-center rounded-full text-white" style={{ background: ACCENT }}>
         <Check className="size-8" />
       </span>
       <p className="mt-4 text-xl font-semibold">¡Enviado! · Sent</p>
       {r && (
         <>
-          <p className="mt-2 text-[2.2rem] leading-none font-semibold tabular" style={{ color: "#b36500" }}>
+          <p className="mt-2 text-[2.2rem] leading-none font-semibold tabular" style={{ color: "#111418" }}>
             {fmtAmount(r.delivered)} MXN
           </p>
-          <p className="mt-1 text-sm text-[#6b5e51]">llegaron a Mamá · arrived in Mamá&apos;s wallet</p>
-          {r.memo && <p className="mt-3 rounded-full bg-[#f1e8da] px-3 py-1 text-sm">&ldquo;{r.memo}&rdquo;</p>}
+          <p className="mt-1 text-sm text-[#5b6270]">llegaron a Mamá · arrived in Mamá&apos;s wallet</p>
+          {r.memo && <p className="mt-3 rounded-full bg-[#f4f5f7] px-3 py-1 text-sm">&ldquo;{r.memo}&rdquo;</p>}
           <a href={r.steps.at(-1)?.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1 text-sm font-medium underline-offset-4 hover:underline">
             Ver en el explorador · View on explorer <ExternalLink className="size-3.5" />
           </a>
-          <p className="mt-4 text-xs text-[#6b5e51]">Entrega on-chain. Sin retiro a banco (SPEI) en este prototipo · On-chain delivery only.</p>
+          <p className="mt-4 text-xs text-[#5b6270]">Entrega on-chain. Sin retiro a banco (SPEI) en este prototipo · On-chain delivery only.</p>
         </>
       )}
       <button
@@ -225,7 +225,7 @@ function Enviado({ s }: { s: RemesasState }) {
           s.setAmount("");
           s.setScreen("inicio");
         }}
-        className="mt-auto h-12 w-full rounded-[12px] bg-[#15110e] text-[16px] font-semibold text-[#fffdf8]"
+        className="mt-auto h-12 w-full rounded-[12px] bg-[#111418] text-[16px] font-semibold text-[#ffffff]"
       >
         Listo · Done
       </button>
@@ -263,7 +263,7 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
         onBack={inFlight ? undefined : () => (bill.reset(), s.setScreen("inicio"))}
       />
       <div className="grid gap-3 px-4 pb-4">
-        <p className="rounded-[10px] border border-[#c77700]/40 bg-[#c77700]/10 px-3 py-2 text-xs text-[#8a5300]">
+        <p className="rounded-[10px] border border-transparent bg-[#f4f5f7] px-3 py-2 text-xs text-[#5b6270]">
           SIMULADO · SIMULATED: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega · the payment is real, the{" "}
           {airtime ? "top-up" : "bill payment"} is not delivered.
         </p>
@@ -272,9 +272,9 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
         ) : (
           <>
             <label className="grid gap-1">
-              <span className="text-xs text-[#6b5e51]">{airtime ? "Número Telcel · phone (10 dígitos)" : "Número de servicio CFE · service number (12 dígitos)"}</span>
-              <div className="flex items-center gap-2 rounded-[10px] border border-[#e7dccb] bg-white px-3">
-                {airtime ? <Phone className="size-4 text-[#6b5e51]" /> : <Lightbulb className="size-4 text-[#6b5e51]" />}
+              <span className="text-xs text-[#5b6270]">{airtime ? "Número Telcel · phone (10 dígitos)" : "Número de servicio CFE · service number (12 dígitos)"}</span>
+              <div className="flex items-center gap-2 rounded-[10px] border border-[#e6e8ec] bg-white px-3">
+                {airtime ? <Phone className="size-4 text-[#5b6270]" /> : <Lightbulb className="size-4 text-[#5b6270]" />}
                 <input
                   inputMode="numeric"
                   value={airtime ? phone : service}
@@ -286,7 +286,7 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
               </div>
             </label>
             <div>
-              <p className="mb-1 text-xs text-[#6b5e51]">Monto · amount (MXN)</p>
+              <p className="mb-1 text-xs text-[#5b6270]">Monto · amount (MXN)</p>
               <div className="grid grid-cols-3 gap-2">
                 {amounts.map((a) => (
                   <button
@@ -294,7 +294,7 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
                     type="button"
                     disabled={inFlight}
                     onClick={() => change(() => setMxn(a))}
-                    className={cn("h-11 rounded-[10px] border text-[15px] font-semibold tabular", mxn === a ? "border-[#15110e] bg-[#15110e] text-[#fffdf8]" : "border-[#e7dccb] bg-white")}
+                    className={cn("h-11 rounded-[10px] border text-[15px] font-semibold tabular", mxn === a ? "border-[#111418] bg-[#111418] text-[#ffffff]" : "border-[#e6e8ec] bg-white")}
                   >
                     ${a}
                   </button>
@@ -302,18 +302,18 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
               </div>
             </div>
             {bill.quote ? (
-              <div className="rounded-[12px] bg-[#f1e8da] p-3 text-sm">
-                <p className="text-xs text-[#6b5e51]">{bill.quote.description}</p>
+              <div className="rounded-[12px] bg-[#f4f5f7] p-3 text-sm">
+                <p className="text-xs text-[#5b6270]">{bill.quote.description}</p>
                 <p className="mt-1 text-xl font-semibold tabular">{fmtAmount(BigInt(bill.quote.amount))} xMXN</p>
-                <p className="text-xs text-[#6b5e51]">Tu saldo · balance: {bal.xmxn === undefined ? "—" : fmtAmount(bal.xmxn)} xMXN</p>
+                <p className="text-xs text-[#5b6270]">Tu saldo · balance: {bal.xmxn === undefined ? "—" : fmtAmount(bal.xmxn)} xMXN</p>
                 {short && (
                   <div className="mt-2 grid gap-1.5">
-                    <p className="text-xs text-[#8a5300]">Necesitas pesos para pagar · You need xMXN to pay this bill.</p>
+                    <p className="text-xs text-[#5b6270]">Necesitas pesos para pagar · You need xMXN to pay this bill.</p>
                     <button
                       type="button"
                       disabled={s.send.tx.isBusy || !address}
                       onClick={() => address && quoteAmount !== undefined && s.send.convert(quoteAmount - (bal.xmxn ?? 0n), address).catch(() => undefined)}
-                      className="flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[#15110e] text-sm font-semibold text-[#fffdf8] disabled:opacity-40"
+                      className="flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[#111418] text-sm font-semibold text-[#ffffff] disabled:opacity-40"
                     >
                       {s.send.tx.isBusy ? (
                         <>
@@ -323,19 +323,19 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
                         "Convertir dólares a pesos · Convert"
                       )}
                     </button>
-                    {s.send.tx.status === "error" && s.send.tx.error && <p className="text-xs text-[#c4352b]">{s.send.tx.error}</p>}
+                    {s.send.tx.status === "error" && s.send.tx.error && <p className="text-xs text-[#d92d20]">{s.send.tx.error}</p>}
                   </div>
                 )}
               </div>
             ) : null}
-            {bill.error && <p className="text-xs text-[#c4352b]">{bill.error}</p>}
+            {bill.error && <p className="text-xs text-[#d92d20]">{bill.error}</p>}
             {!bill.quote ? (
               <button
                 type="button"
                 disabled={!valid || inFlight}
                 onClick={() => bill.requestQuote(airtime ? { provider: "telcel", phone, amountMxn: mxn } : { provider: "cfe", serviceNumber: service, amountMxn: mxn })}
                 className="h-12 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-                style={{ background: ACCENT, color: "#15110e" }}
+                style={{ background: ACCENT, color: "#ffffff" }}
               >
                 {bill.stage === "quoting" ? "Cotizando… · Quoting" : "Cotizar · Get quote"}
               </button>
@@ -345,7 +345,7 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
                 disabled={!bill.canPay || inFlight || short}
                 onClick={() => bill.pay()}
                 className="flex h-12 items-center justify-center gap-2 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-                style={{ background: ACCENT, color: "#15110e" }}
+                style={{ background: ACCENT, color: "#ffffff" }}
               >
                 {inFlight ? (
                   <>
@@ -374,26 +374,26 @@ function PaidReceipt({ s }: { s: RemesasState }) {
   const r = s.bill.result!;
   return (
     <div className="grid gap-3 text-center">
-      <span className="mx-auto mt-2 grid size-14 place-items-center rounded-full" style={{ background: ACCENT }}>
+      <span className="mx-auto mt-2 grid size-14 place-items-center rounded-full text-white" style={{ background: ACCENT }}>
         <Check className="size-7" />
       </span>
       <p className="text-lg font-semibold">Pagado · Paid</p>
-      <div className="grid gap-2 rounded-[12px] border border-[#e7dccb] bg-white p-3 text-left text-sm">
+      <div className="grid gap-2 rounded-[12px] border border-[#e6e8ec] bg-white p-3 text-left text-sm">
         <div className="flex justify-between gap-2">
           <span>Pago · Payment</span>
           <span className="font-semibold tabular">{fmtAmount(BigInt(r.receipt.amount))} xMXN</span>
         </div>
-        <a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 text-xs text-[#6b5e51] hover:underline">
+        <a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 text-xs text-[#5b6270] hover:underline">
           <span>Real, on Tempo</span>
           <span className="inline-flex items-center gap-1 font-mono">
             {r.receipt.txHash.slice(0, 10)}… <ExternalLink className="size-3" />
           </span>
         </a>
-        <div className="flex justify-between gap-2 border-t border-[#e7dccb] pt-2">
+        <div className="flex justify-between gap-2 border-t border-[#e6e8ec] pt-2">
           <span>{r.fulfillment?.providerName ?? "Proveedor"}</span>
-          <span className="rounded bg-[#c77700]/15 px-1.5 text-xs font-semibold text-[#8a5300]">SIMULATED</span>
+          <span className="rounded bg-[#f4f5f7] px-1.5 text-xs font-semibold text-[#5b6270]">SIMULATED</span>
         </div>
-        {r.fulfillment && <p className="font-mono text-xs text-[#6b5e51]">Ref. {r.fulfillment.reference}</p>}
+        {r.fulfillment && <p className="font-mono text-xs text-[#5b6270]">Ref. {r.fulfillment.reference}</p>}
       </div>
       <button
         type="button"
@@ -401,7 +401,7 @@ function PaidReceipt({ s }: { s: RemesasState }) {
           s.bill.reset();
           s.setScreen("inicio");
         }}
-        className="h-12 rounded-[12px] bg-[#15110e] text-[16px] font-semibold text-[#fffdf8]"
+        className="h-12 rounded-[12px] bg-[#111418] text-[16px] font-semibold text-[#ffffff]"
       >
         Listo · Done
       </button>
