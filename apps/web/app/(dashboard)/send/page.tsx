@@ -1,14 +1,6 @@
-import { ClientOnly } from "@/components/console";
-import type { Metadata } from "next";
-import { SendScreen } from "@/components/transfer/send-screen";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Send money" };
-
+// Send money moved into Mercado Remesas (crew/DESIGN-ECOSYSTEM.md).
 export default function SendPage() {
-  // Wallet state is restored before hydration, so the screen renders on the client only (no mismatch).
-  return (
-    <ClientOnly>
-      <SendScreen />
-    </ClientOnly>
-  );
+  redirect("/remesas?screen=enviar");
 }
