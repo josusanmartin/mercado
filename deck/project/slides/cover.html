@@ -7,7 +7,7 @@ for(var i=0;i<N;i++)cols.push({y:Math.random()*1080,v:.12+Math.random()*.25,s:rn
 x.font='24px "SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace';x.textBaseline='top';
 var glow=null,last=0;
 function f(t){x.fillStyle='#0D0D0D';x.fillRect(0,0,1920,1080);
-cols.forEach(function(k,i){k.y-=k.v;if(k.y<-1100){k.y=1080;k.s=rnd(40)}
+cols.forEach(function(k,i){k.y-=k.v;if(k.y<-1300){k.y=1080;k.s=rnd(40)}
 for(var j=0;j<k.s.length;j++){var yy=k.y+j*32;if(yy<-30||yy>1090)continue;
 var g=glow&&glow.i===i&&glow.j===j;x.fillStyle=g?'rgba(255,181,71,'+glow.a+')':'rgba(242,240,234,'+k.a+')';x.fillText(k.s[j],i*CW+8,yy)}});
 if(!glow&&t-last>1800){glow={i:Math.floor(N*.55+Math.random()*N*.45),j:Math.floor(Math.random()*40),a:0,d:1};last=t}
