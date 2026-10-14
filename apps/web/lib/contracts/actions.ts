@@ -4,13 +4,13 @@
 //   await m.deposit(toUnits("100"));          // Approve OUSD (if needed) → Deposit
 //   m.tx.status / m.tx.stepLabel / m.tx.error / m.tx.steps[i].url
 import { useCallback } from "react";
-import { isAddress, parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
+import { hexToString, isAddress, parseEventLogs, stringToHex, type Abi, type Address, type Hex } from "viem";
 import { useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 import { ADDR, CHAIN_ID } from "./addresses";
 import { creditPoolAbi, swapDeskAbi, tokenAbi, vaultAbi } from "./abis";
 import { readableError } from "./errors";
-import { useTx, type TxApi } from "./tx";
+import { useTx, type TxApi, type TxStep } from "./tx";
 
 /** Fields from POST /api/driver/score → attestation (strings as the API returns them). */
 export type Attestation = {
@@ -39,6 +39,25 @@ function checkRecipient(to: string): asserts to is Address {
 
 /** Apply slippage (bps) to a quoted output to get minOut. */
 export const withSlippage = (amountOut: bigint, slippageBps = 50n) => (amountOut * (10_000n - slippageBps)) / 10_000n;
+
+/** Amount of `token` delivered to `to` in a confirmed tx, from its Transfer / TransferWithMemo logs (receipt-derived,
+ *  so it never changes with later balances). Returns the memo too when present. */
+export function deliveredFromReceipt(step: TxStep | undefined, token: Address, to: Address) {
+  const logs = (step?.receipt?.logs ?? []).filter((l) => l.address.toLowerCase() === token.toLowerCase());
+  const events = parseEventLogs({ abi: tokenAbi, logs, eventName: ["Transfer", "TransferWithMemo"] });
+  let amount = 0n;
+  let memo: Hex | undefined;
+  for (const e of events) {
+    if (e.args.to?.toLowerCase() !== to.toLowerCase()) continue;
+    if (e.eventName === "TransferWithMemo") memo = e.args.memo;
+    else amount += e.args.amount;
+  }
+  // some TIP-20 paths emit only TransferWithMemo; fall back to its amount
+  if (amount === 0n)
+    for (const e of events)
+      if (e.eventName === "TransferWithMemo" && e.args.to?.toLowerCase() === to.toLowerCase()) amount += e.args.amount;
+  return { amount, memo, memoText: memo ? hexToString(memo, { size: 32 }).replace(/\0+$/, "") : undefined };
+}
 
 export function useMercado() {
   const config = useConfig();
