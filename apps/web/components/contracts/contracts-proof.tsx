@@ -2,7 +2,7 @@
 // "Every contract, live and verified": each Mercado contract grouped by product, with its address, a LIVE Sourcify
 // verification check, an explorer link, a one-line purpose, admin powers in plain words, and live key state read
 // on-chain right now. v1 is listed as legacy (still deployed). Nothing here is hardcoded state.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useReadContracts } from "wagmi";
 import { ExternalLink, History, Layers, Loader2, XCircle } from "lucide-react";
@@ -273,11 +273,25 @@ function ContractRow({ it }: { it: Item }) {
  */
 function Architecture({ locked, supply, cdpDebt, coverageBps, rate }: { locked?: boolean; supply?: bigint; cdpDebt?: bigint; coverageBps?: bigint; rate?: number }) {
   const reduced = useReducedMotion();
+  // V6 #2 motion budget: the "how xMXN is minted" pass plays ONCE on arrival (~1.2s), then rests; hovering or
+  // focusing an issuer node replays it. No perpetual loop.
+  const [run, setRun] = useState(1);
+  const [playing, setPlaying] = useState(true);
+  useEffect(() => {
+    if (!playing) return;
+    const t = setTimeout(() => setPlaying(false), 1_400);
+    return () => clearTimeout(t);
+  }, [playing, run]);
+  const replay = () => {
+    if (playing) return;
+    setRun((r) => r + 1);
+    setPlaying(true);
+  };
   const n = (v?: bigint) => (v === undefined ? "…" : fmtAmount(v, 0));
   const cov = coverageBps === undefined ? "…" : coverageBps > 10_000_000n ? "∞" : fmtBps(coverageBps, 0);
   const label = `Contract architecture. The factory granted the issuer role to the vault and the exchange${locked ? " and locked it" : ""}. Both mint xMXN (${n(supply)} in circulation). Card, Crédito and Invest use xMXN. Admin inputs: the owner key sets risk parameters and can pause; the FX oracle relays USD/MXN.`;
-  const node = (x: number, y: number, w: number, href: string, title: string, sub: string, kind: "main" | "plain" | "admin" = "plain") => (
-    <a href={href} className="group/n">
+  const node = (x: number, y: number, w: number, href: string, title: string, sub: string, kind: "main" | "plain" | "admin" = "plain", issuer = false) => (
+    <a href={href} className="group/n" onMouseEnter={issuer ? replay : undefined} onFocus={issuer ? replay : undefined}>
       <rect
         x={x}
         y={y}
@@ -335,7 +349,7 @@ function Architecture({ locked, supply, cdpDebt, coverageBps, rate }: { locked?:
         {MINTS.map((d) => (
           <g key={d}>{edge(d)}</g>
         ))}
-        {tag(572, 169, "mints")}
+        {tag(572, 169, playing && !reduced ? "how xMXN is minted" : "mints")}
         {/* uses */}
         {edge("M810 165 C855 165 855 68 898 68")}
         {edge("M810 165 L898 165")}
@@ -349,18 +363,18 @@ function Architecture({ locked, supply, cdpDebt, coverageBps, rate }: { locked?:
         {node(20, 16, 190, "#c-mint", "Owner key", "risk params · can pause", "admin")}
         {node(20, 137, 190, "#c-mint", "Factory", locked ? "issuer roles locked ✓" : "issuer roles …", "main")}
         {node(20, 258, 190, "#c-oracle-and-sponsorship", "FX oracle", rate === undefined ? "admin-relayed" : `admin-relayed · ${rate.toFixed(2)}`, "admin")}
-        {node(330, 70, 200, "#c-mint", "Vault · Mint", `CDP debt ${n(cdpDebt)}`)}
-        {node(330, 204, 200, "#c-remesas-global", "Exchange", `coverage ${cov}`)}
+        {node(330, 70, 200, "#c-mint", "Vault · Mint", `CDP debt ${n(cdpDebt)}`, "plain", true)}
+        {node(330, 204, 200, "#c-remesas-global", "Exchange", `coverage ${cov}`, "plain", true)}
         {node(640, 137, 170, "#c-mint", "xMXN", `${n(supply)} in circulation`, "main")}
         {node(900, 40, 180, "#c-card", "Card", "spend")}
         {node(900, 137, 180, "#c-cr-dito", "Crédito", "borrow")}
         {node(900, 234, 180, "#c-invest", "Invest", "save")}
-        {/* a mint travelling along each issuer edge (intentional loop; none under reduced motion) */}
-        {!reduced && (
-          <g data-loop>
-            {MINTS.map((d, i) => (
+        {/* one mint travelling each issuer edge into xMXN (once; none under reduced motion) */}
+        {!reduced && playing && (
+          <g key={run}>
+            {MINTS.map((d) => (
               <circle key={d} r={4} className="fill-[var(--accent)]">
-                <animateMotion dur="2.6s" begin={`${i * 1.3}s`} repeatCount="indefinite" path={d} />
+                <animateMotion dur="1.2s" repeatCount="1" fill="freeze" path={d} />
               </circle>
             ))}
           </g>
