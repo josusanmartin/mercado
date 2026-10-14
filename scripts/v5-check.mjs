@@ -2,7 +2,7 @@
 // v5 UI pass gate (lead 04:44): after each web/mobile push, READ-ONLY. For every route at 1440x900 in dark + light,
 // with normal and reduced motion, plus a 390x844 phone-width pass (dark): HTTP 200, zero console errors, no horizontal overflow, the phone ending ≤868px
 // (lead 04:53) or the page's primary action inside the first 900px fold, and under prefers-reduced-motion no long-running animations.
-// Motion (v6): no animation > 2 s after settle unless it's an intentional loop ([data-loop] / counter / ticker; FlowPath
+// Motion (v6): no animation > 2 s after settle unless it's an intentional loop (live counters/tickers; [data-loop] only on Home, lead 09:21; FlowPath
 // dots must be still at arrival, lead 09:12 V6 #2),
 // and nothing long or infinite under reduced motion. CLS on arrival ≤ 0.05 (desktop gate).
 // Headings: h1/h2 accessible names must be words, not spaced letters (lead 06:11).
@@ -126,17 +126,18 @@ for (const { theme, motion, w, h } of RUNS.filter((x) => !ONLY || (ONLY === '390
         }
         // lead 08:4x: no animation running > 2 s after settle, except intentional loops (live counters, FlowPath dots)
         // marked [data-loop] or with a flow/counter/ticker class; those must stop under reduced motion (checked below)
-        const longAnims = await page.evaluate(() =>
+        const longAnims = await page.evaluate((isHome) =>
           document
             .getAnimations()
             .filter((a) => a.playState === 'running')
             .map((a) => {
               const t = a.effect?.getTiming?.() ?? {}
               const el = a.effect?.target
-              const allowed = !!el?.closest?.('[data-loop], [class*="counter" i], [class*="ticker" i]') // lead 09:12 V6 #2: FlowPath dots travel only while a payment is pending, so on arrival (nothing pending) a moving flow dot is a fail
+              const allowed = !!el?.closest?.(isHome ? '[data-loop], [class*="counter" i], [class*="ticker" i]' : '[class*="counter" i], [class*="ticker" i]') // lead 09:21: data-loop is reserved for the Home hero pan (+ live counters) // lead 09:12 V6 #2: FlowPath dots travel only while a payment is pending, so on arrival (nothing pending) a moving flow dot is a fail
               return { d: Number(t.duration) || 0, it: t.iterations, allowed, name: a.animationName ?? a.constructor.name, el: el ? `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)}` : '' }
             })
             .filter((x) => x.d * (x.it === Infinity ? Infinity : x.it || 1) > 2000),
+          r.path === '/',
         )
         const loops = longAnims.filter((a) => a.allowed).length
         const bad = longAnims.filter((a) => !a.allowed)
