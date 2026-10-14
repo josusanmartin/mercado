@@ -5,15 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { fmtBps, fmtNumber } from "@/lib/format";
 import { HEALTH_COPY, health, rateAtThreshold, ratioBps } from "@/lib/vault-math";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { RatioMeter } from "./ratio-meter";
 
 const MIN_RATE = 8;
 const MAX_RATE = 25;
 
-export function PesoSlider({
+export function PesoStress({
   collateral,
   debt,
   mxnPerUsd,
@@ -39,18 +37,7 @@ export function PesoSlider({
   const empty = debt === 0n;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>What if the peso gets stronger?</CardTitle>
-        <CardDescription className="text-pretty">
-          Your collateral is in dollars and your debt is in pesos. When the peso strengthens, each dollar covers fewer pesos and your
-          ratio falls.
-        </CardDescription>
-        <CardAction>
-          <Badge variant="mock">Mock scenario, preview only</Badge>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="grid gap-5">
+    <div className="grid gap-5 pt-2">
         {empty ? (
           <p className="text-muted-foreground text-sm">Enter an amount to mint, or open a position, to see how it holds up.</p>
         ) : (
@@ -58,15 +45,15 @@ export function PesoSlider({
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-muted-foreground text-xs">{projected ? "Projected position" : "Your position"} at</p>
-                <p className="font-display text-3xl font-semibold tabular">
+                <p className="text-4xl font-semibold tabular">
                   {fmtNumber(rate, 2)} <span className="text-muted-foreground text-base font-normal">MXN/USD</span>
                 </p>
               </div>
               <div className="text-right">
                 <p
                   className={cn(
-                    "font-display text-3xl font-semibold tabular",
-                    h === "liquidatable" ? "text-destructive" : h === "tight" || h === "ok" ? "text-warning-ink" : "text-primary",
+                    "text-4xl font-semibold tabular",
+                    h === "liquidatable" ? "text-destructive" : h === "tight" ? "text-warning-ink" : undefined,
                   )}
                 >
                   {fmtBps(bpsAt)}
@@ -113,7 +100,7 @@ export function PesoSlider({
             {touched && (
               <button
                 type="button"
-                className="text-primary justify-self-start text-sm hover:underline"
+                className="justify-self-start rounded-full text-sm underline-offset-4 hover:underline"
                 onClick={() => {
                   setTouched(false);
                   setRate(current);
@@ -124,7 +111,6 @@ export function PesoSlider({
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
