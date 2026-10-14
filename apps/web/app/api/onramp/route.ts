@@ -10,8 +10,9 @@
 //      Unknown settlement stays "pending" (202) until the chain answers; it is never re-sent.
 // Behind ONRAMP_ENABLED (off → 503) until review accepts it. Budgets (R-047): whole cents, US$1–500 per tx; per-wallet and global daily totals computed
 // from the persisted ledger (every non-failed record counts), all under one process-wide lock; fail
-// closed if the float can't cover the amount. Single-process file store (.data/onramp.json).
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+// closed if the float can't cover the amount. File store .data/onramp.json (lib/remesas/onramp-ledger):
+// a corrupt/unreadable ledger fails closed (503 LEDGER_UNAVAILABLE), and an O_EXCL lock file makes it
+// single-writer across processes, inside the in-process mutex.
 import path from "node:path";
 import { z } from "zod";
 import { createWalletClient, encodeFunctionData, erc20Abi, http, isAddress, keccak256, type Address, type Hex } from "viem";
@@ -21,6 +22,7 @@ import { env, repoRoot } from "@/lib/server/env";
 import { jsonError, parseJson } from "@/lib/server/http";
 import { publicClient } from "@/lib/server/chain";
 import { withKeyLock } from "@/lib/server/bills/lock";
+import { LedgerUnavailable, loadLedger, saveLedger, withFileLock, type OnrampIntent, type OnrampLedger } from "@/lib/remesas/onramp-ledger";
 
 const MIN_CENTS = 1_00;
 const MAX_PER_TX_CENTS = 500_00;
@@ -39,24 +41,13 @@ const Body = z.object({
   idempotencyKey: z.string().min(8).max(128),
 });
 
-type Status = "signed" | "delivered" | "failed";
-type Intent = { key: string; to: string; cents: number; day: string; status: Status; hash?: Hex; signed?: Hex; createdAt: string; error?: string };
-type Ledger = Record<string, Intent>;
+type Intent = OnrampIntent;
+type Ledger = OnrampLedger;
 
 const file = () => process.env.MERCADO_ONRAMP_FILE ?? path.join(repoRoot(), ".data", "onramp.json");
-function load(): Ledger {
-  try {
-    return existsSync(file()) ? (JSON.parse(readFileSync(file(), "utf8")) as Ledger) : {};
-  } catch {
-    return {};
-  }
-}
-function save(l: Ledger) {
-  mkdirSync(path.dirname(file()), { recursive: true });
-  const tmp = `${file()}.tmp`;
-  writeFileSync(tmp, JSON.stringify(l, null, 1));
-  renameSync(tmp, file()); // atomic replace
-}
+
+const load = () => loadLedger(file());
+const save = (l: Ledger) => saveLedger(file(), l);
 const today = () => new Date().toISOString().slice(0, 10);
 const live = (i: Intent) => i.status !== "failed";
 
@@ -104,9 +95,16 @@ export async function POST(request: Request) {
   if (cents < MIN_CENTS) return jsonError(400, `The minimum top-up is US$${MIN_CENTS / 100}.`, "BELOW_MIN");
   if (cents > MAX_PER_TX_CENTS) return jsonError(400, `At most US$${MAX_PER_TX_CENTS / 100} per top-up.`, "PER_TX_CAP");
 
-  // One lock for the whole ledger: reservation, signing and persistence are serialized.
-  return withKeyLock("onramp-ledger", async () => {
-    const ledger = load();
+  // One lock for the whole ledger (in-process mutex + OS-level file lock): reservation, signing and
+  // persistence are serialized across requests AND processes.
+  return withKeyLock("onramp-ledger", () => withFileLock(file(), async () => {
+    let ledger: Ledger;
+    try {
+      ledger = load();
+    } catch (e) {
+      if (e instanceof LedgerUnavailable) return jsonError(503, "Top-up is unavailable while its ledger is being repaired.", "LEDGER_UNAVAILABLE");
+      throw e;
+    }
     const prior = ledger[body.idempotencyKey];
     if (prior) {
       if (prior.to !== to || prior.cents !== cents) return jsonError(409, "This idempotency key was already used for a different top-up.", "KEY_PAYLOAD_CONFLICT");
@@ -154,5 +152,8 @@ export async function POST(request: Request) {
     save(ledger);
     if (next.status === "failed") return jsonError(502, "The OUSD transfer reverted; nothing was delivered.", "TRANSFER_FAILED");
     return response(next);
-  });
+  }).catch((e) => {
+    if (e instanceof LedgerUnavailable) return jsonError(503, "Top-up is temporarily unavailable.", "LEDGER_UNAVAILABLE");
+    throw e;
+  }));
 }
