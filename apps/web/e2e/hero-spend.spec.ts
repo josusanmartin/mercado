@@ -40,7 +40,10 @@ test('hero: advance → Mercado Card tap (frozen decline → unfreeze → one ch
   await expect(phone).toBeVisible({ timeout: 90_000 })
   await pause(1200)
   const connect = phone.getByRole('button', { name: /Continuar con Uber/i })
-  if (await connect.isVisible().catch(() => false)) {
+  const ready = phone.getByText(/Disponible ahora/i).first()
+  // wait for the phone to settle on either the connect screen or an already-connected home (no race)
+  await expect(connect.or(ready).first()).toBeVisible({ timeout: 60_000 })
+  if (await connect.isVisible()) {
     await connect.click()
     await pause(1500) // simulated consent sheet
     await phone.getByRole('button', { name: /Permitir/i }).click()

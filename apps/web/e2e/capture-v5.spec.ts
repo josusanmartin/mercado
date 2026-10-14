@@ -21,7 +21,7 @@ test.use({ viewport: { width: 1440, height: 900 } })
 
 async function settle(page: Page) {
   await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' })
-  await page.waitForLoadState('networkidle').catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {}) // pages with live polling never go idle
   await page.waitForTimeout(4000) // live reads (chain + API) settle
   await page.evaluate(() => window.scrollTo({ top: 0 }))
   await page.waitForTimeout(400)
@@ -34,7 +34,7 @@ for (const s of SHOTS) {
     const res = await page.goto(s.path)
     test.skip((res?.status() ?? 404) >= 400, `${s.path} not live`)
     if (s.tab) {
-      await page.waitForLoadState('networkidle').catch(() => {})
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {}) // pages with live polling never go idle
       await page.getByRole('tab', { name: s.tab }).or(page.getByRole('button', { name: s.tab })).first().click()
     }
     await settle(page)
