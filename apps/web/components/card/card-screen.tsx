@@ -22,6 +22,7 @@ import {
   useCardActions,
   useCardStats,
   useCards,
+  usePool,
   type Tap,
 } from "@/lib/contracts";
 import { useReportBusy } from "@/lib/busy";
@@ -36,11 +37,34 @@ import { Button } from "@/components/ui/button";
 const VIOLET = "#7c5cff";
 const shop = personaById("merchant");
 
+/** Who holds the card on this page: Familia (default) or the driver (?holder=driver, or arriving as Driver). */
+type HolderId = "recipient" | "driver";
+const HOLDERS: Record<HolderId, { persona: "recipient" | "driver"; hello: string; onCard: string }> = {
+  recipient: { persona: "recipient", hello: "Mamá", onCard: "Familia (MX)" },
+  driver: { persona: "driver", hello: "Javier", onCard: "Javier · Driver" },
+};
+/** On-chain merchant names are ASCII; show them properly. */
+const merchantLabel = (name?: string) => (name ? name.replace(/\bDona\b/g, "Doña").replace(" - ", " · ") : undefined);
+
+function useHolderId(): HolderId {
+  const { address } = useConnection();
+  const [id, setId] = useState<HolderId>("recipient");
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("holder");
+    if (q === "driver" || q === "recipient") setId(q);
+    else if (address && address.toLowerCase() === personaById("driver").address?.toLowerCase()) setId("driver");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return id;
+}
+
 export function CardScreen() {
   const stats = useCardStats(shop.address);
+  const holderId = useHolderId();
+  const holder = HOLDERS[holderId];
   return (
     <SettingsLayout
       title="Spend xMXN at the corner store"
+      demo={holder.persona}
       kpis={[
         { label: "Cards issued", value: stats.cardsIssued === undefined ? "—" : stats.cardsIssued.toString(), sub: "virtual, on-chain" },
         { label: "Spent with Card", value: stats.totalSpent === undefined ? "—" : fmtAmount(stats.totalSpent, 0), sub: `xMXN · ${stats.charges?.toString() ?? "—"} charges` },
@@ -61,8 +85,8 @@ export function CardScreen() {
           </Rows>
         </Panel>
       ) : (
-        <ConnectGate persona="recipient" why="The card belongs to the family's wallet. Use the demo account or connect your own.">
-          <CardDemo />
+        <ConnectGate persona={holder.persona} why="The card belongs to the cardholder's wallet. Use the demo account or connect your own.">
+          <CardDemo holderId={holderId} />
         </ConnectGate>
       )}
     </SettingsLayout>
@@ -79,7 +103,7 @@ function safeV2Card() {
 
 type Pending = { tap: Tap; status: "asking" | "signing" | "charging" | "done" | "declined" | "error"; error?: string; hash?: Hex; chargeId?: bigint };
 
-function CardDemo() {
+function CardDemo({ holderId }: { holderId: HolderId }) {
   const { address } = useConnection();
   const [pending, setPending] = useState<Pending>();
   const terminal = useTerminal();
@@ -104,7 +128,7 @@ function CardDemo() {
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-10">
       <div className="-mx-4 sm:mx-0">
         <PhoneFrame label="Cardholder phone, Android preview">
-          <HolderApp holder={address} pending={pending} onApprove={approve} onDecline={() => setPending((p) => p && { ...p, status: "declined" })} />
+          <HolderApp holderId={holderId} holder={address} pending={pending} onApprove={approve} onDecline={() => setPending((p) => p && { ...p, status: "declined" })} />
         </PhoneFrame>
       </div>
       <div className="grid content-start gap-10">
@@ -124,9 +148,23 @@ function CardDemo() {
 
 // ---------------------------------------------------------------- holder phone
 
-function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address; pending?: Pending; onApprove: () => void; onDecline: () => void }) {
+function HolderApp({
+  holderId,
+  holder,
+  pending,
+  onApprove,
+  onDecline,
+}: {
+  holderId: HolderId;
+  holder?: Address;
+  pending?: Pending;
+  onApprove: () => void;
+  onDecline: () => void;
+}) {
   const { cards, allowance, isLoading } = useCards();
   const bal = useBalances();
+  const pool = usePool();
+  const who = HOLDERS[holderId];
   const a = useCardActions();
   const card = cards.at(-1);
   const [limit, setLimit] = useState<number>();
@@ -139,7 +177,7 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
     <div className="relative flex min-h-full flex-col bg-white px-4 pb-6 text-[#111418]">
       <div className="pt-3">
         <p className="text-[13px] text-[#5b6270]">Mi tarjeta · My card</p>
-        <p className="text-xl font-semibold">Hola, {personaById("recipient").name}</p>
+        <p className="text-xl font-semibold">Hola, {who.hello}</p>
       </div>
 
       {isLoading ? (
@@ -155,7 +193,7 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
         </div>
       ) : (
         <>
-          <CardFront last4={card.last4} frozen={card.frozen} />
+          <CardFront last4={card.last4} frozen={card.frozen} name={who.onCard} />
           <p className="mt-2 text-[13px] text-[#5b6270]">{CARD_LABEL}.</p>
 
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -171,6 +209,13 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
               </p>
             </div>
           </div>
+
+          {holderId === "driver" && (
+            <p className="mt-3 flex justify-between rounded-[12px] bg-[#f4f5f7] px-3 py-2 text-[15px]">
+              <span>Adelanto pendiente · advance owed</span>
+              <span className="font-semibold tabular">{pool.debt === undefined ? "—" : `${fmtAmount(pool.debt)} xMXN`}</span>
+            </p>
+          )}
 
           <div className="mt-4 grid gap-3 border-t border-[#e6e8ec] pt-4">
             <label className="flex items-center justify-between gap-3">
@@ -236,7 +281,7 @@ function HolderApp({ holder, pending, onApprove, onDecline }: { holder?: Address
   );
 }
 
-function CardFront({ last4, frozen }: { last4: number; frozen: boolean }) {
+function CardFront({ last4, frozen, name }: { last4: number; frozen: boolean; name: string }) {
   return (
     <div className="relative mt-4 aspect-[1.586] overflow-hidden rounded-[18px] p-5 text-white" style={{ background: VIOLET }}>
       <div className="flex items-start justify-between">
@@ -245,7 +290,7 @@ function CardFront({ last4, frozen }: { last4: number; frozen: boolean }) {
       </div>
       <p className="absolute bottom-12 left-5 font-mono text-lg tracking-widest tabular">5x•• •••• •••• {String(last4).padStart(4, "0")}</p>
       <div className="absolute right-5 bottom-4 left-5 flex items-end justify-between text-[13px]">
-        <span>{personaById("recipient").name}</span>
+        <span>{name}</span>
         <span>xMXN</span>
       </div>
       {frozen && (
@@ -371,7 +416,7 @@ function Terminal({
             <Store className="size-5" strokeWidth={1.75} />
           </span>
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">{stats.merchantName ? stats.merchantName.replace(" - ", " · ") : "Shop terminal"}</h2>
+            <h2 className="text-xl font-semibold tracking-tight">{merchantLabel(stats.merchantName) ?? "Shop terminal"}</h2>
             <p className="text-muted-foreground text-[13px]">
               Demo merchant terminal {shortAddr(shop.address)} · {stats.merchantActive ? "allowlisted on MercadoCard" : "checking allowlist…"}
             </p>
