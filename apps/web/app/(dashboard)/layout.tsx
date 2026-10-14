@@ -23,7 +23,8 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
             <WalletMenu />
           </div>
         </div>
-        <div className="mx-auto max-w-7xl px-4 pb-2 lg:hidden">
+        <div className="mx-auto grid max-w-7xl gap-2 px-4 pb-2 lg:hidden">
+          <NetworkBadge className="justify-self-start sm:hidden" />
           <MobileNav />
         </div>
       </header>
