@@ -31,6 +31,7 @@ import { fmtAmount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   ENDPOINTS,
+  QUOTE_BODY,
   curlFor,
   snippetFor,
   type EndpointId,
@@ -269,9 +270,18 @@ function TryIt({ endpoint }: { endpoint: PaidEndpoint }) {
           <Button size="lg" onClick={t.run} disabled={!t.ready || t.busy}>
             {t.busy
               ? "Calling…"
-              : `Run ${endpoint.method} ${endpoint.path.split("?")[0]}`}
+              : t.pending
+                ? "Re-check the unresolved order"
+                : `Run ${endpoint.method} ${endpoint.path.split("?")[0]}`}
           </Button>
         </PanelActions>
+        {endpoint.needsQuote && (
+          <p className="text-muted-foreground mt-3 text-[13px]">
+            {t.pending
+              ? "A previous run ended without a clear answer. This re-checks that order with the same idempotency key (never pays twice) and resumes it only if nothing was paid."
+              : `Each run buys a new demo top-up (a new order for ${QUOTE_BODY.amountMxn} xMXN; fulfillment is SIMULATED).`}
+          </p>
+        )}
         {t.trace.length > 0 && (
           <ol className="mt-6 grid gap-4">
             {t.trace.map((s, i) => (

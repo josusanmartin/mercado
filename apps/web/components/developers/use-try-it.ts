@@ -7,6 +7,7 @@ import { Receipt, type Challenge } from "mppx";
 import { useWalletClient } from "wagmi";
 import { TEMPO_MODERATO_CHAIN_ID } from "@mercado/shared";
 import { useReportBusy } from "@/lib/busy";
+import { checkBillSettlement } from "@/lib/mpp/client";
 import { QUOTE_BODY, type PaidEndpoint } from "./endpoints";
 
 export type TraceStep = {
@@ -22,12 +23,43 @@ export type TryItResult = {
   body?: unknown;
 };
 
+/**
+ * Bill pay buys something, so an attempt whose outcome is unknown (crash/network error after paying) is
+ * remembered per browser by its quote + idempotency key. The next Run reconciles THAT order first (same
+ * key, no credential, never pays) and resumes it if unpaid, instead of buying a second top-up.
+ */
+type PendingBill = { quoteId: string; idempotencyKey: string };
+const PENDING_KEY = "mercado.developers.tryit.bills.pending";
+function loadPending(): PendingBill | undefined {
+  try {
+    const v = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "null");
+    return v?.quoteId && v?.idempotencyKey ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+function savePending(p: PendingBill | undefined) {
+  try {
+    if (p) localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    else localStorage.removeItem(PENDING_KEY);
+  } catch {
+    /* storage unavailable: the in-memory copy still guards this tab */
+  }
+}
+
 export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
   const { data: walletClient } = useWalletClient();
   const [trace, setTrace] = useState<TraceStep[]>([]);
   const [result, setResult] = useState<TryItResult>();
   const [busy, setBusy] = useState(false);
   const t0 = useRef(0);
+  const [pending, setPendingState] = useState<PendingBill | undefined>(() =>
+    endpoint.needsQuote ? loadPending() : undefined,
+  );
+  const setPending = useCallback((p: PendingBill | undefined) => {
+    savePending(p);
+    setPendingState(p);
+  }, []);
   useReportBusy(busy);
 
   const log = useCallback((s: Omit<TraceStep, "at">) => {
@@ -46,7 +78,36 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
     const raw = Fetch.unwrapFetch(globalThis.fetch);
     try {
       let body = endpoint.body?.({ borrower });
-      if (endpoint.needsQuote) {
+      let bill: PendingBill | undefined;
+      if (endpoint.needsQuote && pending) {
+        log({
+          kind: "quote",
+          title: "Unresolved order from a previous run: re-checking it (same idempotency key, no payment)",
+          detail: { quoteId: pending.quoteId, idempotencyKey: pending.idempotencyKey },
+        });
+        const check = await checkBillSettlement(pending.quoteId, pending.idempotencyKey);
+        if (check.state === "settled") {
+          setPending(undefined);
+          log({
+            kind: "response",
+            title: "Already paid: recovered the existing order (nothing paid again)",
+            detail: { order: check.order.orderId, status: check.order.status },
+          });
+          setResult({ status: 200, body: check.order });
+          return;
+        }
+        if (check.state === "pending") {
+          log({ kind: "error", title: "Settlement still pending: run again in a few seconds", detail: { error: check.message } });
+          return;
+        }
+        if (check.state === "unpaid") {
+          bill = pending; // no payment found on-chain: resume THIS order instead of opening a new one
+          log({ kind: "quote", title: "Not paid yet: resuming the same order" });
+        } else setPending(undefined); // closed without payment: start fresh
+      }
+      if (endpoint.needsQuote && bill) {
+        body = endpoint.body!({ borrower, ...bill });
+      } else if (endpoint.needsQuote) {
         log({
           kind: "quote",
           title: "POST /api/bills/quote (free)",
@@ -60,11 +121,8 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
           })
         ).json();
         if (!q.quoteId) throw new Error(q.error ?? "Quote failed");
-        body = endpoint.body!({
-          borrower,
-          quoteId: q.quoteId,
-          idempotencyKey: crypto.randomUUID(),
-        });
+        bill = { quoteId: q.quoteId, idempotencyKey: crypto.randomUUID() };
+        body = endpoint.body!({ borrower, ...bill });
         log({
           kind: "quote",
           title: `Quote ${q.quoteId.slice(0, 14)}…`,
@@ -127,7 +185,11 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
         title: `${endpoint.method} ${endpoint.path}`,
         detail: body ? { body: JSON.stringify(body) } : undefined,
       });
-      const res = await mppx.fetch(endpoint.path, {
+      // remembered BEFORE paying, cleared only once the outcome is known
+      if (bill) setPending(bill);
+      let res: Response;
+      try {
+        res = await mppx.fetch(endpoint.path, {
         method: endpoint.method,
         ...(endpoint.method === "POST"
           ? {
@@ -135,7 +197,24 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
               body: JSON.stringify(body),
             }
           : {}),
-      });
+        });
+      } catch (err) {
+        if (!bill) throw err;
+        // the client failed, possibly after paying: ask the server (same key, no credential)
+        const check = await checkBillSettlement(bill.quoteId, bill.idempotencyKey).catch(() => undefined);
+        if (check?.state === "settled") {
+          setPending(undefined);
+          log({
+            kind: "response",
+            title: "Paid: the order settled (recovered by idempotency key)",
+            detail: { order: check.order.orderId, status: check.order.status },
+          });
+          setResult({ status: 200, body: check.order });
+          return;
+        }
+        if (check?.state === "closed") setPending(undefined);
+        throw err;
+      }
       let receipt: TryItResult["receipt"];
       try {
         receipt = Receipt.fromResponse(res);
@@ -155,6 +234,9 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
             }
           : { error: (json as { error?: string } | undefined)?.error },
       });
+      // a definite answer (paid, or a 4xx refusal) closes the attempt; 409 pending / 5xx keep it for recovery
+      if (bill && (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 409)))
+        setPending(undefined);
       setResult({ status: res.status, receipt, body: json });
     } catch (e) {
       log({
@@ -165,7 +247,7 @@ export function useTryIt(endpoint: PaidEndpoint, borrower: string) {
     } finally {
       setBusy(false);
     }
-  }, [walletClient, busy, endpoint, borrower, log]);
+  }, [walletClient, busy, endpoint, borrower, log, pending, setPending]);
 
-  return { run, trace, result, busy, ready: !!walletClient?.account };
+  return { run, trace, result, busy, pending, ready: !!walletClient?.account };
 }

@@ -72,11 +72,12 @@ export function curlFor(e: PaidEndpoint, origin: string, borrower: string) {
   if (e.id === "bills")
     return [
       `# 1) free quote`,
-      `curl -s -X POST "${origin}/api/bills/quote" -H 'content-type: application/json' \\`,
-      `  -d '${JSON.stringify(QUOTE_BODY)}'`,
+      `Q=$(curl -s -X POST "${origin}/api/bills/quote" -H 'content-type: application/json' \\`,
+      `  -d '${JSON.stringify(QUOTE_BODY)}' | jq -r .quoteId)`,
+      `KEY=$(uuidgen)  # keep it: a retry with the same key never pays twice`,
       `# 2) pay it: the API answers 402 with the MPP challenge`,
       `curl -i -X POST "${url}" -H 'content-type: application/json' \\`,
-      `  -d '{"quoteId":"q_…","idempotencyKey":"'"$(uuidgen)"'"}'`,
+      `  -d "{\\"quoteId\\":\\"$Q\\",\\"idempotencyKey\\":\\"$KEY\\"}"`,
     ].join("\n");
   if (e.method === "GET")
     return `curl -i "${url}"\n# → HTTP/1.1 402 Payment Required + WWW-Authenticate: Payment id=…, request=…`;
@@ -90,7 +91,17 @@ export function curlFor(e: PaidEndpoint, origin: string, borrower: string) {
 /** ~10-line mppx client that pays and retries automatically. */
 export function snippetFor(e: PaidEndpoint, origin: string, borrower: string) {
   const call =
-    e.method === "GET"
+    e.id === "bills"
+      ? `const q = await (await fetch("${origin}/api/bills/quote", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(${JSON.stringify(QUOTE_BODY)}),
+})).json();
+const idempotencyKey = crypto.randomUUID(); // reuse it on retry: never pays twice
+const res = await mppx.fetch("${origin}${e.path}", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ quoteId: q.quoteId, idempotencyKey }),
+});`
+      : e.method === "GET"
       ? `const res = await mppx.fetch("${origin}${e.path}");`
       : `const res = await mppx.fetch("${origin}${e.path}", {
   method: "POST", headers: { "Content-Type": "application/json" },
