@@ -71,7 +71,8 @@ export function LiveMoney({
 
   if (variant === "hero")
     return (
-      <Display fit size={size} className={cn("flex items-baseline", className)}>
+      // one line, always: under the phone's CSS zoom, fit's measure can land 1px over and fall back to wrapping
+      <Display fit size={size} className={cn("flex items-baseline !flex-nowrap !whitespace-nowrap", className)}>
         <span>
           {prefix}
           <span ref={intRef}>{first.int}</span>

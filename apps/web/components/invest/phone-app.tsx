@@ -39,6 +39,7 @@ import {
   useH,
   LoadError,
   StaleLine,
+  dayLabel,
   washStyle,
 } from "@/components/mobile/extra/editorial";
 import { INVEST, useInvestActions, useInvestHistory, useInvestPositions, type InvestActivity } from "./use-invest";
@@ -261,24 +262,77 @@ function Allocation({ r, rate }: { r: ReturnType<typeof useReturns>; rate?: numb
   );
 }
 
-/** v6: a product's balance over time, from its own deposits/withdrawals/trades, ending at the live value. */
-function useBalanceSeries(product: Product, current: number | undefined) {
+/**
+ * v6 (review #5/#10): a product's NET CONTRIBUTIONS over its observed history, in its own unit (OUSD / xMXN /
+ * mIDX): steps at each deposit/withdrawal/trade, starting at the first observed event (no invented zero) and
+ * held flat to today. It is not a valuation; the live value is the number above it. A fixed 104px slot from first
+ * paint: loading, failed, empty and one-event histories use the same box and say so.
+ */
+function ContributionChart({ product }: { product: Product }) {
   const h = useInvestHistory();
-  const now = useNow(10_000);
+  const now = useNow(60_000);
+  const unit = product === "acciones" ? "mIDX" : PRODUCT[product].unit;
+  const title = product === "acciones" ? "mIDX comprados − vendidos" : `Aportes netos · ${unit}`;
+  const digits = product === "acciones" ? 4 : 2;
+  const fmt = (x: number) => x.toLocaleString("es-MX", { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const rows = (h.data?.rows ?? [])
     // pesos: only the sxMXN savings rows (older lending-pool rows are another product)
     .filter((x) => x.product === product && x.timestamp !== undefined && (product === "acciones" || x.label.includes("ahorro")))
     .sort((a, b) => a.timestamp! - b.timestamp!);
-  if (!rows.length || now === undefined) return [];
   let v = 0;
   const pts = rows.map((x) => {
     const into = x.label.startsWith("Depósito") || x.label.startsWith("Compra");
-    v = Math.max(0, v + (into ? 1 : -1) * (Number(x.amount) / 1e6));
+    v += (into ? 1 : -1) * (Number(x.amount) / 1e6);
     return { t: x.timestamp!, v };
   });
-  const t0 = rows[0].timestamp!;
-  const lead = Math.max(60, (now - t0) * 0.04);
-  return [{ t: t0 - lead, v: 0 }, ...pts, { t: Math.max(now, pts.at(-1)!.t + 1), v: current ?? v }];
+  const n = pts.length;
+  const vals = pts.map((x) => x.v);
+  const [min, max] = [Math.min(...vals), Math.max(...vals)];
+  const first = n ? dayLabel(pts[0].t, now) : undefined;
+  const series = n >= 2 ? [...pts, { t: Math.max(now ?? 0, pts.at(-1)!.t), v: pts.at(-1)!.v }] : [];
+  const status = !h.data
+    ? h.isError
+      ? "Historial no disponible"
+      : "Cargando historial…"
+    : n === 0
+      ? "Sin aportes todavía"
+      : n === 1
+        ? `Historial corto · un movimiento (${first})`
+        : undefined;
+  return (
+    <figure className="mt-5 grid h-[104px] grid-rows-[32px_1fr_16px] gap-1">
+      {/* two fixed lines: what is plotted, then its range */}
+      <figcaption className="m-meta grid content-start">
+        <span className="truncate">{title}</span>
+        <span>{n >= 2 ? `máx ${fmt(max)} · mín ${fmt(min)}` : " "}</span>
+      </figcaption>
+      <div className="relative min-h-0">
+        {series.length ? (
+          <Sparkline
+            points={series}
+            height={44}
+            label={`${title}, desde ${first} hasta hoy, mínimo ${fmt(min)}, máximo ${fmt(max)}`}
+            color="#0a0a0a"
+            fill="#ffffff"
+            fillOpacity={0.32}
+          />
+        ) : (
+          // a still scaffold (never a fake trend) in the same box
+          <span aria-hidden className="absolute inset-x-0 top-1/2 border-t border-dashed border-[rgba(10,10,10,.35)]" />
+        )}
+      </div>
+      <p className="m-meta flex justify-between gap-2" role={status ? "status" : undefined}>
+        {status ? (
+          <span>{status}</span>
+        ) : (
+          <>
+            <span>{first}</span>
+            <span>Hoy</span>
+          </>
+        )}
+      </p>
+    </figure>
+  );
 }
 
 /* ─────────────────────────────── Product ─────────────────────────────── */
@@ -289,12 +343,6 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
   const pesos = useVaultPosition(SXMXN, INVEST.xmxn);
   const r = useReturns();
   const P = PRODUCT[product];
-  const nowS = useNow(10_000);
-  const liveNow = (l: typeof r.usd) => (nowS === undefined ? undefined : l.at(nowS));
-  const series = useBalanceSeries(
-    product,
-    product === "dolares" ? liveNow(r.usd) : product === "pesos" ? liveNow(r.mxn) : r.st.balance !== undefined ? Number(r.st.balance) / 1e6 : undefined,
-  );
   const view = {
     dolares: {
       live: r.usd,
@@ -351,8 +399,8 @@ function ProductScreen({ product, back, trade }: { product: Product; back: () =>
             <Money value={product === "acciones" && ok ? r.st.value : undefined} currency="USD" size={50} className="mt-3" />
           )}
           <Meta className="mt-2" parts={view.meta} />
-          {/* v6: the balance over time (steps at each deposit / withdrawal / trade, then today's live value) */}
-          <Sparkline points={series} label={`${P.title}: tu saldo en el tiempo`} color="#0a0a0a" fill="#ffffff" fillOpacity={0.32} className="mt-5" />
+          {/* v6: net contributions over the observed history, fixed slot (review #5/#10) */}
+          <ContributionChart product={product} />
         </section>
       </AccentField>
       <div className="flex flex-1 flex-col" style={washStyle(MAIZ)}>
