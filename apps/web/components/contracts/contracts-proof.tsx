@@ -32,7 +32,7 @@ import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { usePresent } from "@/components/console/present";
-import { SuccessCheck } from "@/lib/motion";
+import { CopyAddress, FlowPath, SuccessCheck } from "@/lib/motion";
 
 const V2 = activeAddresses("v2");
 const V1 = activeAddresses("v1");
@@ -151,12 +151,22 @@ function Verified({ address, precompile, keyOnly }: { address?: string; precompi
       </span>
     );
   return v.data?.match === "exact_match" ? (
-    <a href={SOURCIFY(address)} target="_blank" rel="noreferrer" className="text-success inline-flex items-center gap-1 text-sm font-medium hover:underline">
+    <a
+      href={SOURCIFY(address)}
+      target="_blank"
+      rel="noreferrer"
+      className="group/v text-success relative inline-flex items-center gap-1 rounded-full border border-current/30 px-2 py-0.5 text-xs font-medium outline-none hover:bg-[color-mix(in_oklab,var(--success)_10%,transparent)] focus-visible:ring-2 focus-visible:ring-current"
+    >
       {/* the signature success motion: the check draws itself once the live Sourcify check comes back */}
       <span aria-hidden className="inline-grid">
-        <SuccessCheck size={16} />
-      </span>{" "}
-      Verified ✓ exact match
+        <SuccessCheck size={12} />
+      </span>
+      Verified ✓
+      {/* v6: the detail reveals on hover/focus instead of sitting in the row (sm+: phones have no hover, and the
+          hidden tooltip must not widen a 390px page) */}
+      <span className="bg-foreground text-background pointer-events-none absolute top-full left-0 z-10 mt-1.5 hidden sm:block translate-y-1 rounded-md px-2.5 py-1.5 text-xs font-normal whitespace-nowrap opacity-0 shadow-sm transition-[opacity,transform] duration-200 group-hover/v:translate-y-0 group-hover/v:opacity-100 group-focus-visible/v:translate-y-0 group-focus-visible/v:opacity-100">
+        exact match on Sourcify: source and deployed bytecode
+      </span>
     </a>
   ) : (
     <span className="text-destructive inline-flex items-center gap-1 text-sm">
@@ -203,9 +213,18 @@ function ContractRow({ it }: { it: Item }) {
       }
       value={
         it.address ? (
-          <a href={explorerAddress(it.address)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-xs hover:underline">
-            {shortAddr(it.address, 6)} <ExternalLink className="size-3" />
-          </a>
+          <span className="inline-flex items-center gap-2">
+            <CopyAddress address={it.address} label={`${it.name} address`} className="text-xs" />
+            <a
+              href={explorerAddress(it.address)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open ${it.name} on the explorer`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ExternalLink className="size-3.5" />
+            </a>
+          </span>
         ) : (
           "—"
         )
@@ -234,6 +253,7 @@ export function ContractsProof() {
   const present = usePresent(); // ?present=1 (deck captures only) drops the testnet label
   const x = (v?: bigint, u = "xMXN") => (v === undefined ? "…" : `${fmtAmount(v)} ${u}`);
   const deployer = L.get<Address>("vault.owner");
+  const supply = L.get<bigint>("xmxn.supply");
   const OWNER = deployer ? `the deployer key (${shortAddr(deployer)})` : "the deployer key";
 
   const fx = L.get<readonly [bigint, bigint, boolean]>("fx.peek");
@@ -507,14 +527,31 @@ export function ContractsProof() {
     >
       {section === "v2" && (
         <div className="grid gap-14">
-          {/* the trust model in full (moved out of the header, V5-TASTE #2): never shortened */}
-          <p className="text-muted-foreground max-w-3xl text-[15px] text-pretty">
-            Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state.
-            Testnet trust model: one admin key (the deployer), no timelock or multisig. &lsquo;No direct sweep&rsquo; is not &lsquo;no
-            control&rsquo;, so the control paths are spelled out per contract.
-          </p>
+          {/* v6 architecture: who can issue xMXN, and where it flows; each node jumps to its group below */}
+          <div className="grid gap-4">
+            <FlowPath
+              active={supply !== undefined}
+              label="Contract architecture: the factory created xMXN and locked its issuers to the vault and the exchange; Card, Crédito and Invest use xMXN"
+              nodes={[
+                { label: <a href="#c-mint" className="hover:text-foreground">Factory</a>, value: L.get<boolean>("factory.locked") ? "Locked ✓" : "…", sub: "issuers fixed forever" },
+                { label: <a href="#c-mint" className="hover:text-foreground">xMXN</a>, value: supply === undefined ? "…" : fmtAmount(supply, 0), sub: "in circulation" },
+                { label: <a href="#c-remesas-global" className="hover:text-foreground">Vault · Exchange</a>, value: "2 issuers", sub: "Mint · Remesas + Global" },
+                { label: <a href="#c-card" className="hover:text-foreground">Card · Crédito · Invest</a>, value: "Use xMXN", sub: "spend · borrow · save" },
+              ]}
+            />
+            <p className="text-muted-foreground text-[15px]">Testnet trust model: one admin key (the deployer), no timelock or multisig.</p>
+            <details className="group text-[15px]">
+              <summary className="meta text-muted-foreground hover:text-foreground cursor-pointer list-none">
+                How it works <span className="inline-block transition-transform group-open:rotate-90">›</span>
+              </summary>
+              <p className="text-muted-foreground mt-2 max-w-3xl text-pretty">
+                Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state.
+                &lsquo;No direct sweep&rsquo; is not &lsquo;no control&rsquo;, so the control paths are spelled out per contract.
+              </p>
+            </details>
+          </div>
           {groups.map((g, i) => (
-            <section key={g.title} className="grid gap-3">
+            <section key={g.title} id={`c-${g.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-$/, "")}`} className="grid scroll-mt-24 gap-3">
               <SectionLabel index={String(i + 1).padStart(2, "0")}>{g.label}</SectionLabel>
               <Panel title={g.title} description={g.description}>
                 <ContractRows items={g.items} />

@@ -22,7 +22,7 @@ import {
 } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Stagger, TickerText } from "@/lib/motion";
+import { Pulse, Stagger, TickerText } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 import { RatioMeter } from "@/components/vault/ratio-meter";
 import { ActivityTable } from "./activity-table";
@@ -81,8 +81,16 @@ function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> 
       : book.rows
           .map((r) => ({ symbol: r.symbol, demo: r.demo, value: r.valueXmxn ?? 0n, share: Number(((r.valueXmxn ?? 0n) * 10_000n) / total) / 100 }))
           .sort((a, b) => b.share - a.share);
-  // shades of the product accent, strongest first (no invented chart colors)
-  const shade = (i: number) => `color-mix(in oklab, var(--accent) ${[100, 72, 50, 34, 22, 14][Math.min(i, 5)]}%, var(--background))`;
+  // Jade chart steps with clearly distinct luminance in each theme (review V6 #4); the same class colors the
+  // segment and its legend dot. Light: deep → pale on white. Dark: pale → deep on #0A0A0A.
+  const STEPS = [
+    "bg-[#1f3d2b] dark:bg-[#d3ecdb]",
+    "bg-[#3d6e50] dark:bg-[#9fd0b0]",
+    "bg-[#6a9c7b] dark:bg-[#6fae86]",
+    "bg-[#a3c7ae] dark:bg-[#4a8962]",
+    "bg-[#d3e6d8] dark:bg-[#2f6145]",
+  ];
+  const shade = (i: number) => STEPS[Math.min(i, STEPS.length - 1)];
   return (
     <section className="grid gap-2.5" aria-label="What backs Mint's xMXN">
       <span className="meta text-muted-foreground">What backs Mint&apos;s xMXN · collateral value at live prices</span>
@@ -100,8 +108,8 @@ function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> 
           <span
             key={p.symbol}
             tabIndex={0}
-            className="group relative h-full min-w-1 outline-none first:rounded-l-full last:rounded-r-full focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
-            style={{ width: `${p.share}%`, background: shade(i) }}
+            className={`group border-background relative h-full border-r outline-none first:rounded-l-full last:rounded-r-full last:border-r-0 focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${shade(i)}`}
+            style={{ width: `${p.share}%` }}
           >
             <span className={`bg-foreground text-background pointer-events-none absolute bottom-full ${align} z-10 mb-2 translate-y-1 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap opacity-0 shadow-sm transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100`}>
               <span className="font-semibold">{p.symbol}</span> · {fmtAmount(p.value, 0)} xMXN · {p.share.toFixed(1)}%
@@ -114,8 +122,9 @@ function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> 
         {parts
           ? parts.map((p, i) => (
               <span key={p.symbol} className="inline-flex items-center gap-1.5">
-                <span className="inline-block size-2.5 rounded-full" style={{ background: shade(i) }} aria-hidden />
-                <span className="text-foreground font-medium">{p.symbol}</span> {p.share.toFixed(1)}%
+                <span className={`inline-block size-2.5 rounded-full ${shade(i)}`} aria-hidden />
+                <span className="text-foreground font-medium">{p.symbol}</span>{" "}
+                <Pulse value={p.share.toFixed(1)}>{p.share.toFixed(1)}%</Pulse>
                 {p.demo && <span data-honesty>(demo token)</span>}
               </span>
             ))
