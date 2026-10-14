@@ -4,7 +4,7 @@
 // "What's real here" panel (incl. CARD_LABEL). Everything here is real on-chain: the card, freeze, the
 // calendar-day limit, the spending allowance, the tap signature and the charge/refund history. Only the
 // card network and number are simulated (the "Demo" mark on the card and the meta line under it).
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type Address, type Hex } from "viem";
 import { Check, CircleUserRound, CreditCard, ExternalLink, History, Lock, Snowflake, Store } from "lucide-react";
 import { explorerTx } from "@mercado/shared";
@@ -384,8 +384,12 @@ function TapPrompt({ pending, merchantName, onApprove, onDecline }: { pending: P
     const t = setTimeout(() => setClosed(key), 2500);
     return () => clearTimeout(t);
   }, [status, key]);
+  // Read the CURRENT status at dismiss time: a dismiss racing with Aprobar must never decline the tap.
+  const statusNow = useRef(status);
+  statusNow.current = status;
   const close = () => {
-    if (status === "asking") onDecline();
+    if (statusNow.current === "signing" || statusNow.current === "charging") return;
+    if (statusNow.current === "asking") onDecline();
     setClosed(key);
   };
   return (

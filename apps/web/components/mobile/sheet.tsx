@@ -58,8 +58,13 @@ export function BottomSheet({
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Latest values for Radix's event handlers: they can fire between a state change (e.g. "signing")
+  // and the re-render that makes the sheet non-dismissable.
+  const live = useRef({ dismissable, onClose });
+  live.current = { dismissable, onClose };
+
   if (!mounted || !host) return null;
-  const close = () => dismissable && onClose();
+  const close = () => live.current.dismissable && live.current.onClose();
   const hiddenName = ariaLabel ?? (typeof sub === "string" ? sub : "Detalle");
 
   return (
@@ -69,9 +74,11 @@ export function BottomSheet({
         <Dialog.Content
           aria-describedby={undefined}
           onCloseAutoFocus={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => !dismissable && e.preventDefault()}
-          onPointerDownOutside={(e) => !dismissable && e.preventDefault()}
-          onInteractOutside={(e) => !dismissable && e.preventDefault()}
+          onEscapeKeyDown={(e) => !live.current.dismissable && e.preventDefault()}
+          // Only an explicit tap on the scrim/outside may dismiss. Focus moving (a button swapping to a
+          // spinner, a wallet prompt) must NEVER close a sheet: that used to decline Card taps (P0).
+          onPointerDownOutside={(e) => !live.current.dismissable && e.preventDefault()}
+          onFocusOutside={(e) => e.preventDefault()}
           data-closing={closing || undefined}
           className={cn(
             "m-sheet absolute inset-x-0 bottom-0 max-h-[92%] overflow-y-auto rounded-t-[8px] bg-[var(--m-surface)] pb-6 outline-none sm:pb-8",
