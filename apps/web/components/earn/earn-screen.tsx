@@ -27,7 +27,8 @@ function pct(part: bigint | undefined, whole: bigint | undefined) {
   return part !== undefined && whole ? Number((part * 10_000n) / whole) / 100 : undefined;
 }
 
-export function EarnScreen() {
+/** `embedded`: render the section list + panels without the product shell (for /credito → Lenders). */
+export function EarnScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const { address } = useConnection();
   const pool = usePool();
   const bal = useBalances();
@@ -64,8 +65,9 @@ export function EarnScreen() {
     { id: "risks", label: "Risks", icon: ShieldAlert },
   ];
 
-  return (
-    <SettingsLayout title="Earn" list={<ListPane label="Earn sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}>
+  const list = <ListPane label="Lender sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />;
+  const body = (
+    <>
       {section === "supply" && (
         <Panel
           key="supply"
@@ -194,6 +196,18 @@ export function EarnScreen() {
           </Rows>
         </Panel>
       )}
+    </>
+  );
+  if (embedded)
+    return (
+      <div className="grid gap-4">
+        {list}
+        {body}
+      </div>
+    );
+  return (
+    <SettingsLayout title="Earn" list={list}>
+      {body}
     </SettingsLayout>
   );
 }
