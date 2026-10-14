@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useConnection } from "wagmi";
 import { Activity, Gauge, Layers, PlusCircle, ShieldAlert } from "lucide-react";
 import { explorerAddress } from "@mercado/shared";
-import { BigNumber, ListPane, Panel, Row, Rows, SettingsLayout } from "@/components/console";
+import { BigNumber, ListPane, Panel, Row, Rows, SectionLabel, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
 import { MintScreen } from "@/components/vault/mint-screen";
@@ -15,7 +15,6 @@ import {
   useActivityFeed,
   useCollateralBook,
   useExchangeState,
-  useFlowTotals,
   useMyPositions,
   useOracle,
   useThreeBuckets,
@@ -23,6 +22,7 @@ import {
 } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { ActivityTable } from "./activity-table";
+import { useMintMeta } from "./use-mint-meta";
 
 type Section = "overview" | "positions" | "issue" | "risk" | "activity";
 const x = (v: bigint | undefined, unit = "xMXN") => (v === undefined ? "…" : `${fmtAmount(v)} ${unit}`);
@@ -51,7 +51,9 @@ function Overview() {
   const cdp = book.totalDebt;
   const exchange = buckets.move?.liabilityXmxn;
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
+      <section className="grid content-start gap-3">
+      <SectionLabel index="01">Colateral</SectionLabel>
       <Panel
         title="Collateral mix"
         description={
@@ -101,7 +103,10 @@ function Overview() {
           })}
         </Rows>
       </Panel>
+      </section>
 
+      <section className="grid content-start gap-3">
+      <SectionLabel index="02">Suministro</SectionLabel>
       <Panel title="Supply" description="Every xMXN in circulation is someone's debt or the exchange's liability.">
         <BigNumber value={supply === undefined ? "…" : fmtAmount(supply, 0)} unit="xMXN" />
         <Rows className="pt-4">
@@ -124,6 +129,7 @@ function Overview() {
           />
         </Rows>
       </Panel>
+      </section>
     </div>
   );
 }
@@ -142,8 +148,33 @@ function Risk() {
   const v2 = ex.protocol === "v2";
   const cov = v2 ? (ex as { coverageBps?: bigint }).coverageBps : undefined;
   const covShown = cov === undefined ? "…" : cov > 10_000_000n ? "∞ (nothing issued)" : fmtBps(cov, 0);
+  const covBreak = cov !== undefined && cov < 10_000_000n ? fxAt(cov) : undefined;
+  const backBreak = fxAt(backingBps, 13_500);
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-12">
+      {/* one big idea first: how far the peso would have to move */}
+      <section className="grid gap-6 sm:grid-cols-2">
+        <div className="grid content-start gap-2">
+          <SectionLabel index="01">Respaldo del intercambio</SectionLabel>
+          <BigNumber value={covShown} />
+          <p className="text-muted-foreground max-w-md text-[15px]">
+            Exchange coverage today. It falls to 100% only if the peso strengthens to{" "}
+            <span className="text-foreground font-semibold">{covBreak === undefined ? "—" : `${covBreak.toFixed(2)} MXN/USD`}</span>.
+          </p>
+        </div>
+        <div className="grid content-start gap-2">
+          <SectionLabel index="02">Respaldo del sistema</SectionLabel>
+          <BigNumber value={backingBps === undefined ? "…" : fmtBps(backingBps, 0)} />
+          <p className="text-muted-foreground max-w-md text-[15px]">
+            All collateral ÷ all Mint debt. The system as a whole reaches the 135% line only at{" "}
+            <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>. Individual
+            positions are liquidated earlier, one at a time, at their own lines.
+          </p>
+        </div>
+      </section>
+      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+      <section className="grid content-start gap-3">
+      <SectionLabel index="03">Balance del intercambio</SectionLabel>
       <Panel
         title={v2 ? "Exchange backing (Move)" : "Swap desk inventory"}
         description={
@@ -181,7 +212,10 @@ function Risk() {
           )}
         </Rows>
       </Panel>
+      </section>
 
+      <section className="grid content-start gap-3">
+      <SectionLabel index="04">Recortes</SectionLabel>
       <Panel title="Collateral haircuts" description="Each collateral has its own mint line (max loan-to-value), liquidation line and penalty.">
         <Rows>
           {book.rows.map((r) => (
@@ -211,8 +245,11 @@ function Risk() {
           />
         </Rows>
       </Panel>
+      </section>
+      </div>
 
-      <div className="lg:col-span-2">
+      <section className="grid gap-3">
+        <SectionLabel index="05">Pruebas de estrés</SectionLabel>
         <Panel
           title="Stress tests on-chain"
           description="Each stress run shocks the admin-relayed rate (forceSet), liquidates a dedicated position at the new rate, then restores the real rate. These rows are the real liquidations."
@@ -236,7 +273,7 @@ function Risk() {
             </Rows>
           )}
         </Panel>
-      </div>
+      </section>
     </div>
   );
 }
@@ -284,10 +321,8 @@ function Positions() {
 export function MintDashboard() {
   const [section, setSection] = useState<Section>("overview");
   const { address } = useConnection();
-  const book = useCollateralBook();
-  const buckets = useThreeBuckets();
-  const flows = useFlowTotals();
   const { open } = useMyPositions();
+  const meta = useMintMeta();
 
   const items = [
     { id: "overview", label: "Overview", icon: Layers },
@@ -300,28 +335,29 @@ export function MintDashboard() {
   return (
     <SettingsLayout
       title="Mercado Mint"
+      statement="Crea pesos."
+      meta={meta.join(" · ")}
       purpose="Institutions mint xMXN against OUSD and yield-bearing collateral. The collateral keeps its own yield."
-      kpis={[
-        { label: "xMXN in circulation", value: buckets.xmxnSupply === undefined ? "…" : fmtAmount(buckets.xmxnSupply, 0), sub: "live total supply" },
-        {
-          label: "Collateral locked",
-          value: book.totalValueXmxn === undefined ? "…" : fmtAmount(book.totalValueXmxn, 0),
-          sub: `xMXN value · ${book.rows.length} collateral${book.rows.length === 1 ? "" : "s"}`,
-        },
-        { label: "Minted all-time", value: flows.data ? fmtAmount(flows.data.minted, 0) : "…", sub: "from Minted events" },
-      ]}
       list={<ListPane label="Mint sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}
     >
       {section === "overview" && <Overview />}
       {section === "issue" && <MintScreen embedded />}
-      {section === "positions" && <Positions />}
+      {section === "positions" && (
+        <section className="grid gap-3">
+          <SectionLabel index="01">Tus posiciones</SectionLabel>
+          <Positions />
+        </section>
+      )}
       {section === "risk" && <Risk />}
       {section === "activity" && (
-        <ActivityTable
-          kind="mint"
-          title="Issuance activity"
-          description="Deposits, mints, repayments and liquidations, from the vault's event logs."
-        />
+        <section className="grid gap-3">
+          <SectionLabel index="01">Actividad on-chain</SectionLabel>
+          <ActivityTable
+            kind="mint"
+            title="Issuance activity"
+            description="Deposits, mints, repayments and liquidations, from the vault's event logs."
+          />
+        </section>
       )}
     </SettingsLayout>
   );

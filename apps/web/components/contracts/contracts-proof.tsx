@@ -26,7 +26,7 @@ import {
   TEMPO_MODERATO_CHAIN_ID,
   tip20Abi,
 } from "@mercado/shared";
-import { ListPane, Panel, Row, Rows, SettingsLayout } from "@/components/console";
+import { ListPane, Panel, Row, Rows, SectionLabel, SettingsLayout } from "@/components/console";
 import { Badge } from "@/components/ui/badge";
 import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
@@ -224,8 +224,9 @@ export function ContractsProof() {
     return `${fmtAmount(t[0])} ${sym} locked · debt ${x(t[1])} of ${x(p.debtCeiling)} ceiling · mint ≥ ${fmtBps(p.mintRatioBps, 0)}, liquidation < ${fmtBps(p.liqRatioBps, 0)}${p.mintPaused ? " · minting PAUSED" : ""}`;
   };
 
-  const groups: { title: string; description: string; items: Item[] }[] = [
+  const groups: { label: string; title: string; description: string; items: Item[] }[] = [
     {
+      label: "Mint",
       title: "Mint · xMXN issuance",
       description: "Institutions lock collateral and mint xMXN. Only the vault and the exchange can ever issue xMXN.",
       items: [
@@ -248,7 +249,7 @@ export function ContractsProof() {
           name: "MultiCollateralVault",
           address: V2.vault,
           purpose: "Per-collateral positions: deposit, mint, repay and burn, withdraw, liquidate. Repay never needs an oracle.",
-          admin: `${OWNER} can add collaterals, change risk parameters (within enforced bounds), set debt ceilings, pause new minting per collateral, and swap a price feed. It cannot move anyone's collateral or mint to itself.`,
+          admin: `${OWNER} can add collaterals, set or swap their price feeds, change risk parameters (within enforced bounds), set debt ceilings and pause new minting per collateral. No function moves anyone's collateral, but that is not the same as no control: the owner could list a token and a feed it controls, then mint xMXN against it.`,
           state: `${V2.collaterals.length} collaterals; xMXN debt and ceilings per collateral below`,
         },
         ...V2.collaterals.map<Item>((c) => ({
@@ -262,6 +263,8 @@ export function ContractsProof() {
               ? "Tempo's testnet faucet token; Mercado has no powers over it."
               : c.symbol === "sOUSD"
                 ? `${OWNER} sets a mock APR (≤ 20%) and funds the yield; it can't take deposits.`
+                : c.symbol === "tTBILL-legacy"
+                ? `Legacy faucet-era token: ANYONE could mint it through its public faucet, so new minting against it is paused in the vault (repay/withdraw only). ${OWNER} also mints it.`
                 : `${OWNER} is the only minter (demo issuance${c.symbol === "tTBILL" ? "; the public faucet is disabled" : ""}).`,
           state: collateralState(c.symbol),
         })),
@@ -284,12 +287,13 @@ export function ContractsProof() {
           address: tbillFeed,
           badge: "Demo price",
           purpose: "Admin-set price for the demo T-bill, with a sanity band, 2% max move and a 24h staleness limit.",
-          admin: `${OWNER} sets the price (within the band) or pauses it.`,
+          admin: `${OWNER} sets the price within the band (2% max move per update), can force-set it past the 2% limit (stress demos), and can pause it.`,
           state: tf ? `$${(Number(tf[0]) / 1e8).toFixed(2)} · updated ${now ? timeAgo(Number(tf[1]), now) : "…"} · ${tf[2] ? "valid" : "INVALID"}` : "…",
         },
       ],
     },
     {
+      label: "Remesas + Global",
       title: "Remesas + Global · the exchange",
       description: "OUSD in mints xMXN, xMXN in is burned and redeemed from the exchange's own reserve, never from Mint collateral.",
       items: [
@@ -297,7 +301,7 @@ export function ContractsProof() {
           name: "MoveAMM",
           address: V2.vamm,
           purpose: "Oracle-anchored vAMM: size-dependent pricing, fee, mint-to-recipient in one tx, pro-rata NAV redemptions under 100% coverage.",
-          admin: `${OWNER} can pause, tune fee/depth/caps within bounds, and withdraw equity only while coverage stays ≥ 120%. Anyone may add equity.`,
+          admin: `${OWNER} can pause swaps (which also freezes redemptions), tune fee (≤ 2%), depth and caps including the redemption bucket and issuance ceiling, and withdraw equity only while coverage stays ≥ 120%. Anyone may add equity.`,
           state: ammS
             ? `${paused("amm.paused")} · reserve ${x(ammS[0], "OUSD")} · issued ${x(ammS[1])} · equity ${x(ammS[2], "OUSD")} · coverage ${ammS[3] > 10_000_000n ? "∞" : fmtBps(ammS[3], 0)} · redemptions ${x(ammS[4], "OUSD")} of ${x(ammS[5], "OUSD")} bucket · fee ${fmtBps(L.get<bigint>("amm.fee"), 2)}`
             : "…",
@@ -305,6 +309,7 @@ export function ContractsProof() {
       ],
     },
     {
+      label: "Crédito",
       title: "Crédito · advances",
       description: "Lenders fund driver advances; each draw needs a short-lived signed eligibility attestation.",
       items: [
@@ -312,7 +317,7 @@ export function ContractsProof() {
           name: "CreditPool v2",
           address: V2.creditPool,
           purpose: "Lender supply/withdraw (idle cash only), attested borrow with nonce replay protection, repay; flat fee realized on repayment.",
-          admin: `${OWNER} can rotate the attestation signer and set the fee (≤ 20%), per-driver cap and utilization cap. It can't withdraw lenders' funds.`,
+          admin: `${OWNER} can rotate the attestation signer and set the fee (≤ 20%), per-driver cap and utilization cap (up to 100%). There is no direct withdrawal of lenders' funds, but whoever controls the signer decides who may borrow: with the cap at 100%, signed attestations for many wallets could lend out all idle cash.`,
           state: poolS
             ? `cash ${x(L.get<bigint>("pool.cash"))} · lent ${x(poolS[2])} · realized fees ${x(poolS[3])} · fee ${fmtBps(L.get<bigint>("pool.fee"), 1)} · per-driver cap ${x(L.get<bigint>("pool.cap"))} · utilization cap ${fmtBps(L.get<bigint>("pool.util"), 0)}`
             : "…",
@@ -322,11 +327,12 @@ export function ContractsProof() {
           key: true,
           address: L.get<Address>("pool.signer") ?? V2.attestationSigner,
           purpose: "Backend key that signs EIP-712 eligibility from Demo Uber/DiDi/Rappi data (an illustrative score, not a credit model).",
-          admin: "A key, not a contract: it can only sign eligibility; the pool enforces caps and liquidity.",
+          admin: "A key, not a contract. It decides who may borrow (within the pool's per-driver and utilization caps), so it is trusted by lenders.",
         },
       ],
     },
     {
+      label: "Card",
       title: "Card · spend xMXN",
       description: "Real on-chain card controls and settlement; only the card network/PAN is simulated (not Visa/Mastercard).",
       items: [
@@ -334,7 +340,7 @@ export function ContractsProof() {
           name: "MercadoCard",
           address: V2.card,
           purpose: "Virtual cards with a calendar-day limit (midnight CDMX), freeze, allowlisted terminals; every charge needs the holder's EIP-712 tap signature.",
-          admin: `${OWNER} can allowlist/delist merchant terminals and pause. It can't charge a card: only an allowlisted terminal with the holder's signature can.`,
+          admin: `${OWNER} can allowlist/delist merchant terminals and pause (which blocks all card spending). It can't charge a card: only an allowlisted terminal with the holder's own signature can.`,
           state: cardS
             ? `${paused("card.paused")} · ${cardS[0]} cards · ${cardS[4]} charges · spent ${x(cardS[1])} · refunded ${x(cardS[2])} · ${cardS[3]} merchant${cardS[3] === 1n ? "" : "s"}`
             : "…",
@@ -349,6 +355,7 @@ export function ContractsProof() {
       ],
     },
     {
+      label: "Invest",
       title: "Invest · save and buy T-bills",
       description: "Peso savings = the CreditPool above; dollar savings = sOUSD; T-bills = the InvestDesk.",
       items: [
@@ -357,7 +364,7 @@ export function ContractsProof() {
           address: V2.investDesk,
           badge: "Demo T-bill",
           purpose: "Buy/sell demo tTBILL for OUSD or xMXN (via the exchange) from finite inventory at the admin feed price + spread; buys back only what each wallet bought.",
-          admin: `${OWNER} can seed/withdraw inventory, set spread (≤ 2%) and trade cap, and pause. It never mints tTBILL.`,
+          admin: `${OWNER} can seed or withdraw inventory at any time (removing liquidity), set spread (≤ 2%) and the trade cap, and pause. The desk itself never mints tTBILL.`,
           state: deskR ? `${paused("desk.paused")} · inventory ${x(deskR[1], "tTBILL")} · ${x(deskR[0], "OUSD")} · spread ${fmtBps(L.get<bigint>("desk.spread"), 2)}` : "…",
         },
         {
@@ -365,7 +372,7 @@ export function ContractsProof() {
           address: sousd,
           badge: "Demo yield",
           purpose: "ERC-4626 over OUSD; mock APR paid from funded OUSD; balance never read (donation-proof).",
-          admin: `${OWNER} sets the APR (≤ 20%) and funds the yield reserve; it can't move deposits.`,
+          admin: `${OWNER} sets the mock APR (0–20%, so it can stop yield) and funds the yield reserve; no function moves deposits.`,
           state:
             L.get<bigint>("sousd.apr") !== undefined
               ? `APR ${fmtBps(L.get<bigint>("sousd.apr"), 2)} (mock) · ${x(L.get<bigint>("sousd.assets"), "OUSD")} staked · ${x(L.get<bigint>("sousd.reserve"), "OUSD")} yield reserve left`
@@ -374,6 +381,7 @@ export function ContractsProof() {
       ],
     },
     {
+      label: "Oráculo y patrocinio",
       title: "Oracle and fee sponsor",
       description: "Shared by every product.",
       items: [
@@ -382,7 +390,7 @@ export function ContractsProof() {
           address: V2.oracle,
           badge: "Admin-relayed",
           purpose: "USD/MXN relayed by an admin key from a public source (Coinbase, intraday); band 5–50, 20% max move, 1h staleness. Not a decentralized oracle.",
-          admin: `${OWNER} pushes the rate (relay, never stepping past the jump limit), can force-set for stress demos, and can pause.`,
+          admin: `${OWNER} pushes the rate (the relay never steps past the jump limit), can force-set any in-band rate (stress demos), can change the band and staleness window (setConfig), and can pause. Every price-dependent action trusts this key.`,
           state: fx ? `${(Number(fx[0]) / 1e8).toFixed(4)} MXN/USD · updated ${now ? timeAgo(Number(fx[1]), now) : "…"} · ${fx[2] ? "valid" : "STALE/INVALID"}` : "…",
         },
         {
@@ -425,12 +433,9 @@ export function ContractsProof() {
   return (
     <SettingsLayout
       title="Every contract, live and verified"
-      purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state."
-      kpis={[
-        { label: "Contracts with source", value: String(total), sub: "each checked live against Sourcify" },
-        { label: "xMXN v2 in circulation", value: L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0), sub: "live total supply" },
-        { label: "Network", value: `Moderato ${TEMPO_MODERATO_CHAIN_ID}`, sub: "Tempo testnet" },
-      ]}
+      statement="Cada contrato, verificado."
+      meta={`${total} contratos con código · verificados en Sourcify, en vivo · xMXN ${L.get<bigint>("xmxn.supply") === undefined ? "…" : fmtAmount(L.get<bigint>("xmxn.supply"), 0)} · Moderato ${TEMPO_MODERATO_CHAIN_ID} · Testnet · sin valor real`}
+      purpose="Each Mercado contract on Tempo Moderato with its verified source, what it does, who can do what, and its live state. Testnet trust model: one admin key (the deployer), no timelock or multisig. 'No direct sweep' is not 'no control', so the control paths are spelled out per contract."
       list={
         <ListPane
           label="Contracts sections"
@@ -445,15 +450,18 @@ export function ContractsProof() {
       }
     >
       {section === "v2" && (
-        <div className="grid gap-8">
-          {groups.map((g) => (
-            <Panel key={g.title} title={g.title} description={g.description}>
-              <Rows data-nav="list">
-                {g.items.map((it) => (
-                  <ContractRow key={it.name} it={it} />
-                ))}
-              </Rows>
-            </Panel>
+        <div className="grid gap-14">
+          {groups.map((g, i) => (
+            <section key={g.title} className="grid gap-3">
+              <SectionLabel index={String(i + 1).padStart(2, "0")}>{g.label}</SectionLabel>
+              <Panel title={g.title} description={g.description}>
+                <Rows data-nav="list">
+                  {g.items.map((it) => (
+                    <ContractRow key={it.name} it={it} />
+                  ))}
+                </Rows>
+              </Panel>
+            </section>
           ))}
         </div>
       )}
