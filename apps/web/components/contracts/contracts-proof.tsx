@@ -125,12 +125,15 @@ type Item = {
   state?: React.ReactNode;
   /** native TIP-20 precompile tokens have no Solidity source to verify */
   precompile?: boolean;
+  /** a plain key (EOA), not a contract: nothing to verify */
+  key?: boolean;
   badge?: string;
 };
 
-function Verified({ address, precompile }: { address?: string; precompile?: boolean }) {
-  const v = useVerified(precompile ? undefined : address);
+function Verified({ address, precompile, keyOnly }: { address?: string; precompile?: boolean; keyOnly?: boolean }) {
+  const v = useVerified(precompile || keyOnly ? undefined : address);
   if (precompile) return <Badge variant="secondary">Tempo TIP-20 precompile</Badge>;
+  if (keyOnly) return <Badge variant="secondary">Key, not a contract</Badge>;
   if (!address) return null;
   if (v.isLoading)
     return (
@@ -156,7 +159,7 @@ function ContractRow({ it }: { it: Item }) {
         <span className="flex flex-wrap items-center gap-2">
           <span className="font-medium">{it.name}</span>
           {it.badge && <Badge variant="mock">{it.badge}</Badge>}
-          <Verified address={it.address} precompile={it.precompile} />
+          <Verified address={it.address} precompile={it.precompile} keyOnly={it.key} />
         </span>
       }
       sub={
@@ -316,6 +319,7 @@ export function ContractsProof() {
         },
         {
           name: "Attestation signer",
+          key: true,
           address: L.get<Address>("pool.signer") ?? V2.attestationSigner,
           purpose: "Backend key that signs EIP-712 eligibility from Demo Uber/DiDi/Rappi data (an illustrative score, not a credit model).",
           admin: "A key, not a contract: it can only sign eligibility; the pool enforces caps and liquidity.",
@@ -337,6 +341,7 @@ export function ContractsProof() {
         },
         {
           name: "Merchant terminal (Tienda Doña Mary)",
+          key: true,
           address: V2.merchant,
           purpose: "Demo merchant account: submits Card charges and receives MPP bill payments.",
           admin: "A key, not a contract.",
@@ -382,6 +387,7 @@ export function ContractsProof() {
         },
         {
           name: "Fee sponsor",
+          key: true,
           address: sponsor.data?.sponsor,
           purpose: "Pays network fees for Mercado calls so drivers, savers and cardholders need no fee tokens (allowlisted functions only).",
           admin: "A key used by our /api/sponsor relay; it only co-signs as fee payer, never sends funds.",
@@ -413,7 +419,8 @@ export function ContractsProof() {
     ...Object.entries((d1.txs as Record<string, string> | undefined) ?? {}).map(([k, h]) => ({ k: `v1 · ${k}`, h })),
   ];
 
-  const total = groups.reduce((n, g) => n + g.items.filter((i) => i.address && !i.precompile).length, 0);
+  // unique deployed contracts with Solidity source (not precompile tokens, not keys)
+  const total = new Set(groups.flatMap((g) => g.items.filter((i) => i.address && !i.precompile && !i.key).map((i) => i.address!.toLowerCase()))).size;
 
   return (
     <SettingsLayout
