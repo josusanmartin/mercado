@@ -1,31 +1,36 @@
-<section id="j2-send" data-transition="fade" style="background:#F5F0E6;color:#13241F;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:20px">
-<p style="font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#A64B0A">Where xMXN comes from</p>
-<h2 style="font-family:'Bricolage Grotesque', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-1px;color:#13241F;width:1400px">Send pesos home, on-chain</h2>
-<x-embed style="position:absolute;left:128px;top:320px;width:1664px;height:520px"><!doctype html><html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:#F5F0E6;color:#13241F;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
-.n{position:absolute;top:110px;width:400px;height:260px;box-sizing:border-box;border-radius:24px;padding:30px;display:flex;flex-direction:column;gap:10px;background:#13241F;color:#F5F0E6}
-.n small{font-size:24px;letter-spacing:2px;text-transform:uppercase;opacity:.8}
-.n b{font-size:80px;line-height:1;font-weight:800;color:#F2A54A;font-variant-numeric:tabular-nums}
-.n span{font-size:26px}
-.path{position:absolute;top:238px;height:4px;background:#C9C1B1}
-.tok{position:absolute;top:214px;width:52px;height:52px;margin-left:-26px;border-radius:50%;background:#F2A54A;box-shadow:0 0 0 6px rgba(242,165,74,.25);opacity:0}
-#rcv b{color:#F5F0E6}
+<section id="j2-send" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:700px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">07 — where xMXN comes from</p>
+<p style="position:absolute;left:892px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#999999">on-chain delivery only, no cash-out · <a href="https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3">live swap ↗</a></p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Send pesos home,</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">settled on-chain.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:470px;width:1664px;height:440px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+.mono{font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace}
+.n{position:absolute;top:40px;width:500px;display:flex;flex-direction:column;gap:8px}
+.n small{font-size:24px;color:#999}
+.n b{font-size:150px;line-height:1;font-weight:500;letter-spacing:-6px;font-variant-numeric:tabular-nums}
+.n span{font-size:26px;color:#999}
+.sep{position:absolute;top:40px;height:260px;width:0;border-left:1px solid rgba(255,255,255,.12)}
+#line{position:absolute;left:0;right:0;top:380px;height:1px;background:rgba(255,255,255,.12)}
+#tok{position:absolute;top:372px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#FFB547;box-shadow:0 0 18px rgba(255,181,71,.8);opacity:0}
+#amt.on{color:#FFB547;text-shadow:0 0 24px rgba(255,181,71,.35)}
 </style></head><body>
-<div class="n" style="left:0"><small>Sender</small><b>50</b><span>testnet OUSD</span></div>
-<div class="n" style="left:632px"><small>SwapDesk</small><b>−0.5%</b><span>spread, own reserves</span></div>
-<div class="n" id="rcv" style="left:1264px"><small>Family wallet</small><b id="amt">0</b><span>xMXN received</span></div>
-<div class="path" style="left:400px;width:232px"></div><div class="path" style="left:1032px;width:232px"></div>
-<div class="tok" id="tk"></div>
+<div class="n" style="left:0"><small class="mono">sender</small><b>50</b><span class="mono">testnet OUSD</span></div>
+<div class="sep" style="left:560px"></div>
+<div class="n" style="left:600px"><small class="mono">swap desk</small><b>0.5%</b><span class="mono">spread, own reserves</span></div>
+<div class="sep" style="left:1140px"></div>
+<div class="n" style="left:1180px"><small class="mono">family wallet</small><b id="amt">0</b><span class="mono">xMXN received</span></div>
+<div id="line"></div><div id="tok"></div>
 <script>
-var tk=document.getElementById('tk'),amt=document.getElementById('amt'),t0=0,L=7000;
-function frame(t){if(!t0)t0=t;var e=(t-t0)%L,x,o=1,a=0;
-if(e<600){o=0;x=400}else if(e<1800){x=400+(e-600)/1200*232}else if(e<2600){x=832;o=.35}else if(e<3800){x=1032+(e-2600)/1200*232}else{o=0;x=1264;a=Math.min(995,Math.round((e-3800)/900*995))}
-if(e<3800)a=0;tk.style.left=x+'px';tk.style.opacity=o;amt.textContent=a.toLocaleString('en-US');requestAnimationFrame(frame)}
+var tk=document.getElementById('tok'),amt=document.getElementById('amt'),t0=0,L=7000;
+function frame(t){if(!t0)t0=t;var e=(t-t0)%L,x=0,o=1,a=0;
+if(e<500){o=0}else if(e<3500){x=(e-500)/3000*1220}else{o=0;x=1220;a=Math.min(995,Math.round((e-3500)/900*995))}
+tk.style.left=x+'px';tk.style.opacity=o;amt.textContent=a.toLocaleString('en-US');amt.classList.toggle('on',a>0);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 </script></body></html></x-embed>
-<p data-build-in="fade" style="position:absolute;left:128px;top:870px;width:900px;font-size:24px;font-weight:600;color:#A64B0A">On-chain delivery only, no cash-out · capped demo desk</p>
-<p data-build-in="fade" style="position:absolute;left:1092px;top:870px;width:700px;font-size:24px;font-weight:600;text-align:right;color:#13241F"><a href="https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3">Live swap: 50 OUSD → 995 xMXN ↗</a></p>
-<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B6963">Mercado · testnet prototype on Tempo Moderato</p>
-<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;text-align:right;color:#5B6963">07</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">07</p>
 <aside>~8s, keep it brief. A sender swaps 50 testnet OUSD on the swap desk: the mock 20 MXN/USD minus a 50 bps spread is 995 xMXN, exactly what the live run delivered, with a minOut slippage guard. The desk pays from its own seeded, finite reserves and can't touch vault collateral; it's a capped demo liquidity source, not a market. The xMXN goes to the recipient's wallet. There's no SPEI or bank cash-out in this prototype. Live on Moderato: swap 50 OUSD for 995 xMXN, then transfer 995 xMXN to the recipient.</aside>
 </section>
