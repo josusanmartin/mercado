@@ -188,7 +188,7 @@ export function PayScreen() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {(["telcel", "cfe"] as const).map((p) => (
                     <Button
                       key={p}
