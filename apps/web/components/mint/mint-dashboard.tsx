@@ -350,7 +350,7 @@ function FxGauge({ rate, at135, at100 }: { rate?: number; at135?: number; at100?
         )}
       </div>
       <figcaption className="text-muted-foreground text-[13px]">
-        USD/MXN. The peso would have to strengthen {move.toFixed(0)}% for the system to reach its 135% line.
+        USD/MXN would have to fall from {rate.toFixed(2)} to {at135.toFixed(2)} (−{move.toFixed(0)}%) for the system to reach its 135% line.
       </figcaption>
     </figure>
   );
