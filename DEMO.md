@@ -17,7 +17,7 @@
 
 ## Stage flow (CR-03, lead-approved): 6 beats + one 45 s spending proof, ≤230 spoken words
 
-Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (synced with the deck's speaker notes at 04:35; the deck wins if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
+Follows the deck's main flow: cover → problem → system map → **spending proof** → why it compounds / risk → close. Say only the *italic* lines (synced with the deck's speaker notes at 04:37; the deck wins if they differ). The per-product slides and the live walkthrough below are **appendix**: use them only for Q&A.
 
 ### 1 · 0:00 Cover (10 s)
 
@@ -30,7 +30,7 @@ Follows the deck's main flow: cover → problem → system map → **spending pr
 ### 3 · 0:35 System map: all six products (30 s)
 
 Optional live: **/** shows "ONE CURRENCY. SIX PRODUCTS." with live numbers.
-- *"One synthetic peso, xMXN, on Tempo. Mint creates it, Remesas and Global move it, Crédito lends it, Card spends it, Invest saves it. Every number in the app is read live from the chain."*
+- *"One synthetic peso, xMXN, on Tempo. Mint creates it, Remesas and Global move it, Crédito lends it, Card spends it, Invest saves it. Balances, transfers, and debt reconcile to Tempo. A separate HTTP 402 call shows software paying for an API response."*
 
 ### ★ · 1:05 The spending proof: one person, one peso (45 s)
 
