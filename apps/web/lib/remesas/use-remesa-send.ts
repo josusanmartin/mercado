@@ -15,6 +15,7 @@ import {
   useMercado,
   useOracle,
   useSwapQuote,
+  useWho,
   withSlippage,
   type TxStep,
 } from "@/lib/contracts";
@@ -30,7 +31,10 @@ export type SendReceipt = { to: Address; amountIn: bigint; delivered: bigint; me
 export function useRemesaSend(amountIn: bigint) {
   const m1 = useMercado();
   const m2 = useMercadoV2();
-  const tx = USE_V2 ? m2.tx : m1.tx;
+  const sendTx = USE_V2 ? m2.tx : m1.tx;
+  const me = useWho();
+  const [active, setActive] = useState<"send" | "recover">("send");
+  const tx = active === "recover" ? m1.tx : sendTx;
   useReportBusy(m1.tx.isBusy || m2.tx.isBusy);
   const fx = useOracle();
 
@@ -52,6 +56,8 @@ export function useRemesaSend(amountIn: bigint) {
   };
 
   const [receipt, setReceipt] = useState<SendReceipt>();
+  // Frozen at send time so a recovery delivers to the same recipient with the same note.
+  const [attempt, setAttempt] = useState<{ to: Address; memo?: string; account?: Address }>();
 
   const send = useCallback(
     async (to: Address, memo?: string) => {
@@ -59,6 +65,8 @@ export function useRemesaSend(amountIn: bigint) {
       if (!isAddress(to) || to === zeroAddress) throw new Error("That recipient address isn't valid.");
       if (memo && memoByteLength(memo) > MEMO_MAX_BYTES) throw new Error("The note is longer than 32 bytes.");
       if (!amountOut) throw new Error("No quote yet.");
+      setAttempt({ to, memo });
+      setActive("send");
       const steps = USE_V2
         ? memo
           ? await m2.sendUsdToMxnWithMemo(amountIn, amountOut, to, memo, SLIPPAGE_BPS)
@@ -90,5 +98,37 @@ export function useRemesaSend(amountIn: bigint) {
     [fx.mxnPerUsd, m1, m2],
   );
 
-  return { tx, quote, send, convert, receipt, reset: () => (setReceipt(undefined), tx.reset()) };
+  /**
+   * Recovery (review): the conversion confirmed but the delivery failed, so the pesos sit in the
+   * sender's own wallet. Exposes exactly what was converted (from that tx's own log) and delivers it
+   * to the frozen recipient with one transfer. It never converts again.
+   */
+  const xmxnToken = (USE_V2 ? V2.xmxn : ADDR.xmxn) ?? ADDR.xmxn;
+  // Only after a failed send: a confirmed conversion to the sender's own wallet with no delivery.
+  const convertStep =
+    active === "send" && sendTx.status === "error" ? sendTx.steps.find((st) => st.receipt && /^(Mint xMXN|Swap OUSD)/.test(st.label)) : undefined;
+  const delivered = sendTx.steps.some((st) => st.receipt && /^Send xMXN/.test(st.label));
+  const strandedAmount = convertStep && !delivered && attempt && me ? deliveredFromReceipt(convertStep, xmxnToken, me).amount : undefined;
+  const stranded = strandedAmount && attempt ? { amount: strandedAmount, to: attempt.to, memo: attempt.memo } : undefined;
+  const deliverStranded = useCallback(async () => {
+    if (!stranded) return undefined;
+    setActive("recover");
+    const steps = await m1.transfer(xmxnToken, stranded.to, stranded.amount, stranded.memo);
+    const last = steps?.at(-1);
+    if (!last) return undefined;
+    const r: SendReceipt = { to: stranded.to, amountIn, delivered: deliveredFromReceipt(last, xmxnToken, stranded.to).amount, memo: stranded.memo, steps: steps ?? [], at: Date.now() };
+    setReceipt(r);
+    return r;
+  }, [stranded, m1, xmxnToken, amountIn]);
+
+  return {
+    tx,
+    quote,
+    send,
+    convert,
+    receipt,
+    stranded,
+    deliverStranded,
+    reset: () => (setReceipt(undefined), setAttempt(undefined), setActive("send"), m1.tx.reset(), m2.tx.reset()),
+  };
 }

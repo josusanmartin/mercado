@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import { USE_V2, V2 } from "@/lib/v2/addresses";
 import { useTokenBalance } from "@/lib/v2/reads";
 import { useRemesaSend } from "@/lib/remesas/use-remesa-send";
+import { useFxLabel } from "@/lib/use-fx-label";
+import { RecentOrders } from "@/components/billpay/recent-orders";
+import { useRecentOrders } from "@/components/billpay/use-bill-pay";
 import { Panel, Row, Rows, SettingsLayout } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { useTourPrefill } from "@/components/tour/demo-tour";
@@ -34,6 +37,11 @@ function useRemesasState() {
   useReportBusy(billBusy);
   const [last, setLast] = useState<"send" | "bill">();
 
+  // Deep links: /remesas?screen=inicio|enviar|aire|servicios (old /pay lands on airtime).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("screen");
+    if (q === "inicio" || q === "enviar" || q === "aire" || q === "servicios") setScreen(q);
+  }, []);
   useEffect(() => {
     if (prefill.screen === "airtime") setScreen("aire");
     else if (prefill.amount) {
@@ -60,6 +68,7 @@ function useRemesasState() {
 export function RemesasScreen() {
   const s = useRemesasState();
   const fx = useOracle();
+  const fxLabel = useFxLabel();
   const b = useThreeBuckets();
   const mama = personaById("recipient");
   const familyV1 = useBalances(mama.address);
@@ -71,7 +80,7 @@ export function RemesasScreen() {
       title="Send money home"
       purpose="Dollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app."
       kpis={[
-        { label: "Today's rate (mock oracle)", value: fx.rate === undefined ? "—" : fmtNumber(fx.rate, 2), sub: "MXN per USD, admin-relayed testnet feed" },
+        { label: "USD/MXN", value: fx.rate === undefined ? "—" : fmtNumber(fx.rate, 2), sub: fxLabel.short ?? "reading the oracle…" },
         PROTOCOL === "v2"
           ? { label: "Exchange backing", value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), sub: "OUSD reserve vs xMXN issued" }
           : { label: "Ready to send", value: b.desk.xmxn === undefined ? "—" : fmtAmount(b.desk.xmxn, 0), sub: "xMXN on the swap desk" },
@@ -96,6 +105,7 @@ function WhatHappened({ s }: { s: RemesasState }) {
   return (
     <div className="grid content-start gap-6">
       {s.last === "bill" ? <BillTrace s={s} /> : <SendFlow s={s} />}
+      <BillHistory />
       <Honesty />
     </div>
   );
@@ -114,6 +124,7 @@ function FlowNode({ title, value, sub, accent }: { title: string; value: string;
 function SendFlow({ s }: { s: RemesasState }) {
   const { address } = useConnection();
   const q = s.send.quote;
+  const fxLabel = useFxLabel();
   const amt = toUnits(s.amount);
   const r = s.send.receipt;
   const inUsd = r ? r.amountIn : amt;
@@ -127,14 +138,14 @@ function SendFlow({ s }: { s: RemesasState }) {
       aside={r ? <Badge variant="success">Delivered</Badge> : undefined}
     >
       <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <FlowNode title="Sender (US)" value={inUsd > 0n ? `$${fmtAmount(inUsd)}` : "$0.00"} sub={`OUSD · ${shortAddr(address)}`} />
+        <FlowNode title="You send" value={inUsd > 0n ? `$${fmtAmount(inUsd)}` : "—"} sub={`OUSD from Sender (US) ${shortAddr(address)}`} />
         <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
         <FlowNode title={q.venue} value={USE_V2 ? "mint" : "swap"} sub={USE_V2 ? "OUSD into the reserve, xMXN minted" : "desk inventory, then a transfer"} accent />
         <ArrowRight className="text-muted-foreground mx-auto size-4 shrink-0 rotate-90 sm:rotate-0" aria-hidden />
         <FlowNode title="Mamá (MX)" value={out !== undefined && inUsd > 0n ? `${fmtAmount(out)} MXN` : "—"} sub={r ? "confirmed on-chain" : "estimated"} />
       </div>
       <Rows className="mt-4">
-        <Row label="Oracle mid" sub="Mock admin oracle, testnet" value={mid !== undefined ? `${fmtNumber(mid, 4)} MXN/USD` : "—"} />
+        <Row label="Oracle mid" sub={fxLabel.short ?? "USD/MXN oracle"} value={mid !== undefined ? `${fmtNumber(mid, 4)} MXN/USD` : "—"} />
         <Row label="Your rate" sub="After fee and size impact" value={rate !== undefined ? `${fmtNumber(rate, 4)} MXN/USD` : "—"} />
         <Row
           label="Cost vs. mid"
@@ -227,6 +238,13 @@ function BillTrace({ s }: { s: RemesasState }) {
   );
 }
 
+/** api's saved-order list: history plus the credential-less settlement check for unpaid orders (R-018). */
+function BillHistory() {
+  const { orders, refresh, check, checks } = useRecentOrders();
+  if (orders.length === 0) return null;
+  return <RecentOrders orders={orders} onRefresh={refresh} onCheck={check} checks={checks} />;
+}
+
 function Honesty() {
   return (
     <Panel title="What's real here">
@@ -234,7 +252,7 @@ function Honesty() {
         <Row label="Dollars and pesos" sub="Testnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)" value={<Badge variant="secondary">Testnet</Badge>} />
         <Row label="Transfers and payments" sub="Real transactions on Tempo Moderato, each with an explorer link" value={<Badge variant="success">Real</Badge>} />
         <Row label="Telcel and CFE" sub="We take a real payment, but no airtime or bill payment is delivered" value={<Badge variant="mock">SIMULATED</Badge>} />
-        <Row label="Exchange rate" sub="Admin-relayed testnet feed, not a decentralized oracle" value={<Badge variant="mock">Mock oracle</Badge>} />
+        <Row label="Exchange rate" sub="A real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle" value={<Badge variant="mock">Admin relay</Badge>} />
       </Rows>
     </Panel>
   );

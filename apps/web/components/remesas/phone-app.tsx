@@ -191,7 +191,27 @@ function Enviar({ s }: { s: RemesasState }) {
             <>Enviar ${amount || "0"} · Send</>
           )}
         </button>
-        {send.tx.status === "error" && send.tx.error && <p className="mb-2 px-1 text-xs text-[#d92d20]">{send.tx.error}</p>}
+        {send.tx.status === "error" && send.tx.error && !send.stranded && <p className="mb-2 px-1 text-[13px] text-[#d92d20]">{send.tx.error}</p>}
+        {send.stranded && (
+          <div className="mb-2 grid gap-1.5 rounded-[14px] bg-[#f4f5f7] p-3 text-[13px]">
+            <p>
+              Ya convertimos tus dólares, pero la entrega falló. Los {fmtAmount(send.stranded.amount)} MXN están en tu cuenta · Your dollars were converted but the delivery
+              failed; the pesos are in your wallet.
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                const r = await send.deliverStranded().catch(() => undefined);
+                if (r) s.setScreen("enviado");
+              }}
+              className="h-10 rounded-[10px] text-sm font-semibold text-white disabled:opacity-40"
+              style={{ background: ACCENT }}
+            >
+              Enviar esos {fmtAmount(send.stranded.amount)} MXN a Mamá · Deliver them
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
