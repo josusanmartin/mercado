@@ -4,13 +4,13 @@
 // A charge: the POS proposes exact terms → the holder approves on the phone (EIP-712 tap signature,
 // mandatory) → the terminal submits it → xMXN moves on-chain → receipt on both sides.
 // Simulated and labeled: only the card network and number (CARD_LABEL). Everything else is real.
-import { useEffect, useMemo, useState } from "react";
-import { createWalletClient, http, parseEventLogs, type Abi, type Address, type Hex } from "viem";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createWalletClient, parseEventLogs, type Abi, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { useConnection, usePublicClient } from "wagmi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ExternalLink, Loader2, Store, X } from "lucide-react";
-import { activeAddresses, explorerTx, mercadoCardAbi, tempoModerato, TEMPO_RPC_URL } from "@mercado/shared";
+import { activeAddresses, explorerTx, mercadoCardAbi, tempoModerato } from "@mercado/shared";
 import {
   ADDR,
   CARD_ENABLED,
@@ -23,6 +23,7 @@ import {
   useCards,
   type Tap,
 } from "@/lib/contracts";
+import { rpcTransport } from "@/lib/contracts/sponsor";
 import { useReportBusy } from "@/lib/busy";
 import { fmtAmount, shortAddr, toUnits } from "@/lib/format";
 import { Panel, PhoneFrame, PhoneKeypad, Row, Rows, SettingsLayout } from "@/components/console";
@@ -97,26 +98,71 @@ function safeV2Card() {
 
 function CardDemo({ holderId }: { holderId: HolderId }) {
   const { address } = useConnection();
+  const client = usePublicClient({ chainId: CHAIN_ID });
   const [pending, setPending] = useState<Pending>();
+  // The holder's signature for the current tap, so a failed charge can be retried with the SAME signed tap.
+  const signed = useRef<{ nonce: bigint; sig: Hex }>(undefined);
   const terminal = useTerminal();
   const actions = useCardActions();
   const qc = useQueryClient();
   const busy = !!pending && (pending.status === "signing" || pending.status === "charging");
   useReportBusy(busy || actions.tx.isBusy);
 
+  const settled = async (hash: Hex | undefined, chargeId: bigint | undefined) => {
+    setPending((p) => p && { ...p, status: "done", hash, chargeId, error: undefined });
+    // The charge is confirmed: refresh card activity, limits and balances right away (lead).
+    await qc.invalidateQueries();
+    setTimeout(() => void qc.invalidateQueries(), 2_500); // the public RPC can lag a block
+  };
+  const failed = (e: unknown) => setPending((p) => p && { ...p, status: "error", error: e instanceof Error ? e.message : String(e) });
+
+  async function chargeSigned(tap: Tap, sig: Hex) {
+    setPending((p) => p && { ...p, status: "charging", error: undefined });
+    try {
+      const r = await terminal.charge(tap, sig);
+      await settled(r.hash, r.chargeId);
+    } catch (e) {
+      failed(e);
+    }
+  }
+
   async function approve() {
     if (!pending) return;
+    setPending({ ...pending, status: "signing", error: undefined });
+    let sig: Hex;
     try {
-      setPending({ ...pending, status: "signing" });
-      const sig = await actions.signTap(pending.tap);
-      setPending((p) => p && { ...p, status: "charging" });
-      const r = await terminal.charge(pending.tap, sig);
-      setPending((p) => p && { ...p, status: "done", hash: r.hash, chargeId: r.chargeId });
-      // The charge is confirmed: refresh card activity, limits and balances right away (lead).
-      await qc.invalidateQueries();
-      setTimeout(() => void qc.invalidateQueries(), 2_500); // the public RPC can lag a block
+      sig = await actions.signTap(pending.tap);
     } catch (e) {
-      setPending((p) => p && { ...p, status: "error", error: e instanceof Error ? e.message : String(e) });
+      return failed(e);
+    }
+    signed.current = { nonce: pending.tap.nonce, sig };
+    await chargeSigned(pending.tap, sig);
+  }
+
+  /**
+   * P0 (lead 04:48): a failed charge never vanishes; the POS offers "Reintentar", and a retry can't charge twice.
+   * Signed tap: if its nonce is already used on-chain, the first attempt landed: show that charge, never charge
+   * again. If unused and still valid, resubmit the SAME signed tap (its nonce makes it at most once). Nothing
+   * signed, or the signed tap expired unused (it can no longer land): ask the holder again with a fresh tap.
+   */
+  async function retry() {
+    if (!pending || !client || !address || !shop.address) return;
+    const tap = pending.tap;
+    const sig = signed.current?.nonce === tap.nonce ? signed.current.sig : undefined;
+    setPending((p) => p && { ...p, status: sig ? "charging" : "asking", error: undefined });
+    try {
+      if (sig) {
+        const used = await client.readContract({ address: ADDR.card, abi: mercadoCardAbi as Abi, functionName: "nonceUsed", args: [tap.cardId, tap.nonce] });
+        if (used) {
+          const hit = await findCharge(client, tap);
+          return settled(hit?.hash, hit?.chargeId);
+        }
+        if (BigInt(Math.floor(Date.now() / 1000)) < BigInt(tap.deadline) - 5n) return chargeSigned(tap, sig);
+      }
+      signed.current = undefined;
+      setPending({ tap: newTap({ cardId: tap.cardId, holder: address, merchant: shop.address, amount: tap.amount, ref: `ticket-${Date.now().toString(36)}` }), status: "asking" });
+    } catch (e) {
+      failed(e);
     }
   }
 
@@ -137,7 +183,7 @@ function CardDemo({ holderId }: { holderId: HolderId }) {
       <div className="grid content-start gap-10 max-sm:gap-0">
         {/* On a real phone the shop terminal and the explanations collapse below the full-screen app. */}
         <PhonePanel summary="Terminal de la tienda · Shop POS (demo)">
-          <Terminal holder={address} pending={pending} setPending={setPending} refund={terminal.refund} />
+          <Terminal holder={address} pending={pending} setPending={setPending} refund={terminal.refund} onRetry={retry} />
         </PhonePanel>
         <PhonePanel className="grid content-start gap-10">
           <Activity holder={address} />
@@ -161,7 +207,7 @@ function useTerminal() {
   const client = usePublicClient({ chainId: CHAIN_ID });
   const send = async (functionName: "charge" | "refund" | "approve", address: Address, abi: Abi, args: readonly unknown[]) => {
     if (!shop.privateKey) throw new Error("The demo terminal key is missing.");
-    const w = createWalletClient({ account: privateKeyToAccount(shop.privateKey), chain: tempoModerato, transport: http(TEMPO_RPC_URL) });
+    const w = createWalletClient({ account: privateKeyToAccount(shop.privateKey), chain: tempoModerato, transport: rpcTransport() }); // paced /api/rpc lane (retries 429s), never the public node directly
     try {
       const { request } = await client!.simulateContract({ account: w.account, address, abi, functionName, args } as never);
       const hash = await w.writeContract(request as never);
@@ -186,6 +232,14 @@ function useTerminal() {
   };
 }
 
+/** The CardCharged event for exactly this tap (its merchantRef), in recent blocks. */
+async function findCharge(client: NonNullable<ReturnType<typeof usePublicClient>>, tap: Tap): Promise<{ hash: Hex; chargeId?: bigint } | undefined> {
+  const latest = await client.getBlockNumber();
+  const logs = await client.getContractEvents({ address: ADDR.card, abi: mercadoCardAbi as Abi, eventName: "CardCharged", args: { cardId: tap.cardId }, fromBlock: latest > 20_000n ? latest - 20_000n : 0n, toBlock: latest });
+  const hit = (logs as unknown as { args: { chargeId: bigint; merchantRef?: Hex }; transactionHash: Hex }[]).find((l) => l.args.merchantRef?.toLowerCase() === String(tap.merchantRef).toLowerCase());
+  return hit ? { hash: hit.transactionHash, chargeId: hit.args.chargeId } : undefined;
+}
+
 function parseAbiApprove(): Abi {
   return [{ type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] }];
 }
@@ -195,9 +249,11 @@ function Terminal({
   pending,
   setPending,
   refund,
+  onRetry,
 }: {
   holder?: Address;
   pending?: Pending;
+  onRetry: () => void;
   setPending: (p: Pending | undefined) => void;
   refund: (chargeId: bigint, amount: bigint) => Promise<{ hash: Hex }>;
 }) {
@@ -237,21 +293,27 @@ function Terminal({
         <div className="grid content-start gap-3">
           <p className="text-muted-foreground text-[13px]">Total a cobrar · amount</p>
           <p className="text-[2.6rem] leading-none font-semibold tabular">
-            {amount || "0"} <span className="text-muted-foreground text-lg font-medium">xMXN</span>
+            {/* The ticket's amount stays on screen while the tap is in flight or failed (never a silent reset to 0). */}
+            {(live || pending?.status === "error") && pending ? fmtAmount(pending.tap.amount) : amount || "0"}{" "}
+            <span className="text-muted-foreground text-lg font-medium">xMXN</span>
           </p>
           <Button size="lg" disabled={!card || amt === 0n || !!live} onClick={charge}>
             {live ? <Loader2 className="animate-spin" /> : null}
             {live ? "Esperando al cliente · waiting for the tap" : "Cobrar con Mercado Card"}
           </Button>
           {!card && <p className="text-muted-foreground text-[13px]">The customer needs a card first (issue one on the phone).</p>}
-          {pending?.status === "done" && pending.hash && (
+          {pending?.status === "done" && (
             <div className="bg-background grid gap-2 rounded-[6px] border p-3 text-[15px]">
               <p className="flex items-center gap-2 font-semibold">
                 <Check className="text-success size-4" /> Cobrado · Charged {fmtAmount(pending.tap.amount)} xMXN
               </p>
-              <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="text-muted-foreground inline-flex items-center gap-1 font-mono text-[13px] hover:underline">
-                {pending.hash.slice(0, 14)}… <ExternalLink className="size-3" />
-              </a>
+              {pending.hash ? (
+                <a href={explorerTx(pending.hash)} target="_blank" rel="noreferrer" className="text-muted-foreground inline-flex items-center gap-1 font-mono text-[13px] hover:underline">
+                  {pending.hash.slice(0, 14)}… <ExternalLink className="size-3" />
+                </a>
+              ) : (
+                <p className="text-muted-foreground text-[13px]">Confirmed on-chain (this tap&apos;s nonce is spent)</p>
+              )}
               {pending.chargeId !== undefined && (
                 <Button
                   variant="outline"
@@ -290,7 +352,20 @@ function Terminal({
               <X className="size-4" /> The customer declined. Nothing was charged.
             </p>
           )}
-          {pending?.status === "error" && <p className="text-destructive text-[13px]">{pending.error}</p>}
+          {pending?.status === "error" && (
+            <div className="grid gap-2" role="alert">
+              <p className="text-destructive text-[15px] font-semibold">No se pudo cobrar · The charge didn&apos;t go through</p>
+              {pending.error && <p className="text-muted-foreground text-[13px]">{pending.error}</p>}
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={onRetry}>
+                  Reintentar · Retry
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setPending(undefined)}>
+                  Cancelar · Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
         <PhoneKeypad value={amount} onChange={setAmount} disabled={!!live} />
       </div>
