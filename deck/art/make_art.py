@@ -243,7 +243,108 @@ def tile(rng):
     save(finish(a, rng), "art-tile.png")
 
 
-if __name__ == "__main__":
+# ---------------------------------------------------------------------------
+# Product hero art for the app (DESIGN-ECOSYSTEM.md): one signature color each.
+# Run: python3 deck/art/make_art.py products  -> apps/web/public/art/*.png
+# ---------------------------------------------------------------------------
+APP_OUT = os.path.join(os.path.dirname(__file__), "..", "..", "apps", "web", "public", "art")
+INK = (21, 17, 14)
+CREAM = (245, 239, 228)
+PRODUCTS = {
+    "mint": ((14, 124, 102), ["xMXN · Mercado Mint", "OUSD  sOUSD  tTBILL", "mint 13,333.33 xMXN", "ratio 250% · liq 135%"]),
+    "remesas": ((240, 140, 0), ["Mercado Remesas", "50 OUSD → 995 xMXN", "para mamá · Guadalajara", "Tiempo Aire 100 MXN"]),
+    "global": ((30, 79, 214), ["Mercado Global", "USD ⇄ MXN · oracle mid", "quote 250 → 4,975 xMXN", "402 · partner API"]),
+    "credito": ((228, 0, 124), ["Mercado Crédito", "score 96.5 · line 1,500", "draw 300 · owed 306", "EIP-712 · nonce burned"]),
+}
+
+
+def tint(c, k):
+    return tuple(int(v + (255 - v) * k) for v in c)
+
+
+def shade(c, k):
+    return tuple(int(v * k) for v in c)
+
+
+def product_source(w, h, accent, lines, rng, bars=False):
+    im = Image.new("RGB", (w, h), INK)
+    d = ImageDraw.Draw(im)
+    f = font(int(h * 0.11), True)
+    cols = [CREAM, accent, tint(accent, 0.45), GREY]
+    for i, t in enumerate(lines):
+        d.text((int(w * 0.04), int(h * 0.08) + i * int(h * 0.2)), t, font=f, fill=cols[i % len(cols)])
+    if bars:
+        x0, base = int(w * 0.62), int(h * 0.92)
+        for i in range(12):
+            bh = int(h * (0.35 + 0.4 * rng.random()))
+            d.rectangle([x0 + i * int(w * 0.03), base - bh, x0 + i * int(w * 0.03) + int(w * 0.02), base], fill=accent if i % 3 else CREAM)
+    else:
+        cx, cy = int(w * 0.76), h // 2
+        for k in range(48):
+            col = [accent, tint(accent, 0.5), CREAM, GREY][k % 4]
+            r0 = h * 0.08 + k * h * 0.008
+            pts = []
+            for t in range(0, 721):
+                a = t / 720 * 2 * math.pi
+                r = r0 + h * 0.05 * math.sin(7 * a + k * 0.21) + h * 0.02 * math.cos(13 * a)
+                pts.append((cx + r * 1.6 * math.cos(a), cy + r * math.sin(a)))
+            d.line(pts, fill=col, width=2)
+    return np.asarray(im).astype(np.float32)
+
+
+def product_art(name, accent, lines, rng, w, h, fade):
+    global PALETTE
+    PALETTE = np.array([INK, accent, tint(accent, 0.45), shade(accent, 0.5), CREAM, GREY], dtype=np.float32)
+    a = product_source(w, h, accent, lines, rng, bars=(name == "credito"))
+    a = halftone(a, rng, int(w * 0.45), 0, w, int(h * 0.3), tint(accent, 0.35), step=max(10, h // 40), gamma=1.5)
+    a = bayer_dither_field(a, int(w * 0.5), int(h * 0.75), w, h, shade(accent, 0.8), strength=0.9)
+    a = macroblocks(a, rng, bs=max(16, h // 30), p_shift=0.12, p_flat=0.08, region=(int(w * 0.3), w))
+    rows = [y for y in range(h) if rng.random() < 0.4]
+    a = pixel_sort_rows(a, rng, rows, thr=35)
+    a = slit_smear(a, rng, int(h * 0.12), direction=-1, maxlen=int(w * 0.5))
+    if fade:
+        bg = np.array(INK, dtype=np.float32)
+        ramp = np.clip((np.arange(w) - w * 0.22) / (w * 0.33), 0, 1) ** 1.5
+        a = bg + (a - bg) * ramp[None, :, None]
+    return finish(a, rng, grain=8.0)
+
+
+def home_art(rng, w, h, fade):
+    global PALETTE
+    accents = [c for c, _ in PRODUCTS.values()]
+    PALETTE = np.array([INK, CREAM, GREY] + accents, dtype=np.float32)
+    a = np.full((h, w, 3), INK, dtype=np.float32)
+    strip = w // 4
+    for i, (name, (acc, lines)) in enumerate(PRODUCTS.items()):
+        src = product_source(strip, h, acc, lines[1:3], rng, bars=(name == "credito"))
+        a[:, i * strip:(i + 1) * strip] = src
+    a = macroblocks(a, rng, bs=max(16, h // 30), p_shift=0.16, p_flat=0.08)
+    rows = [y for y in range(h) if rng.random() < 0.45]
+    a = pixel_sort_rows(a, rng, rows, thr=35)
+    a = slit_smear(a, rng, int(h * 0.15), direction=-1, maxlen=int(w * 0.4))
+    if fade:
+        bg = np.array(INK, dtype=np.float32)
+        ramp = np.clip((np.arange(w) - w * 0.15) / (w * 0.3), 0, 1) ** 1.4
+        a = bg + (a - bg) * ramp[None, :, None]
+    return finish(a, rng, grain=8.0)
+
+
+def products():
+    os.makedirs(APP_OUT, exist_ok=True)
+    for i, (name, (acc, lines)) in enumerate(PRODUCTS.items()):
+        for suffix, w, h, fade in (("", 2400, 480, True), ("-square", 1200, 1200, False)):
+            img = product_art(name, acc, lines, np.random.default_rng(1000 + i), w, h, fade)
+            Image.fromarray(img).save(os.path.join(APP_OUT, f"{name}{suffix}.png"), optimize=True)
+            print(f"{name}{suffix}.png", w, "x", h)
+    for suffix, w, h, fade in (("", 2400, 480, True), ("-square", 1200, 1200, False)):
+        img = home_art(np.random.default_rng(42), w, h, fade)
+        Image.fromarray(img).save(os.path.join(APP_OUT, f"home{suffix}.png"), optimize=True)
+        print(f"home{suffix}.png", w, "x", h)
+
+
+if __name__ == "__main__" and len(__import__("sys").argv) > 1 and __import__("sys").argv[1] == "products":
+    products()
+elif __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     cover(np.random.default_rng(402))
     band(np.random.default_rng(42431), "art-band-1.png", 0)
