@@ -24,7 +24,6 @@ export function SettingsLayout({
   children,
   product,
   purpose,
-  kpis,
   demo,
   statement,
   meta,
@@ -34,7 +33,7 @@ export function SettingsLayout({
   children: ReactNode;
   product?: ProductId;
   purpose?: ReactNode;
-  /** Up to three live numbers for the hero band. Never hardcoded (josu's wiring rule). */
+  /** @deprecated Not rendered (josu, 03:02: the KPI strip is gone). Kept so existing callers compile. */
   kpis?: Kpi[];
   /** Demo-mode account for this page/tab; defaults to the product's. */
   demo?: PersonaId | null;
@@ -51,7 +50,6 @@ export function SettingsLayout({
         product={p.id}
         title={title}
         purpose={purpose ?? p.purpose}
-        kpis={kpis}
         demo={demo === null ? undefined : (demo ?? p.demo)}
         statement={statement}
         meta={meta}
@@ -71,7 +69,6 @@ export function ProductHero({
   product,
   title,
   purpose,
-  kpis,
   demo,
   statement,
   meta,
@@ -110,17 +107,8 @@ export function ProductHero({
           )}
         </div>
       </div>
-      {kpis && kpis.length > 0 && (
-        <dl className="grid grid-cols-1 border-t sm:grid-cols-3">
-          {kpis.slice(0, 3).map((k, i) => (
-            <div key={k.label} className={cn("min-w-0 py-4", i > 0 && "border-t sm:border-t-0 sm:border-l sm:pl-6", i < 2 && "sm:pr-6")}>
-              <dt className="meta text-muted-foreground">{k.label}</dt>
-              <dd className="display mt-2 truncate text-[clamp(2.2rem,4.5vw,3.6rem)] tabular">{k.value}</dd>
-              {k.sub && <dd className="text-muted-foreground mt-1.5 text-[13px]">{k.sub}</dd>}
-            </div>
-          ))}
-        </dl>
-      )}
+      {/* josu (03:02): no KPI strip under product headers. `kpis` is still accepted but not rendered;
+          numbers belong where the user acts (quote, draw sheet, Risk tab). */}
     </section>
   );
 }

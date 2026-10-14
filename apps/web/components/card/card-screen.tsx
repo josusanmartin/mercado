@@ -66,11 +66,6 @@ export function CardScreen() {
     <SettingsLayout
       title="Spend xMXN at the corner store"
       demo={holder.persona}
-      kpis={[
-        { label: "Cards issued", value: stats.cardsIssued === undefined ? "—" : stats.cardsIssued.toString(), sub: "virtual, on-chain" },
-        { label: "Spent with Card", value: stats.totalSpent === undefined ? "—" : fmtAmount(stats.totalSpent, 0), sub: `xMXN · ${stats.charges?.toString() ?? "—"} charges` },
-        { label: "Merchants", value: stats.merchants === undefined ? "—" : stats.merchants.toString(), sub: "allowlisted demo terminals" },
-      ]}
     >
       {!CARD_ENABLED ? (
         <Panel title="Mercado Card runs on Mercado v2" description="The card settles in v2 xMXN, so it switches on when the app moves to v2. Its contract is already live on Moderato.">

@@ -71,11 +71,6 @@ export function EcosystemHome() {
             {tour.active ? "Resume the Demo Tour" : "Start the Demo Tour"}
           </Button>
         </div>
-        <dl className="grid grid-cols-1 border-t sm:grid-cols-3">
-          <Kpi label="xMXN en circulación" value={n0(b.xmxnSupply)} sub="each backed by a debt position or the exchange reserve" />
-          <Kpi label="Colateral bloqueado" value={live.mint.value} sub={live.mint.caption} edge />
-          <Kpi label="Prestado a choferes" value={n0(b.pool.loansOut)} sub={`${n0(b.pool.cash)} xMXN available`} edge />
-        </dl>
       </section>
 
       <ProductIndex live={live} />
@@ -87,16 +82,6 @@ export function EcosystemHome() {
         </h2>
         <FlowMap live={live} supply={b.xmxnSupply} />
       </section>
-    </div>
-  );
-}
-
-function Kpi({ label, value, sub, edge }: { label: string; value: string; sub?: string; edge?: boolean }) {
-  return (
-    <div className={cn("min-w-0 py-4", edge && "border-t sm:border-t-0 sm:border-l sm:pl-6")}>
-      <dt className="meta text-muted-foreground">{label}</dt>
-      <dd className="display mt-2 truncate text-[clamp(2.4rem,5vw,4rem)] tabular">{value}</dd>
-      {sub && <dd className="text-muted-foreground mt-1.5 text-[13px]">{sub}</dd>}
     </div>
   );
 }

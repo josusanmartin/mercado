@@ -6,12 +6,10 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { useConnection } from "wagmi";
 import type { Address } from "viem";
-import { PROTOCOL, useBalances, useOracle, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
 import { useReportBusy } from "@/lib/busy";
 import { cn } from "@/lib/utils";
-import { USE_V2, V2 } from "@/lib/v2/addresses";
-import { useTokenBalance } from "@/lib/v2/reads";
+import { USE_V2 } from "@/lib/v2/addresses";
 import { useRemesaSend } from "@/lib/remesas/use-remesa-send";
 import { useFxLabel } from "@/lib/use-fx-label";
 import { RecentOrders } from "@/components/billpay/recent-orders";
@@ -69,25 +67,11 @@ function useRemesasState() {
 
 export function RemesasScreen() {
   const s = useRemesasState();
-  const fx = useOracle();
-  const fxLabel = useFxLabel();
-  const b = useThreeBuckets();
-  const mama = personaById("recipient");
-  const familyV1 = useBalances(mama.address);
-  const familyV2 = useTokenBalance(USE_V2 ? V2.xmxn : undefined, mama.address);
-  const family = USE_V2 ? familyV2.data : familyV1.xmxn;
 
   return (
     <SettingsLayout
       title="Send money home"
       purpose="Dollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app."
-      kpis={[
-        { label: "USD/MXN", value: fx.rate === undefined ? "—" : fmtNumber(fx.rate, 2), sub: fxLabel.short ?? "reading the oracle…" },
-        PROTOCOL === "v2"
-          ? { label: "Exchange backing", value: b.move?.coverageBps === undefined ? "—" : fmtBps(b.move.coverageBps, 0), sub: "OUSD reserve vs xMXN issued" }
-          : { label: "Ready to send", value: b.desk.xmxn === undefined ? "—" : fmtAmount(b.desk.xmxn, 0), sub: "xMXN on the swap desk" },
-        { label: "Familia (MX) balance", value: family === undefined ? "—" : fmtAmount(family, 0), sub: `xMXN in ${shortAddr(mama.address)}` },
-      ]}
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
         <div className="-mx-4 sm:mx-0">
