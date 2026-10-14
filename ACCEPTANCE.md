@@ -31,7 +31,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | 7 | CreditPool borrow fails for invalid signer, expired attestation, replayed nonce, exceeded cap, insufficient liquidity | contracts | ✅ | Live J4 sims on the deployed pool: tampered sig → `InvalidSigner`, expired → `AttestationExpired`, over max → `ExceedsAttestedMax`, replay → `NonceAlreadyUsed`; liquidity/utilization caps in Foundry `LoanAttestation.t.sol` (67/67, review-verified) |
 | 8 | Lenders can't withdraw xMXN that's currently lent out; repayment updates debt correctly | contracts | ✅ | Live J4: with 500 lent out, LENDER `withdrawAvailable(idle cash + 1)` → `InsufficientLiquidity`. Live J4/J6: debt 0 → 510 → 0, outstanding returns to 0, fees realized |
 | 9 | MPP endpoint returns a real 402 when unpaid, verifies payment and records one receipt per order; retries can't fulfill twice | api / qa | ✅ | Live J5 (pull + push + failure): `WWW-Authenticate: Payment` 402 bound to order, on-chain transfer from driver to merchant equals the quote, one receipt per order, retry returns the same order/reference with no second debit; history checked. Concurrency/recovery (R-005/R-009/R-011) covered by api vitest (37) + review probes |
-| 10 | Demo data and simulated fulfillment are labeled in both API responses and the frontend | api / web / qa | 🟡 API ✅ | API: `demo:true` + "Demo Uber Data" (driver/score), `simulated:true` + "SIMULATED fulfillment, no real top-up" (quote/pay), fx `isMock`. Frontend: Playwright smoke pending UI |
+| 10 | Demo data and simulated fulfillment are labeled in both API responses and the frontend | api / web / qa | ✅ | API: `demo:true` + "Demo Uber Data" (driver/score), `simulated:true` + "SIMULATED fulfillment, no real top-up" (quote/pay), fx `isMock`. Frontend (Playwright `apps/web/e2e/smoke.spec.ts`, desktop + Pixel 7): visible footer "Testnet prototype · OUSD has no real value · xMXN is not redeemable" on every tab, Demo Uber Data + "illustrative" on /credit, SIMULATED on /pay, mock oracle on /mint, "No guaranteed return" on /earn. Receipt still: `deck/assets/hero-driver-receipt.png` |
 | 11 | README discloses: testnet prototype, not a real credit product or a redeemable fiat stablecoin | qa | ✅ | `README.md` § Disclosures, reviewed and passed by `review` at 78e353f |
 
 ## A2. Extras (beyond SPEC §0)
@@ -46,10 +46,11 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
 | # | Check | Owner | Status | Evidence |
 |---|---|---|---|---|
-| D1 | Playwright smoke test covers every tab | qa / web | ⬜ | |
-| D2 | Mobile layout (~390px) usable on every tab | web | ⬜ | |
+| D5 | Hero recording: driver advance → 402 bill payment → receipt + remaining debt, in a real browser | api / qa | ✅ | `apps/web/e2e/hero.spec.ts` → `deck/assets/hero-driver.mp4` (48s, real testnet txs) |
+| D1 | Playwright smoke test covers every tab | qa / web | ✅ | `smoke.spec.ts`: 26/27 pass (desktop + mobile, every tab, labels, no runtime errors, API 402/400 checks) |
+| D2 | Mobile layout (~390px) usable on every tab | web | 🟡 | Pixel 7: no overflow on 5/6 tabs; /send overflows by 3px (reported to web) |
 | D3 | Readable errors: insufficient liquidity, stale oracle, wrong network, revert reasons | web | ⬜ | |
-| D4 | Persistent "testnet prototype" banner; mock-oracle and "Testnet OUSD (no real value)" labels visible | web | ⬜ | |
+| D4 | Persistent "testnet prototype" banner; mock-oracle and "Testnet OUSD (no real value)" labels visible | web | ✅ | Console footer/hint bar on every tab, desktop + mobile (smoke.spec) |
 
 ## D. Adversarial review log
 
