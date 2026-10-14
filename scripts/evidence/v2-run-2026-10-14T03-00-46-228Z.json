@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-14T03:00:46.227Z",
+  "protocol": "v2",
+  "steps": [
+    "V10"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V10": {
+      "status": "fail",
+      "txs": {
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0xb5e8b175682d521d0ca0a23d58c2d148ee30519752ded66a9e21ff9c59cc555b",
+        "Ahorro en pesos: supply 100 xMXN v2 to the credit pool": "https://explore.testnet.tempo.xyz/tx/0x1950d7182c63ff355032199dfa1322571e5905b5d2df9a013fc96461d8a19c14",
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x64b7effdaeda93959a23c22abe5a502a0a08dff86caf22dffdd2e6586dadcf47",
+        "Ahorro en dólares: stake 50 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x55972baaa2fd8b3e083d3fcfb015ff358ac8363efc14b618aa96bfbc791ca418",
+        "approve OUSD → InvestDesk": "https://explore.testnet.tempo.xyz/tx/0xd75f4f3fc18a97f13eaf091733a9cdca93e98d34df2cee2fc76e18f910677054"
+      },
+      "notes": [],
+      "error": "buy above the 25,000 USD max trade: reverted with 0x13be252b, expected TradeTooLarge | InsufficientInventory"
+    }
+  }
+}

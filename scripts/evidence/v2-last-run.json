@@ -1,8 +1,8 @@
 {
-  "at": "2026-10-14T02:43:42.165Z",
+  "at": "2026-10-14T03:01:32.171Z",
   "protocol": "v2",
   "steps": [
-    "V9"
+    "V10"
   ],
   "evidence": {
     "V0": {
@@ -10,19 +10,16 @@
       "txs": {},
       "notes": []
     },
-    "V9": {
+    "V10": {
       "status": "pass",
       "txs": {
-        "approve OUSD → vamm": "https://explore.testnet.tempo.xyz/tx/0x47aa0e3b4f7c297572540c5e990db2d0504aa9d68182ff16b1b76adb07b15b63",
-        "fund Miguel: 10 OUSD → xMXN v2 (vAMM mint to self)": "https://explore.testnet.tempo.xyz/tx/0xde2e3235245f963493493359772ba3613195980fa9b77a2ddb291a9c15816381",
-        "issue a Mercado Card (daily limit 1,000 xMXN)": "https://explore.testnet.tempo.xyz/tx/0x2d44d537ac81950a39af8fe2cdfdfea16cf088c94f6047f7b71a3032b8d39b05",
-        "holder sets the daily limit 1,000 → 600 xMXN": "https://explore.testnet.tempo.xyz/tx/0xd0e0f9ddb8bcbecc6a93391c47deecb875528c57f9d4b06ce4d3371406155bda",
-        "approve xMXN v2 → card (spending allowance)": "https://explore.testnet.tempo.xyz/tx/0x13f452fdf69470687b163a10d9830395e636980fad711da576d9f6956d8209f5",
-        "holder freezes the card": "https://explore.testnet.tempo.xyz/tx/0x37d728bc084c80cae3dc2d2e9f135dbc54168021e35d5a15f3804aba1765a0d5",
-        "holder unfreezes the card": "https://explore.testnet.tempo.xyz/tx/0x4b1733e8022b7aec7d40eae47ead572700e84f96d2b6227819843e3582e8fd38",
-        "terminal charges 50 xMXN v2 (holder's tap)": "https://explore.testnet.tempo.xyz/tx/0x93b1f73b4cd807081aed5b9d482b49e432aa22e33ed9e9e3a6b0315b86d8e18f",
-        "approve merchant xMXN v2 → card (refund allowance)": "https://explore.testnet.tempo.xyz/tx/0x9b3a86fe6c005b9ca707dc7afd9e17c17e29014a33a0c2d4214bce419a155798",
-        "merchant refunds 10 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0x49e33f6d4b13e347723926943de7ca8025b8dc0f6babdf070bca14b92042c42c"
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0xf63ac5b97cfcac2483b3bc7d5e742d0aff63d9be5518ac00f6de26641b54b775",
+        "Ahorro en pesos: supply 100 xMXN v2 to the credit pool": "https://explore.testnet.tempo.xyz/tx/0x5104aa9cc83501747d1c228da8ca47de59e5bfe1b5dd524f91d5d657d3deec79",
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xdc0888faaf397c81d742c0298c4ea63193b7bd413ed9d4ec48bc5820a2b2f646",
+        "Ahorro en dólares: stake 50 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xf7de9bcb5a472c0aa8dbfa905b88940eda0b8cbd60ae4a09924837779bbcd5fb",
+        "buy tTBILL with 100 OUSD": "https://explore.testnet.tempo.xyz/tx/0xbf55024bbc508b9cd7ec81b9f5ef053ab8b2bf0b6c5c8be53513d9e01cfabc3d",
+        "approve tTBILL → InvestDesk": "https://explore.testnet.tempo.xyz/tx/0x8589313e808a0dcd1ddb314fc7482d07437786c0a20dcab8b8cd310f32cd9bb6",
+        "sell 0.4988 tTBILL back": "https://explore.testnet.tempo.xyz/tx/0x260653a81aa48e3c21f44f0a5f1af9f792ca2d974c3fed0e881dd43ff1029ac4"
       },
       "notes": []
     }

@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T02:59:56.719Z",
+  "protocol": "v2",
+  "steps": [
+    "V2",
+    "V10"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V2": {
+      "status": "pass",
+      "txs": {
+        "approve tTBILL → vault": "https://explore.testnet.tempo.xyz/tx/0x158a8d068d999791d0c51a91cfff861f3ca0c0492d1eb94de501b10edde7236e",
+        "depositCollateral 10 tTBILL": "https://explore.testnet.tempo.xyz/tx/0x3c1c69ef10f813574f33f39862e054efa849f739313ca1a0d1400b07fa1f1b9b",
+        "mint 6,124.15 xMXN v2 against tTBILL": "https://explore.testnet.tempo.xyz/tx/0x162a99ffb489e8e499d50efb455b295b62059ab262aebc9632bb96c6f7363e1c"
+      },
+      "notes": []
+    },
+    "V10": {
+      "status": "fail",
+      "txs": {
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0xbc341c3e76836be51f94307f0cdf209ff73bcc89aab9195c9201fea7a4fd1f7f",
+        "Ahorro en pesos: supply 100 xMXN v2 to the credit pool": "https://explore.testnet.tempo.xyz/tx/0x656159f0e846582e3b5ef85c57c303b0a1839f956bfd19cefd6a8453218fb125",
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xef300ffd7138439c54ce24c473c76a52d37475d3ec64df62c6ab8ed22072aba7",
+        "Ahorro en dólares: stake 50 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x3d97e4b1fd7b130ded4e0bbac523dad8374ccff29fa24a9de2c5dc563ab37a09"
+      },
+      "notes": [],
+      "error": "buy with minOut above the quote: reverted with 0x13be252b, expected Slippage"
+    }
+  }
+}

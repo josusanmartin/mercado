@@ -36,7 +36,7 @@ for (const line of existsSync(join(ROOT, '.env.local')) ? readFileSync(join(ROOT
   if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '')
 }
 const shared = await import('@mercado/shared')
-const { activeAddresses, mercadoCardAbi, multiCollateralVaultAbi, moveAmmAbi, stakedOusdAbi, demoRwaAbi, priceFeedAbi, creditPoolAbi, tip20Abi, fxOracleAdapterAbi } = shared as any
+const { activeAddresses, investDeskAbi, mercadoCardAbi, multiCollateralVaultAbi, moveAmmAbi, stakedOusdAbi, demoRwaAbi, priceFeedAbi, creditPoolAbi, tip20Abi, fxOracleAdapterAbi } = shared as any
 const A = activeAddresses('v2')
 
 const RPC = process.env.TEMPO_RPC_URL ?? tempoModerato.rpcUrls.default.http[0]
@@ -50,7 +50,8 @@ const col = (sym: string) => A.collaterals.find((c: any) => c.symbol === sym)!
 
 // ---------- logging / evidence ----------
 const C = { dim: '\x1b[2m', b: '\x1b[1m', g: '\x1b[32m', r: '\x1b[31m', y: '\x1b[33m', c: '\x1b[36m', x: '\x1b[0m' }
-const fmt = (v: bigint, d = 6) => Number(formatUnits(v, d)).toLocaleString('en-US', { maximumFractionDigits: d === 8 ? 4 : 2 })
+const fmt = (v: bigint, d = 6, digits = d === 8 ? 4 : 2) => Number(formatUnits(v, d)).toLocaleString('en-US', { maximumFractionDigits: digits })
+const fmt4 = (v: bigint) => fmt(v, 6, 4)
 const pct = (bps: bigint) => (bps > 10n ** 12n ? '∞' : `${(Number(bps) / 100).toFixed(1)}%`)
 const txUrl = (h: Hash) => `${EXPLORER}/tx/${h}`
 const log = (s = '') => console.log(`   ${s}`)
@@ -236,7 +237,18 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const t = col('tTBILL')
       const p = await read(A.vault, multiCollateralVaultAbi, 'params', [t.token])
       const qty = parseUnits('10', 6)
-      if ((await bal(t.token, lp.address)) < qty) await send('tTBILL faucet 10 (demo, not a security)', lp, { address: t.token, abi: demoRwaAbi, functionName: 'faucet', args: [qty] })
+      // tTBILL issuance is gated (R-042): the institution BUYS it on Mercado Invest's desk (the ecosystem loop)
+      const have = await bal(t.token, lp.address)
+      if (have < qty) {
+        const desk: Address = (A as any).investDesk ?? (shared as any).moderatoDeployment?.v2?.investDesk
+        const [px] = await read(t.feed ?? (await read(A.vault, multiCollateralVaultAbi, 'params', [t.token])).feed, priceFeedAbi, 'price')
+        const ousdIn = ((qty - have) * px) / 10n ** 8n + parseUnits('5', 6) // + spread headroom
+        await ensureOusd(lp.address, ousdIn, 'LP')
+        await approveIfNeeded(lp, A.ousd, desk, ousdIn, 'OUSD → InvestDesk')
+        const [tOut] = await read(desk, investDeskAbi, 'quoteBuy', [ousdIn])
+        await send(`buy ${fmt(tOut)} tTBILL on InvestDesk for ${fmt(ousdIn)} OUSD`, lp, { address: desk, abi: investDeskAbi, functionName: 'buy', args: [ousdIn, (tOut * 995n) / 1000n] })
+      }
+      void demoRwaAbi
       const [c0, d0] = await read(A.vault, multiCollateralVaultAbi, 'getPosition', [lp.address, t.token])
       await approveIfNeeded(lp, t.token, A.vault, qty, 'tTBILL → vault')
       await send('depositCollateral 10 tTBILL', lp, { address: A.vault, abi: multiCollateralVaultAbi, functionName: 'depositCollateral', args: [t.token, qty] })
@@ -553,6 +565,67 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       assert((await bal(A.xMXN, holder.address)) - h1 === refund, 'holder got the 10 back')
       await expectRevert('refund more than what is left of the charge', { address: card, abi: mercadoCardAbi, functionName: 'refund', args: [ev.args.chargeId, amount], account: terminal }, ['RefundTooLarge'])
       ok('refund 10 → holder; over-refund rejected; the card network/PAN is the only simulated part (MOCKS.md A8)')
+    },
+  },
+  {
+    id: 'V10',
+    title: 'Invest: a saver grows money three real ways: pesos in the credit pool, dollars in sOUSD, and T-bills on the InvestDesk',
+    async run() {
+      const desk: Address | undefined = (A as any).investDesk ?? (shared as any).moderatoDeployment?.v2?.investDesk
+      if (!desk) throw new SkipStep('deployments.v2.investDesk missing')
+      const saver = account('SAVER')
+      const t = col('tTBILL')
+      const s = col('sOUSD')
+      // 1) Ahorro en pesos: supply xMXN v2 to CreditPool v2 (yield = realized driver fees, variable, not guaranteed)
+      const pesos = parseUnits('100', 6)
+      assert((await bal(A.xMXN, saver.address)) >= pesos, 'saver holds ≥100 xMXN v2')
+      const lb0: bigint = await read(A.creditPool, creditPoolAbi, 'lenderBalance', [saver.address])
+      await approveIfNeeded(saver, A.xMXN, A.creditPool, pesos, 'xMXN v2 → pool v2')
+      await send('Ahorro en pesos: supply 100 xMXN v2 to the credit pool', saver, { address: A.creditPool, abi: creditPoolAbi, functionName: 'supply', args: [pesos] })
+      const lb1: bigint = await read(A.creditPool, creditPoolAbi, 'lenderBalance', [saver.address])
+      assert(lb1 - lb0 >= pesos - 1n, `lender claim grew by ~100 (${fmt(lb1 - lb0)})`)
+      ok(`saver's pool claim ${fmt(lb0)} → ${fmt(lb1)} xMXN v2 (earns only realized driver fees; no guaranteed return)`)
+      // 2) Ahorro en dólares: stake OUSD → sOUSD (real ERC-4626; demo-funded yield)
+      const usd = parseUnits('50', 6)
+      await ensureOusd(saver.address, usd, 'Saver')
+      await approveIfNeeded(saver, A.ousd, s.token, usd, 'OUSD → sOUSD')
+      const sh0 = await bal(s.token, saver.address)
+      await send('Ahorro en dólares: stake 50 OUSD → sOUSD', saver, { address: s.token, abi: stakedOusdAbi, functionName: 'deposit', args: [usd, saver.address] })
+      const shares = (await bal(s.token, saver.address)) - sh0
+      const worth: bigint = await read(s.token, stakedOusdAbi, 'convertToAssets', [shares])
+      assert(shares > 0n && worth >= usd - 1n, 'sOUSD shares worth ≥ the OUSD staked')
+      ok(`${fmt(shares)} sOUSD, worth ${fmt(worth)} OUSD now (mock APR ${Number(await read(s.token, stakedOusdAbi, 'aprBps')) / 100}%, demo-funded)`)
+      // 3) T-bills on the InvestDesk: buy with OUSD, then sell part back (buy-back limited to what you bought)
+      const ousdIn = parseUnits('100', 6)
+      await ensureOusd(saver.address, ousdIn, 'Saver')
+      const [tOut, fee, px] = await read(desk, investDeskAbi, 'quoteBuy', [ousdIn])
+      log(`quote: 100 OUSD → ${fmt4(tOut)} tTBILL at $${fmt(px, 8)} (spread fee ${fmt4(fee)} tTBILL = ${Number(await read(desk, investDeskAbi, 'spreadBps'))} bps; admin feed, demo RWA)`)
+      const d = { address: desk, abi: investDeskAbi, account: saver } as const
+      // the desk pulls OUSD before checking minOut, so approve first (otherwise sims revert InsufficientAllowance)
+      await approveIfNeeded(saver, A.ousd, desk, ousdIn, 'OUSD → InvestDesk')
+      await expectRevert('buy with minOut above the quote', { ...d, functionName: 'buy', args: [ousdIn, tOut + 1n] }, ['Slippage'])
+      const maxUsd: bigint = await read(desk, investDeskAbi, 'maxTradeUsd')
+      // buy() pulls OUSD before validating, so check the size cap through quoteBuy (the same check, no allowance needed)
+      await expectRevert(`trade above the ${fmt(maxUsd)} USD max`, { ...d, functionName: 'quoteBuy', args: [maxUsd + parseUnits('1', 6)] }, ['TradeTooLarge'])
+      const [rO0, rT0] = await read(desk, investDeskAbi, 'reserves')
+      const tb0 = await bal(t.token, saver.address)
+      const bought0: bigint = await read(desk, investDeskAbi, 'bought', [saver.address])
+      await send(`buy tTBILL with 100 OUSD`, saver, { ...d, functionName: 'buy', args: [ousdIn, (tOut * 995n) / 1000n] })
+      const got = (await bal(t.token, saver.address)) - tb0
+      assert(got >= (tOut * 995n) / 1000n, 'received ≥ minOut tTBILL')
+      const [rO1, rT1] = await read(desk, investDeskAbi, 'reserves')
+      assert(rO1 - rO0 === ousdIn && rT0 - rT1 === got, 'desk reserves moved by exactly the trade (finite inventory, no mint)')
+      const boughtNow: bigint = await read(desk, investDeskAbi, 'bought', [saver.address])
+      await expectRevert('sell back more than you bought', { ...d, functionName: 'sell', args: [boughtNow + 1n, 0n] }, ['ExceedsBoughtBalance'])
+      const half = got / 2n
+      const [oOut] = await read(desk, investDeskAbi, 'quoteSell', [half])
+      await approveIfNeeded(saver, t.token, desk, half, 'tTBILL → InvestDesk')
+      const o0 = await bal(A.ousd, saver.address)
+      await send(`sell ${fmt4(half)} tTBILL back`, saver, { ...d, functionName: 'sell', args: [half, (oOut * 995n) / 1000n] })
+      const back = (await bal(A.ousd, saver.address)) - o0
+      assert(back >= (oOut * 995n) / 1000n, 'received ≥ minOut OUSD')
+      ok(`bought ${fmt4(got)} tTBILL for 100 OUSD, sold ${fmt4(half)} back for ${fmt(back)} OUSD (spread both ways); bought balance ${fmt4(bought0)} → ${fmt4(boughtNow)} → ${fmt4(await read(desk, investDeskAbi, 'bought', [saver.address]))}`)
+      ok('tTBILL is a demo RWA on an admin price feed (not a security, no real T-bill); the trades and inventory are real (MOCKS.md A6)')
     },
   },
   {
