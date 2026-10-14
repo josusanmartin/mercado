@@ -30,13 +30,13 @@ function build({ platform, profile, seed, weeks, driver, activeFrom, base, jitte
 }
 const sets = [
   build({ platform: "didi", profile: "steady", seed: 101, weeks: 12, activeFrom: 0, base: { trips: 105, fare: 112 }, jitter: 0.08, hours: 44,
-    driver: { driverId: "demo-didi-steady-001", firstName: "Andrés", city: "Ciudad de México", vehicle: "Toyota Yaris 2020", rating: 4.91, activatedAt: "2023-11-06" } }),
+    driver: { driverId: "demo-didi-steady-001", firstName: "Javier", city: "Ciudad de México", vehicle: "Toyota Yaris 2020", rating: 4.91, activatedAt: "2023-11-06" } }),
   build({ platform: "didi", profile: "irregular", seed: 113, weeks: 10, activeFrom: 0, base: { trips: 70, fare: 106 }, jitter: 0.3, hours: 26,
     driver: { driverId: "demo-didi-irregular-002", firstName: "Karla", city: "Puebla", vehicle: "Hyundai Grand i10 2019", rating: 4.84, activatedAt: "2025-02-10" } }),
   build({ platform: "didi", profile: "new-driver", seed: 127, weeks: 8, activeFrom: 5, base: { trips: 64, fare: 108 }, jitter: 0.15, hours: 28,
     driver: { driverId: "demo-didi-new-003", firstName: "Iván", city: "Querétaro", vehicle: "Nissan March 2021", rating: 4.88, activatedAt: "2026-09-21" } }),
   build({ platform: "rappi", profile: "steady", seed: 201, weeks: 12, activeFrom: 0, base: { trips: 140, fare: 52 }, jitter: 0.09, hours: 48,
-    driver: { driverId: "demo-rappi-steady-001", firstName: "Daniela", city: "Guadalajara", vehicle: "Motocicleta Italika 150", rating: 4.95, activatedAt: "2024-06-03" } }),
+    driver: { driverId: "demo-rappi-steady-001", firstName: "Javier", city: "Ciudad de México", vehicle: "Motocicleta Italika 150", rating: 4.95, activatedAt: "2024-06-03" } }),
   build({ platform: "rappi", profile: "irregular", seed: 213, weeks: 10, activeFrom: 0, base: { trips: 100, fare: 50 }, jitter: 0.3, hours: 26,
     driver: { driverId: "demo-rappi-irregular-002", firstName: "Jorge", city: "Monterrey", vehicle: "Bicicleta", rating: 4.79, activatedAt: "2025-04-14" } }),
   build({ platform: "rappi", profile: "new-driver", seed: 227, weeks: 8, activeFrom: 5, base: { trips: 90, fare: 50 }, jitter: 0.15, hours: 26,

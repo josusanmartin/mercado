@@ -6,8 +6,8 @@
   "profile": "steady",
   "driver": {
     "driverId": "demo-rappi-steady-001",
-    "firstName": "Daniela",
-    "city": "Guadalajara",
+    "firstName": "Javier",
+    "city": "Ciudad de México",
     "vehicle": "Motocicleta Italika 150",
     "rating": 4.95,
     "activatedAt": "2024-06-03",

@@ -1,7 +1,7 @@
 // Earnings data providers for the credit service. Only the demo providers are functional: they serve
 // deterministic, clearly labeled synthetic fixtures ("Demo Uber Data", "Demo DiDi Data", "Demo Rappi Data").
 // No real platform data is used, and nothing is affiliated with Uber, DiDi or Rappi.
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { EarningsFixtureSchema } from "@mercado/shared";
 import { DEMO_PLATFORM_LABELS } from "@mercado/shared";
@@ -25,16 +25,18 @@ export interface EarningsProvider {
   getPayments(driverRef: string): Promise<PaymentRecord[]>;
 }
 
-const cache = new Map<string, EarningsFixture>();
+// cached per file mtime, so an edited fixture is served without restarting the server
+const cache = new Map<string, { mtimeMs: number; fixture: EarningsFixture }>();
 
 export function loadFixture(profile: DriverProfileId, platform: DriverPlatform = "uber"): EarningsFixture {
   const key = `${platform}/${profile}`;
-  const hit = cache.get(key);
-  if (hit) return hit;
   const file = path.join(repoRoot(), "fixtures", platform, `${profile}.json`);
+  const { mtimeMs } = statSync(file);
+  const hit = cache.get(key);
+  if (hit && hit.mtimeMs === mtimeMs) return hit.fixture;
   const fixture = EarningsFixtureSchema.parse(JSON.parse(readFileSync(file, "utf8")));
   if (fixture.platform !== platform) throw new Error(`fixture ${key} is labeled ${fixture.platform}`);
-  cache.set(key, fixture);
+  cache.set(key, { mtimeMs, fixture });
   return fixture;
 }
 
