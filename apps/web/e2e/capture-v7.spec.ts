@@ -28,7 +28,8 @@ async function go(page: Page, path: string) {
   await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
   await page.waitForTimeout(3500) // live reads settle
   await expect(page.locator('html')).toHaveClass(/dark/)
-  await expect(page.locator('html')).toHaveAttribute('data-present', /1|true/)
+  // web sets html[data-present] as an empty boolean attribute; presence = capture mode on
+  await expect.poll(() => page.evaluate(() => document.documentElement.hasAttribute('data-present')), { timeout: 10_000 }).toBe(true)
 }
 
 const phoneOf = (page: Page) => page.getByRole('group', { name: /Android/ }).first()
