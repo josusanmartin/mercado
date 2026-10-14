@@ -6,7 +6,22 @@ Tracks every check from SPEC §6 (plus the §0 journey). `qa` maintains this fil
 
 Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
-## A. SPEC §0 end-to-end journey (on Moderato, `scripts/demo-journey.ts`)
+## Final status (14 Oct 2026, 03:20 UTC): v2 live on :3100, six products
+
+| Area | Status | Evidence |
+|---|---|---|
+| SPEC §6 required checks 1–11 | ✅ 11/11 | §B below (v1 evidence; the same properties hold on v2 per §F) |
+| Contracts | ✅ 136/136 Foundry tests, 9 suites | `scripts/evidence/forge-test.txt` |
+| Source verification | ✅ every v1 + v2 contract `exact_match/exact_match` on Tempo's Sourcify (`contracts.tempo.xyz`), checked by qa 03:17 UTC | links in `README.md` |
+| v2 journey (six products) | ✅ V0–V10 + VS green on Moderato | §F below, `scripts/evidence/v2-run-*.json` |
+| Post-flip HTTP check (:3100 = v2) | ✅ attestation bound to pool v2, bills + underwriter 402s in xMXN v2 | §E (V2) |
+| Mocks only where necessary | ✅ qa (`check-mocks.ts` PASS); review re-audit requested; G3 (v2 /mint OUSD $1 wording) reopened → contracts | `MOCKS.md` |
+| Indexer = chain | ✅ minted − burned == totalSupply (v1 + v2) | §E (IX) |
+| Crash/restart safety (bills) | ✅ | §A2 (X3) |
+| Spending-proof hero video | ✅ 44 s, real txs | §F (F9), `deck/assets/hero-spend-final.mp4` |
+| UI e2e (6 products, honesty, redirects, mobile) | 🟡 most green; open: /remesas desktop overflow, mobile Demo-mode control | §C |
+
+## A. SPEC §0 end-to-end journey: v1, pre-flip (`scripts/demo-journey.ts`)
 
 | # | Step | Owner | Status | Evidence |
 |---|---|---|---|---|
@@ -50,15 +65,34 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | IX | Activity indexer (getLogs) is complete and correct | contracts / qa | ✅ | `scripts/check-indexer.ts` on v1 and v2: minted − burned == totalSupply (68,650 / 745,661.61), Σ Borrowed == totalBorrowed, lent − repaid + fees == outstanding, sampled txs succeeded, no duplicate rows |
 | V2 | `PROTOCOL=v2` journey green end to end (V2-SWITCH gate) | qa / contracts / api | ✅ | Gate passed; lead flipped :3100 to v2 at 02:37 UTC. `scripts/demo-journey-v2.ts` V0–V10 + VS: Create (sOUSD, tTBILL via InvestDesk), Move (mint-to-recipient, redeem), Lend/Spend/Repay on pool v2, underwriter bot over HTTP, Card (issue, limit, tap auth, frozen decline + retry, charge, refund), Invest (pool supply, sOUSD, T-bill buy/sell), stress liquidation + restore. Post-flip HTTP check on :3100 green |
 
+## F. v2 live: six products, one currency (`PROTOCOL=v2 npx tsx scripts/demo-journey.ts`)
+
+All at the relayed USD/MXN (~18.37). Every step asserts the supply identity `xMXN.totalSupply == Σ vault debt + AMM liability` after each mint/burn, and every negative check is a simulation that must revert with the exact custom error.
+
+| # | Product · step | Status | Evidence |
+|---|---|---|---|
+| F1 | **Mint**: stake OUSD → sOUSD (demo), mint xMXN v2 at 250% on the deposit; over-mint / over-withdraw → `RatioTooLow`, non-issuer mint → `Unauthorized` | ✅ | [stake](https://explore.testnet.tempo.xyz/tx/0x5c5d41b751160138c31bdf1afd5f06b7eae9937ebf3576e8033a41057cbc762f), [mint 1,469.97](https://explore.testnet.tempo.xyz/tx/0xaef469ee31baca15a225d5b79d36efeeeefbe47ba3391c9f330e2d4b63df17be) |
+| F2 | **Mint**: tTBILL (demo RWA, gated issuance, bought on InvestDesk) at 300%; independent positions | ✅ | [deposit](https://explore.testnet.tempo.xyz/tx/0x3c1c69ef10f813574f33f39862e054efa849f739313ca1a0d1400b07fa1f1b9b), [mint 6,124.15](https://explore.testnet.tempo.xyz/tx/0x162a99ffb489e8e499d50efb455b295b62059ab262aebc9632bb96c6f7363e1c) |
+| F3 | **Remesas/Global**: 50 OUSD → xMXN v2 **minted straight to the recipient** in one tx (Transfer from 0x0); Slippage / SwapTooLarge sims | ✅ | [50 OUSD → 916.55 xMXN to Rosa](https://explore.testnet.tempo.xyz/tx/0x3829f78ed58a67fb0182afed88360afad1be03f3d2def1fda4dcb2c13cf15e31) |
+| F4 | **Global**: redeem 200 xMXN v2 → OUSD (burned); ExceedsLiability sim; 24h bucket recorded | ✅ | [redeem 200 → 10.86 OUSD](https://explore.testnet.tempo.xyz/tx/0x61d4f51e63f85c9e9b46ada4cdb9f030d1450172e3e8fe0c170ecf0ec1d54fdb) |
+| F5 | **Crédito**: attestation (api credit service) bound to CreditPool v2 → borrow; tampered sig / replay sims | ✅ | [borrow 500](https://explore.testnet.tempo.xyz/tx/0xbb9f6edeea5275c4997c6f052f50a26922dcdabd2e0b785178ba86557ab0cb33), [repay 510, fees realized](https://explore.testnet.tempo.xyz/tx/0xcc9b79f6216e1782629429466288da208714d053792256178f2f71a6868de2b8) |
+| F6 | **Spend (MPP)**: Telcel 402 paid in xMXN v2 → SIMULATED top-up; idempotent retry | ✅ | [100 xMXN v2 → merchant](https://explore.testnet.tempo.xyz/tx/0x625b5bc111d0ef59f4cb3d2e5b9c4ceecddd4a4074c539101bd99f876820f69e) |
+| F7 | **Agents (MPP)**: underwriter bot over real HTTP on :3100, 402 → 2 xMXN v2 → report + Payment-Receipt; no attestation leaked | ✅ | [2 xMXN v2](https://explore.testnet.tempo.xyz/tx/0xe560865f15ac4d253d28d44a1f481f797702ae3917f205e095fb0b278ca122ce) |
+| F8 | **Card**: issue → set limit → holder EIP-712 tap → terminal charge → refund. Sims: wrong signer / raised amount → `BadTapSignature`, non-merchant → `NotMerchant`, expired → `TapExpired`, over limit → `OverDailyLimit`, non-holder freeze/limit → `NotHolder`, frozen → `CardIsFrozen`, replay → `TapReplayed`, over-refund → `RefundTooLarge` | ✅ | [issue](https://explore.testnet.tempo.xyz/tx/0x2d44d537ac81950a39af8fe2cdfdfea16cf088c94f6047f7b71a3032b8d39b05), [limit](https://explore.testnet.tempo.xyz/tx/0xd0e0f9ddb8bcbecc6a93391c47deecb875528c57f9d4b06ce4d3371406155bda), [freeze](https://explore.testnet.tempo.xyz/tx/0x37d728bc084c80cae3dc2d2e9f135dbc54168021e35d5a15f3804aba1765a0d5), [unfreeze](https://explore.testnet.tempo.xyz/tx/0x4b1733e8022b7aec7d40eae47ead572700e84f96d2b6227819843e3582e8fd38), [charge 50](https://explore.testnet.tempo.xyz/tx/0x93b1f73b4cd807081aed5b9d482b49e432aa22e33ed9e9e3a6b0315b86d8e18f) |
+| F9 | **Spending proof in the real UI** (judge item 2): Javier draws 375 → Card tap declined while frozen ("Tarjeta congelada", nothing charged) → unfreeze → charged exactly once → receipts + "Debes 382.50" | ✅ | `deck/assets/hero-spend-final.mp4` (44 s); [draw](https://explore.testnet.tempo.xyz/tx/0x083a2de4b0ac30b74e5e5590dc59afd451b73a612275033ea022461b3711357c), [freeze](https://explore.testnet.tempo.xyz/tx/0x45186458dff70dbb34c80d19c7aa691e213e464afd258c3b0833db1b12816161), [unfreeze](https://explore.testnet.tempo.xyz/tx/0x2d41a60e9e6c1993b0d3e9ef42e0ddad14ed29720a34f51c13e538150644bdeb), [charge #5, 150](https://explore.testnet.tempo.xyz/tx/0x5f97a04d6a6c52f95120c960de67de476f9012bf067f004cf4c1603946887ba5) |
+| F10 | **Invest**: supply 100 xMXN v2 to the pool (realized fees only), stake 50 OUSD → sOUSD, buy tTBILL with 100 OUSD and sell half back; Slippage / TradeTooLarge / ExceedsBoughtBalance sims (R-042 drain closed) | ✅ | [supply](https://explore.testnet.tempo.xyz/tx/0x5104aa9cc83501747d1c228da8ca47de59e5bfe1b5dd524f91d5d657d3deec79), [stake](https://explore.testnet.tempo.xyz/tx/0xf7de9bcb5a472c0aa8dbfa905b88940eda0b8cbd60ae4a09924837779bbcd5fb), [buy](https://explore.testnet.tempo.xyz/tx/0xbf55024bbc508b9cd7ec81b9f5ef053ab8b2bf0b6c5c8be53513d9e01cfabc3d), [sell](https://explore.testnet.tempo.xyz/tx/0x260653a81aa48e3c21f44f0a5f1af9f792ca2d974c3fed0e881dd43ff1029ac4) |
+| F11 | **Risk**: StressDemoV2 forces −30% FX, AMM coverage 307% → 215%, a 160% v2 position is liquidated, then the price is restored and AMM + desk unpaused | ✅ | [liquidation](https://explore.testnet.tempo.xyz/tx/0xa0ca227ab323b30ed745379fb3038899b74f1954aa2e2191ee482eb52e61b6d0) |
+
 ## C. Pass D robustness (UI / ops)
 
 | # | Check | Owner | Status | Evidence |
 |---|---|---|---|---|
+| D6 | Spending-proof hero (Card, v2 UI) | qa / mobile / mobile2 | ✅ | §F (F9) |
 | D5 | Hero recording: driver advance → 402 bill payment → receipt + remaining debt, in a real browser | api / qa | ✅ | `apps/web/e2e/hero.spec.ts` → `deck/assets/hero-driver.mp4` (48s, real testnet txs) |
-| D1 | Playwright smoke test covers every tab | qa / web | ✅ | `smoke.spec.ts`: 26/27 pass (desktop + mobile, every tab, labels, no runtime errors, API 402/400 checks) |
-| D2 | Mobile layout (~390px) usable on every tab | web | 🟡 | Pixel 7: no overflow on 5/6 tabs; /send overflows by 3px (reported to web) |
-| D3 | Readable errors: insufficient liquidity, stale oracle, wrong network, revert reasons | web | ⬜ | |
-| D4 | Persistent "testnet prototype" banner; mock-oracle and "Testnet OUSD (no real value)" labels visible | web | ✅ | Console footer/hint bar on every tab, desktop + mobile (smoke.spec) |
+| D1 | Playwright smoke covers every product route | qa / web | ✅ | `ecosystem.spec.ts`: 6 products + home, honesty footer, redirects (/credit, /earn, /pay, /send), Crédito tabs, /card + /invest labels, no runtime errors (desktop + Pixel 7 + exact 390px) |
+| D2 | Mobile layout usable | web / mobile | 🟡 | Remesas full-screen at 390px with no overflow; open: /remesas desktop 11px overflow, mobile Demo-mode control not visible |
+| D3 | Readable errors (frozen card, over limit, expired tap, coverage, slippage, stale oracle, wrong network) | contracts / web | ✅ | `readableError()` maps v2 custom errors Spanish-first (e.g. "Tarjeta congelada · Card is frozen…"), visible in `hero-spend-final-declined.png` |
+| D4 | Persistent honesty footer + per-product labels | web | ✅ | Footer "Testnet prototype · sin valor real · OUSD has no real value · xMXN is not redeemable for pesos" on every route (e2e); per-product mock badges |
 
 ## D. Adversarial review log
 
