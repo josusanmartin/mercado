@@ -155,7 +155,7 @@ PRODUCTS = [
          steps=[("store", "Enter supplier"), ("shield-check", "Check the minimum"), ("banknote", "Pay")],
          local="business KYC", shot=("panel", "act-global.png"),
          alt="Mercado Global: pay 1,000 OUSD to a supplier, with the quoted pesos and the minimum enforced on-chain, before pressing Pay",
-         notes="Global pays suppliers: the business sees the quote and an on-chain minimum, then pays in xMXN. Partners can also buy a signed quote through HTTP 402."),
+         notes="Global pays suppliers in xMXN: the payment either delivers at least the quoted minimum or reverts. Partners can also buy a signed quote through HTTP 402."),
     dict(id="credito", num="06", name="Crédito", col="#E36A97", line="Working-capital advances based on earnings history.",
          steps=[("link", "Connect earnings"), ("gauge", "Check your limit"), ("hand-coins", "Draw xMXN")],
          local="income-data integration", shot=("phone", "act-credito.png"),
