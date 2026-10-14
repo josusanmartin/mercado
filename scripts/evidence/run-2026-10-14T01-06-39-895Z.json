@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-14T01:06:39.894Z",
+  "api": "http://localhost:3100",
+  "steps": [
+    "J1",
+    "J2"
+  ],
+  "evidence": {
+    "J0": {
+      "status": "pass",
+      "txs": {},
+      "notes": [
+        "mxnPerUsd=2000000000 isMock=true"
+      ]
+    },
+    "J1": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x74aa169feb03bade8cd05602222205da956a7fea5255e9e43f9ea15f641f303c",
+        "depositCollateral 1,000 OUSD": "https://explore.testnet.tempo.xyz/tx/0x41a703d620888f53b79445e178f55787d205953407c1d8cb69d52645ae20ac8e"
+      },
+      "notes": []
+    },
+    "J2": {
+      "status": "pass",
+      "txs": {
+        "mint 6,666.67 xMXN": "https://explore.testnet.tempo.xyz/tx/0x059229341477770716ee1c3485ac6b409b7420901d52ecfcf1eb04bc715ba4b4"
+      },
+      "notes": []
+    }
+  }
+}

@@ -54,7 +54,7 @@ The spine of the demo is **one xMXN flow**: the lender funds the pool, the drive
 
 ## Optional (after the main take): on-chain liquidation proof
 
-Run `npx tsx scripts/demo-journey.ts --steps J7` (wraps `packages/contracts/script/StressDemo.s.sol`). It pauses the desk, opens a separate ~160% position, force-sets the mock oracle 20 → 13, liquidates that position from a liquidator account, restores the price and unpauses the desk. Then it re-runs the health check. Show the `Liquidated` tx on the explorer.
+Run `npx tsx scripts/demo-journey.ts --steps J7` (wraps `packages/contracts/script/StressDemo.s.sol`). It pauses the desk, opens a separate ~160% position, force-sets the mock oracle 20 → 14 (160% → 112%: under the 135% line but solvent, so the liquidator gets the full 10% bonus), liquidates that position from a liquidator account, restores the price and unpauses the desk. Then it re-runs the health check. Show the `Liquidated` tx on the explorer.
 - *"Liquidation isn't a slide: here's a real liquidation on Tempo, on a dedicated position, with the mock oracle restored seconds later."*
 
 ## 2:35 Close

@@ -136,6 +136,7 @@ const vaultAbi = parseAbi([
   'function getPosition(address) view returns ((uint256 collateral, uint256 debt))',
   'function collateralRatio(address) view returns (uint256)',
   'function maxMintable(address) view returns (uint256)',
+  'function maxWithdrawable(address) view returns (uint256)',
   'error RatioTooLow(uint256 ratioBps, uint256 requiredBps)',
 ])
 const deskAbi = parseAbi([
@@ -396,6 +397,9 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       // negative check (simulation only, no gas): minting past 150% must revert
       const over = (await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'maxMintable', args: [lp.address] })) + 1_000_000n
       await expectRevert('mint above the 150% limit', { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [over], account: lp }, ['RatioTooLow'])
+      // collateral withdrawal can't make the position unhealthy: maxWithdrawable is exact, +1 base unit reverts
+      const maxW = await pub.readContract({ address: d.vault, abi: vaultAbi, functionName: 'maxWithdrawable', args: [lp.address] })
+      await expectRevert(`withdrawCollateral(maxWithdrawable ${fmt(maxW)} + 0.000001)`, { address: d.vault, abi: vaultAbi, functionName: 'withdrawCollateral', args: [maxW + 1n], account: lp }, ['RatioTooLow'])
       // only the vault may mint xMXN: a direct TIP-20 mint from the LP must revert
       await expectRevert(
         'direct xMXN.mint by a non-vault account',
@@ -579,7 +583,7 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
       const fromBlock = await pub.getBlockNumber()
       // ~/.local/bin/forge is an unrelated CLI on this box; use Foundry's explicitly
       const forge = process.env.FORGE_BIN ?? join(process.env.HOME ?? '', '.foundry/bin/forge')
-      log(`running ${forge} script script/StressDemo.s.sol --broadcast (pause desk → 160% position → forceSet 20→13 → liquidate → restore → unpause)`)
+      log(`running ${forge} script script/StressDemo.s.sol --broadcast (pause desk → 160% position → forceSet 20→14 (STRESS_PRICE) → liquidate → restore → unpause)`)
       const { spawnSync } = await import('node:child_process')
       const r = spawnSync(forge, ['script', 'script/StressDemo.s.sol', '--rpc-url', RPC, '--broadcast'], {
         cwd: join(ROOT, 'packages/contracts'),
