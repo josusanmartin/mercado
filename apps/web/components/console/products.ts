@@ -96,7 +96,7 @@ export const PRODUCTS: Product[] = [
     icon: PiggyBank,
     color: "var(--c-invest)",
     onColor: "#111418",
-    demo: "lender",
+    demo: "saver",
   },
 ];
 
