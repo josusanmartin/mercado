@@ -411,7 +411,7 @@ function EarningsBars({ weeks, height = 112 }: { weeks: { weekStart: string; net
           <span
             key={w.weekStart}
             className="m-rise flex-1"
-            style={{ height: `${(w.netMxn / max) * 100}%`, background: i === last ? ROSA : "#0a0a0a", animationDelay: `${i * 22}ms` }}
+            style={{ height: `${(w.netMxn / max) * 100}%`, background: i === last ? ROSA : "var(--m-on-surface)", animationDelay: `${i * 22}ms` }}
             title={`${w.weekStart}: ${fmtNumber(w.netMxn, 0)} MXN`}
           />
         ))}
@@ -475,7 +475,7 @@ function Ganancias({ platform, data, adv }: Props) {
             <EarningsBars weeks={d.weeks} />
           </div>
           <div className="flex items-center gap-3 px-5 pt-6">
-            <span className="grid size-10 place-items-center rounded-full bg-[var(--m-on-surface)] text-[15px] font-semibold text-white">{d.driver.firstName[0]}</span>
+            <span className="grid size-10 place-items-center rounded-full bg-[var(--m-on-surface)] text-[15px] font-semibold text-[var(--m-surface)]">{d.driver.firstName[0]}</span>
             <div className="min-w-0">
               <p className="text-[15px] font-semibold">
                 {d.driver.firstName} · {d.driver.city}

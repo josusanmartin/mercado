@@ -198,7 +198,7 @@ export function ActionRow({ children }: { children: ReactNode }) {
   return <div className="flex justify-between px-1">{children}</div>;
 }
 
-/** Black pill (or the product accent with `accent`), 52px. Shows a spinner + label while busy. */
+/** Black pill (the kit inverse token: cream in the ink theme), or the product accent with `accent`; 52px. Shows a spinner + label while busy. */
 export function Pill({
   children,
   onClick,
@@ -222,10 +222,10 @@ export function Pill({
       disabled={disabled}
       className={cn(
         "inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold",
-        variant === "solid" && (accent ? "bg-[var(--m-accent)] text-[var(--m-on-accent)]" : "bg-[#0a0a0a] text-white"),
-        variant === "line" && "border border-[#0a0a0a] text-[#0a0a0a]",
+        variant === "solid" && (accent ? "bg-[var(--m-accent)] text-[var(--m-on-accent)]" : "bg-[var(--m-inverse)] text-[var(--m-on-inverse)]"),
+        variant === "line" && "border border-[var(--m-on-surface)] text-[var(--m-on-surface)]",
         // busy keeps its color (with a spinner); only a truly unavailable action greys out
-        loading ? "cursor-progress" : "disabled:border-transparent disabled:bg-[#ebebe8] disabled:text-[#8a8a85]",
+        loading ? "cursor-progress" : "disabled:border-transparent disabled:bg-[var(--m-surface-2)] disabled:text-[var(--m-on-surface-variant)]",
         className,
       )}
     >
@@ -244,7 +244,7 @@ export function PillChip({ selected, children, onClick, disabled }: { selected?:
       disabled={disabled}
       className={cn(
         "relative inline-flex h-9 items-center rounded-full px-4 text-[14px] font-medium after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-['']",
-        selected ? "bg-[#0a0a0a] text-white" : "border border-[var(--m-outline-variant)] text-[#0a0a0a]",
+        selected ? "bg-[var(--m-inverse)] text-[var(--m-on-inverse)]" : "border border-[var(--m-outline-variant)] text-[var(--m-on-surface)]",
       )}
     >
       {children}
@@ -362,7 +362,7 @@ export function DotNav<T extends string>({ items, value, onChange }: { items: Do
   return (
     <nav
       aria-label="Navegación"
-      className="z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-white max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(68px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[88px] sm:pb-5"
+      className="z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-[var(--m-surface)] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(68px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[88px] sm:pb-5"
     >
       {items.map((it) => {
         const on = it.id === value;
@@ -375,7 +375,7 @@ export function DotNav<T extends string>({ items, value, onChange }: { items: Do
               haptic();
               onChange(it.id);
             }}
-            className={cn("grid content-center justify-items-center gap-1 [&_svg]:size-[22px]", on ? "text-[#0a0a0a]" : "text-[#8a8a85]")}
+            className={cn("grid content-center justify-items-center gap-1 [&_svg]:size-[22px]", on ? "text-[var(--m-on-surface)]" : "text-[var(--m-on-surface-variant)]")}
           >
             {it.icon}
             <span className={cn("text-[11.5px] tracking-[0.02em]", on ? "font-semibold" : "font-medium")}>{it.label}</span>
