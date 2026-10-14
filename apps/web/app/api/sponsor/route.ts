@@ -9,7 +9,18 @@ import { FEE_TOKEN, tempoModerato, TEMPO_RPC_URL } from "@mercado/shared";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { env, repoRoot } from "@/lib/server/env";
-import { ALLOWED_TARGETS, GLOBAL_PER_HOUR, MAX_GAS, PER_SENDER_PER_HOUR, consumeQuota, refusal } from "./policy";
+import {
+  ALLOWED_TARGETS,
+  FEE_TOKENS,
+  GLOBAL_PER_HOUR,
+  MAX_FEE_PER_GAS,
+  MAX_GAS,
+  MAX_PRIORITY_FEE,
+  MAX_TX_COST,
+  PER_SENDER_PER_HOUR,
+  consumeQuota,
+  refusal,
+} from "./policy";
 
 /** SPONSOR_PRIVATE_KEY from env, re-reading the root .env.local if the server started before it was added. */
 function sponsorKey(): `0x${string}` {
@@ -35,7 +46,7 @@ function createRelay() {
         validate: (tx) => {
           const why = refusal(tx as Parameters<typeof refusal>[0]);
           if (why) {
-            console.warn("[sponsor] refused:", why, JSON.stringify(tx, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
+            console.warn("[sponsor] refused:", why, (tx as { from?: string }).from);
             return false;
           }
           return consumeQuota((tx as { from: `0x${string}` }).from) ? true : "spend_limit_exceeded";
@@ -65,6 +76,10 @@ export async function GET() {
     policy: {
       targets: [...ALLOWED_TARGETS],
       maxGas: MAX_GAS.toString(),
+      maxFeePerGas: MAX_FEE_PER_GAS.toString(),
+      maxPriorityFeePerGas: MAX_PRIORITY_FEE.toString(),
+      maxTxCost: MAX_TX_COST.toString(),
+      feeTokens: [...FEE_TOKENS],
       perSenderPerHour: PER_SENDER_PER_HOUR,
       globalPerHour: GLOBAL_PER_HOUR,
     },

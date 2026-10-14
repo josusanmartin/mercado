@@ -2,7 +2,7 @@
 // useTx(): run one or more contract writes with status, a readable revert reason and explorer links.
 // Each write is simulated first (so reverts surface before the wallet prompt), then sent and awaited.
 import { useCallback, useRef, useState } from "react";
-import type { Abi, Address, Hash, TransactionReceipt } from "viem";
+import type { Abi, Address, Hash, Log } from "viem";
 import { useConfig } from "wagmi";
 import { getConnection, simulateContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,10 @@ import { readableError } from "./errors";
 
 export type TxStatus = "idle" | "simulating" | "signing" | "pending" | "success" | "error";
 
-export type TxStep = { label: string; hash: Hash; url: string; receipt?: TransactionReceipt };
+/** Minimal receipt shape (Tempo receipts carry extra fields and statuses). */
+export type TxReceipt = { status: string; transactionHash: Hash; blockNumber: bigint; logs: Log[] };
+
+export type TxStep = { label: string; hash: Hash; url: string; receipt?: TxReceipt };
 
 export type WriteRequest = {
   address: Address;
@@ -62,13 +65,14 @@ export function useTx() {
       });
       setStatus("signing");
       assertSameWallet(account);
-      const hash = await writeContract(config, request as Parameters<typeof writeContract>[1]);
+      // The registered config narrows `chain` to tempoModerato; the simulated request is for that chain.
+      const hash = await writeContract(config, request as never);
       const step: TxStep = { label, hash, url: explorerTx(hash) };
       setSteps((s) => [...s, step]);
       setStatus("pending");
       const receipt = await waitForTransactionReceipt(config, { hash, chainId: CHAIN_ID });
       if (receipt.status !== "success") throw new Error(`${label} reverted on-chain (${hash}).`);
-      step.receipt = receipt;
+      step.receipt = receipt as unknown as TxReceipt;
       setSteps((s) => s.map((x) => (x.hash === hash ? { ...step } : x)));
       return step;
     },
