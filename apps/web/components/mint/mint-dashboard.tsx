@@ -22,7 +22,8 @@ import {
 } from "@/lib/contracts";
 import { fmtAmount, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Reveal, Stagger, TickerText } from "@/lib/motion";
+import { Stagger, TickerText } from "@/lib/motion";
+import { Button } from "@/components/ui/button";
 import { ActivityTable } from "./activity-table";
 import { useMintMeta } from "./use-mint-meta";
 
@@ -56,16 +57,53 @@ function DemoOnlyNote({ symbol }: { symbol: string }) {
   ) : null;
 }
 
-/** Rows that fade up one after another; each row keeps its hairline (the wrapper carries it). */
-function StaggerRows({ children }: { children: ReactNode[] }) {
+/** Rows with the hover sweep; each row keeps its hairline (the wrapper carries it). No entrance of their own:
+ *  the Panel around them owns the arrival (review V5-TASTE #3, one entrance owner). */
+function SweepRows({ children }: { children: ReactNode[] }) {
   return (
-    <Stagger className="grid">
+    <div className="grid">
       {children.map((c, i) => (
         <div key={i} className="mx-sweep border-b last:border-b-0 [&>div]:border-b-0">
           {c}
         </div>
       ))}
-    </Stagger>
+    </div>
+  );
+}
+
+/** One narrow, factual strip: each collateral's share of the value backing Mint's xMXN (live prices). */
+function CollateralStrip({ book }: { book: ReturnType<typeof useCollateralBook> }) {
+  const total = book.totalValueXmxn;
+  const parts =
+    total === undefined || total === 0n || book.rows.some((r) => r.valueXmxn === undefined)
+      ? undefined
+      : book.rows
+          .map((r) => ({ symbol: r.symbol, demo: r.demo, share: Number(((r.valueXmxn ?? 0n) * 10_000n) / total) / 100 }))
+          .sort((a, b) => b.share - a.share);
+  // shades of the product accent, strongest first (no invented chart colors)
+  const shade = (i: number) => `color-mix(in oklab, var(--accent) ${[100, 72, 50, 34, 22, 14][Math.min(i, 5)]}%, var(--background))`;
+  return (
+    <section className="grid gap-2.5" aria-label="What backs Mint's xMXN">
+      <span className="meta text-muted-foreground">What backs Mint&apos;s xMXN · collateral value at live prices</span>
+      <div
+        className="bg-muted flex h-3 w-full overflow-hidden rounded-full"
+        role="img"
+        aria-label={parts ? parts.map((p) => `${p.symbol} ${p.share.toFixed(1)}%`).join(", ") : "Collateral mix loading"}
+      >
+        {parts?.map((p, i) => <span key={p.symbol} className="h-full" style={{ width: `${p.share}%`, background: shade(i) }} />)}
+      </div>
+      <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-[13px]">
+        {parts
+          ? parts.map((p, i) => (
+              <span key={p.symbol} className="inline-flex items-center gap-1.5">
+                <span className="inline-block size-2.5 rounded-full" style={{ background: shade(i) }} aria-hidden />
+                <span className="text-foreground font-medium">{p.symbol}</span> {p.share.toFixed(1)}%
+                {p.demo && <span data-honesty>(demo token)</span>}
+              </span>
+            ))
+          : "—"}
+      </div>
+    </section>
   );
 }
 
@@ -85,8 +123,9 @@ function Kpi({ label, value, unit, sub }: { label: string; value: string; unit?:
   );
 }
 
-/** Overview (v5): four big live figures first; the collateral mix and supply detail fold away below. */
-function Overview() {
+/** Overview (v5): four big live figures, the next actions, one factual collateral strip; the detailed
+ *  collateral and supply tables fold away below (review V5-TASTE #10). */
+function Overview({ go }: { go: (s: Section) => void }) {
   const book = useCollateralBook();
   const buckets = useThreeBuckets();
   const [open, setOpen] = useState(false);
@@ -102,7 +141,6 @@ function Overview() {
         <Kpi
           label="xMXN in circulation"
           value={supply === undefined ? "—" : fmtAmount(supply, 0)}
-          unit="xMXN"
           sub={`${x(cdp)} minted against collateral${PROTOCOL === "v2" ? ` + ${x(exchange)} issued by the exchange` : ""}`}
         />
         <Kpi
@@ -125,6 +163,17 @@ function Overview() {
         )}
       </Stagger>
 
+      <div className="flex flex-wrap gap-3">
+        <Button variant="brand" size="lg" className="mx-press text-[var(--on-accent)]" onClick={() => go("issue")}>
+          Issue xMXN
+        </Button>
+        <Button variant="secondary" size="lg" className="mx-press" onClick={() => go("positions")}>
+          View your positions
+        </Button>
+      </div>
+
+      <CollateralStrip book={book} />
+
       <div className="grid gap-6">
         <button
           type="button"
@@ -138,7 +187,7 @@ function Overview() {
         </button>
         <div id={detailId} hidden={!open}>
           {open && (
-    <Reveal className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-14">
       <section className="grid content-start gap-3">
       <SectionLabel index="01">Collateral</SectionLabel>
       <Panel
@@ -149,7 +198,7 @@ function Overview() {
             : "Testnet OUSD locked in the vault (valued at an assumed $1.00). Multi-collateral issuance is the v2 vault."
         }
       >
-        <StaggerRows>
+        <SweepRows>
           {book.rows.map((r) => {
             const share = pct(r.valueXmxn, book.totalValueXmxn);
             const ceilingUse = r.debtCeiling ? pct(r.debt, r.debtCeiling) : undefined;
@@ -189,7 +238,7 @@ function Overview() {
               />
             );
           })}
-        </StaggerRows>
+        </SweepRows>
       </Panel>
       </section>
 
@@ -218,7 +267,7 @@ function Overview() {
         </Rows>
       </Panel>
       </section>
-    </Reveal>
+    </div>
           )}
         </div>
       </div>
@@ -253,7 +302,7 @@ function Risk() {
   return (
     <div className="grid gap-12">
       {/* one big idea first: how far the peso would have to move */}
-      <Stagger as="section" className="grid gap-6 sm:grid-cols-2" step={90}>
+      <section className="grid gap-6 sm:grid-cols-2">
         <div className="grid content-start gap-2">
           <SectionLabel index="01">Exchange coverage</SectionLabel>
           <BigNumber className="text-product" value={<TickerText text={covShown} />} />
@@ -270,8 +319,8 @@ function Risk() {
             <span className="text-foreground font-semibold">{backBreak === undefined ? "—" : `${backBreak.toFixed(2)} MXN/USD`}</span>.
           </p>
         </div>
-      </Stagger>
-      <Reveal className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+      </section>
+      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
       <section className="grid content-start gap-3">
       <SectionLabel index="03">Exchange balance sheet</SectionLabel>
       <Panel
@@ -360,9 +409,9 @@ function Risk() {
         </Rows>
       </Panel>
       </section>
-      </Reveal>
+      </div>
 
-      <Reveal as="section" className="grid gap-3">
+      <section className="grid gap-3">
         <SectionLabel index="05">Stress tests</SectionLabel>
         <Panel
           title="Stress tests on-chain"
@@ -387,7 +436,7 @@ function Risk() {
             </Rows>
           )}
         </Panel>
-      </Reveal>
+      </section>
     </div>
   );
 }
@@ -402,7 +451,7 @@ function Positions() {
         ) : open.length === 0 ? (
           <p className="text-muted-foreground py-4 text-sm">No open positions yet. Use Issue &amp; manage to deposit collateral and mint.</p>
         ) : (
-          <StaggerRows>
+          <SweepRows>
             {positions
               .filter((p) => open.includes(p))
               .map((p) => (
@@ -425,7 +474,7 @@ function Positions() {
                   }
                 />
               ))}
-          </StaggerRows>
+          </SweepRows>
         )}
       </ConnectGate>
     </Panel>
@@ -453,7 +502,7 @@ export function MintDashboard() {
       purpose="Institutions mint xMXN against OUSD and yield-bearing collateral. The collateral keeps its own yield."
       list={<ListPane label="Mint sections" items={items} value={section} onChange={(id) => setSection(id as Section)} />}
     >
-      {section === "overview" && <Overview />}
+      {section === "overview" && <Overview go={setSection} />}
       {section === "issue" && <MintScreen embedded />}
       {section === "positions" && (
         <section className="grid gap-3">

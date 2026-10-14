@@ -32,7 +32,7 @@ import { CHAIN_ID } from "@/lib/contracts";
 import { fmtAmount, fmtBps, shortAddr, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { usePresent } from "@/components/console/present";
-import { Reveal, Stagger, SuccessCheck } from "@/lib/motion";
+import { SuccessCheck } from "@/lib/motion";
 
 const V2 = activeAddresses("v2");
 const V1 = activeAddresses("v1");
@@ -165,16 +165,16 @@ function Verified({ address, precompile, keyOnly }: { address?: string; precompi
   );
 }
 
-/** Contract rows fade up one after another; the wrapper carries the hairline and the hover sweep. */
+/** Contract rows with the hover sweep (the wrapper carries the hairline). The Panel owns the entrance. */
 function ContractRows({ items }: { items: Item[] }) {
   return (
-    <Stagger className="grid" step={45}>
+    <div className="grid">
       {items.map((it) => (
         <div key={it.name} className="mx-sweep border-b last:border-b-0 [&>div]:border-b-0">
           <ContractRow it={it} />
         </div>
       ))}
-    </Stagger>
+    </div>
   );
 }
 
@@ -508,12 +508,12 @@ export function ContractsProof() {
       {section === "v2" && (
         <div className="grid gap-14">
           {groups.map((g, i) => (
-            <Reveal as="section" key={g.title} className="grid gap-3">
+            <section key={g.title} className="grid gap-3">
               <SectionLabel index={String(i + 1).padStart(2, "0")}>{g.label}</SectionLabel>
               <Panel title={g.title} description={g.description}>
                 <ContractRows items={g.items} />
               </Panel>
-            </Reveal>
+            </section>
           ))}
         </div>
       )}
@@ -524,7 +524,7 @@ export function ContractsProof() {
       )}
       {section === "history" && (
         <Panel title="Deployment history" description="Every deployment and setup transaction, linked to the explorer.">
-          <Stagger className="grid" step={20}>
+          <div className="grid">
             {txs.map(({ k, h }) => (
               <Row
                 key={k}
@@ -537,7 +537,7 @@ export function ContractsProof() {
                 }
               />
             ))}
-          </Stagger>
+          </div>
         </Panel>
       )}
     </SettingsLayout>

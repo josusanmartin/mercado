@@ -8,7 +8,6 @@ import { useActivityFeed, type ActivityKind, type ActivityRow } from "@/lib/cont
 import { fmtAmount, shortAddr, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { Stagger } from "@/lib/motion";
 
 export function ActivityTable({
   kind,
@@ -68,7 +67,7 @@ export function ActivityTable({
                 <th className="px-1 py-2" />
               </tr>
             </thead>
-            <Stagger as="tbody" key={String(mine)} step={30}>
+            <tbody>
               {feed.rows.map((r) => (
                 <tr key={`${r.txHash}-${r.logIndex}`} className="mx-sweep border-t">
                   <td className="px-1 py-2.5">{r.label}</td>
@@ -84,7 +83,7 @@ export function ActivityTable({
                   </td>
                 </tr>
               ))}
-            </Stagger>
+            </tbody>
           </table>
           {feed.total > feed.rows.length && <p className="text-muted-foreground pt-2 text-xs">Showing {feed.rows.length} of {feed.total}.</p>}
         </div>
