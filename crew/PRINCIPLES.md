@@ -21,3 +21,29 @@ Owners: `web` (shared tokens, components/console, Home, shell) FIRST, then `mobi
 
 ## Header rule (josu, 03:02)
 **No KPI strip under product headers, on any page.** The three-number band ('USD/MXN 18.37 · Exchange backing 270% · Familia balance 4,066', 'Available to lend · Advances out · Fees paid') is useless there. A number only appears where the user needs it to act (e.g. the rate inside the send quote, 'available' inside the draw sheet, coverage inside the Risk tab).
+
+## v5 · Sleeker, more motion, more color (josu, 04:45)
+josu: "keep improving the UI to make it sleeker, more transitions, colors, animations... more modern." This **adds to** principles 1–8 and doesn't replace them: editorial type, black/white + cultural palette and small meta all stay. What changes: the product now **moves**, and each product has its own **color world**.
+
+**Color**
+- Every product page lives in its accent. The hero becomes a full-bleed color field (Mint jade, Remesas terracotta, Global cobalt, Crédito rosa, Card ink-on-cream, Invest maize) with the giant product word in white/ink. Below the hero it fades to the canvas through a soft accent wash (a 4–8% tint, a radial/mesh gradient allowed here only), so you always know which product you're in.
+- The sidebar's active row fills with the product accent (a sliding pill/bar that animates between rows). Home shows all six colors.
+- Dark mode: the same worlds on #0A0A0A with lighter accent tints (≥3:1 for large text, AA for small).
+- Gradients: only these washes and the image-in-type textures. Still no gradient buttons, no glassy card soup.
+
+**Motion** (transform/opacity only, 60fps, ease-out `cubic-bezier(.2,.8,.2,1)`, 180–420ms; a spring is OK for sheets; never bouncy-cute)
+- Route changes: a View Transition / crossfade-slide between product pages; the hero color field morphs into the next product's color.
+- Hero entrance: the product word reveals with a mask/letter stagger (≤500ms total) and meta lines fade up after.
+- Numbers: balances, quotes and coverage tick up/down to new values (no jumpy re-render); live counters keep their 50ms decimals.
+- Lists and rows: a staggered fade-up on first view (IntersectionObserver), hover = an accent underline/fill sweep from the left.
+- Buttons: press scale .97, hover lift on pills, a loading state that morphs (pill → spinner → check).
+- Success moments (sent, minted, charged, drawn, saved): one signature motion, a check that draws itself + the amount settling + a soft accent ripple. No confetti.
+- Phone apps: tab/screen changes slide horizontally (Android-style shared axis), sheets spring up, skeletons shimmer, the balance card has a subtle parallax/tilt on hover (desktop only).
+- Home: the hero image-in-type texture pans slowly; the six-product index rows expand on hover to show their live number in color.
+- Sticky header: backdrop-blur + hairline once scrolled.
+
+**Guardrails**
+- `prefers-reduced-motion`: everything collapses to simple fades; counters jump straight to the value.
+- No layout shift, no animation that delays a primary action (≤200ms before anything is clickable), and no change to tx logic, copy, honesty labels (data-honesty), testids or the accessible names qa/review scripts use.
+- One small lib is allowed: `motion` (motion.dev), installed via `flock .npm.lock`; or pure CSS + View Transitions. Nothing else.
+- Every PR keeps the 1440x900 fold (CR-04) and the light/dark contrast rules.
