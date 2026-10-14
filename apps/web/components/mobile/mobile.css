@@ -1,0 +1,271 @@
+/*
+  Mercado mobile kit (crew/mobile.md): Material 3-inspired Android UI used inside PhoneFrame.
+  Everything is scoped under .m-root so the desktop Brand v4 (Instrument Sans) is untouched.
+  The phone screen always renders light, like a real app with its own theme.
+*/
+.m-root {
+  --m-accent: #111418;
+  --m-on-accent: #ffffff;
+  --m-accent-container: color-mix(in oklab, var(--m-accent) 13%, white);
+  --m-on-accent-container: color-mix(in oklab, var(--m-accent) 70%, black);
+  --m-surface: #ffffff;
+  --m-surface-1: #f7f7f9;
+  --m-surface-2: #f1f2f5;
+  --m-surface-3: #e9ebef;
+  --m-on-surface: #15171b;
+  --m-on-surface-variant: #565c68;
+  --m-outline: #b8bcc5;
+  --m-outline-variant: #e3e5ea;
+  --m-error: #c62828;
+  --m-success: #12805c;
+  --m-ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --m-ease-emph-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --m-ease-std: cubic-bezier(0.2, 0, 0, 1);
+
+  font-family: var(--font-roboto), Roboto, "Google Sans", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.43;
+  letter-spacing: 0.004em;
+  color: var(--m-on-surface);
+  background: var(--m-surface);
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "tnum" 0;
+}
+.m-root .m-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.m-root :focus-visible {
+  outline: 2px solid var(--m-accent);
+  outline-offset: 2px;
+}
+
+/* Scrollbar hidden inside the phone (Android overlays a thin one only while scrolling). */
+.m-scroll {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.m-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pressables: M3 state layer (hover/pressed) + ripple + a slight press-in. */
+.m-press {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 120ms var(--m-ease-std), background-color 150ms var(--m-ease-std), box-shadow 150ms var(--m-ease-std);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.m-press::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 150ms var(--m-ease-std);
+  pointer-events: none;
+  z-index: -1;
+}
+.m-press:hover:not(:disabled)::before {
+  opacity: 0.06;
+}
+.m-press:active:not(:disabled)::before {
+  opacity: 0.1;
+}
+.m-press:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.m-press:disabled {
+  cursor: default;
+}
+.m-ripple {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  pointer-events: none;
+  transform: scale(0);
+  opacity: 0.16;
+  z-index: -1;
+  animation: m-ripple-grow 420ms var(--m-ease-std) forwards;
+}
+.m-ripple.m-ripple-out {
+  animation: m-ripple-grow 420ms var(--m-ease-std) forwards, m-ripple-fade 260ms linear 120ms forwards;
+}
+@keyframes m-ripple-grow {
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes m-ripple-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Screen transitions (M3 shared axis X, ~240ms). */
+.m-enter-fwd {
+  animation: m-in-fwd 240ms var(--m-ease-emph-decel) both;
+}
+.m-enter-back {
+  animation: m-in-back 240ms var(--m-ease-emph-decel) both;
+}
+.m-enter-fade {
+  animation: m-fade 200ms var(--m-ease-std) both;
+}
+@keyframes m-in-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+@keyframes m-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes m-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Bottom sheet + scrim. */
+.m-scrim {
+  background: rgb(0 0 0 / 0.32);
+  animation: m-fade 220ms var(--m-ease-std) both;
+}
+.m-scrim[data-closing] {
+  animation: m-fade-out 180ms var(--m-ease-std) both;
+}
+.m-sheet {
+  animation: m-sheet-in 250ms var(--m-ease-emph-decel) both;
+}
+.m-sheet[data-closing] {
+  animation: m-sheet-out 180ms var(--m-ease-emph-accel) both;
+}
+@keyframes m-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes m-sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes m-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Snackbar. */
+.m-snack {
+  animation: m-snack-in 220ms var(--m-ease-emph-decel) both;
+}
+.m-snack[data-closing] {
+  animation: m-fade-out 160ms var(--m-ease-std) both;
+}
+@keyframes m-snack-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* Success check: the circle pops, then the tick draws, then a soft ring. */
+.m-check-disc {
+  animation: m-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.m-check-tick {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: m-draw 300ms var(--m-ease-std) 260ms forwards;
+}
+.m-check-ring {
+  animation: m-ring 900ms var(--m-ease-std) 200ms both;
+}
+@keyframes m-pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+@keyframes m-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes m-ring {
+  from {
+    transform: scale(0.8);
+    opacity: 0.45;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.m-rise {
+  animation: m-rise 320ms var(--m-ease-emph-decel) both;
+}
+@keyframes m-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Skeleton shimmer. */
+.m-skeleton {
+  background: linear-gradient(90deg, var(--m-surface-2) 0%, var(--m-surface-3) 45%, var(--m-surface-2) 90%);
+  background-size: 220% 100%;
+  animation: m-shimmer 1.3s linear infinite;
+}
+@keyframes m-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+/* Indeterminate linear progress (M3). */
+.m-progress {
+  position: relative;
+  overflow: hidden;
+  background: var(--m-accent-container);
+}
+.m-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--m-accent);
+  border-radius: inherit;
+  animation: m-indeterminate 1.2s var(--m-ease-std) infinite;
+}
+@keyframes m-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-root *,
+  .m-root *::before,
+  .m-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

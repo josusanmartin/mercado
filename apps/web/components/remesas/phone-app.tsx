@@ -1,257 +1,642 @@
 "use client";
-// The Remesas mobile app (inside the Android frame on desktop, full-screen on phones).
-// Spanish first, English sub-labels. Every number is live: balances and quotes from chain, payments
-// through the real MPP 402 flow. Only airtime/bill FULFILLMENT is simulated, and it says so.
-import { useState } from "react";
+// The Remesas Android app (inside PhoneFrame on desktop, full-screen on phones), built on the mobile kit.
+// Spanish first, English sub-labels. Every number is live: balances and quotes from chain, sends on the
+// v2 exchange, bills through the real MPP 402 flow. Only the card charge on the on-ramp and the
+// airtime/bill FULFILLMENT are simulated, and both say so.
+import { useMemo, useState, type ReactNode } from "react";
 import { useConnection } from "wagmi";
-import { ArrowLeft, Check, ChevronRight, ExternalLink, Lightbulb, Loader2, Phone, Send, Smartphone } from "lucide-react";
-import { MEMO_MAX_BYTES, memoByteLength, useBalances } from "@/lib/contracts";
-import { useActivity } from "@/lib/activity";
-import { fmtAmount, fmtNumber, shortAddr, timeAgo, toUnits } from "@/lib/format";
+import {
+  ArrowUpRight,
+  Bell,
+  ChevronRight,
+  CircleUserRound,
+  ExternalLink,
+  History,
+  House,
+  Lightbulb,
+  Phone,
+  Plus,
+  Send,
+  ShieldCheck,
+  Smartphone,
+  Wallet,
+} from "lucide-react";
+import { MEMO_MAX_BYTES, memoByteLength, useBalances, useOracle } from "@/lib/contracts";
+import { useActivityFeed, type ActivityRow } from "@/lib/contracts/activity";
+import { fmtAmount, fmtNumber, shortAddr, toUnits } from "@/lib/format";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { personaById } from "@/components/wallet/personas";
-import { TELCEL_AMOUNTS } from "@/components/billpay/use-bill-pay";
+import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
+import { TELCEL_AMOUNTS, useRecentOrders, type RecentOrder } from "@/components/billpay/use-bill-pay";
+import {
+  Avatar,
+  Banner,
+  BottomNav,
+  BottomSheet,
+  BrandLogo,
+  BrandTile,
+  Button,
+  Chip,
+  DemoBadge,
+  DetailRows,
+  EmptyState,
+  HonestyNote,
+  IconButton,
+  LinearProgress,
+  ListHeader,
+  ListItem,
+  NumericKeypad,
+  Pressable,
+  ScreenTransition,
+  SkeletonList,
+  SuccessScreen,
+  TopAppBar,
+  fmtMoney,
+  fmtTyping,
+  haceTiempo,
+  useNavDirection,
+  useSnackbar,
+  type NavItem,
+} from "@/components/mobile";
+import { OnrampSheet } from "./onramp-sheet";
+import { useFxHistory, type FxPoint } from "./use-fx-history";
 import type { RemesasState } from "./remesas-screen";
-import { PhoneKeypad as Keypad } from "@/components/console";
 
-export type Screen = "inicio" | "enviar" | "enviado" | "aire" | "servicios";
+export type Screen = "inicio" | "enviar" | "enviado" | "aire" | "servicios" | "actividad" | "perfil";
+const ORDER: Screen[] = ["inicio", "actividad", "perfil", "enviar", "aire", "servicios", "enviado"];
+const TABS: NavItem<"inicio" | "enviar" | "actividad" | "perfil">[] = [
+  { id: "inicio", label: "Inicio", icon: <House strokeWidth={1.75} /> },
+  { id: "enviar", label: "Enviar", icon: <Send strokeWidth={1.75} /> },
+  { id: "actividad", label: "Actividad", icon: <History strokeWidth={1.75} /> },
+  { id: "perfil", label: "Perfil", icon: <CircleUserRound strokeWidth={1.75} /> },
+];
 
-const ACCENT = "#ff8a1f";
+export const ORANGE = "#ff8a1f";
+const contacts = CONTACTS.filter((c) => c.address);
 
 export function PhoneApp({ s }: { s: RemesasState }) {
   const { screen } = s;
+  const dir = useNavDirection(screen, ORDER);
+  const [onramp, setOnramp] = useState(false);
+  const tab = screen === "inicio" || screen === "actividad" || screen === "perfil";
+  const app = { s, openOnramp: () => setOnramp(true) };
   return (
-    <div className="flex min-h-full w-full min-w-0 flex-col bg-[#ffffff] text-[#111418]">
-      {screen === "inicio" && <Inicio s={s} />}
-      {screen === "enviar" && <Enviar s={s} />}
-      {screen === "enviado" && <Enviado s={s} />}
-      {(screen === "aire" || screen === "servicios") && <Pagar s={s} kind={screen} />}
+    <div className="flex min-h-full flex-col bg-[var(--m-surface)]">
+      <ScreenTransition id={screen} dir={dir} className="flex-1">
+        {screen === "inicio" && <Inicio {...app} />}
+        {screen === "enviar" && <Enviar {...app} />}
+        {screen === "enviado" && <Enviado {...app} />}
+        {(screen === "aire" || screen === "servicios") && <Pagar s={s} kind={screen} />}
+        {screen === "actividad" && <Actividad {...app} />}
+        {screen === "perfil" && <Perfil {...app} />}
+      </ScreenTransition>
+      {tab && <BottomNav items={TABS} value={screen as "inicio"} onChange={(id) => s.setScreen(id)} />}
+      <BottomSheet open={onramp} onClose={() => setOnramp(false)} title="Agregar dólares" sub="Add dollars with a card">
+        <OnrampSheet onDone={() => setOnramp(false)} />
+      </BottomSheet>
     </div>
   );
 }
 
-function Header({ title, sub, onBack }: { title: string; sub: string; onBack?: () => void }) {
-  return (
-    <div className="flex items-center gap-2 px-4 pt-2 pb-3">
-      {onBack && (
-        <button type="button" onClick={onBack} aria-label="Atrás / Back" className="grid size-9 place-items-center rounded-full hover:bg-[#f4f5f7]">
-          <ArrowLeft className="size-5" />
-        </button>
-      )}
-      <div>
-        <p className="text-[17px] leading-tight font-semibold">{title}</p>
-        <p className="text-xs text-[#5b6270]">{sub}</p>
-      </div>
-    </div>
-  );
+type AppProps = { s: RemesasState; openOnramp: () => void };
+
+/* ─────────────────────────────── Inicio ─────────────────────────────── */
+
+function greeting(now?: number) {
+  if (!now) return "Hola";
+  // CDMX is UTC−6 all year.
+  const h = new Date((now - 6 * 3600) * 1000).getUTCHours();
+  return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
 }
 
-function Inicio({ s }: { s: RemesasState }) {
-  const { address } = useConnection();
-  const bal = useBalances();
-  const activity = useActivity(address).slice(0, 4);
-  const now = useNow(30_000);
-  const mama = personaById("recipient");
+function Inicio({ s, openOnramp }: AppProps) {
+  const now = useNow(60_000);
+  const snack = useSnackbar();
+  const start = (c?: Contact) => {
+    if (c?.address) s.setTo(c.address);
+    s.setScreen("enviar");
+  };
   return (
-    <div className="grid gap-4 px-4 pb-6">
-      <div className="pt-3">
-        <p className="text-xs text-[#5b6270]">Hola · Hello</p>
-        <p className="text-xl font-semibold">Envía a casa en segundos</p>
-      </div>
-      <div className="rounded-[20px] p-4 text-white" style={{ background: ACCENT }}>
-        <p className="text-xs font-medium opacity-80">Tu saldo · Your balance</p>
-        <p className="mt-1 text-4xl font-semibold tracking-tight tabular">{bal.ousd === undefined ? "—" : `$${fmtAmount(bal.ousd)}`}</p>
-        <p className="text-xs opacity-80">testnet OUSD, no real value</p>
-        <p className="mt-2 text-sm font-medium tabular">{bal.xmxn === undefined ? "" : `${fmtAmount(bal.xmxn)} xMXN en pesos`}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => s.setScreen("enviar")}
-        className="flex items-center justify-between rounded-[14px] bg-[#111418] px-4 py-4 text-left text-[#ffffff]"
-      >
-        <span>
-          <span className="block text-[17px] font-semibold">Enviar a México</span>
-          <span className="block text-xs opacity-70">Send money home · to {mama.name}</span>
+    <div className="pb-4">
+      <header className="flex h-16 items-center gap-3 px-4">
+        <span className="grid size-10 place-items-center rounded-[12px] text-[19px] font-semibold text-white" style={{ background: ORANGE }} aria-hidden>
+          M
         </span>
-        <Send className="size-5" />
-      </button>
-      <div className="grid grid-cols-2 gap-3">
-        <Tile icon={<Smartphone className="size-5" />} title="Recargar Tiempo Aire" sub="Airtime top-up" onClick={() => s.setScreen("aire")} />
-        <Tile icon={<Lightbulb className="size-5" />} title="Pagar servicios" sub="Pay bills (CFE)" onClick={() => s.setScreen("servicios")} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] leading-tight text-[var(--m-on-surface-variant)]">{greeting(now)}</p>
+          <p className="text-[18px] leading-tight font-medium">Mercado Remesas</p>
+        </div>
+        <IconButton label="Notificaciones" onClick={() => snack("Sin notificaciones nuevas")}>
+          <Bell className="size-6" strokeWidth={1.75} />
+        </IconButton>
+      </header>
+
+      <BalanceHero />
+
+      <div className="mt-5 grid grid-cols-4 px-2">
+        <QuickAction icon={<Send strokeWidth={1.75} />} label="Enviar" onClick={() => start()} primary />
+        <QuickAction icon={<Smartphone strokeWidth={1.75} />} label="Tiempo Aire" onClick={() => s.setScreen("aire")} />
+        <QuickAction icon={<Lightbulb strokeWidth={1.75} />} label="Servicios" onClick={() => s.setScreen("servicios")} />
+        <QuickAction icon={<Plus strokeWidth={1.75} />} label="Agregar dólares" onClick={openOnramp} />
       </div>
-      <div>
-        <p className="mb-1 text-sm font-semibold">
-          Movimientos <span className="font-normal text-[#5b6270]">· Activity</span>
-        </p>
-        {activity.length === 0 ? (
-          <p className="text-sm text-[#5b6270]">Aún no hay movimientos desde este navegador · No activity yet</p>
-        ) : (
-          <ul className="divide-y divide-[#e6e8ec]">
-            {activity.map((a) => (
-              <li key={a.hash}>
-                <a href={a.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 text-sm">
-                  <span className="size-1.5 rounded-full bg-[#079455]" />
-                  <span className="flex-1 truncate">{a.label}</span>
-                  <span className="text-xs text-[#5b6270] tabular">{now ? timeAgo(a.at / 1000, now) : ""}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+
+      <ListHeader>Envía a</ListHeader>
+      <div className="m-scroll flex gap-1 overflow-x-auto px-2 pb-1">
+        {contacts.map((c) => (
+          <Pressable key={c.id} onClick={() => start(c)} className="grid w-[84px] shrink-0 justify-items-center gap-1.5 rounded-[16px] py-2">
+            <Avatar name={c.name} size={56} />
+            <span className="grid text-center leading-tight">
+              <span className="text-[14px] font-medium">{c.name}</span>
+              <span className="text-[13px] text-[var(--m-on-surface-variant)]">{c.city}</span>
+            </span>
+          </Pressable>
+        ))}
+        <Pressable onClick={() => snack("Demo: contactos fijos en este prototipo")} className="grid w-[84px] shrink-0 justify-items-center gap-1.5 rounded-[16px] py-2">
+          <span className="grid size-14 place-items-center rounded-full border border-dashed border-[var(--m-outline)] text-[var(--m-on-surface-variant)]">
+            <Plus className="size-6" strokeWidth={1.75} />
+          </span>
+          <span className="text-[14px] font-medium text-[var(--m-on-surface-variant)]">Nuevo</span>
+        </Pressable>
       </div>
+
+      <ListHeader
+        action={
+          <button type="button" onClick={() => s.setScreen("actividad")} className="h-10 rounded-full px-3 text-[14px] font-medium" style={{ color: "#b45309" }}>
+            Ver todo
+          </button>
+        }
+      >
+        Movimientos
+      </ListHeader>
+      <ActivityList limit={4} onEmpty={() => start()} />
+      <HonestyNote className="mt-3">Saldo en testnet OUSD, sin valor real · Testnet demo, no real money.</HonestyNote>
     </div>
   );
 }
 
-function Tile({ icon, title, sub, onClick }: { icon: React.ReactNode; title: string; sub: string; onClick: () => void }) {
+function QuickAction({ icon, label, onClick, primary }: { icon: ReactNode; label: string; onClick: () => void; primary?: boolean }) {
   return (
-    <button type="button" onClick={onClick} className="grid gap-2 rounded-[14px] border border-[#e6e8ec] bg-white p-3 text-left hover:border-[#ff8a1f]">
-      <span className="grid size-9 place-items-center rounded-[10px] text-white" style={{ background: ACCENT }}>
+    <Pressable onClick={onClick} className="grid content-start justify-items-center gap-2 rounded-[16px] px-1 py-2">
+      <span
+        className={cn(
+          "grid size-14 place-items-center rounded-full [&_svg]:size-6",
+          primary ? "text-white shadow-[0_4px_12px_-4px_rgb(255_138_31/0.7)]" : "bg-[var(--m-accent-container)] text-[#8a3d00]",
+        )}
+        style={primary ? { background: ORANGE } : undefined}
+      >
         {icon}
       </span>
-      <span>
-        <span className="block text-sm leading-tight font-semibold">{title}</span>
-        <span className="block text-xs text-[#5b6270]">{sub}</span>
-      </span>
-    </button>
+      <span className="text-center text-[13px] leading-tight font-medium">{label}</span>
+    </Pressable>
   );
 }
 
-function Enviar({ s }: { s: RemesasState }) {
+function BalanceHero() {
   const bal = useBalances();
-  const mama = personaById("recipient");
-  const { send, amount, setAmount, memo, setMemo } = s;
+  const fx = useOracle();
+  const hist = useFxHistory();
+  const pts = hist.data ?? [];
+  const first = pts[0]?.rate;
+  const change = fx.rate !== undefined && first ? ((fx.rate - first) / first) * 100 : undefined;
+  const usd = bal.ousd;
+  const mxnEquiv = usd !== undefined && fx.rate !== undefined ? (Number(usd) / 1e6) * fx.rate : undefined;
+  const [whole, cents] = usd === undefined ? ["—", ""] : fmtMoney(usd).split(".");
+  return (
+    <section className="relative mx-4 overflow-hidden rounded-[28px] px-5 pt-5 pb-4 text-white" style={{ background: ORANGE }} aria-label="Tu saldo">
+      {/* tonal layers (flat shapes, no gradients) */}
+      <span aria-hidden className="absolute -top-16 -right-12 size-56 rounded-full bg-white/[0.10]" />
+      <span aria-hidden className="absolute -right-24 -bottom-28 size-64 rounded-full bg-[#e06a00]/45" />
+      <span aria-hidden className="absolute top-24 -left-16 size-40 rounded-full bg-[#ffa94d]/40" />
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <p className="text-[14px] font-medium text-white/90">Tu saldo · USD</p>
+          <DemoBadge tone="onAccent">testnet</DemoBadge>
+        </div>
+        <p className="m-num mt-1 text-[44px] leading-none font-medium tracking-[-0.02em]">
+          <span className="mr-0.5 align-top text-[22px] leading-[1.6] font-normal text-white/85">US</span>
+          {whole}
+          {cents && <span className="text-[26px] text-white/85">.{cents}</span>}
+        </p>
+        <p className="m-num mt-2 text-[15px] text-white/95">≈ MX{mxnEquiv === undefined ? "$—" : fmtMoney(mxnEquiv, 0)} al tipo de hoy</p>
+        <div className="mt-3 flex items-end justify-between gap-3">
+          <span className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/20 pr-3 pl-2.5 text-[13px] font-medium whitespace-nowrap">
+            <span className="relative grid size-2 place-items-center">
+              <span className="absolute size-2 animate-ping rounded-full bg-white/70" />
+              <span className="size-2 rounded-full bg-white" />
+            </span>
+            <span className="m-num">{fmtNumber(fx.rate, 2)} MXN</span>
+            {change !== undefined && Math.abs(change) >= 0.005 && <span className="m-num text-white/85">{change > 0 ? "▲" : "▼"}{fmtNumber(Math.abs(change), 2)}%</span>}
+          </span>
+          {pts.length >= 3 ? <Sparkline points={pts} /> : <span className="text-[13px] text-white/75">{hist.isLoading ? "" : "historial no disponible"}</span>}
+        </div>
+        <p className="mt-3 border-t border-white/25 pt-2.5 text-[13px] text-white/90">
+          <span className="m-num font-medium">MX{fmtMoney(bal.xmxn)}</span> en pesos · xMXN demo
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/** White line of the relay's real on-chain pushes; scaled to its own range. */
+function Sparkline({ points }: { points: FxPoint[] }) {
+  const w = 84;
+  const h = 32;
+  const rates = points.map((p) => p.rate);
+  const lo = Math.min(...rates);
+  const hi = Math.max(...rates);
+  const span = hi - lo || 1;
+  const xy = points.map((p, i) => [(i / (points.length - 1)) * w, h - 3 - ((p.rate - lo) / span) * (h - 6)] as const);
+  const d = xy.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const [lx, ly] = xy[xy.length - 1];
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      width={w}
+      height={h}
+      className="shrink-0 overflow-visible"
+      role="img"
+      aria-label={`Últimas ${points.length} actualizaciones del tipo de cambio en cadena, de ${fmtNumber(lo, 4)} a ${fmtNumber(hi, 4)}`}
+    >
+      <title>{`Relay on-chain: ${points.length} pushes · ${fmtNumber(lo, 4)}–${fmtNumber(hi, 4)} MXN`}</title>
+      <path d={d} fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.95} />
+      <circle cx={lx} cy={ly} r={3} fill="white" />
+    </svg>
+  );
+}
+
+/* ───────────────────────────── activity ───────────────────────────── */
+
+type Entry =
+  | { kind: "send"; at: number; row: ActivityRow; contact?: Contact }
+  | { kind: "bill"; at: number; order: RecentOrder };
+
+function useEntries() {
+  const { address } = useConnection();
+  const feed = useActivityFeed("move", { account: address, limit: 30 });
+  const orders = useRecentOrders();
+  const entries = useMemo(() => {
+    const sends: Entry[] = feed.rows
+      .filter((r) => r.tokenOut === "xMXN" && r.account.toLowerCase() === address?.toLowerCase())
+      .map((r) => ({ kind: "send", at: r.timestamp ?? 0, row: r, contact: contactByAddress(r.to) }));
+    const bills: Entry[] = orders.orders.map((o) => ({ kind: "bill", at: Date.parse(o.createdAt) / 1000, order: o }));
+    return [...sends, ...bills].sort((a, b) => b.at - a.at);
+  }, [feed.rows, orders.orders, address]);
+  return { entries, loading: feed.isLoading, error: feed.error };
+}
+
+function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void }) {
+  const { entries, loading, error } = useEntries();
+  const now = useNow(30_000) ?? 0;
+  if (loading && entries.length === 0) return <SkeletonList rows={3} />;
+  if (error && entries.length === 0)
+    return (
+      <div className="px-4">
+        <Banner tone="error">No pudimos leer tus movimientos · couldn&apos;t load activity. Reintentando…</Banner>
+      </div>
+    );
+  if (entries.length === 0)
+    return (
+      <EmptyState
+        icon={<PaperPlane />}
+        title="Haz tu primer envío"
+        hint="Tus envíos y pagos aparecerán aquí · Your transfers will show up here."
+        action={
+          <Button size="md" variant="tonal" className="mt-2" onClick={onEmpty}>
+            Enviar ahora
+          </Button>
+        }
+      />
+    );
+  return (
+    <ul>
+      {entries.slice(0, limit).map((e) => (
+        <li key={e.kind === "send" ? e.row.txHash + e.row.logIndex : e.order.orderId}>
+          {e.kind === "send" ? (
+            <ListItem
+              href={e.row.url}
+              leading={<Avatar name={e.contact?.name ?? "Envío"}>{e.contact ? undefined : <ArrowUpRight className="size-5" />}</Avatar>}
+              headline={`Envío a ${e.contact?.name ?? shortAddr(e.row.to)}`}
+              supporting={`${haceTiempo(e.at, now)} · ${e.contact?.city ?? "on-chain"}`}
+              trailing={`-US${fmtMoney(e.row.amount)}`}
+              trailingSub={`MX${fmtMoney(e.row.amountOut)}`}
+            />
+          ) : (
+            <ListItem
+              href={e.order.receipt?.explorerUrl}
+              leading={<BrandTile id={e.order.provider === "telcel" ? "telcel" : "cfe"} />}
+              headline={e.order.provider === "telcel" ? "Tiempo Aire Telcel" : "Luz CFE"}
+              supporting={
+                <span className="flex items-center gap-1.5">
+                  {haceTiempo(e.at, now)} <DemoBadge className="h-5 px-1.5 text-[12px]">SIMULATED</DemoBadge>
+                </span>
+              }
+              trailing={`-MX${fmtMoney(BigInt(e.order.amount))}`}
+              trailingSub={statusEs(e.order.status)}
+            />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const statusEs = (st: string) =>
+  ({ CREATED: "Pendiente", PAYMENT_VERIFIED: "Pagado", FULFILLED_SIMULATED: "Pagado", FAILED: "Falló" })[st] ?? st;
+
+function PaperPlane() {
+  return (
+    <svg viewBox="0 0 64 64" className="!size-10" fill="none" aria-hidden>
+      <path d="M8 30 56 10 44 54 32 38 8 30Z" fill="#ffdcc2" stroke={ORANGE} strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M32 38 56 10" stroke={ORANGE} strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M32 38v12l6-6" stroke={ORANGE} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Actividad({ s }: AppProps) {
+  return (
+    <div className="pb-4">
+      <TopAppBar title="Actividad" sub="Envíos y pagos · Activity" />
+      <ActivityList onEmpty={() => s.setScreen("enviar")} />
+      <HonestyNote className="mt-3">Los envíos se leen de la cadena (Tempo testnet). Los pagos de servicios son SIMULATED: el pago es real, la recarga no se entrega.</HonestyNote>
+    </div>
+  );
+}
+
+/* ─────────────────────────────── Perfil ─────────────────────────────── */
+
+function Perfil({ openOnramp }: AppProps) {
+  const { address } = useConnection();
+  const snack = useSnackbar();
+  return (
+    <div className="pb-4">
+      <TopAppBar title="Perfil" sub="Tu cuenta · Account" />
+      <div className="flex items-center gap-4 px-4 pt-2 pb-4">
+        <Avatar name="Sender US" size={56}>
+          <Wallet className="size-6" strokeWidth={1.75} />
+        </Avatar>
+        <div className="min-w-0">
+          <p className="text-[18px]">Cuenta demo · Sender (US)</p>
+          <button
+            type="button"
+            onClick={() => address && navigator.clipboard?.writeText(address).then(() => snack("Dirección copiada"))}
+            className="font-mono text-[13px] text-[var(--m-on-surface-variant)]"
+          >
+            {shortAddr(address)}
+          </button>
+        </div>
+      </div>
+      <ListItem leading={<Icon><Plus /></Icon>} headline="Agregar dólares" supporting="Tarjeta (simulada) o Tempo Wallet" onClick={openOnramp} trailing={<ChevronRight className="size-5 text-[var(--m-on-surface-variant)]" />} />
+      <ListItem leading={<Icon><ShieldCheck /></Icon>} headline="Red" supporting="Tempo Moderato · testnet" />
+      {address && (
+        <ListItem
+          leading={<Icon><ExternalLink /></Icon>}
+          headline="Ver mi cuenta en el explorador"
+          supporting="explore.testnet.tempo.xyz"
+          href={`https://explore.testnet.tempo.xyz/address/${address}`}
+        />
+      )}
+      <HonestyNote className="mt-4">
+        Prototipo en testnet. OUSD es el token de prueba de Tempo (sin valor real, no canjeable). xMXN es un token demo. Sin retiro a banco (SPEI).
+      </HonestyNote>
+    </div>
+  );
+}
+
+const Icon = ({ children }: { children: ReactNode }) => (
+  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--m-surface-2)] text-[var(--m-on-surface-variant)] [&_svg]:size-5 [&_svg]:stroke-[1.75]">{children}</span>
+);
+
+/* ─────────────────────────────── Enviar ─────────────────────────────── */
+
+function Enviar({ s }: AppProps) {
+  const bal = useBalances();
+  const { send, amount, setAmount, memo } = s;
+  const contact = contactByAddress(s.to) ?? contacts[0];
+  const [review, setReview] = useState(false);
+  const [pick, setPick] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const amt = toUnits(amount);
   const q = send.quote;
   const rate = q.amountOut !== undefined && amt > 0n ? Number(q.amountOut) / Number(amt) : undefined;
   const overBalance = bal.ousd !== undefined && amt > bal.ousd;
   const memoTooLong = memoByteLength(memo) > MEMO_MAX_BYTES;
   const busy = send.tx.isBusy;
-  const can = !busy && amt > 0n && !overBalance && !memoTooLong && q.amountOut !== undefined && !q.error && !!mama.address;
+  const can = !busy && amt > 0n && !overBalance && !memoTooLong && q.amountOut !== undefined && !q.error && !!s.to && !send.stranded;
 
   return (
-    <div className="flex min-h-full min-w-0 flex-col">
-      <Header title="Enviar a México" sub="Send money home" onBack={busy ? undefined : () => s.setScreen("inicio")} />
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 px-4">
-        <div className="text-center">
-          <p className="text-xs text-[#5b6270]">Envías · You send</p>
-          <p className="text-[2.6rem] leading-none font-semibold tracking-tight tabular">${amount || "0"}</p>
-          <p className="text-xs text-[#5b6270]">USD (testnet OUSD) · saldo {bal.ousd === undefined ? "—" : `$${fmtAmount(bal.ousd)}`}</p>
-        </div>
-        <div className="rounded-[12px] bg-[#f4f5f7] px-3 py-2.5 text-center">
-          <p className="text-xs text-[#5b6270]">{mama.name === "Familia (MX)" ? "Mamá" : mama.name} recibe · receives about</p>
-          <p className="text-2xl font-semibold tabular" style={{ color: "#111418" }}>
-            {q.amountOut !== undefined && amt > 0n ? `${fmtAmount(q.amountOut)} MXN` : q.loading && amt > 0n ? "…" : "0.00 MXN"}
-          </p>
-          <p className="text-[13px] text-[#5b6270]">
-            {rate !== undefined ? `1 USD = ${fmtNumber(rate, 4)} MXN · ${q.venue}` : "Cotización en vivo · live quote"}
-          </p>
-          {q.error && amt > 0n && <p className="mt-1 text-xs text-[#d92d20]">{q.error}</p>}
-          {overBalance && <p className="mt-1 text-xs text-[#d92d20]">Saldo insuficiente · not enough balance</p>}
-        </div>
-        <div className="flex items-center gap-3 rounded-[12px] border border-[#e6e8ec] bg-white p-3">
-          <span className="grid size-9 place-items-center rounded-full bg-[#111418] text-sm font-semibold text-[#ffffff]">M</span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">Mamá · Guadalajara</p>
-            <p className="truncate font-mono text-[13px] text-[#5b6270]">{mama.name}, demo wallet · {shortAddr(mama.address)}</p>
-          </div>
-          <ChevronRight className="size-4 text-[#5b6270]" aria-hidden />
-        </div>
-        <label className="grid gap-1">
-          <span className="flex justify-between text-xs text-[#5b6270]">
-            <span>Nota · Note (on-chain, public)</span>
-            <span className={cn("tabular", memoTooLong && "text-[#d92d20]")}>
-              {memoByteLength(memo)}/{MEMO_MAX_BYTES}
+    <div className="flex min-h-full flex-col">
+      <TopAppBar title="Enviar a México" sub="Send money home" onBack={busy ? undefined : () => s.setScreen("inicio")} />
+      <div className="px-4">
+        <Pressable onClick={() => setPick(true)} disabled={busy} className="flex w-full items-center gap-3 rounded-[16px] bg-[var(--m-surface-1)] px-3 py-2.5 text-left">
+          <Avatar name={contact?.name ?? "?"} size={40} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px]">
+              {contact?.name} · {contact?.city}
             </span>
+            <span className="block truncate font-mono text-[13px] text-[var(--m-on-surface-variant)]">demo wallet · {shortAddr(s.to)}</span>
           </span>
-          <input
-            value={memo}
-            onChange={(e) => s.setMemo(e.target.value)}
-            disabled={busy}
-            placeholder="para mamá"
-            className="h-10 rounded-[10px] border border-[#e6e8ec] bg-white px-3 text-sm"
-          />
-        </label>
+          <span className="text-[14px] font-medium text-[#b45309]">Cambiar</span>
+        </Pressable>
       </div>
-      <div className="mt-auto min-w-0 px-3 pt-2">
-        <Keypad value={amount} onChange={setAmount} disabled={busy} />
-        <button
-          type="button"
-          disabled={!can}
-          onClick={() => s.doSend()}
-          className="mt-2 mb-2 flex h-12 w-full items-center justify-center gap-2 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-          style={{ background: ACCENT, color: "#ffffff" }}
-        >
-          {busy ? (
-            <>
-              <Loader2 className="size-4 animate-spin" /> {send.tx.stepLabel ?? "Enviando"}…
-            </>
-          ) : (
-            <>Enviar ${amount || "0"} · Send</>
-          )}
+
+      <div className="mt-5 grid justify-items-center px-4 text-center">
+        <p className="text-[14px] text-[var(--m-on-surface-variant)]">Envías · You send</p>
+        <p className={cn("m-num mt-1 text-[48px] leading-none font-normal tracking-[-0.02em]", overBalance && "text-[var(--m-error)]")}>
+          <span className="text-[24px] text-[var(--m-on-surface-variant)]">US$</span>
+          {fmtTyping(amount)}
+        </p>
+        <p className="m-num mt-2 text-[13px] text-[var(--m-on-surface-variant)]">
+          {overBalance ? "Saldo insuficiente · not enough balance" : `Disponible US${fmtMoney(bal.ousd)}`}
+        </p>
+        <div className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full bg-[var(--m-accent-container)] px-4 text-[15px] text-[#7a3400]">
+          {contact?.name} recibe
+          <span className="m-num font-semibold">
+            {q.amountOut !== undefined && amt > 0n ? `MX${fmtMoney(q.amountOut)}` : q.loading && amt > 0n ? "…" : "MX$0.00"}
+          </span>
+        </div>
+        <p className="m-num mt-1.5 text-[13px] text-[var(--m-on-surface-variant)]">
+          {rate !== undefined ? `1 USD = ${fmtNumber(rate, 4)} MXN · llega al instante` : "Cotización en vivo · live quote"}
+        </p>
+        {q.error && amt > 0n && <p className="mt-1 text-[13px] text-[var(--m-error)]">{q.error}</p>}
+      </div>
+
+      <div className="mt-2 flex justify-center gap-2 px-4">
+        {[20, 50, 100, 200].map((v) => (
+          <Chip key={v} selected={amount === String(v)} disabled={busy} onClick={() => setAmount(String(v))}>
+            ${v}
+          </Chip>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-center">
+        <button type="button" disabled={busy} onClick={() => setNoteOpen(true)} className="h-10 rounded-full px-3 text-[14px] text-[var(--m-on-surface-variant)]">
+          {memo ? <>Nota: &ldquo;{memo}&rdquo; · editar</> : "+ Agregar nota (pública, on-chain)"}
         </button>
-        {send.tx.status === "error" && send.tx.error && !send.stranded && <p className="mb-2 px-1 text-[13px] text-[#d92d20]">{send.tx.error}</p>}
-        {send.stranded && (
-          <div className="mb-2 grid gap-1.5 rounded-[14px] bg-[#f4f5f7] p-3 text-[13px]">
-            <p>
-              Ya convertimos tus dólares, pero la entrega falló. Los {fmtAmount(send.stranded.amount)} MXN están en tu cuenta · Your dollars were converted but the delivery
-              failed; the pesos are in your wallet.
-            </p>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={async () => {
-                const r = await send.deliverStranded().catch(() => undefined);
-                if (r) s.setScreen("enviado");
-              }}
-              className="h-10 rounded-[10px] text-sm font-semibold text-white disabled:opacity-40"
-              style={{ background: ACCENT }}
-            >
-              Enviar esos {fmtAmount(send.stranded.amount)} MXN a Mamá · Deliver them
-            </button>
-          </div>
+      </div>
+
+      <div className="mt-auto px-4 pt-1 pb-3">
+        <NumericKeypad value={amount} onChange={setAmount} disabled={busy} />
+        {send.stranded ? (
+          <StrandedRecovery s={s} />
+        ) : (
+          <Button className="mt-2 w-full" disabled={!can} onClick={() => setReview(true)}>
+            Revisar envío · Review
+          </Button>
         )}
       </div>
+
+      <BottomSheet open={pick} onClose={() => setPick(false)} title="¿A quién le envías?" sub="Demo contacts with real testnet wallets">
+        <ul>
+          {contacts.map((c) => (
+            <li key={c.id}>
+              <ListItem
+                leading={<Avatar name={c.name} />}
+                headline={`${c.name} · ${c.city}`}
+                supporting={<span className="font-mono">{shortAddr(c.address)}</span>}
+                onClick={() => {
+                  s.setTo(c.address);
+                  setPick(false);
+                }}
+                trailing={c.address === s.to ? <span className="text-[#b45309]">✓</span> : undefined}
+              />
+            </li>
+          ))}
+        </ul>
+      </BottomSheet>
+
+      <BottomSheet open={noteOpen} onClose={() => setNoteOpen(false)} title="Nota para el envío" sub="Se guarda en la cadena y es pública · stored on-chain, public">
+        <div className="grid gap-3 px-6">
+          <label className="grid gap-1">
+            <input
+              autoFocus
+              value={memo}
+              onChange={(e) => s.setMemo(e.target.value)}
+              placeholder="para mamá"
+              className="h-14 rounded-[4px] border border-[var(--m-outline)] bg-transparent px-4 text-[16px] outline-none focus:border-2 focus:border-[var(--m-accent)]"
+            />
+            <span className={cn("text-right text-[13px] text-[var(--m-on-surface-variant)] tabular", memoTooLong && "text-[var(--m-error)]")}>
+              {memoByteLength(memo)}/{MEMO_MAX_BYTES} bytes
+            </span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {["para mamá", "para la renta", "feliz cumple", "para la luz"].map((t) => (
+              <Chip key={t} selected={memo === t} onClick={() => s.setMemo(t)}>
+                {t}
+              </Chip>
+            ))}
+          </div>
+          <Button onClick={() => setNoteOpen(false)} disabled={memoTooLong}>
+            Listo
+          </Button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={review} onClose={() => setReview(false)} dismissable={!busy} title="Revisa tu envío" sub="Review your transfer">
+        <div className="grid gap-4 px-6">
+          {busy && <LinearProgress />}
+          <DetailRows
+            rows={[
+              { label: "Envías", value: `US${fmtMoney(amt)}`, sub: "testnet OUSD" },
+              { label: "Tipo de cambio", value: rate !== undefined ? `${fmtNumber(rate, 4)} MXN` : "—", sub: "incluye comisión del exchange" },
+              { label: `${contact?.name} recibe`, value: q.amountOut !== undefined ? `MX${fmtMoney(q.amountOut)}` : "—", sub: "xMXN, directo a su wallet" },
+              { label: "Llega", value: "Al instante", sub: "on-chain, Tempo testnet" },
+              ...(memo ? [{ label: "Nota", value: `“${memo}”` }] : []),
+            ]}
+          />
+          {send.tx.status === "error" && send.tx.error && <Banner tone="error">{send.tx.error}</Banner>}
+          <Button
+            loading={busy}
+            disabled={!can && !busy}
+            onClick={async () => {
+              await s.doSend();
+            }}
+          >
+            {busy ? `${send.tx.stepLabel ?? "Enviando"}…` : `Enviar US${fmtMoney(amt)}`}
+          </Button>
+          <p className="text-center text-[13px] text-[var(--m-on-surface-variant)]">Sin retiro a banco (SPEI) en este prototipo · on-chain delivery only</p>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
 
-function Enviado({ s }: { s: RemesasState }) {
-  const r = s.send.receipt;
+function StrandedRecovery({ s }: { s: RemesasState }) {
+  const send = s.send;
+  const busy = send.tx.isBusy;
+  const name = contactByAddress(send.stranded!.to)?.name ?? shortAddr(send.stranded!.to);
   return (
-    <div className="flex min-h-full flex-col items-center px-5 pt-10 pb-6 text-center">
-      <span className="grid size-16 place-items-center rounded-full text-white" style={{ background: ACCENT }}>
-        <Check className="size-8" />
-      </span>
-      <p className="mt-4 text-xl font-semibold">¡Enviado! · Sent</p>
-      {r && (
-        <>
-          <p className="mt-2 text-[2.2rem] leading-none font-semibold tabular" style={{ color: "#111418" }}>
-            {fmtAmount(r.delivered)} MXN
-          </p>
-          <p className="mt-1 text-sm text-[#5b6270]">llegaron a Mamá · arrived in Mamá&apos;s wallet</p>
-          {r.memo && <p className="mt-3 rounded-full bg-[#f4f5f7] px-3 py-1 text-sm">&ldquo;{r.memo}&rdquo;</p>}
-          <a href={r.steps.at(-1)?.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-1 text-sm font-medium underline-offset-4 hover:underline">
-            Ver en el explorador · View on explorer <ExternalLink className="size-3.5" />
-          </a>
-          <p className="mt-4 text-xs text-[#5b6270]">Entrega on-chain. Sin retiro a banco (SPEI) en este prototipo · On-chain delivery only.</p>
-        </>
-      )}
-      <button
-        type="button"
-        onClick={() => {
-          s.send.reset();
-          s.setAmount("");
-          s.setScreen("inicio");
+    <div className="mt-2 grid gap-2">
+      <Banner tone="info">
+        Ya convertimos tus dólares, pero la entrega falló. Los MX{fmtMoney(send.stranded!.amount)} están en tu cuenta · Your dollars were converted but the delivery failed; the pesos are
+        in your wallet.
+      </Banner>
+      <Button
+        loading={busy}
+        disabled={busy}
+        onClick={async () => {
+          const r = await send.deliverStranded().catch(() => undefined);
+          if (r) s.setScreen("enviado");
         }}
-        className="mt-auto h-12 w-full rounded-[12px] bg-[#111418] text-[16px] font-semibold text-[#ffffff]"
       >
-        Listo · Done
-      </button>
+        Entregar MX{fmtMoney(send.stranded!.amount)} a {name}
+      </Button>
+      {send.tx.status === "error" && send.tx.error && <p className="text-[13px] text-[var(--m-error)]">{send.tx.error}</p>}
     </div>
   );
 }
+
+/* ─────────────────────────────── Enviado ─────────────────────────────── */
+
+function Enviado({ s }: AppProps) {
+  const r = s.send.receipt;
+  const c = contactByAddress(r?.to);
+  const name = c?.name ?? "tu familia";
+  return (
+    <SuccessScreen
+      title={<>¡Enviado a {name}!</>}
+      amount={r ? `MX${fmtMoney(r.delivered)}` : undefined}
+      caption={r ? `llegaron a la wallet de ${name} · arrived on-chain` : undefined}
+      action={
+        <Button
+          variant="dark"
+          className="w-full"
+          onClick={() => {
+            s.send.reset();
+            s.setAmount("");
+            s.setMemo("");
+            s.setScreen("inicio");
+          }}
+        >
+          Listo · Done
+        </Button>
+      }
+    >
+      {r && (
+        <div className="grid gap-3">
+          {r.memo && <p className="mx-auto w-fit rounded-[18px] rounded-bl-[4px] bg-[var(--m-accent-container)] px-4 py-2 text-[15px] text-[#7a3400]">&ldquo;{r.memo}&rdquo;</p>}
+          <DetailRows
+            rows={[
+              { label: "Enviaste", value: `US${fmtMoney(r.amountIn)}` },
+              { label: "Tipo aplicado", value: `${fmtNumber(Number(r.delivered) / Number(r.amountIn), 4)} MXN` },
+              {
+                label: "Comprobante",
+                value: (
+                  <a href={r.steps.at(-1)?.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[#b45309]">
+                    {r.steps.at(-1)?.hash.slice(0, 10)}… <ExternalLink className="size-3.5" />
+                  </a>
+                ),
+                sub: "Tempo testnet",
+              },
+            ]}
+          />
+          <p className="text-center text-[13px] text-[var(--m-on-surface-variant)]">Entrega on-chain. Sin retiro a banco (SPEI) en este prototipo.</p>
+        </div>
+      )}
+    </SuccessScreen>
+  );
+}
+
+/* ─────────────────────────────── Pagar ─────────────────────────────── */
 
 const CFE_AMOUNTS = [150, 300, 500];
 
@@ -275,108 +660,92 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
     if (bill.quote) bill.reset(); // editing a paid field drops the quote and its idempotency key (R-015)
   };
 
+  if (done) return <PaidReceipt s={s} />;
   return (
     <div className="flex min-h-full flex-col">
-      <Header
+      <TopAppBar
         title={airtime ? "Recargar Tiempo Aire" : "Pagar servicios"}
         sub={airtime ? "Telcel airtime top-up" : "CFE electricity bill"}
         onBack={inFlight ? undefined : () => (bill.reset(), s.setScreen("inicio"))}
       />
-      <div className="grid gap-3 px-4 pb-4">
-        <p className="rounded-[10px] border border-transparent bg-[#f4f5f7] px-3 py-2 text-xs text-[#5b6270]">
+      {inFlight && <LinearProgress className="rounded-none" />}
+      <div className="grid gap-4 px-4 pt-1 pb-4">
+        <div className="flex items-center gap-3">
+          <BrandTile id={airtime ? "telcel" : "cfe"} size={48} />
+          <div className="min-w-0 flex-1">
+            <p className="text-[16px]">{airtime ? "Telcel" : "CFE · Luz"}</p>
+            <p className="text-[13px] text-[var(--m-on-surface-variant)]">Sin afiliación · not affiliated</p>
+          </div>
+          <DemoBadge>SIMULATED</DemoBadge>
+        </div>
+        <Banner tone="info">
           SIMULADO · SIMULATED: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega · the payment is real, the{" "}
           {airtime ? "top-up" : "bill payment"} is not delivered.
-        </p>
-        {done ? (
-          <PaidReceipt s={s} />
-        ) : (
-          <>
-            <label className="grid gap-1">
-              <span className="text-xs text-[#5b6270]">{airtime ? "Número Telcel · phone (10 dígitos)" : "Número de servicio CFE · service number (12 dígitos)"}</span>
-              <div className="flex items-center gap-2 rounded-[10px] border border-[#e6e8ec] bg-white px-3">
-                {airtime ? <Phone className="size-4 text-[#5b6270]" /> : <Lightbulb className="size-4 text-[#5b6270]" />}
-                <input
-                  inputMode="numeric"
-                  value={airtime ? phone : service}
-                  disabled={inFlight}
-                  onChange={(e) => change(() => (airtime ? setPhone : setService)(e.target.value.replace(/\D/g, "").slice(0, airtime ? 10 : 12)))}
-                  placeholder={airtime ? "55 1234 5678" : "123456789012"}
-                  className="h-11 flex-1 bg-transparent text-[16px] tabular outline-none"
-                />
+        </Banner>
+        <label className="relative grid">
+          <span className="absolute -top-2 left-3 bg-[var(--m-surface)] px-1 text-[12.5px] text-[var(--m-on-surface-variant)]">
+            {airtime ? "Número Telcel (10 dígitos)" : "Número de servicio CFE (12 dígitos)"}
+          </span>
+          <span className="flex h-14 items-center gap-3 rounded-[4px] border border-[var(--m-outline)] px-4 focus-within:border-2 focus-within:border-[var(--m-accent)]">
+            {airtime ? <Phone className="size-5 text-[var(--m-on-surface-variant)]" /> : <Lightbulb className="size-5 text-[var(--m-on-surface-variant)]" />}
+            <input
+              inputMode="numeric"
+              value={airtime ? phone : service}
+              disabled={inFlight}
+              onChange={(e) => change(() => (airtime ? setPhone : setService)(e.target.value.replace(/\D/g, "").slice(0, airtime ? 10 : 12)))}
+              placeholder={airtime ? "55 1234 5678" : "123456789012"}
+              className="m-num h-full flex-1 bg-transparent text-[16px] outline-none"
+            />
+          </span>
+        </label>
+        <div>
+          <p className="mb-2 text-[14px] text-[var(--m-on-surface-variant)]">Monto · amount (MXN)</p>
+          <div className="flex flex-wrap gap-2">
+            {amounts.map((a) => (
+              <Chip key={a} selected={mxn === a} disabled={inFlight} onClick={() => change(() => setMxn(a))}>
+                ${a}
+              </Chip>
+            ))}
+          </div>
+        </div>
+        {bill.quote && (
+          <div className="rounded-[16px] bg-[var(--m-surface-1)] p-4">
+            <p className="text-[13px] text-[var(--m-on-surface-variant)]">{bill.quote.description}</p>
+            <p className="m-num mt-1 text-[28px] leading-tight">MX{fmtMoney(BigInt(bill.quote.amount))}</p>
+            <p className="text-[13px] text-[var(--m-on-surface-variant)]">Pagas en xMXN · saldo MX{fmtMoney(bal.xmxn)}</p>
+            {short && (
+              <div className="mt-3 grid gap-2">
+                <p className="text-[13px] text-[var(--m-on-surface-variant)]">Necesitas pesos para pagar · convert some dollars first.</p>
+                <Button
+                  variant="dark"
+                  size="md"
+                  loading={s.send.tx.isBusy}
+                  disabled={s.send.tx.isBusy || !address}
+                  onClick={() => address && quoteAmount !== undefined && s.send.convert(quoteAmount - (bal.xmxn ?? 0n), address).catch(() => undefined)}
+                >
+                  {s.send.tx.isBusy ? `${s.send.tx.stepLabel ?? "Convirtiendo"}…` : "Convertir dólares a pesos"}
+                </Button>
+                {s.send.tx.status === "error" && s.send.tx.error && <p className="text-[13px] text-[var(--m-error)]">{s.send.tx.error}</p>}
               </div>
-            </label>
-            <div>
-              <p className="mb-1 text-xs text-[#5b6270]">Monto · amount (MXN)</p>
-              <div className="grid grid-cols-3 gap-2">
-                {amounts.map((a) => (
-                  <button
-                    key={a}
-                    type="button"
-                    disabled={inFlight}
-                    onClick={() => change(() => setMxn(a))}
-                    className={cn("h-11 rounded-[10px] border text-[15px] font-semibold tabular", mxn === a ? "border-[#111418] bg-[#111418] text-[#ffffff]" : "border-[#e6e8ec] bg-white")}
-                  >
-                    ${a}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {bill.quote ? (
-              <div className="rounded-[12px] bg-[#f4f5f7] p-3 text-sm">
-                <p className="text-xs text-[#5b6270]">{bill.quote.description}</p>
-                <p className="mt-1 text-xl font-semibold tabular">{fmtAmount(BigInt(bill.quote.amount))} xMXN</p>
-                <p className="text-xs text-[#5b6270]">Tu saldo · balance: {bal.xmxn === undefined ? "—" : fmtAmount(bal.xmxn)} xMXN</p>
-                {short && (
-                  <div className="mt-2 grid gap-1.5">
-                    <p className="text-xs text-[#5b6270]">Necesitas pesos para pagar · You need xMXN to pay this bill.</p>
-                    <button
-                      type="button"
-                      disabled={s.send.tx.isBusy || !address}
-                      onClick={() => address && quoteAmount !== undefined && s.send.convert(quoteAmount - (bal.xmxn ?? 0n), address).catch(() => undefined)}
-                      className="flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[#111418] text-sm font-semibold text-[#ffffff] disabled:opacity-40"
-                    >
-                      {s.send.tx.isBusy ? (
-                        <>
-                          <Loader2 className="size-4 animate-spin" /> {s.send.tx.stepLabel ?? "Convirtiendo"}…
-                        </>
-                      ) : (
-                        "Convertir dólares a pesos · Convert"
-                      )}
-                    </button>
-                    {s.send.tx.status === "error" && s.send.tx.error && <p className="text-xs text-[#d92d20]">{s.send.tx.error}</p>}
-                  </div>
-                )}
-              </div>
-            ) : null}
-            {bill.error && <p className="text-xs text-[#d92d20]">{bill.error}</p>}
-            {!bill.quote ? (
-              <button
-                type="button"
-                disabled={!valid || inFlight}
-                onClick={() => bill.requestQuote(airtime ? { provider: "telcel", phone, amountMxn: mxn } : { provider: "cfe", serviceNumber: service, amountMxn: mxn })}
-                className="h-12 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-                style={{ background: ACCENT, color: "#ffffff" }}
-              >
-                {bill.stage === "quoting" ? "Cotizando… · Quoting" : "Cotizar · Get quote"}
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={!bill.canPay || inFlight || short}
-                onClick={() => bill.pay()}
-                className="flex h-12 items-center justify-center gap-2 rounded-[12px] text-[16px] font-semibold disabled:opacity-40"
-                style={{ background: ACCENT, color: "#ffffff" }}
-              >
-                {inFlight ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" /> {STAGE_ES[bill.stage] ?? "Pagando"}…
-                  </>
-                ) : (
-                  <>Pagar {fmtAmount(BigInt(bill.quote.amount))} xMXN · Pay</>
-                )}
-              </button>
             )}
-          </>
+          </div>
+        )}
+        {bill.error && <Banner tone="error">{bill.error}</Banner>}
+      </div>
+      <div className="mt-auto px-4 pb-4">
+        {!bill.quote ? (
+          <Button
+            className="w-full"
+            loading={bill.stage === "quoting"}
+            disabled={!valid || inFlight}
+            onClick={() => bill.requestQuote(airtime ? { provider: "telcel", phone, amountMxn: mxn } : { provider: "cfe", serviceNumber: service, amountMxn: mxn })}
+          >
+            {bill.stage === "quoting" ? "Cotizando…" : "Continuar · Get quote"}
+          </Button>
+        ) : (
+          <Button className="w-full" loading={inFlight} disabled={!bill.canPay || inFlight || short} onClick={() => bill.pay()}>
+            {inFlight ? `${STAGE_ES[bill.stage] ?? "Pagando"}…` : `Pagar MX${fmtMoney(BigInt(bill.quote.amount))}`}
+          </Button>
         )}
       </div>
     </div>
@@ -392,39 +761,41 @@ export const STAGE_ES: Record<string, string> = {
 
 function PaidReceipt({ s }: { s: RemesasState }) {
   const r = s.bill.result!;
+  const telcel = r.fulfillment?.providerName?.toLowerCase().includes("telcel") ?? s.screen === "aire";
   return (
-    <div className="grid gap-3 text-center">
-      <span className="mx-auto mt-2 grid size-14 place-items-center rounded-full text-white" style={{ background: ACCENT }}>
-        <Check className="size-7" />
-      </span>
-      <p className="text-lg font-semibold">Pagado · Paid</p>
-      <div className="grid gap-2 rounded-[12px] border border-[#e6e8ec] bg-white p-3 text-left text-sm">
-        <div className="flex justify-between gap-2">
-          <span>Pago · Payment</span>
-          <span className="font-semibold tabular">{fmtAmount(BigInt(r.receipt.amount))} xMXN</span>
-        </div>
-        <a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 text-xs text-[#5b6270] hover:underline">
-          <span>Real, on Tempo</span>
-          <span className="inline-flex items-center gap-1 font-mono">
-            {r.receipt.txHash.slice(0, 10)}… <ExternalLink className="size-3" />
-          </span>
-        </a>
-        <div className="flex justify-between gap-2 border-t border-[#e6e8ec] pt-2">
-          <span>{r.fulfillment?.providerName ?? "Proveedor"}</span>
-          <span className="rounded bg-[#f4f5f7] px-1.5 text-xs font-semibold text-[#5b6270]">SIMULATED</span>
-        </div>
-        {r.fulfillment && <p className="font-mono text-xs text-[#5b6270]">Ref. {r.fulfillment.reference}</p>}
-      </div>
-      <button
-        type="button"
-        onClick={() => {
-          s.bill.reset();
-          s.setScreen("inicio");
-        }}
-        className="h-12 rounded-[12px] bg-[#111418] text-[16px] font-semibold text-[#ffffff]"
-      >
-        Listo · Done
-      </button>
-    </div>
+    <SuccessScreen
+      title="¡Pagado!"
+      amount={`MX${fmtMoney(BigInt(r.receipt.amount))}`}
+      caption="Pago real en Tempo · recarga SIMULATED"
+      action={
+        <Button
+          variant="dark"
+          className="w-full"
+          onClick={() => {
+            s.bill.reset();
+            s.setScreen("inicio");
+          }}
+        >
+          Listo · Done
+        </Button>
+      }
+    >
+      <DetailRows
+        rows={[
+          { label: "Proveedor", value: <span className="inline-flex items-center gap-2"><BrandLogo id={telcel ? "telcel" : "cfe"} height={telcel ? 13 : 22} /></span>, sub: "SIMULATED: no se entrega" },
+          {
+            label: "Pago",
+            value: (
+              <a href={r.receipt.explorerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-mono text-[#b45309]">
+                {r.receipt.txHash.slice(0, 10)}… <ExternalLink className="size-3.5" />
+              </a>
+            ),
+            sub: "Real, on Tempo (MPP 402)",
+          },
+          ...(r.fulfillment ? [{ label: "Referencia", value: <span className="font-mono">{r.fulfillment.reference}</span> }] : []),
+        ]}
+      />
+    </SuccessScreen>
   );
 }
+

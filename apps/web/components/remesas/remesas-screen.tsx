@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { useConnection } from "wagmi";
+import type { Address } from "viem";
 import { PROTOCOL, useBalances, useOracle, useThreeBuckets } from "@/lib/contracts";
 import { fmtAmount, fmtBps, fmtNumber, shortAddr, toUnits } from "@/lib/format";
 import { useReportBusy } from "@/lib/busy";
@@ -31,6 +32,8 @@ function useRemesasState() {
   const [screen, setScreen] = useState<Screen>("inicio");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
+  // The chosen contact (Mamá by default); the phone's "Envía a" carousel sets it.
+  const [to, setTo] = useState<Address | undefined>(personaById("recipient").address);
   const send = useRemesaSend(toUnits(amount));
   const bill = useBillPay();
   const billBusy = ["quoting", "requesting", "challenge", "signing", "verifying"].includes(bill.stage);
@@ -55,14 +58,13 @@ function useRemesasState() {
   }, [bill.stage]);
 
   async function doSend() {
-    const to = personaById("recipient").address;
     if (!to) return;
     setLast("send");
     const r = await send.send(to, memo.trim() || undefined).catch(() => undefined);
     if (r) setScreen("enviado");
   }
 
-  return { screen, setScreen, amount, setAmount, memo, setMemo, send, bill, last, doSend };
+  return { screen, setScreen, amount, setAmount, memo, setMemo, to, setTo, send, bill, last, doSend };
 }
 
 export function RemesasScreen() {
@@ -90,7 +92,7 @@ export function RemesasScreen() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10">
         <div className="-mx-4 sm:mx-0">
           <ConnectGate persona="sender" why="Mercado Remesas runs on the sender's wallet. Use the demo account or connect your own.">
-            <PhoneFrame>
+            <PhoneFrame accent="#ff8a1f" label="Mercado Remesas, Android phone preview">
               <PhoneApp s={s} />
             </PhoneFrame>
           </ConnectGate>
