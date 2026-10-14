@@ -5,14 +5,14 @@
 // Spanish only in the phone; the English explanations live in the desktop "what just happened" panel.
 // Every number is live: balances and quotes from chain, sends on the v2 exchange, bills through the real
 // MPP 402 flow. Simulated (and labeled): the on-ramp card charge and the airtime/bill fulfillment.
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useConnection } from "wagmi";
 import { ArrowUpRight, Bell, CircleUserRound, CreditCard, ExternalLink, History, House, Lightbulb, Phone, Plus, Send, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { MEMO_MAX_BYTES, memoByteLength, useBalances, useOracle } from "@/lib/contracts";
 import { useActivityFeed, type ActivityRow } from "@/lib/contracts/activity";
 import { fmtNumber, shortAddr, toUnits } from "@/lib/format";
-import { Stagger, TickerText } from "@/lib/motion";
+import { Stagger, Ticker, TickerText, useReducedMotion } from "@/lib/motion";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import { CONTACTS, contactByAddress, type Contact } from "@/components/wallet/personas";
@@ -37,6 +37,7 @@ import {
   LinearProgress,
   ListHeader,
   ListHeaderAction,
+  PullToRefresh,
   ListItem,
   Meta,
   Money,
@@ -52,6 +53,7 @@ import {
   haceTiempo,
   useNavDirection,
   useSnackbar,
+  useNewKeys,
   useStatusBar,
   washStyle,
   type NavItem,
@@ -145,7 +147,7 @@ function Inicio({ s, openOnramp }: AppProps) {
     animation: "m-papel 24s linear infinite",
   };
   return (
-    <div className="pb-6">
+    <PullToRefresh className="pb-6" stretch={TERRACOTTA}>
       {/* v5 color world: the terracotta field holds the header, the hero and the balance (ink text, 5.6:1 AA);
           a soft wash carries it into the white canvas for the tiles, actions and contacts. */}
       <AccentField color={TERRACOTTA} className="pb-6">
@@ -209,7 +211,7 @@ function Inicio({ s, openOnramp }: AppProps) {
 
       <ListHeader action={<ListHeaderAction onClick={() => s.setScreen("actividad")}>Ver todo</ListHeaderAction>}>Movimientos</ListHeader>
       <ActivityList limit={4} onEmpty={() => start()} />
-    </div>
+    </PullToRefresh>
   );
 }
 
@@ -370,6 +372,8 @@ const hhmm = (t: number) => new Date((t - 6 * 3600) * 1000).toISOString().slice(
 function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void }) {
   const { entries, loading, error } = useEntries();
   const now = useNow(30_000) ?? 0;
+  const keyOf = (e: Entry) => (e.kind === "send" ? e.row.txHash + e.row.logIndex : e.order.orderId);
+  const fresh = useNewKeys("remesas-activity", loading ? [] : entries.map(keyOf));
   if (loading && entries.length === 0) return <SkeletonList rows={3} />;
   if (error && entries.length === 0)
     return (
@@ -381,6 +385,7 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
     return (
       <EmptyState
         icon={<PaperPlane />}
+        size={120}
         title="Haz tu primer envío"
         hint="Llega en segundos a tu familia."
         action={
@@ -391,7 +396,8 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
       />
     );
   const shown = entries.slice(0, limit);
-  // Rows arrive after the screen (async reads), so they own their entrance: a short stagger.
+  // Rows arrive after the screen (async reads), so they own their entrance: a short stagger. A row that is
+  // new since this list last showed (e.g. the send you just made) slides in at the top with an accent flash.
   return (
     <Stagger>
       {shown.map((e, i) => {
@@ -399,28 +405,30 @@ function ActivityList({ limit, onEmpty }: { limit?: number; onEmpty: () => void 
         const head = i === 0 || dayGroup(shown[i - 1].at, now) !== g;
         const when = g === "Antes" ? haceTiempo(e.at, now) : hhmm(e.at);
         return (
-          <div key={e.kind === "send" ? e.row.txHash + e.row.logIndex : e.order.orderId}>
+          <div key={keyOf(e)}>
             {head && <Meta className="px-4 pt-3 pb-1">{g}</Meta>}
-            {e.kind === "send" ? (
-              <ListItem
-                divider
-                href={e.row.url}
-                leading={<Avatar name={e.contact?.name ?? "Envío"}>{e.contact ? undefined : <ArrowUpRight className="size-5" />}</Avatar>}
-                headline={`Envío a ${e.contact?.name ?? shortAddr(e.row.to)}`}
-                supporting={`${e.contact?.city ?? "En la cadena"} · ${when}`}
-                trailing={`−US${fmtMoney(e.row.amount)}`}
-                trailingSub={`MX${fmtMoney(e.row.amountOut)}`}
-              />
-            ) : (
-              <ListItem
-                divider
-                href={e.order.receipt?.explorerUrl}
-                leading={<BrandTile id={e.order.provider === "telcel" ? "telcel" : "cfe"} />}
-                headline={e.order.provider === "telcel" ? "Tiempo Aire Telcel" : "Luz CFE"}
-                supporting={`Simulado · ${statusEs(e.order.status)} · ${when}`}
-                trailing={`−MX${fmtMoney(BigInt(e.order.amount))}`}
-              />
-            )}
+            <div className={fresh.has(keyOf(e)) ? "m-new" : undefined}>
+              {e.kind === "send" ? (
+                <ListItem
+                  divider
+                  href={e.row.url}
+                  leading={<Avatar name={e.contact?.name ?? "Envío"}>{e.contact ? undefined : <ArrowUpRight className="size-5" />}</Avatar>}
+                  headline={`Envío a ${e.contact?.name ?? shortAddr(e.row.to)}`}
+                  supporting={`${e.contact?.city ?? "En la cadena"} · ${when}`}
+                  trailing={`−US${fmtMoney(e.row.amount)}`}
+                  trailingSub={`MX${fmtMoney(e.row.amountOut)}`}
+                />
+              ) : (
+                <ListItem
+                  divider
+                  href={e.order.receipt?.explorerUrl}
+                  leading={<BrandTile id={e.order.provider === "telcel" ? "telcel" : "cfe"} />}
+                  headline={e.order.provider === "telcel" ? "Tiempo Aire Telcel" : "Luz CFE"}
+                  supporting={`Simulado · ${statusEs(e.order.status)} · ${when}`}
+                  trailing={`−MX${fmtMoney(BigInt(e.order.amount))}`}
+                />
+              )}
+            </div>
           </div>
         );
       })}
@@ -440,12 +448,17 @@ const statusEs = (st: string) =>
     FAILED: "falló",
   })[st] ?? st;
 
+/** Empty activity (v6): a terracotta paper plane on a dotted route from a home, floating gently. */
 function PaperPlane() {
   return (
-    <svg viewBox="0 0 64 64" fill="none" aria-hidden>
-      <path d="M6 30 58 8 46 56 32 38 6 30Z" fill={CREAM} stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M32 38 58 8" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M32 38v13l7-7" fill={TERRACOTTA} stroke={INK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 120 80" fill="none" aria-hidden>
+      <path d="M32 64 C50 64 58 42 78 34" stroke={TERRACOTTA} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="1 7" />
+      <path d="M4 62 17 50 30 62v16H4Z" fill={CREAM} stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <g className="m-float">
+        <path d="M70 34 114 14 104 58 92 42Z" fill={TERRACOTTA} stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M92 42 114 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M92 42v12l6-6" fill={CREAM} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
     </svg>
   );
 }
@@ -719,7 +732,7 @@ function Enviado({ s }: AppProps) {
   return (
     <SuccessScreen
       title={<>Enviado a {name}</>}
-      amount={r ? `MX${fmtMoney(r.delivered)}` : undefined}
+      amount={r ? <Arrives value={Number(r.delivered) / 1e6} /> : undefined}
       caption={r ? "En su wallet · en la cadena" : undefined}
       action={
         <Button
@@ -737,6 +750,7 @@ function Enviado({ s }: AppProps) {
     >
       {r && (
         <div className="grid gap-4">
+          <SendRoute city={c?.city} />
           {r.memo && (
             <p className="w-fit rounded-[8px] px-3 py-2 text-[15px]" style={{ background: CREAM, color: INK }}>
               “{r.memo}”
@@ -763,6 +777,48 @@ function Enviado({ s }: AppProps) {
         </div>
       )}
     </SuccessScreen>
+  );
+}
+
+/** Mamá's pesos arrive: the amount ticks up from 0 while the route draws (reduced motion: shown at once). */
+function Arrives({ value }: { value: number }) {
+  const reduced = useReducedMotion();
+  const [v, setV] = useState(reduced ? value : 0);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), 150);
+    return () => clearTimeout(t);
+  }, [value]);
+  return <Ticker value={v} duration={1100} format={(n) => `MX${fmtMoney(n)}`} />;
+}
+
+const ROUTE = "M24 62 Q160 -8 296 62";
+
+/** The send, shown (v6): US → MX arc that draws itself, a dot travelling along it, a pulse on arrival. */
+function SendRoute({ city }: { city?: string }) {
+  const reduced = useReducedMotion();
+  return (
+    <figure className="m-0" role="img" aria-label={`De Estados Unidos a ${city ?? "México"}, México`}>
+      <svg viewBox="0 0 320 76" className="w-full" fill="none" aria-hidden>
+        <path d={ROUTE} stroke="var(--m-outline-variant)" strokeWidth="2" strokeDasharray="2 6" strokeLinecap="round" />
+        <path className="m-route-line" d={ROUTE} stroke={TERRACOTTA} strokeWidth="3" strokeLinecap="round" pathLength={1} />
+        <circle cx="24" cy="62" r="6" fill="var(--m-on-surface)" />
+        <circle className="m-route-pulse" cx="296" cy="62" r="6" fill={TERRACOTTA} />
+        <circle cx="296" cy="62" r="6" fill={TERRACOTTA} />
+        {reduced ? null : (
+          <circle r="5" fill={TERRACOTTA} stroke="var(--m-surface)" strokeWidth="2">
+            <animateMotion dur="1.1s" fill="freeze" path={ROUTE} calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.2 0.8 0.2 1" />
+          </circle>
+        )}
+      </svg>
+      <figcaption className="m-meta mt-1 flex justify-between" aria-hidden>
+        <span className="flex items-center gap-1.5">
+          <FlagUS /> EE. UU.
+        </span>
+        <span className="flex items-center gap-1.5">
+          {city ?? "México"} <FlagMX />
+        </span>
+      </figcaption>
+    </figure>
   );
 }
 
