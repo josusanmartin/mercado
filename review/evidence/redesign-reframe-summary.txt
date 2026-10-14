@@ -1,0 +1,205 @@
+{
+  "file": "review/evidence/redesign-1791942908388.json",
+  "routes": [
+    {
+      "width": 1440,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 1440,
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/credit",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/pay",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/mint",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/send",
+      "status": 200,
+      "errors": [],
+      "overflow": true,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    },
+    {
+      "width": 390,
+      "path": "/earn",
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "clipped": false,
+          "visible": true
+        }
+      ],
+      "network": false
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "input-edit-stays-on-pay",
+      "pass": true,
+      "tourText": 0
+    },
+    {
+      "name": "dialog-backspace-does-not-navigate",
+      "pass": true,
+      "path": "/pay"
+    },
+    {
+      "name": "escape-closes-dialog",
+      "pass": false
+    },
+    {
+      "name": "profile-arrow-focus",
+      "focused": "Miguel, Sender in Houston"
+    }
+  ]
+}

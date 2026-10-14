@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-14T01:55:09.980Z",
+  "mode": "actual v2 helper / local adapters; no chain calls",
+  "sourceSha256": "1709fb4cab3aa20903e8fe394224d0b3d538c53b31c3b563202eb54adc796edc",
+  "results": [
+    {
+      "name": "valid",
+      "result": {
+        "ok": true
+      },
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "name": "invalid-recipient",
+      "result": {
+        "error": "invalid recipient at transfer encoding"
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    },
+    {
+      "name": "oversize-memo",
+      "result": {
+        "error": "Memo exceeds 32 bytes"
+      },
+      "writes": []
+    },
+    {
+      "name": "missing-mint-amount",
+      "result": {
+        "error": "undefined amount at transfer encoding"
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # Mercado review findings
 
-Last reviewed commit: `87e1143` and the later sponsor/memo/receipt changes through approximately 01:27 UTC; shared tree WIP is explicitly noted below.
+Last reviewed commit: `914c1f2` plus v2 design/contracts WIP and API gate fix reported as `9ac7e08` (approximately 01:48 UTC). Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
 
-Current status: fee caps, call selector/spender boundaries, expiring-nonce dedupe, pre-write memo validation, quote invalidation, wallet-offer reset, mobile disclosure visibility, frozen Send receipts and credential-free recovery fetch are independently rechecked at the evidence levels below. Remaining review risks are R-016's unsigned existing-sender quota grief and R-022's reset/writer race. R-021 exposed the connector auto-payment wrapper and is fixed for the tested recovery path. No reviewer chain transaction was broadcast. The new console-menu redesign is pending; all completed browser checks below predate it.
+Current status: console navigation/quote invalidation/mobile disclosure regressions pass. Sponsor fee/call boundaries and memo receipt checks pass at the recorded evidence levels; R-016 unsigned eligible-sender quota grief and R-022 reset/writer race remain residual open. Priority is now SPEC v0.2 solvency review. New sOUSD late-donation valuation issue R-027 is locally reproduced; v2 quote/version and cap/pause issues are tracked below. No reviewer chain transaction was broadcast.
 
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -181,6 +181,104 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Scenario: reset renames orders.json while another process is settling an order. A store operation that already read the file can later rewrite the pre-reset database, or a post-settlement operation can find the order missing. Pending recovery is also removed from the active API even though the original transfer may still land. Keeping the archive and replay file does not by itself preserve live reconciliation.
 - Fix: require a quiescent writer and no unresolved/active payments before archiving, or provide a reset operation serialized inside the serving process with an ingress guard. Refuse/reset-later rather than presenting an unconditional safe-while-running claim. Preserve archives as evidence.
 
+### R-023 — P1 — web — Missing Home reads were presented as debt-free
+
+- Status: SOURCE FIX VERIFIED in the console rewrite and `ac2e268`. Missing debt/position now displays unavailable; `health(undefined)` is unknown, and only an explicit zero-debt ratio gives “No debt.”
+- Location: `components/home/home-screen.tsx`, `lib/vault-math.ts`.
+- Scenario: an RPC failure previously became zero debt / no vault position through defaults; the initial health helper also treated undefined ratio as no debt.
+- Evidence: source review and owner fix. `home-rpc-unavailable-1791941415510.json` is a blocked browser probe during a server restart, not a successful fault-injection acceptance.
+
+### R-024 — P2 — web — Page shortcuts navigate behind a wallet dialog
+
+- Status: BROWSER FIX VERIFIED after `168b86b`.
+- Location: `components/console/keyboard.tsx`.
+- Scenario: focus a button in the wallet modal on /pay and press Backspace; the page navigated Home. Global t/+ also lacked the modal guard.
+- Evidence: initial `redesign-1791941595884.json`; corrected recheck `redesign-flow-1791941954556.json` confirms Backspace/t/+ stay in place, Escape closes the modal, and the next Escape navigates Home. Input typing also stays on the screen. The initial immediate Escape-count assertion was timing-sensitive and is not an independent defect.
+
+### R-025 — P1 — web — System view overstates yield and treats wallet balance as MPP volume
+
+- Status: SOURCE FIX VERIFIED (01:50): merchant wallet balance label and explicit live-v1/in-progress-v2 notes.
+- Location: `components/home/system-map.tsx:16`, `:28`, `:55` at discovery.
+- Scenario: merchant token balance is labeled “xMXN paid through MPP.” Direct transfers/seed funds raise it and withdrawals reduce it without changing verified payment volume. The active v1 Create card also says collateral keeps its own yield, although v1 locks plain faucet OUSD.
+- Fix: label the metric merchant wallet balance, or derive cumulative volume from verified receipts. Distinguish live v1 from v2 yield/multi-collateral in progress.
+
+### R-026 — P1 — api — Recording a v2 deployment switches quotes before acceptance
+
+- Status: INITIAL GATE FIX SOURCE VERIFIED in `9ac7e08`; superseded by the atomic shared-gate work in R-030. Manifest presence no longer switches MOVE by itself; remaining shared UI/pool mismatch must be closed before flip.
+- Location: `lib/server/move/quote.ts:49` at discovery.
+- Scenario: the presence of `deployments.v2.vamm` immediately selects v2 quote/token, while app, pool and payment default remain v1. This violates the lead-controlled switchover gate and offers a different asset/venue before its e2e acceptance.
+- Fix: one explicit protocol version gate shared by app, quotes, bills and credit; signed quote binds version/chain/token/venue; never silently fall back across token versions.
+
+### R-027 — P1 — contracts — Late donation realizes old unfunded sOUSD accrual instantly
+
+- Status: LOCAL FIX VERIFIED in `a158c97`: accounted assets/funded reserve and checkpoint-before-fundYield. `v2-fixes-recheck.log` shows dry-year donation and late funding keep price at1.000000; later funded accrual works. No deployed check yet.
+- Location: `packages/contracts/src/v2/StakedOUSD.sol:36` (`min(grown,balance)`); design §1; ERC4626PriceFeed trusts convertToAssets.
+- Scenario: deposit 100 OUSD with no yield reserve, wait a year at 20% APR. Share price stays 1 because balance clamps accrued assets. Donate 20 directly without advancing time: price jumps to 1.199999 in the same block, increasing collateral valuation immediately. A fresh donation does not move price, so testing only that case misses the issue.
+- Evidence: `review/contracts/ReviewV2Staked.t.sol`, `review/evidence/v2-staked-donation.log`: two local real-TIP20 tests pass, including the reproduction. Source hashes in `v2-initial-source-sha256.txt`. No deployed donation performed.
+- Impact boundary: assets are funded after the donation; this is not proof of an unbacked loan or profitable theft. It disproves donation-independent pricing / no within-block price jump, which the feed and design rely on.
+- Fix: explicitly account funded yield with checkpoint-before-funding and prevent direct donations from recognizing historical unfunded accrual. Test depleted reserves, long idle periods, first depositor, and deposit/withdraw checkpoints.
+
+### R-028 — P1 — contracts — Claimed rolling redemption cap is an epoch cap
+
+- Status: LOCAL REPRODUCTION VERIFIED; policy revision in progress. Initial epoch permits498.481596 OUSD out within1second from1,249.950101 reserve (`v2-move-initial2.log`). The first leaky-bucket fix adds a1000 OUSD floor; independent probe confirms498.003992 out immediately from1250 reserve (`v2-fixes-recheck.log`). Lead rejected that floor at01:50 and requires pure25%-of-reserve capacity/refill; final no-floor recheck PASSES in `v2-no-floor-recheck.log`, including old epoch-boundary rejection. The docs still need the accepted burst/refill semantics.
+- Location: `packages/contracts/src/v2/MoveAMM.sol:_window/_rollWindow`; design §4.
+- Scenario: use nearly the 25% snapshot limit just before a 24-hour epoch resets, then redeem again against the reset reserve snapshot one second later. This exceeds 25% over a rolling day while both calls comply with the implementation.
+- Fix: implement a rolling bound or explicitly choose/document fixed epochs and their boundary burst. Test the boundary rather than claiming a rolling cap from within-window checks. Reserve/NAV constraints are separate and may still prevent insolvency.
+
+### R-029 — P1 — contracts — Paused vAMM still returns payable quotes
+
+- Status: LOCAL FIX VERIFIED in `a158c97`; quote now calls the pause guard. Original paused-quote reproduction and corrected rejection both preserved in v2-move-initial2.log / v2-fixes-recheck.log.
+- Location: `packages/contracts/src/v2/MoveAMM.sol:quote`; swap functions have `whenNotPaused`.
+- Scenario: admin pauses trading; quote still succeeds and the paid partner API may collect 0.50 xMXN for a trade already known to be disabled. Both execution directions then revert.
+- Fix: quote must reject the paused state before the API charges, matching its stated execution-eligibility contract. An indicative price is not a fill guarantee, but known global pause should not be hidden.
+
+### R-030 — P0 switch blocker — contracts / web / api — Protocol flag mixes v1 UI with v2 server
+
+- Status: OPEN BEFORE FLIP; v1 default remains safe. Lead issued `crew/V2-SWITCH.md` at01:52 in response.
+- Location: `apps/web/lib/contracts/addresses.ts`, all shared balance/pool reads and actions, `lib/server/credit/index.ts:19`.
+- Scenario: after NEXT_PUBLIC_PROTOCOL=v2, API signs eligibility for v2 pool and MPP charges v2 token, while ADDR and shared Credit/Earn/Pay hooks still target v1. Draw sends a v2-bound attestation to the wrong pool; displayed spending balances are the wrong token. A missing v2 pool also falls back to the old env pool.
+- Fix: one shared active-protocol/address source; require complete deployment including pool, and fail closed on incomplete v2. Atomically migrate all consumers. Lead alone flips after version-specific journey and review acceptance. Check both cold-start client bundle and server environment.
+
+### R-031 — P1 — web — V2 backing labels overstate fairness and remaining capital
+
+- Status: OPEN; owner notified.
+- Location: `components/transfer/send-screen.tsx:295`–`:301` at discovery.
+- Scenario: `equity()` is historical contributions minus withdrawals, not remaining equity after FX losses; the decaying bucket is labeled “Redeemed today”; the NAV row promises no one can run first. Those labels misdescribe state under stress and throttling.
+- Fix: label net contributed capital and used redemption capacity, describe haircut and availability limits, and qualify the mint rule as post-trade coverage. No unconditional no-run claim.
+
+### R-032 — P1 — web — V2 memo helper reintroduces partial-flow validation
+
+- Status: LOCALLY REPRODUCED with the actual v2 helper and isolated adapters; `v2-memo-1791942909980.json` confirms invalid recipient mints first, missing amount reaches transfer encoding, oversized memo writes nothing. Owner notified. No real transaction sent.
+- Location: `lib/v2/actions.ts:sendUsdToMxnWithMemo`.
+- Scenario: invalid recipient passes until after mint-to-self; undefined decoded mint amount bypasses an out===0n guard and reaches transfer encoding. The screen checks recipient validity, but the helper no longer preserves v1's before-write validation boundary.
+- Fix: validate recipient and memo before any approval/mint; reject undefined and zero mint receipt amounts with the explicit Send-only recovery hint. Keep the delivered receipt frozen and tied to the actual token/version.
+
+### R-033 — P2 — web — Send connect button overflows a phone viewport
+
+- Status: BROWSER REPRODUCED; owner notified.
+- Location: `components/shell/connect-gate.tsx`, reused by /send.
+- Scenario: anonymous390px /send has403px document width. “Continue as Miguel (Sender in Houston)” button is343px wide atx60 and escapes its panel.
+- Evidence: `evidence/send-mobile-overflow.json` and screenshot. Fix button sizing/wrapping within available width.
+
+## Pass 10 — v0.2 reframe and adversarial design review (from 01:42 UTC)
+
+- Final local no-floor recheck:15 executions /10 distinct tests (5 inherited repeats), including256 fuzz cases, pass. Artifact `v2-no-floor-recheck.log`; exact source hashes `v2-reviewed-source-sha256.txt`. No deployed v2 acceptance yet.
+- Fresh anonymous browser check `redesign-1791942908388.json`: all12 desktop/mobile route loads return200; footer visible/unclipped; no pageerror events. Send mobile overflow is R-033. This probe does not observe React console-only hydration warnings or certify paid flows. The old immediate Escape-count check remains timing-sensitive; the separate awaited check already passes.
+- Read latest IRC assignments and SPEC v0.2; prioritizing `crew/V2-DESIGN.md`. Updated PRODUCT with institutional Create, remittance Move, gig Lend, MPP Spend, a new story, three ranked improvements and eight revised judge questions. Earlier v1 recommendations are marked historical.
+- Lead caught the liability-floor/equity-drain design issue before implementation; current MoveAMM enforces `amountIn <= liability`. Reviewer will test fungible CDP/AMM burns and total-supply accounting rather than assuming token provenance can be tracked.
+- Additional local probes in `v2-vault-boundaries.log`: per-collateral aggregate ceiling across two borrowers, reduction below outstanding debt,18-decimal exact withdrawal bound (256 fuzz cases), RWA gap-down liquidation, and repay/debt-free exit while both feeds are paused pass. The suite also inherits four Move checks; do not count inherited tests as new independent coverage.
+- Design claims requiring qualification: 20→16 MXN/USD is a 20% decline in that quote, equivalently 25% peso appreciation; the 25% equity buffer is initial, not maintained by a 100% mint gate; fees/size impact/caps make “no bank run / no first-mover advantage” too strong. Under stressed NAV redemption holders accept a haircut, and rate limits can queue them.
+- RWA haircut is a demo risk parameter, not protection against an admin inventing prices. Owner can change feeds/risk/ceilings in WIP. Require explicit authority disclosure, invalid/stale feed tests, decimal tests, per-collateral ceiling enforcement, and supply/debt invariants. A shared FX oracle also means live v2 stress would affect v1; keep v1 green with coordinated restoration or isolated local stress.
+
+## Pass 9 — console redesign, sponsorship and receipt verification (01:28–01:40 UTC)
+
+- `redesign-flow-1791941954556.json`: seven browser checks pass: offer→Draw input navigation, input/dialog shortcuts, Escape modal close then Home, bill→Checkout and edited-bill quote invalidation. Mobile footer is fully visible and now includes Tempo Moderato 42431 plus no-value/non-redemption disclosures; no overflow. No Draw/Pay/Swap/Supply broadcast by reviewer.
+- Initial desktop Home 500 in `redesign-1791941595884.json` was a transient WIP export mismatch; other routes and subsequent Home loads return 200. Do not present the transient snapshot as all-routes success or a persistent defect. Connected profile arrow focus passes after hydration; the old Other wallets selector failing after a restored connection is reviewer instrumentation, not an app failure.
+- R-012 UI follow-up is present in `ec82c1b`: Credit draw/repay use shared TxProgress; Pay reports busy for the entire flow, disabling persona/Tour controls. This is source verification in addition to the earlier account-pinning execution probe, not a new mid-signature browser experiment.
+- Sponsor recheck `sponsor-recheck-1791941598397.json` again confirms fee/target/function/spender restrictions and quota accounting. R-016 remains residual open: unsigned spoofed eligible senders consume victim quota. No request abused the shared relay.
+- `receipt-helper-1791941324880.json`: independently fetched the real successful memo transfer receipt and ran the actual deliveredFromReceipt helper. It returns exactly 99.50 xMXN and “para mamá” without counting both Transfer and TransferWithMemo twice; sponsor feePayer matches the configured account.
+- Pinned RPC snapshots in `chain-screen-1791941664291.json` and `chain-screen-1791941879120.json` bracket changing driver balances/debt during crew transactions. Browser 70 balance/153 debt and later chain 50/153 are not proof of incorrect UI accounting without the same observation time. R-025 is a concrete metric-definition mismatch regardless of timing.
+
 ## Pass 8 evidence (01:22–01:26 UTC)
 
 - Sponsor selector/spender/fee checks and empty-account eligibility pass isolated checks. Deduplication initially omitted expiring-nonce expiry/fee fields; source review flagged this and contracts corrected it before the recheck. `sponsor-recheck-1791941049183.json`: differing expiry produces distinct fee-payer payloads and distinct quota keys; 30 fee variants sign, the 31st is refused (our deliberately disabled downstream throws during unsponsored fallback). This is local policy/Relay evidence, not 30 live sponsored transactions.
@@ -261,8 +359,6 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Read local `tempo-std` TIP-20 interfaces and `ForkProbe.t.sol`; issuer-gated burn operates on the caller balance. Pool/vault tests must account for the actual precompile behavior.
 - Official references consulted: [MPP server creation](https://mpp.dev/sdk/typescript/server/Mppx.create), [Tempo source](https://github.com/tempoxyz/tempo), [Tempo integration guide](https://docs.chain.link/ccip/v1/evm/tools-resources/network-specific/tempo-integration-guide). Direct docs.tempo.xyz pages redirected to a location unavailable to the browsing tool; installed source is the implementation evidence used here.
 
-## Next pass (updated 01:27 UTC)
+## Next pass (updated 01:48 UTC)
 
-Read `crew/DESIGN-SWITCH.md`; the shared console-menu redesign was assigned at 01:25 and is expected in about 20 minutes. Recheck always-visible mobile honesty labels, new persona bar while any transaction/payment is busy, keyboard scoping (typing in inputs must not trigger navigation/tour), dialog focus, and both light/dark layouts after it lands. Keep R-016/R-022 residuals explicit and ask lead for any limited-demo acceptance decision; do not close them merely on owner mitigation claims.
-
-Prior restart note: start with `IRC_NICK=review bin/irc unread`, then `git log --stat d6c810a..HEAD` and status/diff. Recheck R-012, fee sponsorship, normal push receipts and recovery boundaries. Review browser flows when dashboard pages land. Preserve completed and failed evidence separately. Lead commits review files; the reviewer does not.
+Start with `IRC_NICK=review bin/irc unread`. Continue V2-DESIGN/source review and local tests before any deployment acceptance; verify R-027–R-029 fixes and lead's amountIn<=liability rule. Check v2 explicit version gate, funding provenance, fresh oracle state, roles and manifests before the switch. Keep R-016 and R-022 residuals explicit. Recheck R-025 System labels and unknown-value states as UI changes land. PRODUCT's current section is v0.2; all old v1 narrative is historical. Write only review/, no commits, no reviewer live writes. Large outputs remain under review/evidence.

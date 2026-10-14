@@ -1,0 +1,57 @@
+{
+  "file": "review/evidence/v2-live-1791943147800.json",
+  "block": "39491110",
+  "runtimes": [
+    {
+      "name": "ERC4626PriceFeed",
+      "match": true
+    },
+    {
+      "name": "FixedPriceFeed",
+      "match": true
+    },
+    {
+      "name": "AdminPriceFeed",
+      "match": true
+    },
+    {
+      "name": "MercadoFactoryV2",
+      "match": true
+    },
+    {
+      "name": "DemoRWA",
+      "match": true
+    },
+    {
+      "name": "StakedOUSD",
+      "match": true
+    },
+    {
+      "name": "MoveAMM",
+      "match": true
+    },
+    {
+      "name": "CreditPool",
+      "match": true
+    },
+    {
+      "name": "MultiCollateralVault",
+      "match": true
+    }
+  ],
+  "receipts": {
+    "total": 35,
+    "success": 35
+  },
+  "checks": [
+    {
+      "name": "all-runtime-matches",
+      "pass": true
+    },
+    {
+      "name": "all-manifest-receipts-succeeded",
+      "pass": true
+    }
+  ],
+  "error": "The contract function \"hasRole\" reverted with the following signature:\n0xaa4bc69a"
+}

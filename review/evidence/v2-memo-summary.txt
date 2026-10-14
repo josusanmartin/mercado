@@ -1,0 +1,40 @@
+{
+  "file": "review/evidence/v2-memo-1791942909980.json",
+  "results": [
+    {
+      "name": "valid",
+      "result": {
+        "ok": true
+      },
+      "writes": [
+        "swapOusdForXmxn",
+        "transferWithMemo"
+      ]
+    },
+    {
+      "name": "invalid-recipient",
+      "result": {
+        "error": "invalid recipient at transfer encoding"
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    },
+    {
+      "name": "oversize-memo",
+      "result": {
+        "error": "Memo exceeds 32 bytes"
+      },
+      "writes": []
+    },
+    {
+      "name": "missing-mint-amount",
+      "result": {
+        "error": "undefined amount at transfer encoding"
+      },
+      "writes": [
+        "swapOusdForXmxn"
+      ]
+    }
+  ]
+}

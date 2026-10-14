@@ -1,0 +1,393 @@
+{
+  "at": "2026-10-14T01:59:31.058Z",
+  "block": "39491154",
+  "manifestSha256": "e7181550fcdd3f598e0ec848707591c423c85d1825e609c9f2a066a9f9bf51b2",
+  "receipts": [
+    {
+      "name": "core.deployMultiCollateralVault",
+      "hash": "0x25afefab17beab66c89311f74bcae3fc427198da2643e33fdac6a35948dd7a93",
+      "status": "success",
+      "blockNumber": "39490701"
+    },
+    {
+      "name": "core.deployMercadoFactoryV2",
+      "hash": "0x00e63f8aa19dd757a4e8673de9a42be5c044cf10cea56ec7dc97aef4ff029442",
+      "status": "success",
+      "blockNumber": "39490694"
+    },
+    {
+      "name": "core.deployMoveAMM",
+      "hash": "0x203ff7239e37fe2521a15eb275e201e9d0ac2f0c8eaf501ae532790c36dbb480",
+      "status": "success",
+      "blockNumber": "39490704"
+    },
+    {
+      "name": "core.createToken",
+      "hash": "0xd173d89bb48adaf745ff1561bc5a78c61ff929f2b5242aa8b2a9d9969e4b4cae",
+      "status": "success",
+      "blockNumber": "39490697"
+    },
+    {
+      "name": "core.lockIssuers",
+      "hash": "0xa90e071580d2a5484d7c877898c407c45fe1ebe209399132e94e86107aa2c717",
+      "status": "success",
+      "blockNumber": "39490709"
+    },
+    {
+      "name": "core.deployERC4626PriceFeed",
+      "hash": "0x90763d37180afb92a07001bb1b1a13e7920ffc8809eacc015636ae435d194b1f",
+      "status": "success",
+      "blockNumber": "39490718"
+    },
+    {
+      "name": "core.deployStakedOUSD",
+      "hash": "0x836669e5e15081374dadef42d390d085c8e4f032709eb6c67f4cde4971db1e4d",
+      "status": "success",
+      "blockNumber": "39490714"
+    },
+    {
+      "name": "core.deployFixedPriceFeed",
+      "hash": "0x714702ef47616e24601ffdc573260e1ee3138f71b93e7a1179e0082364796feb",
+      "status": "success",
+      "blockNumber": "39490711"
+    },
+    {
+      "name": "core.deployDemoRWA",
+      "hash": "0x2366cb80728021e3ef693f9d16cf25b6650c21269802fb7a35fa75f3c853b812",
+      "status": "success",
+      "blockNumber": "39490721"
+    },
+    {
+      "name": "core.deployAdminPriceFeed",
+      "hash": "0x49c69d3b16a427233e91730c9017ad6e00591c7bddb046834e232e092e0b7beb",
+      "status": "success",
+      "blockNumber": "39490726"
+    },
+    {
+      "name": "core.addCollateral",
+      "hash": "0x457301ceaab4c9633ac5c79e4468a2aa7fbe230e8a05d9339d9a8cab03ed61d9",
+      "status": "success",
+      "blockNumber": "39490729"
+    },
+    {
+      "name": "core.approve",
+      "hash": "0x9e64c46b9fd8ec3fb31002fe95844ab6162e98f4d7a51112607cad6ff89135f4",
+      "status": "success",
+      "blockNumber": "39490740"
+    },
+    {
+      "name": "core.addCollateral#3",
+      "hash": "0x73d02376b490fd0eeca4217983fc1e6004de3e495b8cdac084c448aa83b94905",
+      "status": "success",
+      "blockNumber": "39490738"
+    },
+    {
+      "name": "core.addCollateral#2",
+      "hash": "0x90ad3bd6c161e7e786ecdb06a5a207e0de0e55d79de5966321127442b880a4f9",
+      "status": "success",
+      "blockNumber": "39490734"
+    },
+    {
+      "name": "core.fundYield",
+      "hash": "0x711cd300e37703d456a8af203ae800635c94a5731bda7e652274d82e2478f26a",
+      "status": "success",
+      "blockNumber": "39490742"
+    },
+    {
+      "name": "seed.approve#2",
+      "hash": "0x0b2f98705125c59d5df31334da5cf547ef00bcb1da252c7f5ee54860ffc33a67",
+      "status": "success",
+      "blockNumber": "39490821"
+    },
+    {
+      "name": "seed.approve",
+      "hash": "0x4e50018641076ff057fd00334d5b3c57ac1ff2c97452150d36ad221215eac13c",
+      "status": "success",
+      "blockNumber": "39490814"
+    },
+    {
+      "name": "seed.deposit",
+      "hash": "0x444182fb4e6a70fdffe1140a7e82bca4578f85b7111ebc2160de5d67c3e335bc",
+      "status": "success",
+      "blockNumber": "39490824"
+    },
+    {
+      "name": "seed.approve#3",
+      "hash": "0xa9d32e130447fc00520ffd723e0198195c3bc72368675b03f29ee3e918212baa",
+      "status": "success",
+      "blockNumber": "39490829"
+    },
+    {
+      "name": "seed.swapOusdForXmxn",
+      "hash": "0x590a879a89d08cb9f213f78c1774da2fa0c1d396950e78771bf8b3e224df1ae9",
+      "status": "success",
+      "blockNumber": "39490819"
+    },
+    {
+      "name": "seed.mint",
+      "hash": "0xb9e5fc84cdab52eb6985d5b83beb3fc5965a5ea187d3888393057d76feafda9a",
+      "status": "success",
+      "blockNumber": "39490836"
+    },
+    {
+      "name": "seed.faucet",
+      "hash": "0xb2d74a09585e83880808b7f97d71368affbe6525402d957d36241fef19a8e87d",
+      "status": "success",
+      "blockNumber": "39490838"
+    },
+    {
+      "name": "seed.depositCollateral#2",
+      "hash": "0x82aa21e05ea2147d4daccd8ee52ca0c609170034b2eb0644ec9cd24a10a71136",
+      "status": "success",
+      "blockNumber": "39490846"
+    },
+    {
+      "name": "seed.depositCollateral",
+      "hash": "0x44460b75cef7f99e73fd2b61ebebb8ad00e4db189331fc2fe8165bf7f721a042",
+      "status": "success",
+      "blockNumber": "39490834"
+    },
+    {
+      "name": "seed.approve#4",
+      "hash": "0xd2ed1e3a24c9bed2545434605605497b6bd0be9a0671c66b6ae454a14059dd78",
+      "status": "success",
+      "blockNumber": "39490841"
+    },
+    {
+      "name": "seed.approve#5",
+      "hash": "0x52a754e014f17af9a72985323fb71b0a35a9d976fe82db87cb561069eda19a7a",
+      "status": "success",
+      "blockNumber": "39490861"
+    },
+    {
+      "name": "seed.addEquity",
+      "hash": "0x6466e5bc2cddbd2ccb5a3e4451f0d6dc5272bc5945d9622d8c0186cd7398c29c",
+      "status": "success",
+      "blockNumber": "39490863"
+    },
+    {
+      "name": "credit.deployCreditPool",
+      "hash": "0xd6581e50776b4b8c1db4d6a68fc62ff436f15871aaf89734dd178a223433a4d1",
+      "status": "success",
+      "blockNumber": "39490916"
+    },
+    {
+      "name": "seed.transfer",
+      "hash": "0x8c690cd94287821c4bea6bbc93e92086a18d14af4081511522e01a3009d65e4e",
+      "status": "success",
+      "blockNumber": "39490856"
+    },
+    {
+      "name": "seed.mint#2",
+      "hash": "0x0d2fc96f53b30d9a862acef8bec52f4681655f434d91c5f622eeafc16d9b2674",
+      "status": "success",
+      "blockNumber": "39490851"
+    },
+    {
+      "name": "credit.approve",
+      "hash": "0xccaece4ce319278de9308baa8d62db99562beed208fe322ef887aea3acf55dd6",
+      "status": "success",
+      "blockNumber": "39490921"
+    },
+    {
+      "name": "credit.depositCollateral",
+      "hash": "0x5328cbf0b8ac9d86f4a2e76e5c2be2054fbec61d553a612d7db3dd986d881062",
+      "status": "success",
+      "blockNumber": "39490926"
+    },
+    {
+      "name": "credit.mint",
+      "hash": "0x69ce736cb8a5bd207cbb0d5254e8df0377dbaea30554021be7db68339abe6236",
+      "status": "success",
+      "blockNumber": "39490931"
+    },
+    {
+      "name": "credit.supply",
+      "hash": "0x79d7abae1a7352276083c07fa5c560e4d6cf5b234a34e1452ccb93a8829aff14",
+      "status": "success",
+      "blockNumber": "39490941"
+    },
+    {
+      "name": "credit.approve#2",
+      "hash": "0xb802995540a70b776f265b7f0e4c8f2452d1176feb478881cd618dfc78b70420",
+      "status": "success",
+      "blockNumber": "39490936"
+    }
+  ],
+  "runtimes": [
+    {
+      "name": "DemoRWA",
+      "address": "0xD2A09BECEBD7bD9e23B0fc6FE1e89616D413b33b",
+      "match": true,
+      "bytes": 2612
+    },
+    {
+      "name": "ERC4626PriceFeed",
+      "address": "0x66a13069272166667044bF6D8B9313Ec8d3b6bE5",
+      "match": true,
+      "bytes": 936
+    },
+    {
+      "name": "FixedPriceFeed",
+      "address": "0x69a678782902b491594Fb7455b2AD787c0397AB2",
+      "match": true,
+      "bytes": 525
+    },
+    {
+      "name": "MercadoFactoryV2",
+      "address": "0xC1e0FDFAFBdf14cFa8357095AAae6490CA625E59",
+      "match": true,
+      "bytes": 2180
+    },
+    {
+      "name": "AdminPriceFeed",
+      "address": "0xC10F6283be77689B7D403AF9974d9842f2c7d6A0",
+      "match": true,
+      "bytes": 2531
+    },
+    {
+      "name": "StakedOUSD",
+      "address": "0xC00d9A247F11749FAa3797c5C6fD1944BDc919d2",
+      "match": true,
+      "bytes": 5558
+    },
+    {
+      "name": "MoveAMM",
+      "address": "0x9ecD19ebd398E73C2E1C196b8f7845CDD9872b7F",
+      "match": true,
+      "bytes": 5983
+    },
+    {
+      "name": "CreditPool",
+      "address": "0xaB32daeF142B442d24589D2161967a843720C6D7",
+      "match": true,
+      "bytes": 7033
+    },
+    {
+      "name": "MultiCollateralVault",
+      "address": "0xc6c63803874d41132CFe437C183Ac401e4aF2577",
+      "match": true,
+      "bytes": 9132
+    }
+  ],
+  "reads": {
+    "supply": "562880478087",
+    "decimals": 6,
+    "state": [
+      "3500000000",
+      "19880478087",
+      "2500000000",
+      "35210",
+      "0",
+      "875000000"
+    ],
+    "locked": true,
+    "roles": {
+      "vault": true,
+      "amm": true,
+      "factory": false,
+      "merchant": false
+    },
+    "totals": [
+      {
+        "symbol": "OUSD",
+        "totals": [
+          "2000000000",
+          "10000000000"
+        ]
+      },
+      {
+        "symbol": "sOUSD",
+        "totals": [
+          "5000000000",
+          "33000000000"
+        ]
+      },
+      {
+        "symbol": "tTBILL",
+        "totals": [
+          "1000000000",
+          "500000000000"
+        ]
+      }
+    ],
+    "prices": [
+      {
+        "symbol": "OUSD",
+        "price": [
+          "100000000",
+          "1791943169"
+        ]
+      },
+      {
+        "symbol": "sOUSD",
+        "price": [
+          "100000000",
+          "1791943169"
+        ]
+      },
+      {
+        "symbol": "tTBILL",
+        "price": [
+          "10000000000",
+          "1791942909"
+        ]
+      }
+    ],
+    "staked": {
+      "totalAssets": "5000001585",
+      "assetsAccounted": "5000000000",
+      "fundedReserve": "1000000000",
+      "yieldReserve": "999998415",
+      "aprBps": "500"
+    },
+    "poolCash": "10000000000",
+    "poolToken": "0x20C0000000000000000000004fE3A8219136ca54",
+    "ammToken": "0x20C0000000000000000000004fE3A8219136ca54",
+    "cdpToken": "0x20C0000000000000000000004fE3A8219136ca54",
+    "reserveBalance": "3500000000",
+    "stakedUnderlyingBalance": "6000000000"
+  },
+  "checks": [
+    {
+      "name": "aggregate-supply-equals-cdp-debt-plus-amm-liability",
+      "pass": true
+    },
+    {
+      "name": "tracked-reserve-is-funded",
+      "pass": true
+    },
+    {
+      "name": "seed-equity-at-least-2500",
+      "pass": true
+    },
+    {
+      "name": "redeem-cap-is-quarter-reserve",
+      "pass": true
+    },
+    {
+      "name": "issuers-locked-and-membership",
+      "pass": true
+    },
+    {
+      "name": "pool-and-both-issuers-use-v2-token",
+      "pass": true
+    },
+    {
+      "name": "v2-pool-funded",
+      "pass": true
+    },
+    {
+      "name": "staked-accounted-assets-and-future-yield-funded",
+      "pass": true
+    },
+    {
+      "name": "all-runtime-matches",
+      "pass": true
+    },
+    {
+      "name": "all-manifest-receipts-succeeded",
+      "pass": true
+    }
+  ]
+}

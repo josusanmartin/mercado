@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+import {Base} from "test/utils/Base.t.sol";
+import {MoveAMM} from "src/v2/MoveAMM.sol";
+import {MultiCollateralVault} from "src/v2/MultiCollateralVault.sol";
+import {FixedPriceFeed} from "src/v2/FixedPriceFeed.sol";
+import {IPriceFeed} from "src/v2/IPriceFeed.sol";
+import {ITIP20} from "tempo-std/interfaces/ITIP20.sol";
+import {ITIP20RolesAuth} from "tempo-std/interfaces/ITIP20RolesAuth.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+contract ReviewV2Move is Base {
+    MoveAMM amm;
+    ITIP20 peso;
+    MultiCollateralVault cdp;
+    function setUp() public virtual override {
+        super.setUp();
+        vm.startPrank(admin);
+        peso = ITIP20(TIP20_FACTORY.createToken("Review v2", "rv2", "MXN", PATH_USD, admin, bytes32("review-v2")));
+        amm = new MoveAMM(admin, IERC20(address(ousd)), peso, IPriceFeed(address(oracle)));
+        cdp = new MultiCollateralVault(admin, peso, IPriceFeed(address(oracle)));
+        ITIP20RolesAuth(address(peso)).grantRole(peso.ISSUER_ROLE(), address(amm));
+        ITIP20RolesAuth(address(peso)).grantRole(peso.ISSUER_ROLE(), address(cdp));
+        cdp.addCollateral(address(ousd), new FixedPriceFeed(1e8, "Review fixed USD"), 15_000, 13_500, 1_000, 1_000_000e6);
+        vm.stopPrank();
+        _fundOusd(alice, 100_000e6);
+        vm.startPrank(alice);
+        ousd.approve(address(amm), type(uint256).max);
+        ousd.approve(address(cdp), type(uint256).max);
+        peso.approve(address(amm), type(uint256).max);
+        peso.approve(address(cdp), type(uint256).max);
+        amm.addEquity(250e6);
+        amm.swapOusdForXmxn(1000e6, 0, alice);
+        vm.stopPrank();
+    }
+    function test_cdpAndAmmFungibleBurnsKeepSupplyInvariant() public {
+        uint256 initialL = amm.liability();
+        vm.startPrank(alice);
+        cdp.depositCollateral(address(ousd), 100e6);
+        cdp.mint(address(ousd), 1000e6);
+        amm.swapXmxnForOusd(1000e6, 0, alice);
+        cdp.repayAndBurn(address(ousd), 1000e6);
+        vm.stopPrank();
+        (,uint256 debt) = cdp.totals(address(ousd));
+        assertEq(peso.totalSupply(), debt + amm.liability());
+        assertEq(amm.liability(), initialL-1000e6);
+        uint256 l = amm.liability();
+        vm.expectRevert(abi.encodeWithSelector(MoveAMM.ExceedsLiability.selector, l, l+1));
+        amm.quote(false, l+1);
+    }
+    function test_pesoAppreciationKeepsNavPayoutWithinProRataReserve() public {
+        vm.prank(admin); oracle.forceSet(128e7);
+        uint256 r = amm.reserve(); uint256 l = amm.liability(); uint256 amount = 1000e6;
+        (uint256 out,,,) = amm.quote(false,amount);
+        assertLe(out, r*amount/l);
+        vm.prank(alice); amm.swapXmxnForOusd(amount,0,alice);
+        assertGe(amm.reserve()*l,r*amm.liability());
+        assertEq(ousd.balanceOf(address(amm)),amm.reserve());
+        vm.expectRevert(); amm.quote(true,1e6);
+    }
+    function test_pausedAmmRejectsQuotes() public {
+        vm.prank(admin); amm.pause();
+        vm.expectRevert(); amm.quote(true,1e6);
+        vm.prank(alice); vm.expectRevert(); amm.swapOusdForXmxn(1e6,0,alice);
+    }
+    function test_leakyBucketFloorIsLargerThanQuarterReserve() public {
+        (,,,,,uint256 cap) = amm.state();
+        assertEq(cap,1000e6);
+        uint256 beforeR = amm.reserve();
+        vm.prank(alice); uint256 out = amm.swapXmxnForOusd(10000e6,0,alice);
+        emit log_named_uint("reserve before redemption", beforeR);
+        emit log_named_uint("immediate redemption",out);
+        assertGt(out,beforeR/4); // policy permits this via the 1000 OUSD floor
+        assertEq(ousd.balanceOf(address(amm)),amm.reserve());
+    }
+}

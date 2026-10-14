@@ -1,6 +1,6 @@
 # Mercado product review
 
-Updated 2026-10-14, 01:46 UTC for **SPEC v0.2**. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
+Updated 2026-10-14, 01:57 UTC for **SPEC v0.2**. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
 
 **A parallel financial system for emerging markets, built on Tempo.** One synthetic local currency connects four jobs: institutions **Create** money against collateral, senders **Move** it across an on-chain corridor, gig workers access **Lend**, and people or agents **Spend** through MPP.
 
@@ -50,10 +50,10 @@ The aha is the connection between creation, circulation, credit and programmable
    The intended minter is an institution or sophisticated collateral owner; the unit of debt is MXN, valued through an oracle. On Moderato, OUSD and every added collateral are test assets. There is no fiat redemption, guaranteed peg, real Treasury/equity backing or assurance of issuer-backed collateral. The retail driver borrows existing xMXN rather than opening the institutional mint position.
 
 3. **Where does the yield come from, and can a donation fake it?**
-   Production collateral would carry its own externally earned yield; the Mercado vault runs no strategy. Our proposed sOUSD is an ERC-4626 demo with admin-driven, funded accrual, not real investment income. The reviewer requires donation-resistant accounting and limits on collateral valuation before accepting v2. An increased displayed share price alone proves neither earned yield nor redeemable assets.
+   Production collateral would carry its own externally earned yield; the Mercado vault runs no strategy. Our proposed sOUSD is an ERC-4626 demo with admin-driven, funded accrual, not real investment income. Local review now verifies accounted funded yield, ignored direct donations and no retrospective accrual on late funding. Deployment acceptance remains separate. An increased displayed share price alone proves neither earned yield nor redeemable assets.
 
 4. **If the peso appreciates, can everyone redeem the same USD reserve?**
-   No automatic guarantee follows from virtual reserves or a spread. For example, 1,000 OUSD against 19,900 xMXN is undercollateralized when the mock rate falls from 20 to 18 MXN/USD. V2 must specify and enforce its reserve coverage and redemption stop/haircut policy; it must also explain recapitalization and who bears a deficit. Until those rules and stress tests pass, the vAMM remains in progress. A circuit breaker can stop an unsafe withdrawal; it cannot manufacture missing backing or assure immediate redemption.
+   No automatic guarantee follows from virtual reserves or a spread. For example, 1,000 OUSD against 19,900 xMXN is undercollateralized when the mock rate falls from 20 to 18 MXN/USD. The reviewed v2 design rejects mints that leave coverage below100%, pays redemptions at the lower of oracle pricing and NAV with fees/size impact, and limits redemption flow with a25%-of-reserve leaky bucket. The donor/admin backstop supplies capital; holders bear the stressed redemption haircut. These rules pass bounded local tests; deployment and the complete journey remain pending. Those limits cannot manufacture missing backing or assure immediate redemption. The bucket has a burst allowance plus continuous refill; it is not a promise of at most25% across every rolling day.
 
 5. **Are exchange redemptions or gig loans spending institutional collateral?**
    V1 uses three separate pools: CDP collateral, seeded exchange inventory and lender-supplied xMXN. V2 proposes separate accounting for CDP collateral and a protocol OUSD reserve, even inside the same vault. Swap minting creates reserve debt; CDP minting creates borrower debt. xMXN is fungible, so the design must bound redemptions by aggregate reserve liabilities without assuming a token remembers its origin. The advance pool remains separately funded and unsecured.

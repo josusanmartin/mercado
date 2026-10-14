@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-14T01:56:48.200Z",
+  "width": 390,
+  "scroll": 403,
+  "wide": [
+    {
+      "tag": "BUTTON",
+      "cls": "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-[color,background-color,transform] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 aria-invalid:ring-destructive/20 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/88 px-8 text-base has-[>svg]:px-6 h-auto min-h-12 py-2 text-left whitespace-normal",
+      "text": "Continue as Miguel (Sender in Houston)",
+      "x": 60,
+      "w": 343
+    }
+  ]
+}

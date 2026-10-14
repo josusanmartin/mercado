@@ -1,0 +1,88 @@
+{
+  "file": "review/evidence/v2-live-1791943177493.json",
+  "block": "39491154",
+  "runtimes": [
+    {
+      "name": "DemoRWA",
+      "match": true
+    },
+    {
+      "name": "ERC4626PriceFeed",
+      "match": true
+    },
+    {
+      "name": "FixedPriceFeed",
+      "match": true
+    },
+    {
+      "name": "MercadoFactoryV2",
+      "match": true
+    },
+    {
+      "name": "AdminPriceFeed",
+      "match": true
+    },
+    {
+      "name": "StakedOUSD",
+      "match": true
+    },
+    {
+      "name": "MoveAMM",
+      "match": true
+    },
+    {
+      "name": "CreditPool",
+      "match": true
+    },
+    {
+      "name": "MultiCollateralVault",
+      "match": true
+    }
+  ],
+  "receipts": {
+    "total": 35,
+    "success": 35
+  },
+  "checks": [
+    {
+      "name": "aggregate-supply-equals-cdp-debt-plus-amm-liability",
+      "pass": true
+    },
+    {
+      "name": "tracked-reserve-is-funded",
+      "pass": true
+    },
+    {
+      "name": "seed-equity-at-least-2500",
+      "pass": true
+    },
+    {
+      "name": "redeem-cap-is-quarter-reserve",
+      "pass": true
+    },
+    {
+      "name": "issuers-locked-and-membership",
+      "pass": true
+    },
+    {
+      "name": "pool-and-both-issuers-use-v2-token",
+      "pass": true
+    },
+    {
+      "name": "v2-pool-funded",
+      "pass": true
+    },
+    {
+      "name": "staked-accounted-assets-and-future-yield-funded",
+      "pass": true
+    },
+    {
+      "name": "all-runtime-matches",
+      "pass": true
+    },
+    {
+      "name": "all-manifest-receipts-succeeded",
+      "pass": true
+    }
+  ]
+}
