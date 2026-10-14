@@ -72,9 +72,12 @@ export function PhoneApp() {
   const [trade, setTrade] = useState<{ product: Product; mode: Mode }>();
   const [done, setDone] = useState<Done>();
   const key = done ? "done" : view.product ? `p-${view.product}` : view.tab;
+  const prev = usePrevious(key);
+  // into a product / the receipt slides forward, back out of them slides back, tab to tab fades
+  const dir = done || view.product ? "fwd" : prev === "done" || prev?.startsWith("p-") ? "back" : "fade";
   return (
     <EdApp screen={key}>
-      <ScreenTransition className="flex-1" id={key} dir={done || view.product ? "fwd" : "fade"}>
+      <ScreenTransition className="flex-1" id={key} dir={dir}>
         {done ? (
           <Listo done={done} close={() => setDone(undefined)} />
         ) : view.product ? (
@@ -109,6 +112,13 @@ export function PhoneApp() {
       />
     </EdApp>
   );
+}
+
+/** The previous distinct value of `v` (for the slide direction). */
+function usePrevious(v: string) {
+  const [hist, setHist] = useState<{ cur: string; prev?: string }>({ cur: v });
+  if (hist.cur !== v) setHist({ cur: v, prev: hist.cur });
+  return hist.cur === v ? hist.prev : hist.cur;
 }
 
 /** Kit AppHeader (■ 06 · INVEST); honesty sits beside the balance (BalanceHead) and in each screen's meta. */
