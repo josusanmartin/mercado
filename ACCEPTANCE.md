@@ -10,7 +10,7 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 
 | # | Step | Owner | Status | Evidence |
 |---|---|---|---|---|
-| J1 | LP deposits testnet OUSD into CollateralVault | contracts / qa | ✅ | journey 2026-10-14 01:0x: [depositCollateral 1,000 OUSD](https://explore.testnet.tempo.xyz/tx/0xe41f969e78ea0d29ab4d104f64dc5ca548619bf2f984aec7a77f496b6eae0355) |
+| J1 | LP deposits testnet OUSD into CollateralVault | contracts / qa | ✅ | [depositCollateral 1,000 OUSD](https://explore.testnet.tempo.xyz/tx/0xe41f969e78ea0d29ab4d104f64dc5ca548619bf2f984aec7a77f496b6eae0355) |
 | J2 | Vault mints xMXN to LP (6dp TIP-20) | contracts / qa | ✅ | [mint 13,333.33 xMXN → LP at 300.0%](https://explore.testnet.tempo.xyz/tx/0x701df8a6761f0d23bb302e8992b305e3dfa182edb7eef60668da906dca3c57eb); totalSupply grew by exactly the debt |
 | J3 | Sender swaps OUSD→xMXN on SwapDesk and transfers xMXN to Recipient | contracts / qa | ✅ | [swap 50 OUSD → 995 xMXN](https://explore.testnet.tempo.xyz/tx/0xeb08956246c14a7ff23b628ae0eb18b103b2f910b7ab2bea4f4f15b7f37a76d3) (minOut 990.03; vault collateral unchanged), [transfer 995 xMXN → Recipient](https://explore.testnet.tempo.xyz/tx/0xc86a194befe0c1abc17923ee7b6e6fd8435e4a81f3bbdfe2a147a141c3cc396a) |
 | J4 | Driver loads Demo Uber Data, gets a signed, expiring attestation, borrows from CreditPool | api / contracts / qa | ✅ | steady profile score 96.5, credit line 1,500; [borrow 500 xMXN](https://explore.testnet.tempo.xyz/tx/0x15e9ad6a3e0cb2f974cab113a5d8744755463b3f662214081216db4f3e950bf1), debt 0 → 510 (2% fee) |
