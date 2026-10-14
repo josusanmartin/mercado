@@ -2,8 +2,8 @@
 // "Every contract, live and verified": each Mercado contract grouped by product, with its address, a LIVE Sourcify
 // verification check, an explorer link, a one-line purpose, admin powers in plain words, and live key state read
 // on-chain right now. v1 is listed as legacy (still deployed). Nothing here is hardcoded state.
-import { useEffect, useMemo, useState } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useReadContracts } from "wagmi";
 import { ExternalLink, History, Layers, Loader2, XCircle } from "lucide-react";
 import type { Abi, Address } from "viem";
@@ -110,27 +110,40 @@ function useLive() {
   return { get: <T,>(k: string) => map.get(k) as T | undefined, loading: q.isLoading };
 }
 
-/** Live Sourcify status for an address (the verifier allows browser CORS). */
-const verifiedQuery = (address?: string) => ({
-  queryKey: ["sourcify", address],
-  enabled: !!address,
-  staleTime: 10 * 60_000,
-  queryFn: async () => {
-    const r = await fetch(SOURCIFY(address!));
-    if (!r.ok) return { match: null as string | null };
-    const j = (await r.json()) as { match?: string; runtimeMatch?: string };
-    return { match: j.match === "exact_match" && j.runtimeMatch === "exact_match" ? "exact_match" : (j.match ?? null) };
-  },
-});
+/**
+ * Live Sourcify status for every contract on the page, in ONE call to our cached server endpoint
+ * (/api/contracts/verified): the browser makes no third-party calls (CR-08). Rows and the tally read the same map.
+ */
+const VerifiedCtx = createContext<Record<string, string | null> | undefined>(undefined);
+
+function useVerifiedMap(addresses: string[]) {
+  const key = [...new Set(addresses.map((a) => a.toLowerCase()))].sort();
+  return useQuery({
+    queryKey: ["sourcify-batch", key.join(",")],
+    enabled: key.length > 0,
+    staleTime: 10 * 60_000,
+    // an address Sourcify couldn't answer yet stays "checking"; poll until every one has an answer
+    refetchInterval: (q) => (q.state.data && key.every((a) => a in q.state.data!) ? false : 5_000),
+    queryFn: async () => {
+      const r = await fetch(`/api/contracts/verified?addresses=${key.join(",")}`);
+      if (!r.ok) throw new Error(`verification check failed (${r.status})`);
+      return (await r.json()) as Record<string, string | null>;
+    },
+  });
+}
+
 function useVerified(address?: string) {
-  return useQuery(verifiedQuery(address));
+  const map = useContext(VerifiedCtx);
+  const a = address?.toLowerCase();
+  const known = !!a && !!map && a in map;
+  return { isLoading: !!a && !known, data: known ? { match: map![a!] } : undefined };
 }
 
 /** The live tally: how many of the deployed contracts are exact-match verified right now (same cached checks as the rows). */
 function VerifiedTally({ addresses }: { addresses: string[] }) {
-  const qs = useQueries({ queries: addresses.map((a) => verifiedQuery(a)) });
-  const done = qs.filter((q) => q.data).length;
-  const ok = qs.filter((q) => q.data?.match === "exact_match").length;
+  const map = useContext(VerifiedCtx) ?? {};
+  const done = addresses.filter((a) => a.toLowerCase() in map).length;
+  const ok = addresses.filter((a) => map[a.toLowerCase()] === "exact_match").length;
   const all = done === addresses.length && ok === addresses.length;
   return (
     <a
@@ -680,8 +693,13 @@ export function ContractsProof() {
   // unique deployed contracts with Solidity source (not precompile tokens, not keys)
   const verifiable = [...new Set(groups.flatMap((g) => g.items.filter((i) => i.address && !i.precompile && !i.key).map((i) => i.address!.toLowerCase())))];
   const total = verifiable.length;
+  const allAddresses = [...groups.flatMap((g) => g.items), ...legacy]
+    .filter((i) => i.address && !i.precompile && !i.key)
+    .map((i) => i.address!.toLowerCase());
+  const verified = useVerifiedMap(allAddresses);
 
   return (
+    <VerifiedCtx.Provider value={verified.data}>
     <SettingsLayout
       title="Every contract, live and verified"
       statement="Verified contracts"
@@ -765,5 +783,6 @@ export function ContractsProof() {
         </Panel>
       )}
     </SettingsLayout>
+    </VerifiedCtx.Provider>
   );
 }
