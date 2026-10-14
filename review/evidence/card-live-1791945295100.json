@@ -1,0 +1,108 @@
+{
+  "at": "2026-10-14T02:34:52.288Z",
+  "block": "39494624",
+  "card": "0x7Fb945ee8BC4A80A37F0c5d95BbEC26976a36A70",
+  "manifestSha256": "61483c293577b5390246ae10110f358e0f45f105d160797d8824bb56faf6316d",
+  "receipts": [
+    {
+      "name": "cardStage.deployMercadoCard",
+      "hash": "0x5d71e59edb26552c50387891febd03a99abb503d25c5839b7e682390236976fb",
+      "status": "success",
+      "blockNumber": "39494245"
+    },
+    {
+      "name": "cardStage.setMerchant",
+      "hash": "0x23452474a7d0dfdb494688a33e3f83bd0e74371e04ef75ef65d63842f2f19900",
+      "status": "success",
+      "blockNumber": "39494247"
+    },
+    {
+      "name": "cardStage.transfer",
+      "hash": "0x9ac6c4e5395a98d3ec8e782868c28a9cfcc9333986f73b71a4f17b97bbcdffb6",
+      "status": "success",
+      "blockNumber": "39494250"
+    },
+    {
+      "name": "cardStage.approve",
+      "hash": "0x93378319ac4ac26b93c160265cc5de0502b46e9a30a49ec79ffffe8bbddce07f",
+      "status": "success",
+      "blockNumber": "39494255"
+    },
+    {
+      "name": "cardStage.issueCard",
+      "hash": "0x8eeb5203cae0d8d5c4c458ba964e892ab2fbe56c9bf15caf6469394495c9a162",
+      "status": "success",
+      "blockNumber": "39494260"
+    },
+    {
+      "name": "cardStage.charge",
+      "hash": "0xe6150c1adf26ae563bfa67f57b8d06e959f3b3f0e9eee151b973333b13e9ad93",
+      "status": "success",
+      "blockNumber": "39494262"
+    }
+  ],
+  "checks": [
+    {
+      "name": "runtime-matches-reviewed-artifact",
+      "pass": true
+    },
+    {
+      "name": "settlement-token-is-v2-xMXN",
+      "pass": true
+    },
+    {
+      "name": "merchant-enabled",
+      "pass": true
+    },
+    {
+      "name": "card-holder-nonzero",
+      "pass": true
+    },
+    {
+      "name": "local-EIP712-digest-equals-chain",
+      "pass": true
+    },
+    {
+      "name": "all-card-stage-receipts-success",
+      "pass": true
+    },
+    {
+      "name": "CardCharged-sum-matches-gross-spend",
+      "pass": true
+    }
+  ],
+  "state": {
+    "token": "0x20C0000000000000000000004fE3A8219136ca54",
+    "stats": [
+      "1",
+      "45000000",
+      "0",
+      "1",
+      "1"
+    ],
+    "card": {
+      "holder": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+      "issuedAt": "1791945071",
+      "frozen": false,
+      "dailyLimit": "1000000000",
+      "spentToday": "42465278",
+      "availableToday": "957534722",
+      "last4": 7958
+    },
+    "merchant": [
+      true,
+      "Tienda Dona Mary - CDMX (demo merchant)"
+    ]
+  },
+  "charges": [
+    {
+      "txHash": "0xe6150c1adf26ae563bfa67f57b8d06e959f3b3f0e9eee151b973333b13e9ad93",
+      "chargeId": "1",
+      "cardId": "1",
+      "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+      "holder": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+      "amount": "45000000",
+      "merchantRef": "0x64656d6f2d7469636b65742d3030303100000000000000000000000000000000"
+    }
+  ]
+}

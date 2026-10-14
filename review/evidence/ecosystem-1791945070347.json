@@ -1,0 +1,1308 @@
+{
+  "at": "2026-10-14T02:31:10.347Z",
+  "routes": [
+    {
+      "route": "/",
+      "width": 1440,
+      "url": "http://localhost:3100/",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nConnect wallet\nMercado: one currency, five products.\n\nA parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.\n\nxMXN in circulation\n68,650\neach backed by a debt position or the exchange reserve\nCollateral locked\n11,300\nOUSD of collateral locked\nLent to drivers\n50\n10,058 xMXN available\n\nMercado Mint\n\n11,300\nOUSD of collateral locked\nMint\n13,782\nxMXN ready to send\nRemesas\n1,321\nOUSD of exchange liquidity\nGlobal\n10,058\nxMXN available to lend\nCrédito\n—\nspent with Card (contract launching)\nCard\nHow money moves\n\nLive on Tempo Moderato. Numbers update as transactions land.\n\nStart the Demo Tour\n\nxMXN\n\n68,650\n\nin circulation\n\nMint\n11,300\nOUSD of collateral locked\n· collateral in, xMXN minted\nRemesas\n13,782\nxMXN ready to send\n· dollars in, pesos delivered home\nGlobal\n1,321\nOUSD of exchange liquidity\n· MXN↔USD for businesses\nCrédito\n10,058\nxMXN available to lend\n· advances out, repaid with fees\nCard\n—\nspent with Card (contract launching)\n· xMXN spent at shops\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado: one currency, five products.",
+        "How money moves"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Connect wallet",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Start the Demo Tour",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/mint",
+      "width": 1440,
+      "url": "http://localhost:3100/mint",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/remesas",
+      "width": 1440,
+      "url": "http://localhost:3100/remesas",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nSender (US) · 0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nreading the oracle…\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n02:31\n\nHola · Hello\n\nEnvía a casa en segundos\n\nTu saldo · Your balance\n\n$999,578.89\n\ntestnet OUSD, no real value\n\n0.30 xMXN en pesos\n\nEnviar a México\nSend money home · to Familia (MX)\nRecargar Tiempo Aire\nAirtime top-up\nPagar servicios\nPay bills (CFE)\n\nMovimientos · Activity\n\nAún no hay movimientos desde este navegador · No activity yet\n\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nUSD/MXN oracle\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Sender (US) · 0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Enviar a México\nSend money home · to Familia (MX)",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Recargar Tiempo Aire\nAirtime top-up",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pagar servicios\nPay bills (CFE)",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/global",
+      "width": 1440,
+      "url": "http://localhost:3100/global",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nBusiness demo · 0x6727…d4d3\nMercado Global\n\nPay Mexican suppliers in pesos from dollars, or bring pesos home, through Mercado's exchange: OUSD in mints xMXN, xMXN out burns it. Quotes come from an admin-relayed testnet FX feed.\nTestnet OUSD · no real value\nxMXN not redeemable for pesos\n\nDemo account · Business demo · 0x6727…d4d3\nDesk OUSD inventory\n1,321 OUSD\nv1 capped demo desk\nDesk xMXN inventory\n13,782 xMXN\nFinite, owner-seeded\nMoved USD → MXN\n…\nAll-time, on-chain\nPay a supplier\nRedeem\nExchange backing\nPartner API\nActivity\nPay a supplier in pesos\n\nYou pay OUSD; the supplier receives xMXN at the quoted rate. On v2 the exchange mints straight to the supplier in one transaction; on v1 the desk swaps, then the xMXN is sent with your memo.\n\nYou pay\nMax: 999,997.71\nOUSD\nSupplier address\nUse the demo supplier account (0x2D94…9700)\nReference (optional, public on v1)\nPay 100.00 OUSD → 1,828.23 xMXN\nIndicative quote\n\nLive from the exchange at this size. For a quote signed by Mercado (cotización indicativa firmada), use the Partner API.\n\nSupplier receives\n\n1,828.23xMXN\n\nRate\n18.28226 xMXN per OUSD\nFX mid (oracle)\nAdmin-relayed testnet feed\n18.3741 MXN/USD\nTotal cost vs mid\nFee 50.00 bps · size impact 0.00 bps\n50.00 bps\nFee\n9.19 xMXN\nMinimum received\nEnforced on-chain (0.5% tolerance)\n1,819.08 xMXN\nQuote expires in\nIndicative · v1 capped swap desk\n29s\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Global",
+        "Pay a supplier in pesos",
+        "Indicative quote"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Business demo · 0x6727…d4d3",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pay a supplier",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Redeem",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Exchange backing",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Partner API",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Max: 999,997.71",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Use the demo supplier account (0x2D94…9700)",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pay 100.00 OUSD → 1,828.23 xMXN",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/credito",
+      "width": 1440,
+      "url": "http://localhost:3100/credito?tab=drivers",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nDriver · 0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\n1\nDriver\n2\nCredit line\n✓\nDraw\n4\nYour advance\n51\nChoose a demo driver\n\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for an Uber password.\n\nDemo Uber Data\nIllustrative, not a credit model\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nAdvances on-chain\n\nEvery advance drawn and repaid in the credit pool, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Crédito",
+        "Choose a demo driver",
+        "Advances on-chain"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Driver · 0x871a…cC63",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "1\nDriver",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "2\nCredit line",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "✓\nDraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "4\nYour advance\n51",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Steady driver\n12 weeks, consistent full-time earnings",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Irregular driver\n10 weeks, part-time and variable",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New driver\nOnly 3 active weeks so far",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/credit",
+      "width": 1440,
+      "url": "http://localhost:3100/credito?tab=drivers",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nDriver · 0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\n1\nDriver\n2\nCredit line\n✓\nDraw\n4\nYour advance\n51\nChoose a demo driver\n\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for an Uber password.\n\nDemo Uber Data\nIllustrative, not a credit model\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nAdvances on-chain\n\nEvery advance drawn and repaid in the credit pool, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Crédito",
+        "Choose a demo driver",
+        "Advances on-chain"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Driver · 0x871a…cC63",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "1\nDriver",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "2\nCredit line",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "✓\nDraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "4\nYour advance\n51",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Steady driver\n12 weeks, consistent full-time earnings",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Irregular driver\n10 weeks, part-time and variable",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New driver\nOnly 3 active weeks so far",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/earn",
+      "width": 1440,
+      "url": "http://localhost:3100/credito?tab=lenders",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nLender · 0x6773…499D\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Lender · 0x6773…499D\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\nSupply\nWithdraw\nYour lending\n10,108\nAdvance pool\n0% lent\nWhere the money sits\nRisks\nSupply xMXN\n\nYour xMXN funds driver advances. Lenders share the flat 2% fee drivers pay, and only once they repay. Advances are unsecured and repaid manually.\n\nNo guaranteed return\nAmount to supply\nWallet: 0.00\nxMXN\nYour claim after\n10,108.00 xMXN\nPool cash available\nWhat lenders can withdraw right now\n10,058.00 xMXN\nSupply xMXN\nPool activity\n\nLender supplies and withdrawals, advances and repayments, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Crédito",
+        "Supply xMXN",
+        "Pool activity"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Lender · 0x6773…499D",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Supply",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Withdraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Your lending\n10,108",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Advance pool\n0% lent",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Where the money sits",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Risks",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Wallet: 0.00",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Supply xMXN",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/pay",
+      "width": 1440,
+      "url": "http://localhost:3100/remesas?screen=aire",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nSender (US) · 0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nadmin-relayed USD/MXN (relay provenance not verified for this update)\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n02:31\n\nRecargar Tiempo Aire\n\nTelcel airtime top-up\n\nSIMULADO · SIMULATED: el pago es real en Tempo; la recarga no se entrega · the payment is real, the top-up is not delivered.\n\nNúmero Telcel · phone (10 dígitos)\n\nMonto · amount (MXN)\n\n$20\n$30\n$50\n$80\n$100\n$150\n$200\nCotizar · Get quote\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed USD/MXN (relay provenance not verified for this update)\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Sender (US) · 0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Atrás / Back",
+          "disabled": false
+        },
+        {
+          "text": "$20",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$30",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$50",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$80",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$100",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$150",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$200",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Cotizar · Get quote",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/send",
+      "width": 1440,
+      "url": "http://localhost:3100/remesas?screen=enviar",
+      "status": 200,
+      "errors": [],
+      "text": "Mercado\nOverview\nMint\nRemesas\nGlobal\nCrédito\nCard\nContracts\nDark theme\nModerato 42431\nDemo mode\nSender (US) · 0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nadmin-relayed USD/MXN (relay provenance not verified for this update)\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n02:31\n\nEnviar a México\n\nSend money home\n\nEnvías · You send\n\n$0\n\nUSD (testnet OUSD) · saldo $999,578.89\n\nMamá recibe · receives about\n\n0.00 MXN\n\nCotización en vivo · live quote\n\nM\n\nMamá · Guadalajara\n\nFamilia (MX), demo wallet · 0x2D94…9700\n\nNota · Note (on-chain, public)\n0/32\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nEnviar $0 · Send\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed USD/MXN (relay provenance not verified for this update)\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+      "scrollWidth": 1440,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "Dark theme",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Sender (US) · 0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Atrás / Back",
+          "disabled": false
+        },
+        {
+          "text": "1",
+          "aria": "1",
+          "disabled": false
+        },
+        {
+          "text": "2",
+          "aria": "2",
+          "disabled": false
+        },
+        {
+          "text": "3",
+          "aria": "3",
+          "disabled": false
+        },
+        {
+          "text": "4",
+          "aria": "4",
+          "disabled": false
+        },
+        {
+          "text": "5",
+          "aria": "5",
+          "disabled": false
+        },
+        {
+          "text": "6",
+          "aria": "6",
+          "disabled": false
+        },
+        {
+          "text": "7",
+          "aria": "7",
+          "disabled": false
+        },
+        {
+          "text": "8",
+          "aria": "8",
+          "disabled": false
+        },
+        {
+          "text": "9",
+          "aria": "9",
+          "disabled": false
+        },
+        {
+          "text": ".",
+          "aria": ".",
+          "disabled": false
+        },
+        {
+          "text": "0",
+          "aria": "0",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Borrar / Delete",
+          "disabled": false
+        },
+        {
+          "text": "Enviar $0 · Send",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 1000,
+          "height": 34.875
+        }
+      ]
+    },
+    {
+      "route": "/",
+      "width": 390,
+      "url": "http://localhost:3100/",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\nConnect\nMercado: one currency, five products.\n\nA parallel financial system for emerging markets on Tempo. Institutions mint xMXN, families and businesses move it across the border, drivers borrow it, and everyone spends it over HTTP.\n\nxMXN in circulation\n—\neach backed by a debt position or the exchange reserve\nCollateral locked\n—\nOUSD of collateral locked\nLent to drivers\n—\n— xMXN available\n\nMercado Mint\n\n—\nOUSD of collateral locked\nMint\n—\nxMXN ready to send\nRemesas\n—\nOUSD of exchange liquidity\nGlobal\n—\nxMXN available to lend\nCrédito\n—\nspent with Card (contract launching)\nCard\nHow money moves\n\nLive on Tempo Moderato. Numbers update as transactions land.\n\nStart the Demo Tour\n\nMint\n\ncollateral in, xMXN minted\n\n—\n\nOUSD of collateral locked\n\nRemesas\n\ndollars in, pesos delivered home\n\n—\n\nxMXN ready to send\n\nGlobal\n\nMXN↔USD for businesses\n\n—\n\nOUSD of exchange liquidity\n\nCrédito\n\nadvances out, repaid with fees\n\n—\n\nxMXN available to lend\n\nCard\n\nxMXN spent at shops\n\n—\n\nspent with Card (contract launching)\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado: one currency, five products.",
+        "How money moves"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "Connect",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Start the Demo Tour",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/mint",
+      "width": 390,
+      "url": "http://localhost:3100/mint",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x819c…B4D4\nMercado Mint\n\nInstitutions mint xMXN against OUSD and yield-bearing collateral. The collateral keeps its own yield.\n\nDemo account · Institución demo · 0x819c…B4D4\nxMXN in circulation\n68,650\nlive total supply\nCollateral locked\n207,628\nxMXN value · 1 collateral\nMinted all-time\n…\nfrom Minted events\nOverview\nIssue & manage\nYour positions\n1\nActivity\nCollateral mix\n\nTestnet OUSD locked in the vault (valued at an assumed $1.00). Multi-collateral issuance is the v2 vault.\n\nOUSD\nTestnet\n11,300.00 OUSD locked · $1.00 each · mint ≥ 150% · liquidation < 135%\n207,627.68 xMXN\n100.0% of collateral\nSupply\n\nEvery xMXN in circulation is someone's debt or the exchange's liability.\n\n68,650xMXN\n\nMinted against collateral\nMint (CDP) debt\n68,650.00 xMXN\nCollateral backing\nCollateral value ÷ CDP debt, at live prices\n302%\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Mint",
+        "Collateral mix",
+        "Supply"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x819c…B4D4",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Overview",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Issue & manage",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Your positions\n1",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Activity",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/remesas",
+      "width": 390,
+      "url": "http://localhost:3100/remesas",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nadmin-relayed USD/MXN (relay provenance not verified for this update)\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n\nHola · Hello\n\nEnvía a casa en segundos\n\nTu saldo · Your balance\n\n$999,578.89\n\ntestnet OUSD, no real value\n\n0.30 xMXN en pesos\n\nEnviar a México\nSend money home · to Familia (MX)\nRecargar Tiempo Aire\nAirtime top-up\nPagar servicios\nPay bills (CFE)\n\nMovimientos · Activity\n\nAún no hay movimientos desde este navegador · No activity yet\n\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed USD/MXN (relay provenance not verified for this update)\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Enviar a México\nSend money home · to Familia (MX)",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Recargar Tiempo Aire\nAirtime top-up",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pagar servicios\nPay bills (CFE)",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/global",
+      "width": 390,
+      "url": "http://localhost:3100/global",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x6727…d4d3\nMercado Global\n\nPay Mexican suppliers in pesos from dollars, or bring pesos home, through Mercado's exchange: OUSD in mints xMXN, xMXN out burns it. Quotes come from an admin-relayed testnet FX feed.\nTestnet OUSD · no real value\nxMXN not redeemable for pesos\n\nDemo account · Business demo · 0x6727…d4d3\nDesk OUSD inventory\n1,321 OUSD\nv1 capped demo desk\nDesk xMXN inventory\n13,782 xMXN\nFinite, owner-seeded\nMoved USD → MXN\n324 OUSD\nAll-time, on-chain\nPay a supplier\nRedeem\nExchange backing\nPartner API\nActivity\nPay a supplier in pesos\n\nYou pay OUSD; the supplier receives xMXN at the quoted rate. On v2 the exchange mints straight to the supplier in one transaction; on v1 the desk swaps, then the xMXN is sent with your memo.\n\nYou pay\nMax: 999,997.71\nOUSD\nSupplier address\nUse the demo supplier account (0x2D94…9700)\nReference (optional, public on v1)\nPay 100.00 OUSD → 1,828.23 xMXN\nIndicative quote\n\nLive from the exchange at this size. For a quote signed by Mercado (cotización indicativa firmada), use the Partner API.\n\nSupplier receives\n\n1,828.23xMXN\n\nRate\n18.28226 xMXN per OUSD\nFX mid (oracle)\nAdmin-relayed testnet feed\n18.3741 MXN/USD\nTotal cost vs mid\nFee 50.00 bps · size impact 0.00 bps\n50.00 bps\nFee\n9.19 xMXN\nMinimum received\nEnforced on-chain (0.5% tolerance)\n1,819.08 xMXN\nQuote expires in\nIndicative · v1 capped swap desk\n29s\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Global",
+        "Pay a supplier in pesos",
+        "Indicative quote"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x6727…d4d3",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pay a supplier",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Redeem",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Exchange backing",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Partner API",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Activity",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Max: 999,997.71",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Use the demo supplier account (0x2D94…9700)",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Pay 100.00 OUSD → 1,828.23 xMXN",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/credito",
+      "width": 390,
+      "url": "http://localhost:3100/credito?tab=drivers",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\n1\nDriver\n2\nCredit line\n✓\nDraw\n4\nYour advance\n51\nChoose a demo driver\n\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for an Uber password.\n\nDemo Uber Data\nIllustrative, not a credit model\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nAdvances on-chain\n\nEvery advance drawn and repaid in the credit pool, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Crédito",
+        "Choose a demo driver",
+        "Advances on-chain"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x871a…cC63",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "1\nDriver",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "2\nCredit line",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "✓\nDraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "4\nYour advance\n51",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Steady driver\n12 weeks, consistent full-time earnings",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Irregular driver\n10 weeks, part-time and variable",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New driver\nOnly 3 active weeks so far",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/credit",
+      "width": 390,
+      "url": "http://localhost:3100/credito?tab=drivers",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x871a…cC63\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Driver · 0x871a…cC63\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\n1\nDriver\n2\nCredit line\n✓\nDraw\n4\nYour advance\n51\nChoose a demo driver\n\nSynthetic earnings, not real Uber data. A real integration would use driver OAuth with Uber-approved scopes (partner.accounts, partner.trips, partner.payments). We never ask for an Uber password.\n\nDemo Uber Data\nIllustrative, not a credit model\nSteady driver\n12 weeks, consistent full-time earnings\nIrregular driver\n10 weeks, part-time and variable\nNew driver\nOnly 3 active weeks so far\nAdvances on-chain\n\nEvery advance drawn and repaid in the credit pool, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Crédito",
+        "Choose a demo driver",
+        "Advances on-chain"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x871a…cC63",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "1\nDriver",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "2\nCredit line",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "✓\nDraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "4\nYour advance\n51",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Steady driver\n12 weeks, consistent full-time earnings",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Irregular driver\n10 weeks, part-time and variable",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "New driver\nOnly 3 active weeks so far",
+          "aria": null,
+          "disabled": false
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/earn",
+      "width": 390,
+      "url": "http://localhost:3100/credito?tab=lenders",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x6773…499D\nMercado Crédito\n\nDrivers draw small xMXN advances against their earnings, lenders fund the pool, and underwriters buy reports per call. Uncollateralized and repaid manually.\nDemo Uber Data\nIllustrative score, not a credit model\nNo guaranteed return\n\nDemo account · Lender · 0x6773…499D\nAvailable to lend\n10,058 xMXN\nIdle pool cash\nAdvances out\n50 xMXN\nPrincipal owed by drivers\nFees paid to lenders\n108.00 xMXN\nFrom repaid advances\nDrivers\nAdvances\nLenders\nFund the pool\nUnderwriting API\nPay per report\nSupply\nWithdraw\nYour lending\n10,108\nAdvance pool\n0% lent\nWhere the money sits\nRisks\nSupply xMXN\n\nYour xMXN funds driver advances. Lenders share the flat 2% fee drivers pay, and only once they repay. Advances are unsecured and repaid manually.\n\nNo guaranteed return\nAmount to supply\nWallet: 0.00\nxMXN\nYour claim after\n10,108.00 xMXN\nPool cash available\nWhat lenders can withdraw right now\n10,058.00 xMXN\nSupply xMXN\nPool activity\n\nLender supplies and withdrawals, advances and repayments, read live from the chain.\n\nWhen\tWhat\tAccount\tAmount\tTx\n10/14/2026, 2:19:30 AM\tAdvance drawn\t0x871a…cC63\t50.00 xMXN\nfee 1.00\n\t0xd6ec3322… ↗\n10/14/2026, 2:15:35 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0xc6401c4a… ↗\n10/14/2026, 2:15:04 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x3bf373dc… ↗\n10/14/2026, 2:14:13 AM\tAdvance repaid\t0x871a…cC63\t510.00 xMXN\t0x43a68609… ↗\n10/14/2026, 2:13:17 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0xf5e7b757… ↗\n10/14/2026, 2:09:48 AM\tAdvance repaid\t0x871a…cC63\t1,020.00 xMXN\t0x5e2e8b1e… ↗\n10/14/2026, 2:08:47 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x44426fff… ↗\n10/14/2026, 2:07:19 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x209a9d03… ↗\n10/14/2026, 2:06:20 AM\tAdvance repaid\t0x871a…cC63\t816.00 xMXN\t0x010b8c43… ↗\n10/14/2026, 2:05:51 AM\tAdvance drawn\t0x871a…cC63\t500.00 xMXN\nfee 10.00\n\t0x990a3f0f… ↗\n10/14/2026, 1:53:14 AM\tAdvance drawn\t0x871a…cC63\t300.00 xMXN\nfee 6.00\n\t0x7003f5e6… ↗\n10/14/2026, 1:52:51 AM\tAdvance repaid\t0x871a…cC63\t1,122.00 xMXN\t0x41d6ed84… ↗\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Crédito",
+        "Supply xMXN",
+        "Pool activity"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x6773…499D",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Drivers\nAdvances",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Lenders\nFund the pool",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Underwriting API\nPay per report",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Supply",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Withdraw",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Your lending\n10,108",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Advance pool\n0% lent",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Where the money sits",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Risks",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Wallet: 0.00",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Supply xMXN",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/pay",
+      "width": 390,
+      "url": "http://localhost:3100/remesas?screen=aire",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nreading the oracle…\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n\nRecargar Tiempo Aire\n\nTelcel airtime top-up\n\nSIMULADO · SIMULATED: el pago es real en Tempo; la recarga no se entrega · the payment is real, the top-up is not delivered.\n\nNúmero Telcel · phone (10 dígitos)\n\nMonto · amount (MXN)\n\n$20\n$30\n$50\n$80\n$100\n$150\n$200\nCotizar · Get quote\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nUSD/MXN oracle\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 390,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Atrás / Back",
+          "disabled": false
+        },
+        {
+          "text": "$20",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$30",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$50",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$80",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$100",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$150",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "$200",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "Cotizar · Get quote",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    },
+    {
+      "route": "/send",
+      "width": 390,
+      "url": "http://localhost:3100/remesas?screen=enviar",
+      "status": 200,
+      "errors": [],
+      "text": "Demo\n0x21B0…E245\nMercado Remesas\n\nDollars in the US become pesos in Mexico in one transaction, and the family's phone and light bills get paid from the same app.\n\nDemo account · Sender (US) · 0x21B0…E245\nUSD/MXN\n18.37\nadmin-relayed USD/MXN (relay provenance not verified for this update)\nReady to send\n13,782\nxMXN on the swap desk\nFamilia (MX) balance\n6,228\nxMXN in 0x2D94…9700\n\nEnviar a México\n\nSend money home\n\nEnvías · You send\n\n$0\n\nUSD (testnet OUSD) · saldo $999,578.89\n\nMamá recibe · receives about\n\n0.00 MXN\n\nCotización en vivo · live quote\n\nM\n\nMamá · Guadalajara\n\nFamilia (MX), demo wallet · 0x2D94…9700\n\nNota · Note (on-chain, public)\n0/32\n1\n2\n3\n4\n5\n6\n7\n8\n9\n.\n0\nEnviar $0 · Send\nWhat will happen\n\nPick an amount on the phone to see the live quote and where the money goes.\n\nMonto a enviar · Amount sending\n\n—\n\nOUSD from Sender (US) 0x21B0…E245\n\nSwap desk\n\nswap\n\ndesk inventory, then a transfer\n\nMamá (MX)\n\n—\n\nestimated\n\nOracle mid\nadmin-relayed USD/MXN (relay provenance not verified for this update)\n18.3741 MXN/USD\nYour rate\nAfter fee and size impact\n—\nCost vs. mid\nEverything you pay, in basis points\n—\nMinimum received\nBelow this the transaction reverts and nothing moves\n—\nNetwork fee\nPaid by Mercado's testnet sponsor when eligible, else in a USD test token\n—\nWhat's real here\nDollars and pesos\nTestnet OUSD and xMXN, no real value; xMXN can't be cashed out at a bank (no SPEI)\nTestnet\nTransfers and payments\nReal transactions on Tempo Moderato, each with an explorer link\nReal\nTelcel and CFE\nWe take a real payment, but no airtime or bill payment is delivered\nSIMULATED\nExchange rate\nA real USD/MXN rate relayed on-chain by an admin key; not a decentralized oracle\nAdmin relay\n\nTempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos\n\nInicio\nMint\nRemesas\nGlobal\nCrédito\nCard",
+      "scrollWidth": 430,
+      "headings": [
+        "Mercado Remesas",
+        "What will happen",
+        "What's real here"
+      ],
+      "buttons": [
+        {
+          "text": "",
+          "aria": "Demo mode: use testnet demo accounts",
+          "disabled": false
+        },
+        {
+          "text": "0x21B0…E245",
+          "aria": null,
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Atrás / Back",
+          "disabled": false
+        },
+        {
+          "text": "1",
+          "aria": "1",
+          "disabled": false
+        },
+        {
+          "text": "2",
+          "aria": "2",
+          "disabled": false
+        },
+        {
+          "text": "3",
+          "aria": "3",
+          "disabled": false
+        },
+        {
+          "text": "4",
+          "aria": "4",
+          "disabled": false
+        },
+        {
+          "text": "5",
+          "aria": "5",
+          "disabled": false
+        },
+        {
+          "text": "6",
+          "aria": "6",
+          "disabled": false
+        },
+        {
+          "text": "7",
+          "aria": "7",
+          "disabled": false
+        },
+        {
+          "text": "8",
+          "aria": "8",
+          "disabled": false
+        },
+        {
+          "text": "9",
+          "aria": "9",
+          "disabled": false
+        },
+        {
+          "text": ".",
+          "aria": ".",
+          "disabled": false
+        },
+        {
+          "text": "0",
+          "aria": "0",
+          "disabled": false
+        },
+        {
+          "text": "",
+          "aria": "Borrar / Delete",
+          "disabled": false
+        },
+        {
+          "text": "Enviar $0 · Send",
+          "aria": null,
+          "disabled": true
+        }
+      ],
+      "footer": [
+        {
+          "text": "Tempo Moderato 42431 · Testnet prototype · OUSD has no real value · xMXN is not redeemable for pesos",
+          "bottom": 942.40625,
+          "height": 52.75
+        }
+      ]
+    }
+  ]
+}

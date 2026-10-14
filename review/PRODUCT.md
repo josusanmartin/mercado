@@ -1,18 +1,18 @@
 # Mercado product review
 
-Updated2026-10-14 through02:30 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
+Updated2026-10-14 through02:35 UTC for SPEC v0.2, DESIGN-ECOSYSTEM and josu's wire-everything rule. This section supersedes the archived v1 narrative below. Implementation belongs to the crew owners; lead commits reviewer files.
 
 **A parallel financial system for emerging markets, built on Tempo.** One synthetic local currency connects four jobs: institutions **Create** money against collateral, senders **Move** it across an on-chain corridor, gig workers access **Lend**, and people or agents **Spend** through MPP.
 
 ## Current ecosystem presentation (supersedes module-only navigation)
 
-**Five products, one currency:** Mercado Mint for institutional issuance; Mercado Remesas for family remittances and Tiempo Aire/services; Mercado Global for businesses and partner API access; Mercado Crédito for drivers, lenders and paid underwriting; Mercado Card for spending existing xMXN at authorized demo merchants. The old Create/Move/Lend/Spend verbs explain operations within these products; they are no longer the site's product names. Home must communicate this map in ten seconds. `crew/DESIGN-ECOSYSTEM.md` replaces the console-menu visual brief.
+**Six products, one currency:** Mercado Mint for institutional issuance; Mercado Remesas for family remittances and Tiempo Aire/services; Mercado Global for businesses and partner API access; Mercado Crédito for drivers, lenders and paid underwriting; Mercado Card for spending existing xMXN at authorized demo merchants; Mercado Invest for lending-pool savings, demo-funded sOUSD and finite-inventory demo tTBILL trades. The old Create/Move/Lend/Spend verbs explain operations within these products; they are no longer the site's product names. Home must communicate this map in ten seconds. `crew/DESIGN-ECOSYSTEM.md` replaces the console-menu visual brief.
 
-Brand v4 is clean white/neutral, with flat teal/orange/blue/pink/violet product colors, five keyboard-accessible tiles, unboxed KPIs and one tab row. Glitch art belongs only to the deck. Remesas, the Crédito driver app and Card use generic Android framing on desktop and full-screen mobile. Demo mode maps product roles explicitly; external-wallet navigation and pending actions must preserve the initiating account.
+Brand v4 is clean white/neutral, with flat teal/orange/blue/pink/violet/gold product colors, six keyboard-accessible tiles, unboxed KPIs and one tab row. Glitch art belongs only to the deck. Remesas, the Crédito driver app and Card use generic Android framing on desktop and full-screen mobile. Demo mode maps product roles explicitly; external-wallet navigation and pending actions must preserve the initiating account.
 
 **Wire everything:** balances, fees, quotes, coverage, KPIs, charts, activity and receipts must come from actual chain/API state. Only unavoidable external integrations remain mocked: income/OAuth, airtime/service fulfillment, and demo collateral yield/price sources. The real FX relay now rejects abnormal jumps/stale dated sources and distinguishes unknown source time from fetch/block time. Card PAN/network and Uber/DiDi/Rappi connections are additional explicit simulations. See `review/MOCK-AUDIT.md` and `MOCKS.md`.
 
-The top three product priorities are now: (1) one coherent five-product Home/tour with traceable balances and no dead ends; (2) a complete spending proof—family transfer or driver advance → holder-authorized Card charge/MPP payment → exact receipt, with interrupted-flow recovery; (3) visible risk proof—current FX provenance, reserve coverage/haircut/bucket and an executed v2 stress recovery. Global's paid signed indicative quote connects this to MPP beyond consumer billpay. Finish these journeys before expanding simulated features.
+The top three product priorities are now: (1) one coherent six-product Home/tour with traceable balances and no dead ends; (2) a complete spending proof—family transfer or driver advance → holder-authorized Card charge/MPP payment → exact receipt, with interrupted-flow recovery; (3) visible risk proof—current FX provenance, reserve coverage/haircut/bucket and an executed v2 stress recovery. Global's paid signed indicative quote connects this to MPP beyond consumer billpay. Finish these journeys before expanding simulated features.
 
 Money-flow diagrams must distinguish credit repayment (returns tokens to lenders) from CDP repayment and AMM redemption (burns tokens). Payment for a quote purchases an API response, not the supplier transfer. Detailed UX acceptance lives in `review/ECOSYSTEM-REVIEW.md`.
 
@@ -53,16 +53,16 @@ The aha is the connection between creation, circulation, credit and programmable
 2. **One compact v2 solvency demonstration.** After deployment, show a funded reserve at a named FX rate, peso appreciation, a denied unsafe redemption and the documented recapitalization/recovery path. Include a funded demo sOUSD accrual and unchanged direct-donation valuation. This makes the difficult engineering inspectable; animations alone are not acceptance.
 3. **One partner quote-to-settlement trace.** Reuse the paid API machinery for a bot buying a Move quote, then clearly separate payment for the API from execution of the currency swap. Display source, expiry, min-out and actual delivery. Keep the existing underwriter trace as the proven fallback; no claims of competitive remittance costs without sourced comparison.
 
-## Judge Q&A — eight hard questions (02:30 UTC, five products / Brand v4)
+## Judge Q&A — eight hard questions (02:35 UTC, six products / Brand v4)
 
 1. **Why does this need Tempo and MPP instead of a database and Stripe?**
-   Tempo gives the five products a shared token ledger, transfers with public memos and fee sponsorship. MPP lets an HTTP client pay for a bill or API response and receive verified settlement evidence. We demonstrate those integrations on testnet; we have not proved superior cost, adoption or production economics.
+   Tempo gives the six products a shared token ledger, transfers with public memos and fee sponsorship. MPP lets an HTTP client pay for a bill or API response and receive verified settlement evidence. We demonstrate those integrations on testnet; we have not proved superior cost, adoption or production economics.
 
 2. **Is xMXN actually a peso, and where can I cash it out?**
    It is a synthetic MXN-denominated testnet token. Institutions create collateralized debt; the exchange creates reserve liabilities; drivers borrow existing tokens. There is no bank cashout, SPEI integration or guaranteed peso peg. OUSD has no real value and is valued at an assumed $1 for this demo.
 
 3. **What is real, and what is still mocked?**
-   Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the rebuilt five-product UI and default-v2 switch are separate acceptance gates. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
+   Contract execution, event-derived balances, MPP settlement and the external FX fetch are real. Uber earnings/OAuth, Telcel/CFE fulfillment, sOUSD yield and tTBILL backing/price are explicitly demo inputs. V2 contracts and crew transaction journeys are deployed; the rebuilt six-product UI and default-v2 switch are separate acceptance gates. `MOCKS.md` records exceptions; a marker scan alone does not establish live wiring.
 
 4. **Who controls the exchange rate, and can they liquidate users?**
    An admin relays Coinbase data into the oracle; this is not decentralized. Coinbase publishes no source timestamp, so we show that uncertainty alongside fetch and block time. The keeper rejects abnormal jumps and stale dated fallback data. Admin stress/override authority remains a trust risk; a real market observation does not remove that authority.
@@ -79,7 +79,7 @@ The aha is the connection between creation, circulation, credit and programmable
 8. **Can this lend to real drivers and pay real bills tomorrow?**
    No. The score is illustrative, income is synthetic, loans are unsecured and repaid manually, and fulfillment is SIMULATED. Production needs real integrations, independently reviewed contracts and operations, durable payment recovery, credible liquidity/oracle controls and appropriate arrangements for customers and assets. The demo proves a connected transaction path, not repayment quality or production readiness.
 
-Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card source/deployment/charge-auth tests are pending. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
+Evidence: `review/FINDINGS.md`, `review/V2-REVIEW.md`, `review/MOCK-AUDIT.md`, `ACCEPTANCE.md` and timestamped `scripts/evidence/` distinguish independent review from crew-recorded runs. Card local auth tests23/23 pass; deployed runtime/receipt check is underway. Invest is newly assigned and queued in INVEST-REVIEW.md; no trade or return claim is accepted yet. Remesas unpaid payment recovery is independently verified; failed send-recovery persistence remains open. Sponsor policy checks pass, with unsigned quota grief and in-memory-budget residuals documented in R-016.
 
 ---
 

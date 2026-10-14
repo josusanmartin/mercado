@@ -1,0 +1,100 @@
+{
+  "at": "2026-10-14T02:41:01.424Z",
+  "block": "39495229",
+  "card": "0x052081d43f9A1e3637c2bBFC3b571b49d0C1F8b6",
+  "manifestSha256": "bc0218a88e7a692022d7232e801434e75a4ad8448f201a9f5d4f1d0bce965799",
+  "receipts": [
+    {
+      "name": "cardStage.deployMercadoCard",
+      "hash": "0xac440778e9382e7e491e71e9ed892c04033d1e953ad271a7da5505a8fa6dbb36",
+      "status": "success",
+      "blockNumber": "39494890"
+    },
+    {
+      "name": "cardStage.setMerchant",
+      "hash": "0xc492035e9bbc0ac936ab667e24153ca803b7298b54ebb78724ac993cd103082c",
+      "status": "success",
+      "blockNumber": "39494895"
+    },
+    {
+      "name": "cardStage.transfer",
+      "hash": "0x1b8aeaba8cfa9712ef5986022d13d398bbcb7e240c862b1f915c67e027a9e15b",
+      "status": "success",
+      "blockNumber": "39494898"
+    }
+  ],
+  "checks": [
+    {
+      "name": "runtime-matches-reviewed-artifact",
+      "pass": true
+    },
+    {
+      "name": "settlement-token-is-v2-xMXN",
+      "pass": true
+    },
+    {
+      "name": "merchant-enabled",
+      "pass": true
+    },
+    {
+      "name": "card-holder-nonzero",
+      "pass": true
+    },
+    {
+      "name": "local-EIP712-digest-equals-chain",
+      "pass": true
+    },
+    {
+      "name": "all-card-stage-receipts-success",
+      "pass": true
+    },
+    {
+      "name": "CardCharged-sum-matches-gross-spend",
+      "pass": true
+    }
+  ],
+  "state": {
+    "token": "0x20C0000000000000000000004fE3A8219136ca54",
+    "stats": [
+      "1",
+      "95000000",
+      "10000000",
+      "1",
+      "2"
+    ],
+    "card": {
+      "holder": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+      "issuedAt": "1791945506",
+      "frozen": false,
+      "dailyLimit": "1000000000",
+      "spentToday": "85000000",
+      "availableToday": "915000000",
+      "last4": 3064,
+      "resetsAt": "1791957600"
+    },
+    "merchant": [
+      true,
+      "Tienda Dona Mary - CDMX (demo merchant)"
+    ]
+  },
+  "charges": [
+    {
+      "txHash": "0x9c5590cead5deeded3245359afbdb3d52dbe821d212e01db0445b1eef1e280e8",
+      "chargeId": "1",
+      "cardId": "1",
+      "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+      "holder": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+      "amount": "45000000",
+      "merchantRef": "0x64656d6f2d7469636b65742d3030303100000000000000000000000000000000"
+    },
+    {
+      "txHash": "0xe2b2d204d866c2877d4b9db2a4ae7bc4fff39f9cf645a38ed7738d7c55ee61f2",
+      "chargeId": "2",
+      "cardId": "1",
+      "merchant": "0x67272037B02f4F48DAc83883f8d1A264a0a1d4d3",
+      "holder": "0x2D941cFFe40DE0242EE145bD9cC44CdE24Ec9700",
+      "amount": "50000000",
+      "merchantRef": "0x4c825dac51b6b0277bf542e0a087bb5403b185956619d3481bfb5962598b1309"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Last reviewed commit: `f81cadb` plus v2 switch/UI WIP through02:04 UTC; deployment snapshot atblock39491154. Exact evidence snapshots/hashes below take precedence over this moving shared-tree summary.
 
-Current status: FIVE-PRODUCT ECOSYSTEM + Mercado Card charge-auth review active (02:30). Read review/CARD-REVIEW.md first for the new assignment. Card source pending; no Card acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
+Current status: SIX-PRODUCT ECOSYSTEM: Card auth review active; Invest pricing/inventory/copy queued (02:35). Read review/CARD-REVIEW.md first for the new assignment. Card source/local auth tests23/23 pass; deployed check underway. Invest source pending. No full Card/Invest journey acceptance claimed. Read review/ECOSYSTEM-REVIEW.md and review/MOCK-AUDIT.md before legacy UI detail. V2 local solvency, deployed runtime/accounting and independent API switch checks pass. R-030 rebuilt UI/complete switch remains gated; R-030 full ecosystem gate and Remesas recovery/mobile carry-forwards remain open; R-032 helper/R-035 terms/R-036–R-038 relay/indexer fixes are verified at their documented boundaries. R-016 unsigned-sender sponsor quota grief and R-022 reset/writer race remain residual open. No reviewer chain transaction was broadcast.
 
 First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitted API/credit service, FX adapter, frontend ABI/format helpers, and OUSD migration visible during that window. This is a moving shared tree; line numbers below refer to the inspected version. Reviewer writes only `review/` and does not commit.
 
@@ -234,7 +234,7 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 
 ### R-030 — P0 switch blocker — contracts / web / api — Protocol flag mixes v1 UI with v2 server
 
-- Status: OPEN BEFORE FLIP; v1 default remains safe. Lead issued `crew/V2-SWITCH.md` at01:52 in response.
+- Status: CORE SWITCH BLOCKER CLOSED02:36.7 shared gate tests,18 sponsor boundaries including Card,17 independent API checks and rebuilt core UI are verified; lead notified and initiated v2 flip at02:37. New Card calendar redeployment/Invest review remain separate extension gates.
 - Location: `apps/web/lib/contracts/addresses.ts`, all shared balance/pool reads and actions, `lib/server/credit/index.ts:19`.
 - Scenario: after NEXT_PUBLIC_PROTOCOL=v2, API signs eligibility for v2 pool and MPP charges v2 token, while ADDR and shared Credit/Earn/Pay hooks still target v1. Draw sends a v2-bound attestation to the wrong pool; displayed spending balances are the wrong token. A missing v2 pool also falls back to the old env pool.
 - Fix: one shared active-protocol/address source; require complete deployment including pool, and fail closed on incomplete v2. Atomically migrate all consumers. Lead alone flips after version-specific journey and review acceptance. Check both cold-start client bundle and server environment.
@@ -311,6 +311,30 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Location: `apps/web/components/remesas/phone-app.tsx:Pagar`; `components/billpay/use-bill-pay.ts:useRecentOrders`; old `components/billpay/pay-screen.tsx:459`.
 - Scenario: an order's payment is pending or paid but fulfillment unresolved, then page reloads. The old Pay history offered an unpaid settlement check by stored idempotency key. Remesas imports only useBillPay and never renders useRecentOrders/RecentOrders, while /pay redirects there. Keys remain stored but users cannot inspect/recover them through the new screen.
 - Fix: restore recent-order rows and the unwrapped/unpaid status check; never route Check settlement through an auto-paying fetch. Keep provider completion distinct from token payment.
+
+### R-041 — P1 honesty/policy — contracts / web — Card daily labels describe a refill bucket as actual daily spend
+
+- Status: LOCALLY REPRODUCED02:34; contracts/lead notified. Charge authorization remains intact.
+- Location: `packages/contracts/src/v2/MercadoCard.sol:getCard`,`:MAX_DAILY_LIMIT`, `:_spentNow`; `apps/web/lib/contracts/card.ts:CardView`.
+- Scenario: card dailyLimit1000 charges1000, then500 twelve hours later. totalSpent=1500 while spentToday=1000; remaining capacity is not actual remaining daily budget. Owner tests intentionally implement leaky refill, but UI/source names1000 perday / spentToday imply a calendar or rolling-day spend total.
+- Evidence: `ReviewCard.test_reviewBucketIsNotStrictRollingDailySpend`, passed in `card-review-tests2.log`.
+- Fix: explicitly choose and label bucket capacity + continuous refill (with separate actual transaction totals), or implement the promised daily spend limit. Never call bucket usage actual spent today.
+
+### R-042 — P1 demo liquidity — contracts — Free tTBILL faucet drains InvestDesk OUSD inventory
+
+- Status: LOCALLY REPRODUCED02:38; contracts/lead notified. Testnet only; no real-value theft or live exploit claimed.
+- Location: `packages/contracts/src/v2/DemoRWA.sol:faucet`; `packages/contracts/src/v2/InvestDesk.sol:sell`.
+- Scenario: a fresh wallet with zero OUSD calls unrestricted faucet(100e6), approves the desk, sells100 tTBILL at the demo$100 price and25bps spread, and receives9975 OUSD from the10000 seeded reserve. The mint cap is per call and cannot limit repeated/Sybil draining. Desk does not mint assets itself, but accepts free-minted assets as consideration.
+- Evidence: actual-contract local `ReviewInvest.test_reviewPublicFaucetCanEmptyFundedInventory`, passed in invest-review-tests.log. No network broadcasts.
+- Fix/decision: gate demo issuance used by the finite funded desk, or explicitly accept/disclose the free-faucet/testnet reserve-drain boundary and avoid presenting inventory as economically protected. Track this in MOCKS.md and do not call no-desk-mint proof no-free-mint economics.
+
+### R-043 — P2 — contracts / api — Paused InvestDesk still returns trade-ready quotes
+
+- Status: LOCALLY REPRODUCED02:38; owners notified.
+- Location: `packages/contracts/src/v2/InvestDesk.sol:quoteBuy`,`:quoteSell`.
+- Scenario: desk.pause() then quoteBuy(100 OUSD) returns positive tTBILL output, while buy reverts EnforcedPause. Source comment says quotes revert as the trade would; view guard omits desk pause (feed pause is correctly enforced).
+- Evidence: ReviewInvest.test_reviewPausedDeskStillQuotesExecutableLookingTrade in invest-review-tests.log; failed trade leaves input funds unchanged.
+- Fix: pause guard on quote entrypoints or an explicit paused-state UI gate. Never present a currently paused trade as executable.
 
 ## Pass 11 — ecosystem IA and mock/data audit (from02:07 UTC)
 
@@ -423,9 +447,9 @@ First pass: 2026-10-14, approximately 00:38–00:42 UTC. Includes the uncommitte
 - Read local `tempo-std` TIP-20 interfaces and `ForkProbe.t.sol`; issuer-gated burn operates on the caller balance. Pool/vault tests must account for the actual precompile behavior.
 - Official references consulted: [MPP server creation](https://mpp.dev/sdk/typescript/server/Mppx.create), [Tempo source](https://github.com/tempoxyz/tempo), [Tempo integration guide](https://docs.chain.link/ccip/v1/evm/tools-resources/network-specific/tempo-integration-guide). Direct docs.tempo.xyz pages redirected to a location unavailable to the browsing tool; installed source is the implementation evidence used here.
 
-## Next pass (updated02:12 UTC)
+## Next pass (updated02:35 UTC)
 
-Start IRC unread. Current task is DESIGN-ECOSYSTEM IA/UX plus verify qa's MOCKS.md against actual code under josu's wire-everything rule. Read ECOSYSTEM-REVIEW/MOCK-AUDIT; review new shell/Home, Mint/Global (contracts), Remesas (web), Crédito/redirects (api), real FX relay/indexer (contracts). Recheck R-031–R-035 as old components move; source version/gate/pool mapping is substantially fixed but rebuilt UI still needs acceptance. Inspect real-source FX date/provenance and indexer range/dedupe/volume semantics. Re-read QA v2 journey receipts if needed; local/deployment/API evidence already passes at recorded boundaries. No reviewer writes to chain, no commits, no server restarts. Lead alone flips/commits. Large outputs stay under review/evidence.
+Start IRC unread. Active Card auth review: read CARD-REVIEW.md,23 local tests pass; card-live-check deployment verification underway. Invest queued in INVEST-REVIEW.md (new six-product scope). Continue source/runtime/hooks review as owners land Card/Invest, new Crédito platform driver/back office and demo tour. R-039 Remesas recovery retry persistence open; R-031 Global labels assigned api; R-033 new send-form overflow430 at390 persists after header fix. R-036–038 fixed, R-040 browser recovery green. No broadcasts, commits or server restarts by reviewer; lead flips/commits. Large outputs under review/evidence.
 
 ## Pass12 — Brand v4, relay fixes and migrated recovery (02:19–02:25)
 
@@ -438,3 +462,17 @@ Start IRC unread. Current task is DESIGN-ECOSYSTEM IA/UX plus verify qa's MOCKS.
 ## New assignment02:29 — Mercado Card / five products
 
 Read IRC immediately on user steering (`irc-card-assignment.txt`). Created CARD-REVIEW.md with authorization/domain/replay/merchant/limit/freeze/refund test matrix and UI/version boundaries. Lead explicitly requires holder EIP-712 tap auth despite optional wording in design; communicated stronger gate to contracts. No Card source available yet. Posted platform-data/cache/signature consistency requirement for Uber/DiDi/Rappi; no mislabeled Uber fallback. PRODUCT and ECOSYSTEM updated to five products/Brand v4, judge Q&A now includes Card trust boundary.
+
+## Invest queued / Card source reviewed (02:33–02:35)
+
+IRC assignment in irc-invest-assignment.txt; created INVEST-REVIEW.md pricing/inventory/no-guaranteed-return gate. Card source found, reviewed EIP-712 mandatory merchant-bound tap, nonce/deadline, holder controls, transfers and capped refunds. Independent test subclass adds9 checks to14 owner tests;23/23 pass incl256 partial-refund fuzz runs. First reviewer import used unsupported absolute-resolved path; corrected to project imports test/ and src/, preserved first log. No contract failure. Runtime/deployment check follows; R-041 policy/copy concern posted.
+
+New Brand v4 browser snapshot ecosystem-1791945070347.json: Global now200; all18 checked route/viewport cases200, no page errors; Home/Mint/Remesas/Global/Crédito widths390. Send deep-link now redirects correctly but form overflows430 at390 (remesas-send-overflow.json); header fix does not close R-033 entirely.
+
+## Pass13 — Card deployed proof / Invest pricing (02:34–02:38)
+
+- Card first deployment0x7Fb945…36A70 independently checked atblock39494624: reviewed runtime matches (masking immutable slots only), v2 xMXN bound, merchant active, local EIP-712 digest equals chain,6 stage receipts successful, CardCharged sum equals gross spend (`card-live-1791945295100.json`). This proof is for the initial bucket version, NOT the later calendar-day redeploy.
+- Lead chose CDMX midnight calendar limit for R-041; source now implements fixedUTC−6 day boundaries and same-day refund capacity restoration. New local tests/redeployment recheck in progress. Card refund must still leave tap nonce consumed.
+- Sponsor actual-source probe expanded for Card user charge/approval versus owner allowlist:18 boundaries pass,7 protocol-gate cases pass (sponsor-card-recheck-summary.txt). R-016 unsigned quota/ingress residual unchanged.
+- InvestDesk source landed;14 tests pass (10 owner+4 independent),256 round-trip fuzz cases. Fixed-price round trips lose only spread/rounding and cannot profit; xMXN buy minOut failure rolls back the entire AMM redemption and inventory transfer. New concrete R-042 faucet/inventory and R-043 paused-quote findings posted. Deployed InvestDesk/complete UI not yet independently accepted.
+- Latest mobile brief now permits real Uber/DiDi/Rappi logos with source attribution, simulated Mercado consent and no password entry. This supersedes the earlier no-logo instruction; no affiliation claim is authorized.

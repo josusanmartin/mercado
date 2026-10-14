@@ -53,3 +53,7 @@ Actual relay functions were executed with local adapters only (`fx-relay-1791944
 R-036/R-037 actual-function recheck `fx-relay-1791944691686.json`: outsize jumps and2020/2099 dates write nothing, Coinbase observation time stays null and receipt block time supplies onchainAt. API read-only200 on both previews has corrected provenance (`fx-api-live2.json`). R-038 now says Transfer to merchant / merchantInflows and filters by RPC topic. R-035 mutable pool terms are sourced correctly.
 
 New authorized mocks to register: Demo DiDi/Rappi earnings and simulated consent alongside Uber; Card PAN/network and demo merchant identity. Card token movement, limits, freeze, charges, refunds, activity and KPIs must be real. Platform-specific labels may never conceal an Uber fallback. Record pending implementations as pending, not accepted live data.
+
+## Invest faucet boundary (02:38)
+
+R-042: the allowed demo asset faucet becomes an inventory-drain path when an InvestDesk offers funded buyback. A fresh local wallet mints100 demo tTBILL free, then sells for9975 OUSD from10000 inventory. A finite desk and no mint call inside InvestDesk do not prove economic backing. Await owner decision on gating issuance versus explicit testnet risk acceptance; register the boundary in MOCKS.md.

@@ -1,0 +1,77 @@
+{
+  "at": "2026-10-14T02:34:07.050Z",
+  "width": 390,
+  "scrollWidth": 430,
+  "nodes": [
+    {
+      "tag": "P",
+      "text": "USD (testnet OUSD) · saldo $999,528.89",
+      "class": "text-xs text-[#5b6270]",
+      "right": 430
+    },
+    {
+      "tag": "DIV",
+      "text": "Mamá recibe · receives about\n\n0.00 MXN\n\nCotización en vivo · live quot",
+      "class": "rounded-[12px] bg-[#f4f5f7] px-3 py-2.5 text-center",
+      "right": 430
+    },
+    {
+      "tag": "P",
+      "text": "Mamá recibe · receives about",
+      "class": "text-xs text-[#5b6270]",
+      "right": 418
+    },
+    {
+      "tag": "P",
+      "text": "0.00 MXN",
+      "class": "text-2xl font-semibold tabular",
+      "right": 418
+    },
+    {
+      "tag": "P",
+      "text": "Cotización en vivo · live quote",
+      "class": "text-[13px] text-[#5b6270]",
+      "right": 418
+    },
+    {
+      "tag": "DIV",
+      "text": "M\n\nMamá · Guadalajara\n\nFamilia (MX), demo wallet · 0x2D94…9700",
+      "class": "flex items-center gap-3 rounded-[12px] border border-[#e6e8ec] bg-white p-3",
+      "right": 430
+    },
+    {
+      "tag": "svg",
+      "class": {},
+      "right": 417
+    },
+    {
+      "tag": "path",
+      "class": {},
+      "right": 411
+    },
+    {
+      "tag": "LABEL",
+      "text": "Nota · Note (on-chain, public)\n0/32",
+      "class": "grid gap-1",
+      "right": 430
+    },
+    {
+      "tag": "SPAN",
+      "text": "Nota · Note (on-chain, public)\n0/32",
+      "class": "flex justify-between text-xs text-[#5b6270]",
+      "right": 430
+    },
+    {
+      "tag": "SPAN",
+      "text": "0/32",
+      "class": "tabular",
+      "right": 430
+    },
+    {
+      "tag": "INPUT",
+      "text": "",
+      "class": "h-10 rounded-[10px] border border-[#e6e8ec] bg-white px-3 text-sm",
+      "right": 430
+    }
+  ]
+}

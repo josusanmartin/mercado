@@ -1,6 +1,6 @@
 # Mercado Card adversarial review
 
-Started 2026-10-14 02:29 UTC. Current assignment: DESIGN-ECOSYSTEM §6 and lead's02:27 message. Five products: Mint, Remesas, Global, Crédito, Card. Reviewer writes only review/, commits nothing and broadcasts no transactions.
+Started 2026-10-14 02:29 UTC. Current assignment: DESIGN-ECOSYSTEM §6 and lead's02:27 message. Six products now: Mint, Remesas, Global, Crédito, Card, Invest. Reviewer writes only review/, commits nothing and broadcasts no transactions.
 
 ## Authorization contract for acceptance
 
@@ -35,3 +35,13 @@ Tests will live under review/contracts/ with isolated Foundry output/cache under
 ## Adjacent Crédito change
 
 Uber, DiDi and Rappi connections are simulated consent with platform-specific demo earnings, no official logos/password request or affiliation. Include platform in query/cache keys, fetched report, scoring and attestation dataHash; clear any old offer/signature on platform/account changes. Until platform support lands, show unavailable rather than silently label Uber data as DiDi/Rappi. Back-office loan-book rows must derive from actual Borrowed/Repaid events and distinguish principal, fees, outstanding balance and illustrative underwriting data.
+
+## Initial contract results (02:34–02:38)
+
+23 tests pass:14 owner tests plus9 independent checks including256 partial-refund fuzz runs, cross-deployment/chain replay, merchant substitution, failed-token rollback, refund replay and limit reduction. No authorization bypass found in this bounded pass. Evidence card-review-tests2.log.
+
+Initial deployed Card0x7Fb945ee8BC4A80A37F0c5d95BbEC26976a36A70 matches the reviewed runtime;6 deployment/stage receipts succeed, token is v2 xMXN, merchant is enabled, typed-data digest equals on-chain tapDigest, event charges reconcile with totalSpent atblock39494624 (`card-live-1791945295100.json`). Sponsor18 cases including Card pass. These checks cover the INITIAL leaky-bucket implementation only.
+
+R-041:1000 dailyLimit permitted1500 spend within12h while spentToday showed1000. Lead chose actual CDMX calendar days (00:00 fixedUTC−6) and same-day refunds restore capacity; previous-day refunds do not. Source updated, calendar local/deployed recheck underway. Previously described no-refund-headroom policy is historical, superseded by this decision. Initial deployment proof does not automatically accept the replacement.
+
+UI source: holder signs typed data; terminal uses explicit testnet demo merchant account, waits for successful receipt and extracts charge ID before completion; token refunds require merchant approval and success receipt. Card network/PAN simulation label is visible. Full UI behavior/receiver-account switching still needs its own acceptance. ECDSA verification supports matching EOA signatures; contract-wallet signature schemes are not established by these tests.
