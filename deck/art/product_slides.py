@@ -36,6 +36,12 @@ P = [
           ("limit", "spend limit, daily window and freeze, enforced on-chain", None, None)],
   status=("#777777", "in progress: card contract and app being built · demo card, not Visa or Mastercard"),
   notes="~8s. Mercado Card is the fifth product: spend xMXN at a shop. The design: a holder issues a virtual card with an on-chain spend limit and daily window and can freeze it; an allowlisted demo merchant terminal charges it, the holder approves with a tap signature, xMXN moves on-chain from holder to merchant, and refunds are real too. Only the card network and the card number are simulated: it's a demo virtual card, not Visa or Mastercard, and it works only at Mercado demo merchants, with no physical card and no ATM. Status: the contract and the app are being built now; don't claim a live charge until it's deployed and its journey passes."),
+ dict(id="p-invest", num="09", name="Mercado Invest", tint="#F2B807", base="#F2B807", art="product-invest-v4.webp",
+  purpose="Save in pesos, dollars or T-bills.", who="Savers in Mexico, and institutions holding xMXN or dollars that should be working.",
+  proofs=[("200", "OUSD staked into sOUSD: dollar savings, demo-funded yield", "stake tx", TX+"0xd64599b71806f40156bfc3c1626392a0ea48107c3678078cd6737b9ba88f55bc"),
+          ("20", "xMXN of realized driver fees in pool v2: variable, not guaranteed", "repay tx", TX+"0x08854d60c176840a2e44db11aed6477354f074c2a3470f42b3015b0d9be1669d")],
+  status=("#FFB547", "sOUSD and pool savings live on v2 · T-bill desk in progress · demo yield source, never guaranteed"),
+  notes="~8s. Mercado Invest is the savings product, with three ways to grow money. Peso savings: deposit xMXN into the real Crédito lending pool; the return is the driver fees actually realized, so far 20 xMXN in pool v2, historical and variable, never guaranteed, and only idle cash is withdrawable. Dollar savings: stake OUSD into sOUSD, the real ERC-4626 on v2, whose accrual comes from a demo yield reserve the admin funds on testnet. T-bills: buy and sell the demo tokenized T-bill through a new InvestDesk at the admin feed price plus a spread, then use it as Mint collateral; that desk is being built now, and the tTBILL is a demo, not a security. Never say guaranteed returns."),
 ]
 
 def slide(p):
