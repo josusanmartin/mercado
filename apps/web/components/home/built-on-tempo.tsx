@@ -151,7 +151,7 @@ export function BuiltOnTempo() {
         />
         <Primitive
           name="Fee sponsorship"
-          does="Mercado pays the network fee for its own contract calls, so users never hold a gas token."
+          does="Mercado pays the network fee for its own contract calls when they qualify, so users don't need a gas token to start."
           href={m?.sponsored ? explorerTx(m.sponsored.hash) : m?.sponsor ? explorerAddress(m.sponsor) : undefined}
           proof={
             m?.sponsored ? <>Latest sponsored payment: fee paid by Mercado ({shortAddr(m.sponsored.feePayer)}), not the sender</> : m?.sponsor ? <>Mercado fee payer {shortAddr(m.sponsor)}</> : mp.isError ? "—" : reading

@@ -4,7 +4,7 @@
 //   <SettingsLayout title list={<ListPane …/>} [product purpose kpis demo]>  → hero band + tabs + content
 //   <Panel title description aside>  <Rows><Row label value sub/></Rows>  <BigNumber/>  <PanelActions/>
 // The product (and its signature color) comes from the route unless `product` is passed.
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { useConnection } from "wagmi";
@@ -15,7 +15,7 @@ import type { PersonaId } from "@/components/wallet/personas";
 import { PRODUCTS, productForPath, type ProductId } from "./products";
 import { useDemoAccount } from "./demo-mode";
 import { LiveMeta, Meta } from "./meta";
-import { LetterReveal } from "@/lib/motion";
+import { LetterReveal, TickerText } from "@/lib/motion";
 
 export type Kpi = { label: string; value: ReactNode; sub?: ReactNode };
 
@@ -173,6 +173,7 @@ export function Panel({
   children,
   className,
   variant = "plain",
+  style,
 }: {
   title?: ReactNode;
   description?: ReactNode;
@@ -180,10 +181,12 @@ export function Panel({
   children: ReactNode;
   className?: string;
   variant?: "plain" | "card";
+  style?: CSSProperties;
 }) {
   const card = variant === "card";
   return (
-    <section className={cn("animate-in fade-in-0 duration-150", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
+    // v5: panels fade up as they render (pure CSS, ends visible; inside <Stagger> they follow one another).
+    <section style={style} className={cn("mx-reveal", card ? "bg-well rounded-[8px]" : "border-t pt-4", className)}>
       {(title || aside) && (
         <header className={cn("flex flex-wrap items-start justify-between gap-3", card && "px-5 pt-5 sm:px-6")}>
           <div className="min-w-0">
@@ -223,7 +226,8 @@ export function Rows({ children, className, ...rest }: React.ComponentProps<"div
 export function BigNumber({ value, unit, className }: { value: ReactNode; unit?: ReactNode; className?: string }) {
   return (
     <p className={cn("display text-[clamp(2.6rem,5vw,4rem)] tabular", className)}>
-      {value}
+      {/* v5: a formatted number glides to each new value (quotes, coverage); anything else renders as is. */}
+      {typeof value === "string" ? <TickerText text={value} /> : value}
       {unit && <span className="text-muted-foreground ml-2 font-sans text-lg font-medium tracking-normal normal-case">{unit}</span>}
     </p>
   );
