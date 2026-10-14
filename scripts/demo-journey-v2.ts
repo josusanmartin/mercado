@@ -679,6 +679,44 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
     },
   },
   {
+    id: 'V12',
+    title: 'Ahorro en pesos: deposit xMXN v2 into the sxMXN savings vault (same audited ERC-4626 code as sOUSD, configured APR)',
+    async run() {
+      const sx: Address | undefined = (A as any).sxMXN ?? (shared as any).moderatoDeployment?.v2?.sxMXN
+      if (!sx) throw new SkipStep('deployments.v2.sxMXN missing')
+      const saver = account('SAVER')
+      const asset: Address = await read(sx, stakedOusdAbi, 'asset')
+      assert(asset.toLowerCase() === A.xMXN.toLowerCase(), `sxMXN asset ${asset} == xMXN v2`)
+      const apr = Number(await read(sx, stakedOusdAbi, 'aprBps'))
+      const reserve: bigint = await read(sx, stakedOusdAbi, 'yieldReserve')
+      log(`sxMXN: configured APR ${apr / 100}% (owner-set), funded yield reserve ${fmt(reserve)} xMXN v2, share price ${fmt4(await read(sx, stakedOusdAbi, 'convertToAssets', [10n ** 6n]))}`)
+      const amt = parseUnits('100', 6)
+      assert((await bal(A.xMXN, saver.address)) >= amt, 'saver holds ≥100 xMXN v2')
+      await approveIfNeeded(saver, A.xMXN, sx, amt, 'xMXN v2 → sxMXN')
+      const sh0 = await bal(sx, saver.address)
+      const ta0: bigint = await read(sx, stakedOusdAbi, 'totalAssets')
+      await send('Ahorro en pesos: deposit 100 xMXN v2 → sxMXN', saver, { address: sx, abi: stakedOusdAbi, functionName: 'deposit', args: [amt, saver.address] })
+      const shares = (await bal(sx, saver.address)) - sh0
+      const worth: bigint = await read(sx, stakedOusdAbi, 'convertToAssets', [shares])
+      assert(shares > 0n && worth >= amt - 1n, 'shares worth ≥ the deposit')
+      assert((await read(sx, stakedOusdAbi, 'totalAssets')) - ta0 >= amt - 1n, 'vault totalAssets grew by the deposit')
+      // donation-proof: a direct transfer to the vault must not move the share price
+      const pps0: bigint = await read(sx, stakedOusdAbi, 'convertToAssets', [10n ** 6n])
+      const donate = parseUnits('1', 6)
+      await send('donate 1 xMXN v2 straight to sxMXN (should NOT move the share price)', saver, { address: A.xMXN, abi: tip20Abi, functionName: 'transfer', args: [sx, donate] })
+      const pps1: bigint = await read(sx, stakedOusdAbi, 'convertToAssets', [10n ** 6n])
+      assert(pps1 - pps0 <= 1n, `donation did not jump the share price (${fmt4(pps0)} → ${fmt4(pps1)}; accrual only)`)
+      // withdraw part back: redeem half the shares
+      const half = shares / 2n
+      const x0 = await bal(A.xMXN, saver.address)
+      await send(`redeem ${fmt4(half)} sxMXN`, saver, { address: sx, abi: stakedOusdAbi, functionName: 'redeem', args: [half, saver.address, saver.address] })
+      const back = (await bal(A.xMXN, saver.address)) - x0
+      assert(back >= (amt / 2n) - 2n, `redeemed ≥ half the deposit (${fmt(back)})`)
+      ok(`deposited 100 → ${fmt4(shares)} sxMXN (worth ${fmt(worth)}), donation ignored by the share price, redeemed half → ${fmt(back)} xMXN v2`)
+      ok(`yield is a configured ${apr / 100}% APR paid from a funded reserve (demo yield, MOCKS.md A5); accrues per second, no guaranteed return`)
+    },
+  },
+  {
     id: 'VS',
     title: 'FX stress on v2 (runs last): liquidation enforceable, AMM coverage under appreciation, full restore',
     async run() {

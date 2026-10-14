@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T03:36:25.906Z",
+  "protocol": "v2",
+  "steps": [
+    "V12"
+  ],
+  "evidence": {
+    "V0": {
+      "status": "pass",
+      "txs": {},
+      "notes": []
+    },
+    "V12": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x06c0df5b433b1e6abfc6e3a28433457680b09ceb12f0caab49eab886f35a98be",
+        "Ahorro en pesos: deposit 100 xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x7e66679d62811a2f48d3fe301cc8a727cf10b1965a53f00a9b48672c249d21d6",
+        "donate 1 xMXN v2 straight to sxMXN (should NOT move the share price)": "https://explore.testnet.tempo.xyz/tx/0xdd5517e8e27a39c77ec05915434b9257aff026d31246f8d0a68f7e959df83170",
+        "redeem 50 sxMXN": "https://explore.testnet.tempo.xyz/tx/0xc4746e983f2385cb773a538c6036e6569cd8307b61d00ef602e2c3bd57d8ba2d"
+      },
+      "notes": []
+    }
+  }
+}

@@ -1,8 +1,8 @@
 {
-  "at": "2026-10-14T03:34:29.258Z",
+  "at": "2026-10-14T03:36:25.906Z",
   "protocol": "v2",
   "steps": [
-    "V11"
+    "V12"
   ],
   "evidence": {
     "V0": {
@@ -10,16 +10,13 @@
       "txs": {},
       "notes": []
     },
-    "V11": {
+    "V12": {
       "status": "pass",
       "txs": {
-        "approve OUSD → stocks desk": "https://explore.testnet.tempo.xyz/tx/0x41ae9edfd60d835431a687f8aa48e8d3db4d62cc7dc93a2ffadce4bb6c30b058",
-        "buy mIDX with 200 OUSD": "https://explore.testnet.tempo.xyz/tx/0x2e66a58718d818b9886d177bf426d81f797017055ad6d18b4440e6ca979d4746",
-        "approve mIDX → stocks desk": "https://explore.testnet.tempo.xyz/tx/0x31e5ff0c62828f498fb7971a05ae70af683ae6f0dd13cda029876b71b2c9851d",
-        "sell 0.4988 mIDX back": "https://explore.testnet.tempo.xyz/tx/0x8e4e87b171999c501aee330b083224a6975a99c6f1fe5f52773093e760cbfe1d",
-        "approve mIDX → vault": "https://explore.testnet.tempo.xyz/tx/0x96268d3c471aa37bf9dc7fb941421ec539e3412daa24c8edd0bdeab512880107",
-        "depositCollateral 2 mIDX": "https://explore.testnet.tempo.xyz/tx/0x47065dbd2141c3a8ac8a53e9630e71f7f9e8658653fceb390b88c18f587d5ba9",
-        "mint 1,049.81 xMXN v2 against mIDX": "https://explore.testnet.tempo.xyz/tx/0x9b4e536c5000e38730e896f252ef2a459b4263e788418535cb5fbb689f854f64"
+        "approve xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x06c0df5b433b1e6abfc6e3a28433457680b09ceb12f0caab49eab886f35a98be",
+        "Ahorro en pesos: deposit 100 xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x7e66679d62811a2f48d3fe301cc8a727cf10b1965a53f00a9b48672c249d21d6",
+        "donate 1 xMXN v2 straight to sxMXN (should NOT move the share price)": "https://explore.testnet.tempo.xyz/tx/0xdd5517e8e27a39c77ec05915434b9257aff026d31246f8d0a68f7e959df83170",
+        "redeem 50 sxMXN": "https://explore.testnet.tempo.xyz/tx/0xc4746e983f2385cb773a538c6036e6569cd8307b61d00ef602e2c3bd57d8ba2d"
       },
       "notes": []
     }
