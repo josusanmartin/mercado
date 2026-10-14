@@ -234,7 +234,9 @@ function CurrencyBlock({ flag, code, name, amount, sub, style }: { flag: ReactNo
         <Display size={22} fit className="leading-tight">
           {amount}
         </Display>
-        <p className="mt-1 text-[11.5px] font-medium tracking-[0.06em] uppercase opacity-70">{sub}</p>
+        <p data-honesty className="mt-1 text-[11.5px] font-medium tracking-[0.06em] uppercase opacity-70">
+          {sub}
+        </p>
       </div>
     </div>
   );
@@ -431,7 +433,9 @@ function Perfil({ openOnramp }: AppProps) {
         <ListItem divider leading={<RowIcon><ShieldCheck /></RowIcon>} headline="Red" supporting="Tempo Moderato · testnet" />
         {address && <ListItem divider leading={<RowIcon><ExternalLink /></RowIcon>} headline="Mi cuenta en el explorador" supporting="explore.testnet.tempo.xyz" href={`https://explore.testnet.tempo.xyz/address/${address}`} />}
       </div>
-      <Meta className="mt-5 px-4">Testnet · sin valor real · sin retiro a banco</Meta>
+      <Meta honesty className="mt-5 px-4">
+        Testnet · sin valor real · no canjeable · sin retiro a banco
+      </Meta>
     </div>
   );
 }
@@ -572,7 +576,9 @@ function Enviar({ s }: AppProps) {
           <Button variant="accent" loading={busy} disabled={!can && !busy} onClick={() => s.doSend()}>
             {busy ? `${send.tx.stepLabel ?? "Enviando"}…` : `Enviar US${fmtMoney(amt)}`}
           </Button>
-          <Meta className="text-center">Testnet · sin retiro a banco</Meta>
+          <Meta honesty className="text-center">
+            Testnet · sin retiro a banco
+          </Meta>
         </div>
       </BottomSheet>
     </div>
@@ -598,6 +604,7 @@ function StrandedRecovery({ s }: { s: RemesasState }) {
         Entregar MX{fmtMoney(send.stranded!.amount)} a {name}
       </Button>
       {send.tx.status === "error" && send.tx.error && <p className="text-[13px] text-[var(--m-error)]">{send.tx.error}</p>}
+      {send.recoveryNote && <p className="text-[13px] text-[var(--m-on-surface-variant)]">{send.recoveryNote}</p>}
     </div>
   );
 }
@@ -693,7 +700,7 @@ function Pagar({ s, kind }: { s: RemesasState; kind: "aire" | "servicios" }) {
           </div>
           <DemoBadge>Simulado</DemoBadge>
         </div>
-        <Meta className="-mt-2">Simulado: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega</Meta>
+        <Meta honesty className="-mt-2">Simulado: el pago es real en Tempo; {airtime ? "la recarga" : "el pago al proveedor"} no se entrega</Meta>
         <label className="grid gap-1">
           <Meta>{airtime ? "Número Telcel · 10 dígitos" : "Número de servicio · 12 dígitos"}</Meta>
           <span className="flex h-14 items-center gap-3 border-b-2 border-[var(--m-outline)] focus-within:border-[var(--m-accent)]">

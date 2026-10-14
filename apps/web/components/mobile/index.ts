@@ -7,6 +7,7 @@ export { AndroidDevice, InPhone, useOverlayHost, useSnackbar } from "./device";
 export {
   AppHeader,
   Avatar,
+  APP_HONESTY,
   BalanceHead,
   Banner,
   BottomNav,

@@ -29,7 +29,6 @@ import {
   ScreenTransition,
   Skeleton,
   Switch,
-  TopAppBar,
   fmtMoney,
   haceTiempo,
   type NavItem,
@@ -69,17 +68,20 @@ export function HolderApp({
   return (
     <div className="relative flex min-h-full flex-col">
       {busy && <LinearProgress className="absolute inset-x-0 top-0 z-20" />}
+      {/* Persistent on every tab and state (R-051): index, product and the full honesty line. */}
+      <AppHeader index="05" product="Tarjeta" right={<Avatar name={who.hello} size={36} />} />
       <ScreenTransition id={tab} dir="fade" className="flex-1 pb-6">
         {tab === "actividad" && (
           <>
-            <TopAppBar title="Actividad" sub="Compras y reembolsos" />
+            <Display as="h1" size={40} className="px-4 pt-1 pb-2">
+              Actividad
+            </Display>
             <CardActivity holder={holder} merchantName={merchantName} limit={30} />
           </>
         )}
         {tab === "perfil" && <Perfil who={who} holder={holder} last4={card?.last4} />}
         {tab === "tarjeta" && (
           <>
-            <AppHeader index="05" product="Tarjeta" right={<Avatar name={who.hello} size={36} />} />
             <Display as="h1" size={40} className="px-4 pt-1">
               Hola, {who.hello}
             </Display>
@@ -99,7 +101,9 @@ export function HolderApp({
               <>
                 <div className="mt-6 px-4">
                   <CardFront last4={card.last4} frozen={card.frozen} name={who.onCard} />
-                  <Meta className="mt-2">Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo</Meta>
+                  <Meta honesty className="mt-2">
+                    Tarjeta virtual demo · no es Visa/Mastercard · solo comercios demo
+                  </Meta>
                 </div>
 
                 <section className="mt-6 px-4" aria-label="Saldo">
@@ -215,7 +219,9 @@ const TABS: NavItem<Tab>[] = [
 function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }; holder?: Address; last4?: number }) {
   return (
     <div>
-      <TopAppBar title="Perfil" sub="Cuenta demo" />
+      <Display as="h1" size={40} className="px-4 pt-1 pb-2">
+        Perfil
+      </Display>
       <div className="flex items-center gap-4 px-4 pt-2 pb-5">
         <Avatar name={who.hello} size={64} />
         <div className="min-w-0">
@@ -241,7 +247,9 @@ function Perfil({ who, holder, last4 }: { who: { hello: string; onCard: string }
           />
         )}
       </div>
-      <Meta className="mt-5 px-4">Tarjeta demo · no es Visa/Mastercard · testnet · sin valor real</Meta>
+      <Meta honesty className="mt-5 px-4">
+        Tarjeta demo · no es Visa/Mastercard · testnet · sin valor real · no canjeable
+      </Meta>
     </div>
   );
 }

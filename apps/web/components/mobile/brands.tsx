@@ -92,7 +92,9 @@ export function ConsentSheet({
           </span>
         </div>
         <div className="grid gap-2">
-          <DemoBadge className="w-fit">Demo · consentimiento simulado</DemoBadge>
+          <DemoBadge guardrail className="w-fit">
+            Demo · consentimiento simulado
+          </DemoBadge>
           <h3 className="m-display text-[28px]">
             {app} quiere acceder a tu cuenta de {name}
           </h3>

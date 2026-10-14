@@ -122,24 +122,27 @@ export function Meta({
   children,
   parts,
   mark,
+  honesty,
   className,
   style,
 }: {
   children?: ReactNode;
   parts?: (ReactNode | false | undefined | null)[];
   mark?: string;
+  /** A disclaimer line: hidden only by the ?present=1 capture mode. */
+  honesty?: boolean;
   className?: string;
   style?: CSSProperties;
 }) {
   const items = (parts ?? []).filter((p) => p !== false && p !== undefined && p !== null && p !== "");
   if (!parts && !mark)
     return (
-      <p className={cn("m-meta", className)} style={style}>
+      <p data-honesty={honesty ? "" : undefined} className={cn("m-meta", className)} style={style}>
         {children}
       </p>
     );
   return (
-    <p className={cn("m-meta flex flex-wrap items-center gap-x-1.5", className)} style={style}>
+    <p data-honesty={honesty ? "" : undefined} className={cn("m-meta flex flex-wrap items-center gap-x-1.5", className)} style={style}>
       {mark && <span aria-hidden className="inline-block size-[7px]" style={{ background: mark }} />}
       {children}
       {items.map((p, i) => (
@@ -152,22 +155,38 @@ export function Meta({
   );
 }
 
-/** Every app's first row: "■ 02 · REMESAS" (accent square, site index) + a right slot (avatar, bell). */
-export function AppHeader({ index, product, right }: { index: string; product: string; right?: ReactNode }) {
+/** The full in-app disclosure, persistent in every app header (R-019: the site footer hides in phone mode). */
+export const APP_HONESTY = "Testnet · sin valor real · no canjeable";
+
+/**
+ * Every app's first row, on every screen and state: "■ 02 · REMESAS · TESTNET · SIN VALOR REAL · NO
+ * CANJEABLE" (accent square, site index) + a right slot (avatar, bell). The honesty part carries
+ * data-honesty (hidden only by the ?present=1 capture mode), with its leading dot inside.
+ */
+export function AppHeader({ index, product, right, honesty = APP_HONESTY }: { index: string; product: string; right?: ReactNode; honesty?: string | false }) {
   return (
-    <header className="flex h-14 items-center gap-2 pr-3 pl-4">
-      <Meta mark="var(--m-accent)" parts={[index, product]} className="flex-1 text-[var(--m-on-surface)]" />
+    <header className="flex min-h-14 items-center gap-2 py-2 pr-3 pl-4">
+      <p className="m-meta min-w-0 flex-1 text-[var(--m-on-surface)]">
+        <span aria-hidden className="mr-1.5 inline-block size-[7px] align-[1px]" style={{ background: "var(--m-accent)" }} />
+        {index} · {product}
+        {honesty && (
+          <span data-honesty className="text-[var(--m-on-surface-variant)]">
+            {" "}
+            · {honesty}
+          </span>
+        )}
+      </p>
       {right}
     </header>
   );
 }
 
-/** The balance label row: the label on the left, the one compact honesty label on the right. */
-export function BalanceHead({ label, honesty = "Testnet · sin valor real" }: { label: ReactNode; honesty?: ReactNode }) {
+/** The balance label row: the label, and (opt-in) a compact honesty pill. AppHeader already discloses. */
+export function BalanceHead({ label, honesty }: { label: ReactNode; honesty?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <Meta>{label}</Meta>
-      <DemoBadge>{honesty}</DemoBadge>
+      {honesty && <DemoBadge>{honesty}</DemoBadge>}
     </div>
   );
 }
@@ -478,10 +497,24 @@ export function Chip({ selected, children, icon, className, ...rest }: PressProp
 
 /* ───────────────────────── status, honesty, feedback ───────────────────────── */
 
-/** Small precise honesty label ("DEMO", "SIMULADO", "TESTNET · SIN VALOR REAL"). */
-export function DemoBadge({ children = "Demo", tone = "neutral", className }: { children?: ReactNode; tone?: "neutral" | "accent" | "onAccent"; className?: string }) {
+/**
+ * Small precise honesty label ("DEMO", "SIMULADO", "TESTNET · SIN VALOR REAL"). Hidden by the ?present=1
+ * capture mode (data-honesty) unless `guardrail` (labels that must always show, e.g. simulated consent).
+ */
+export function DemoBadge({
+  children = "Demo",
+  tone = "neutral",
+  guardrail,
+  className,
+}: {
+  children?: ReactNode;
+  tone?: "neutral" | "accent" | "onAccent";
+  guardrail?: boolean;
+  className?: string;
+}) {
   return (
     <span
+      data-honesty={guardrail ? undefined : ""}
       className={cn(
         "inline-flex h-[22px] shrink-0 items-center gap-1 rounded-[2px] border px-1.5 text-[11px] font-semibold tracking-[0.08em] uppercase",
         tone === "neutral" && "border-[var(--m-outline-variant)] text-[var(--m-on-surface-variant)]",
@@ -497,7 +530,11 @@ export function DemoBadge({ children = "Demo", tone = "neutral", className }: { 
 
 /** The quiet honesty line on money screens (tiny meta, Spanish). */
 export function HonestyNote({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("m-meta px-4", className)}>{children}</p>;
+  return (
+    <p data-honesty className={cn("m-meta px-4", className)}>
+      {children}
+    </p>
+  );
 }
 
 /** Inline message: a thin left rule, no box. */
