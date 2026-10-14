@@ -2,3 +2,5 @@
 export * from "./schemas";
 export type * from "./types";
 export * from "./chain";
+export * from "./abi";
+export * from "./deployments";
