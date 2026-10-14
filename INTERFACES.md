@@ -129,7 +129,7 @@ Payment token for bills: **xMXN** (the driver holds it after the advance). The M
 
 | Nick | Owns |
 |---|---|
-| `contracts` | `packages/contracts/**`, `packages/shared/src/{abi,deployments,chain.ts}`, `apps/web/lib/contracts/**` (typed hooks), `apps/web/app/api/sponsor/**` (fee sponsorship) |
+| `contracts` | `packages/contracts/**`, `packages/shared/src/{abi,deployments,chain.ts}`, `apps/web/lib/contracts/**` (typed hooks), `apps/web/app/api/sponsor/**` (fee sponsorship), `apps/web/app/(dashboard)/earn/**` + `apps/web/components/earn/**` (Earn screen) |
 | `web` | `apps/web/**` except `apps/web/app/api/**` and `apps/web/lib/server/**`; root `package.json` workspaces |
 | `api` | `apps/web/app/(dashboard)/{credit,pay}/**`, `apps/web/components/{credit,billpay}/**` (screens), `apps/web/app/api/**`, `apps/web/lib/server/**`, `apps/web/lib/mpp/**`, `fixtures/**`, `packages/shared/src/{schemas,types}.ts` |
 | `qa` | `scripts/**` (e2e demo journey), `apps/web/e2e/**`, `README.md`, `DEMO.md`, `.env.example`, `ACCEPTANCE.md` |
