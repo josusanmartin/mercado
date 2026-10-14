@@ -1,36 +1,36 @@
-<section id="j4-bills" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Serif', Georgia, serif;padding:128px 128px 160px">
+<section id="j4-bills" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/43f886d7093f469dc1d8680cd904ef9d" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
 <p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">04 — the core flow</p>
-<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:400;line-height:1.05;letter-spacing:-3px;color:#F2F0EA">The driver pays</h2>
-<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:400;font-style:italic;line-height:1.05;letter-spacing:-3px;color:#999999">over a real HTTP 402.</h2>
-<hr style="position:absolute;left:128px;top:448px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
-<x-embed style="position:absolute;left:128px;top:476px;width:1664px;height:300px"><!doctype html><html><head><meta charset="utf-8"><style>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">The driver pays</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">over a real HTTP 402.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:470px;width:960px;height:310px"><!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:26px;overflow:hidden}
-.l{display:flex;gap:28px;height:56px;align-items:center;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,text-shadow .8s}
+.l{display:flex;gap:24px;height:60px;align-items:center;white-space:nowrap;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s,text-shadow .8s}
 .l.on{opacity:1;transform:none}
-.d{width:40px;color:#666}
-.k{width:620px;color:#F2F0EA}
+.d{width:32px;color:#666}
 .v{color:#999}
-.amber .k,.amber .v{color:#FFB547}
+.amber{color:#FFB547}
 .amber.on{text-shadow:0 0 18px rgba(255,181,71,.55)}
 .ok{color:#00FF00;text-shadow:0 0 10px rgba(0,255,0,.5)}
 </style></head><body>
-<div class="l"><span class="d">→</span><span class="k">POST /api/bills/pay</span><span class="v">telcel · 100 MXN</span></div>
-<div class="l"><span class="d">←</span><span class="k">402 Payment Required</span><span class="v">100 xMXN · tempo/charge</span></div>
-<div class="l"><span class="d">→</span><span class="k">transfer 100 xMXN on Tempo</span><span class="v">0x10ff…a00e</span></div>
-<div class="l"><span class="d">→</span><span class="k">retry with payment credential</span><span class="v"></span></div>
-<div class="l amber"><span class="d">←</span><span class="k">200 OK · Payment-Receipt</span><span class="v"><span class="ok">✓</span> verified on-chain</span></div>
+<div class="l"><span class="d">→</span><span>POST /api/bills/pay</span><span class="v">telcel · 100 MXN</span></div>
+<div class="l"><span class="d">←</span><span>402 Payment Required</span><span class="v">100 xMXN</span></div>
+<div class="l"><span class="d">→</span><span>transfer 100 xMXN on Tempo</span></div>
+<div class="l"><span class="d">→</span><span>retry with payment credential</span></div>
+<div class="l amber"><span class="d">←</span><span>200 OK · Payment-Receipt</span><span><span class="ok">✓</span> verified</span></div>
 <script>
 var L=[].slice.call(document.querySelectorAll('.l'));
 function run(){L.forEach(function(e){e.classList.remove('on')});L.forEach(function(e,i){setTimeout(function(){e.classList.add('on')},600+i*1100)})}
 run();setInterval(run,11000);
 </script></body></html></x-embed>
-<hr style="position:absolute;left:128px;top:792px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
-<div id="wallet" style="position:absolute;left:128px;top:812px;width:1664px;display:flex;gap:64px;align-items:flex-end">
-<div style="width:420px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">driver balance</p><p style="font-size:72px;line-height:1;letter-spacing:-2px;color:#F2F0EA">400 xMXN</p></div>
-<div style="width:420px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">still owed</p><p style="font-size:72px;line-height:1;letter-spacing:-2px;color:#FFB547">510 xMXN</p></div>
-<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:flex-end"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">airtime top-up: simulated</p><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#F2F0EA"><a href="https://explore.testnet.tempo.xyz/tx/0x10ff16340ab60d9e4e68917f7734495f3cc4b4bd390078149889f6d2680fa00e">live tx on Moderato ↗</a></p></div>
+<div id="wallet" style="position:absolute;left:128px;top:808px;width:960px;display:flex;gap:64px;align-items:flex-end">
+<div style="width:400px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">driver balance</p><p style="font-size:72px;font-weight:500;line-height:1;letter-spacing:-2.5px;color:#F2F0EA">400 xMXN</p></div>
+<div style="width:400px;display:flex;flex-direction:column;gap:4px"><p style="font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">still owed</p><p style="font-size:72px;font-weight:500;line-height:1;letter-spacing:-2.5px;color:#FFB547">510 xMXN</p></div>
 </div>
+<img data-build-in="fade 3" src="/_blob/8a2d7b3532a2d0870e4cc40360bd6be0" alt="Mercado checkout: Telcel airtime 100 MXN, pay 100 xMXN over MPP HTTP 402, five steps from quote locked to simulated top-up" style="position:absolute;left:1152px;top:470px;width:640px;height:401px;object-fit:cover;border:1px solid rgba(255,255,255,0.12)">
+<p style="position:absolute;left:1152px;top:888px;width:640px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">top-up simulated · <a href="https://explore.testnet.tempo.xyz/tx/0x10ff16340ab60d9e4e68917f7734495f3cc4b4bd390078149889f6d2680fa00e">live tx ↗</a></p>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">04</p>
-<aside>~25s. Slow down here. The driver spends 100 MXN of the advance on Telcel airtime. The unpaid request gets a real HTTP 402 from mppx; the wallet pays in xMXN on Tempo; the server verifies that exact payment for that exact order before calling the provider. The bottom row puts the receipt next to the remaining debt: 400 xMXN left, 510 still owed. The top-up is simulated: MPP is the payment rail, not a bill-payment provider, and no airtime is delivered. A settled order returns its recorded receipt on retry; recovery from an interrupted payment is still under test, so don't claim more. The live link is the full-journey run on Moderato: the driver paid 100 xMXN to the merchant through a real 402, with an idempotent retry. Both server-broadcast (pull) and wallet-broadcast (push, what Tempo Wallet and passkeys use) modes pass live. The driver later repays 510 by hand from separate, labeled test funds.</aside>
+<aside>~25s. Slow down here. The driver spends 100 MXN of the advance on Telcel airtime. The unpaid request gets a real HTTP 402 from mppx; the wallet pays in xMXN on Tempo; the server verifies that exact payment for that exact order before calling the provider. Under the log, the receipt sits next to the remaining debt: 400 xMXN left, 510 still owed. The screenshot is the real checkout in the app: quote locked, 402, pay on Tempo, verified on-chain, simulated top-up. The top-up is simulated: MPP is the payment rail, not a bill-payment provider, and no airtime is delivered. A settled order returns its recorded receipt on retry, and a crash-and-restart test recovered a paid order from the chain without charging twice. The live link is the full-journey run on Moderato: 100 xMXN to the merchant through a real 402, in both server- and wallet-broadcast modes. The driver later repays 510 by hand from separate, labeled test funds.</aside>
 </section>
