@@ -302,14 +302,18 @@ function InvestV2() {
                 sub={
                   <>
                     {unscoped(dolScoped, "sOUSD shares") ?? (
-                      <LiveEarned
-                        live={liveDol}
-                        base={net?.netDolares}
-                        unit="OUSD"
-                        fallback={signed(earnedDol, "OUSD")}
-                      />
+                      <>
+                        {signed(earnedDol, "OUSD", 6)} earned on-chain · now{" "}
+                        <LiveEarned
+                          live={liveDol}
+                          base={net?.netDolares}
+                          unit="OUSD"
+                          fallback="…"
+                        />{" "}
+                        projected
+                      </>
                     )}{" "}
-                    earned · {pct(p.dollars?.aprBps)} a year
+                    · {pct(p.dollars?.aprBps)} a year
                   </>
                 }
               />
@@ -320,14 +324,18 @@ function InvestV2() {
                   vault ? (
                     <>
                       {unscoped(pesoScoped, "sxMXN shares") ?? (
-                        <LiveEarned
-                          live={livePes}
-                          base={net?.netPesosVault}
-                          unit="xMXN"
-                          fallback={signed(earnedPesos, "xMXN")}
-                        />
+                        <>
+                          {signed(earnedPesos, "xMXN", 6)} earned on-chain · now{" "}
+                          <LiveEarned
+                            live={livePes}
+                            base={net?.netPesosVault}
+                            unit="xMXN"
+                            fallback="…"
+                          />{" "}
+                          projected
+                        </>
                       )}{" "}
-                      earned · {pct(vault.aprBps)} a year
+                      · {pct(vault.aprBps)} a year
                     </>
                   ) : (
                     <>{signed(earnedPesos, "xMXN")} earned · variable</>
@@ -413,6 +421,15 @@ function InvestV2() {
                   >
                     Mint xMXN against mIDX →
                   </Link>
+                </li>
+                <li>
+                  <span className="text-foreground font-medium">
+                    Earned on-chain vs projected.
+                  </span>{" "}
+                  &quot;Earned on-chain&quot; is your position at the last chain
+                  read minus what you put in; &quot;projected&quot; runs the
+                  vault&apos;s own accrual formula forward to this second and
+                  re-syncs on every read.
                 </li>
                 <li>
                   The allocation bar converts pesos at the oracle rate (
