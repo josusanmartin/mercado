@@ -10,11 +10,11 @@
 </div>
 <div data-build-in="rise 4" style="position:absolute;left:128px;top:602px;width:840px;height:136px;display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(255,255,255,0.14)">
 <p style="width:260px;font-family:'Anton', 'Arial Narrow', sans-serif;font-size:56px;font-weight:400;line-height:1;text-transform:uppercase;color:#FFFFFF">Pesos</p>
-<div style="flex:1;display:flex;flex-direction:column;gap:4px"><p id="mxn-rate" style="font-family:'Anton', 'Arial Narrow', sans-serif;font-size:72px;font-weight:400;line-height:1;text-transform:uppercase;color:#E5A823">Variable</p><p style="font-size:24px;color:#B3B3B3">earns the fees drivers pay on their advances</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px"><p id="mxn-rate" style="font-family:'Anton', 'Arial Narrow', sans-serif;font-size:72px;font-weight:400;line-height:1;color:#E5A823">8.00% a year</p><p style="font-size:24px;color:#B3B3B3">peso savings, accruing every second</p></div>
 </div>
 <div data-build-in="rise 5" style="position:absolute;left:128px;top:738px;width:840px;height:136px;display:flex;align-items:center;gap:32px;border-bottom:1px solid rgba(255,255,255,0.14)">
 <p style="width:260px;font-family:'Anton', 'Arial Narrow', sans-serif;font-size:56px;font-weight:400;line-height:1;text-transform:uppercase;color:#FFFFFF">Stocks</p>
-<div style="flex:1;display:flex;flex-direction:column;gap:4px"><p style="font-family:'Anton', 'Arial Narrow', sans-serif;font-size:56px;font-weight:400;line-height:1;text-transform:uppercase;color:#E5A823">US large caps</p><p style="font-size:24px;color:#B3B3B3">a tokenized index of US large-cap stocks</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px"><p style="font-family:'Anton', 'Arial Narrow', sans-serif;font-size:56px;font-weight:400;line-height:1;text-transform:uppercase;color:#E5A823">US$100.00</p><p style="font-size:24px;color:#B3B3B3">Mercado US Equity Index, one token for US large caps</p></div>
 </div>
 <x-embed style="position:absolute;left:1032px;top:466px;width:760px;height:408px"><!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;background:#0A0A0A;color:#FFFFFF;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
@@ -27,7 +27,7 @@ small{display:block;font-size:24px;letter-spacing:3px;text-transform:uppercase;f
 <div class="box" style="top:0"><small>US$10,000 in dollars</small><span class="v" id="u">US$10,000.00000000</span><span class="r">projected at 5.00% a year, per second</span></div>
 <div class="box" id="mbox" style="top:214px;display:none"><small>MX$100,000 in pesos</small><span class="v" id="m">MX$100,000.000000</span><span class="r" id="mr"></span></div>
 <script>
-var USD_APR=0.05,MXN_APR=null,t0=performance.now();
+var USD_APR=0.05,MXN_APR=0.08,t0=performance.now();
 function fmt(x,d){var p=x.toFixed(d).split('.');return p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',')+'.'+p[1]}
 var u=document.getElementById('u'),m=document.getElementById('m');
 if(MXN_APR!==null){document.getElementById('mbox').style.display='block';document.getElementById('mr').textContent='projected at '+(MXN_APR*100).toFixed(2)+'% a year, per second'}
@@ -38,5 +38,5 @@ tick();setInterval(tick,50);
 </script></body></html></x-embed>
 <p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'Inter Tight', Arial, sans-serif;font-size:24px;color:#8A8A8A;text-transform:uppercase;letter-spacing:3px;font-weight:600">Mercado · built on Tempo</p>
 <p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'Inter Tight', Arial, sans-serif;font-size:24px;text-align:right;color:#8A8A8A;text-transform:uppercase;letter-spacing:3px;font-weight:600">10</p>
-<aside>~10s. Mercado Invest: save in dollars, pesos or stocks. Dollars earn 5.00% a year as configured, accruing every second on-chain; the counter shows US$10,000 growing at that rate in real time. Pesos earn what drivers actually pay in advance fees, so the return is variable and historical, not promised. Stocks is a tokenized index of US large-cap stocks. Q&A context: on Tempo testnet today the 5.00% comes from a yield reserve our operator funds, the peso yield is small because the pool is young, and the stock index token is being added now with an operator price feed; no return is guaranteed.</aside>
+<aside>~10s. Mercado Invest: save in dollars, pesos or stocks. Dollars earn 5.00% a year as configured, accruing every second on-chain; the counter shows US$10,000 growing at that rate in real time. Pesos earn 8.00% a year as configured in the peso savings vault, also accruing every second; the second counter shows MX$100,000 growing at that rate. Stocks is the Mercado US Equity Index token, priced at US$100.00, bought and sold against dollars. Q&A context: on Tempo testnet both rates are configured by our operator and paid from reserves we fund (the dollar and peso vaults use the same audited, donation-proof contract), the index token has an operator-set price feed, and no return is guaranteed.</aside>
 </section>
