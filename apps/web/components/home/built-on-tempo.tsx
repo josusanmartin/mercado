@@ -7,16 +7,15 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient, useReadContract } from "wagmi";
 import { hexToBytes, parseAbiItem, type Address, type Hex } from "viem";
-import { Fetch } from "mppx/client";
 import { explorerAddress, explorerTx, TEMPO_EXPLORER_URL } from "@mercado/shared";
 import { ADDR, CHAIN_ID, tokenAbi } from "@/lib/contracts";
 import { fmtAmount, fmtNumber, shortAddr } from "@/lib/format";
 import { Meta } from "@/components/console";
 import { WalletDialog } from "@/components/wallet/wallet-menu";
+import { probeChallenge } from "@/lib/mpp/client";
 
 const MEMO = parseAbiItem("event TransferWithMemo(address indexed from, address indexed to, uint256 amount, bytes32 indexed memo)");
 const CHUNK = 50_000n; // the node's getLogs range limit
-const PROBE = "/api/move/quote?side=usd_to_mxn&amount=250&access=partner";
 
 /** bytes32 memo → text, only when it is a human note (valid UTF-8, no control characters). */
 function memoText(m: Hex): string | null {
@@ -85,19 +84,19 @@ function useMemoProofs() {
   });
 }
 
-/** A real unpaid call to a paid endpoint: the server answers 402 with a payment challenge. */
+/** A real unpaid call to the paid partner quote: it answers 402 with a payment challenge. Made server-side
+ *  via /api/mpp/challenge (CR-08), so the browser doesn't log a red 402 in devtools; nothing is charged. */
 function use402() {
   return useQuery({
     queryKey: ["tempo-402-probe"],
     staleTime: Infinity,
     queryFn: async () => {
-      const raw = Fetch.unwrapFetch(globalThis.fetch);
       const [res, pricing] = await Promise.all([
-        raw(PROBE),
+        probeChallenge("move-quote", { side: "usd_to_mxn", amount: "250" }),
         fetch("/api/mpp/pricing").then((r) => r.json() as Promise<Record<string, { amount: string | null; symbol: string }>>),
       ]);
       const price = pricing["move-quote"];
-      return { status: res.status, challenge: !!res.headers.get("WWW-Authenticate"), price: price?.amount ? `${fmtAmount(BigInt(price.amount))} ${price.symbol}` : undefined };
+      return { status: res.status, challenge: !!res.wwwAuthenticate, price: price?.amount ? `${fmtAmount(BigInt(price.amount))} ${price.symbol}` : undefined };
     },
   });
 }
