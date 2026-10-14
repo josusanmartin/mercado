@@ -3,7 +3,7 @@
 // (apps/web/.env.local, NEXT_PUBLIC_DEMO_*) so Demo mode works in one click. No real value.
 import type { Address, Hex } from "viem";
 
-export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender" | "merchant";
+export type PersonaId = "lp" | "sender" | "recipient" | "driver" | "lender" | "merchant" | "saver";
 
 export type Persona = {
   id: PersonaId;
@@ -66,9 +66,26 @@ export const PERSONAS: Persona[] = [
     address: process.env.NEXT_PUBLIC_DEMO_LENDER_ADDRESS as Address | undefined,
     privateKey: process.env.NEXT_PUBLIC_DEMO_LENDER_PRIVATE_KEY as Hex | undefined,
   },
+  {
+    id: "saver",
+    name: "Saver",
+    role: "Mercado Invest",
+    blurb: "Saves in pesos and dollars and buys demo T-bills.",
+    address: process.env.NEXT_PUBLIC_DEMO_SAVER_ADDRESS as Address | undefined,
+    privateKey: process.env.NEXT_PUBLIC_DEMO_SAVER_PRIVATE_KEY as Hex | undefined,
+  },
 ];
 
 export const personaById = (id: PersonaId) => PERSONAS.find((p) => p.id === id)!;
 
 export const personaByAddress = (addr?: string) =>
   addr ? PERSONAS.find((p) => p.address?.toLowerCase() === addr.toLowerCase()) : undefined;
+
+/** Remesas contacts: real configured testnet wallets (Mamá is the Familia (MX) demo account). */
+export type Contact = { id: "mama" | "papa" | "ana"; name: string; city: string; address?: Address };
+export const CONTACTS: Contact[] = [
+  { id: "mama", name: "Mamá", city: "Guadalajara", address: process.env.NEXT_PUBLIC_DEMO_RECIPIENT_ADDRESS as Address | undefined },
+  { id: "papa", name: "Papá", city: "Puebla", address: process.env.NEXT_PUBLIC_DEMO_PAPA_ADDRESS as Address | undefined },
+  { id: "ana", name: "Ana", city: "CDMX", address: process.env.NEXT_PUBLIC_DEMO_ANA_ADDRESS as Address | undefined },
+];
+export const contactByAddress = (addr?: string) => (addr ? CONTACTS.find((c) => c.address?.toLowerCase() === addr.toLowerCase()) : undefined);
