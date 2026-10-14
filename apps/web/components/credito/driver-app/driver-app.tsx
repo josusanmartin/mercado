@@ -18,6 +18,7 @@ import { LetterReveal, Stagger, TickerText } from "@/lib/motion";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Honesty, usePresent } from "@/components/console/present";
+import { Spark, Stepper } from "@/lib/motion";
 import { Badge } from "@/components/ui/badge";
 import { personaByAddress } from "@/components/wallet/personas";
 import { AppHeader, BalanceHead, BottomNav, BottomSheet, BrandLogo, ConsentSheet, EmptyState, Meta, Money, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessScreen, brandName, fmtMoney, useNavDirection } from "@/components/mobile";
@@ -911,63 +912,107 @@ function WhatHappened({ flow, platform, data, adv }: Props) {
         : "Bound to this wallet, this pool and this chain",
     },
   ];
+  // v6 "show, don't tell": one stepper + a score gauge + the earnings it was computed from; the long text sits
+  // behind "How it works" (honesty sentences keep their present-mode tags there).
+  const drawn = flow === "recibido" || flow === "pagado" || (adv.pool.debt !== undefined && adv.pool.debt > 0n);
+  const current = !platform || flow === "conectar" ? 0 : !data.data ? 1 : !s ? 2 : !adv.att && !drawn ? 3 : !drawn ? 4 : 5;
+  const weeks = data.data?.weeks ?? [];
+  const net = weeks.map((w) => w.netMxn);
+  const mxn = (n: number) => `MX$${Math.round(n).toLocaleString("en-US")}`;
   return (
     <div className="grid content-start gap-8">
-      <Panel title="What just happened" description="Each step of the advance, and what is real.">
-        <ol className="grid gap-3">
-          {steps.map((st) => (
-            <li key={st.label} className="flex items-start gap-3">
-              <span className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", st.done ? "bg-product" : "bg-input")} />
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-[15px]", !st.done && "text-muted-foreground")}>{st.label}</p>
-                <p className="text-muted-foreground text-[13px]">{st.sub}</p>
-              </div>
-              {st.badge && <Badge variant="mock">{st.badge}</Badge>}
-            </li>
-          ))}
-          {adv.tx.steps.map((st) => (
-            <li key={st.hash} className="flex items-start gap-3">
-              <span className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", st.receipt ? "bg-success" : "bg-warning")} />
-              <a href={st.url} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-2 hover:underline">
-                <span className="text-[15px]">{st.label}</span>
-                <span className="text-muted-foreground font-mono text-[13px]">{st.hash.slice(0, 10)}…</span>
-                <ExternalLink className="text-muted-foreground size-3.5" />
-              </a>
-              <Badge variant="success">On-chain</Badge>
-            </li>
-          ))}
-        </ol>
+      <Panel title="What just happened" description="The advance, step by step.">
+        <Stepper
+          label="Advance progress"
+          current={current}
+          className="pt-2"
+          steps={[
+            { label: "Connect", sub: name ?? "a platform" },
+            { label: "Earnings", sub: weeks.length ? `${weeks.length} weeks` : "—" },
+            { label: "Score", sub: s ? `${fmtNumber(s.score, 1)}/100` : "—" },
+            { label: "Attestation", sub: adv.att ? "EIP-712 ✓" : "—" },
+            { label: "Draw", sub: drawn ? "on-chain ✓" : "—" },
+          ]}
+        />
+        {(s || weeks.length > 1) && (
+          <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 gap-y-2 border-t pt-5">
+            {s ? (
+              <Ring
+                value={s.score / 100}
+                marker={s.scoreFloor / 100}
+                size={84}
+                stroke={7}
+                color="var(--accent)"
+                track="var(--border)"
+                markerColor="var(--foreground)"
+                label={`Score ${fmtNumber(s.score, 1)} out of 100, floor ${s.scoreFloor}`}
+              >
+                <span className="tabular text-[17px] font-semibold">{fmtNumber(s.score, 1)}</span>
+              </Ring>
+            ) : (
+              <span />
+            )}
+            {weeks.length > 1 ? (
+              <figure className="grid min-w-0 gap-1">
+                <figcaption className="meta text-muted-foreground">
+                  Net weekly earnings · last {weeks.length} weeks · MXN
+                </figcaption>
+                <Spark
+                  values={net}
+                  className="h-10 w-40"
+                  label={`Net weekly earnings over ${weeks.length} weeks, from ${mxn(net[0])} to ${mxn(net[net.length - 1])}`}
+                />
+                <p className="text-muted-foreground tabular text-[12px]">
+                  {mxn(net[0])} → {mxn(net[net.length - 1])} · low {mxn(Math.min(...net))} · high {mxn(Math.max(...net))}
+                </p>
+              </figure>
+            ) : (
+              <span />
+            )}
+          </div>
+        )}
+        {adv.tx.steps.length > 0 && (
+          <ol className="mt-5 grid gap-2 border-t pt-4">
+            {adv.tx.steps.map((st) => (
+              <li key={st.hash} className="flex items-center gap-3">
+                <span className={cn("size-2.5 shrink-0 rounded-full", st.receipt ? "bg-success" : "bg-warning")} />
+                <a href={st.url} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-2 hover:underline">
+                  <span className="text-[15px]">{st.label}</span>
+                  <span className="text-muted-foreground font-mono text-[13px]">{st.hash.slice(0, 10)}…</span>
+                  <ExternalLink className="text-muted-foreground size-3.5" />
+                </a>
+                <Badge variant="success">On-chain</Badge>
+              </li>
+            ))}
+          </ol>
+        )}
+        <details className="mt-5 text-[13px]">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer">How it works</summary>
+          <ul className="text-muted-foreground grid gap-2 pt-3">
+            {steps.map((st) => (
+              <li key={st.label}>
+                <span className="text-foreground font-medium">{st.label}.</span> {st.sub}
+              </li>
+            ))}
+            {s && (
+              <li>
+                <span className="text-foreground font-medium">Why this credit line.</span>
+                <Honesty> {HEURISTIC_NOTE}</Honesty>
+                <ul className="mt-1 grid gap-1">
+                  {s.explanation.map((e) => {
+                    const rest = e.replace(HEURISTIC_NOTE, "").trim();
+                    return rest ? (
+                      <li key={e}>· {rest}</li>
+                    ) : null;
+                  })}
+                  {s.attestationWithheld && <li className="text-destructive">· No offer right now: {s.attestationWithheld}</li>}
+                </ul>
+              </li>
+            )}
+            {adv.score.error && <li className="text-destructive">{(adv.score.error as Error).message}</li>}
+          </ul>
+        </details>
       </Panel>
-      {(s || adv.score.error) && (
-        <Panel
-          title="Why this credit line"
-          description={
-            <>
-              The scoring rule&apos;s own explanation.<Honesty> {HEURISTIC_NOTE}</Honesty>
-            </>
-          }
-        >
-          {adv.score.error && <p className="text-destructive text-[14px]">{(adv.score.error as Error).message}</p>}
-          {s && (
-            <ul className="grid gap-1.5 text-[14px]">
-              {s.explanation.map((e) => {
-                const rest = e.replace(HEURISTIC_NOTE, "").trim();
-                return rest ? (
-                  <li key={e} className="text-muted-foreground">
-                    · {rest}
-                    {e.includes(HEURISTIC_NOTE) && <Honesty> {HEURISTIC_NOTE}</Honesty>}
-                  </li>
-                ) : (
-                  <li key={e} data-honesty className="text-muted-foreground">
-                    · {e}
-                  </li>
-                );
-              })}
-              {s.attestationWithheld && <li className="text-destructive">· No offer right now: {s.attestationWithheld}</li>}
-            </ul>
-          )}
-        </Panel>
-      )}
       <Panel title="The pool behind it" description="Advances come from lenders' xMXN in the credit pool, never from the mint vault. A flat fee is added to what the driver owes; repayment is manual and nothing is taken from platform payouts.">
         <Rows>
           <Row label="Available to lend" value={adv.pool.available === undefined ? "—" : `${fmtAmount(adv.pool.available, 0)} xMXN`} />

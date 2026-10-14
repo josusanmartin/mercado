@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { EarnScreen } from "@/components/earn/earn-screen";
 import { usePool } from "@/lib/contracts";
 import { fmtAmount } from "@/lib/format";
-import { Stagger, TickerText } from "@/lib/motion";
+import { Spark, Stagger, TickerText } from "@/lib/motion";
 import { bpsToPct } from "@/components/credit/use-advance";
 import { UnderwritingApi } from "./underwriting-api";
 
@@ -56,7 +56,11 @@ const get = async <T,>(url: string) => {
   return body as T;
 };
 
-const PLATFORM_NAME: Record<string, string> = { uber: "Uber", didi: "DiDi", rappi: "Rappi" };
+const PLATFORM_NAME: Record<string, string> = {
+  uber: "Uber",
+  didi: "DiDi",
+  rappi: "Rappi",
+};
 /** "Uber (demo)"; the "(demo)" suffix hides only in capture mode (?present=1). */
 const platform = (p: string) =>
   PLATFORM_NAME[p] ? (
@@ -69,6 +73,90 @@ const platform = (p: string) =>
   );
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const when = (s?: number) => (s ? new Date(s * 1000).toLocaleString() : "—");
+
+/** Lent out ÷ lender claims, with the on-chain cap as a tick. Static bar: no looping motion. */
+function UtilizationBar({
+  bps,
+  capBps,
+}: {
+  bps: number | undefined;
+  capBps: number | undefined;
+}) {
+  const pct = (b: number) => Math.min(100, b / 100);
+  return (
+    <figure className="grid content-start gap-2" aria-label="Pool utilization">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="meta text-muted-foreground">Utilization</span>
+        <span className="tabular text-[17px] font-semibold">
+          {bps === undefined ? "…" : `${(bps / 100).toFixed(1)}%`}
+        </span>
+      </div>
+      <div
+        role="img"
+        aria-label={
+          bps === undefined
+            ? "Loading"
+            : `${(bps / 100).toFixed(1)}% of lender claims lent out${capBps ? `, cap ${capBps / 100}%` : ""}`
+        }
+        className="bg-muted relative h-2.5 w-full overflow-hidden rounded-full"
+      >
+        {bps !== undefined && (
+          <span
+            className="absolute inset-y-0 left-0 rounded-full bg-[var(--accent)]"
+            style={{ width: `${pct(bps)}%` }}
+          />
+        )}
+        {capBps !== undefined && capBps < 10_000 && (
+          <span
+            aria-hidden
+            className="bg-foreground absolute inset-y-0 w-0.5"
+            style={{ left: `${pct(capBps)}%` }}
+          />
+        )}
+      </div>
+      <p className="text-muted-foreground text-[12px]">
+        Lent out of lender claims
+        {capBps !== undefined
+          ? ` · cap ${(capBps / 100).toFixed(0)}% (on-chain)`
+          : ""}
+      </p>
+    </figure>
+  );
+}
+
+/** Each advance's size, oldest → newest, with its window, unit and first/last/low/high (no inferred zero). */
+function AdvanceSpark({ loans }: { loans: Loan[] | undefined }) {
+  const series = (loans ?? [])
+    .filter((l) => l.openedAt !== undefined)
+    .sort((a, b) => a.openedAt! - b.openedAt!)
+    .map((l) => Number(l.principal) / 1e6);
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return (
+    <figure className="grid min-w-0 content-start gap-1">
+      <figcaption className="meta text-muted-foreground">
+        Advance size · last {series.length} advances · xMXN
+      </figcaption>
+      {series.length > 1 ? (
+        <>
+          <Spark
+            values={series}
+            className="h-10 w-40"
+            label={`Advance sizes over the last ${series.length} advances, from ${fmt(series[0])} to ${fmt(series[series.length - 1])} xMXN`}
+          />
+          <p className="text-muted-foreground tabular text-[12px]">
+            {fmt(series[0])} → {fmt(series[series.length - 1])} · low{" "}
+            {fmt(Math.min(...series))} · high {fmt(Math.max(...series))}
+          </p>
+        </>
+      ) : (
+        <p className="text-muted-foreground text-[13px]">
+          {loans ? "Not enough advances yet to chart." : "Reading the chain…"}
+        </p>
+      )}
+    </figure>
+  );
+}
 
 export function BackOffice() {
   const pool = usePool();
@@ -94,6 +182,18 @@ export function BackOffice() {
         title="Platform"
         description="The pool's state and book, read live from the chain."
       >
+        {/* v6 "show, don't tell": how much of the pool is lent out, and the advances it made */}
+        <div className="grid gap-6 pt-2 pb-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <UtilizationBar
+            bps={utilization}
+            capBps={
+              pool.maxUtilizationBps === undefined
+                ? undefined
+                : Number(pool.maxUtilizationBps)
+            }
+          />
+          <AdvanceSpark loans={book.data?.loans} />
+        </div>
         <Rows>
           <Row
             label="Pool liquidity"
@@ -125,7 +225,9 @@ export function BackOffice() {
             value={
               <TickerText
                 text={
-                  (utilization === undefined ? undefined : bpsToPct(BigInt(utilization))) ?? "…"
+                  (utilization === undefined
+                    ? undefined
+                    : bpsToPct(BigInt(utilization))) ?? "…"
                 }
               />
             }
@@ -282,9 +384,7 @@ export function BackOffice() {
                     <td className="py-2 pr-4 font-mono text-[13px]">
                       {short(a.borrower)}
                     </td>
-                    <td className="py-2 pr-4">
-                      {platform(a.platform)}
-                    </td>
+                    <td className="py-2 pr-4">{platform(a.platform)}</td>
                     <td className="tabular py-2 pr-4 text-right">{a.score}</td>
                     <td className="tabular py-2 pr-4 text-right">
                       {fmtAmount(BigInt(a.maxAmount), 0)}
