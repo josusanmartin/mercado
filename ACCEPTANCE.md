@@ -42,6 +42,13 @@ Explorer: https://explore.testnet.tempo.xyz (Tempo Moderato, chain 42431)
 | X2 | Fee sponsorship: a wallet with zero fee tokens transacts via `/api/sponsor` | contracts | ✅ | [approve paid by sponsor](https://explore.testnet.tempo.xyz/tx/0xb2be0921e163201457a9a86286785e38f93fdb3b60c06e4714203bf6116a67b7) |
 | X3 | Bills crash/restart safety: server SIGKILLed mid-settle, restarted on the same state | api / qa | ✅ | `scripts/bills-crash-proof.ts` (real bills service in a child process, own state files, real Moderato settlement). **A** killed right after broadcast, before PAYMENT_VERIFIED: a plain retry recovers [the tx](https://explore.testnet.tempo.xyz/tx/0x88501f18e3ca060b1f0de8b1fef215bc83b3be182f4112c1f4e827317f1eda70) from chain → FULFILLED_SIMULATED, no new 402, 1 charge, 1 fulfillment. **B** killed after the attempt persisted, before broadcast: retry → 409 SETTLEMENT_PENDING, nothing charged; after the hold, a fresh 402 is [paid once](https://explore.testnet.tempo.xyz/tx/0x98a2c0e64b915a7d5401c558437338e160836e8894daabaac8ef62abc8c1ccad). Transcript + order stores: `scripts/evidence/crash-proof/` |
 
+## E. v0.2 (josu's rules and the v2 switch gate)
+
+| # | Check | Owner | Status | Evidence |
+|---|---|---|---|---|
+| M1 | Mock only what's necessary: every remaining mock is listed in `MOCKS.md` (what / why / where labeled) and `scripts/check-mocks.ts` passes | qa / all | 🟡 | Check passes (no unlisted mocks). Open gaps G1–G4 in MOCKS.md §C: hardcoded per-driver cap, static recorded agent trace, OUSD=$1 not shown in UI, FX relay timestamps |
+| V2 | `PROTOCOL=v2` journey green end to end (V2-SWITCH gate) | qa / contracts / api | 🟡 | `scripts/demo-journey-v2.ts` V0–V7 green live: Create (sOUSD 250%, tTBILL 300%), Move (OUSD → xMXN v2 minted to the recipient in one tx; redeem burns), Lend/Spend/Repay on pool v2 via in-process api services; supply identity asserted after each mint/burn (`scripts/evidence/v2-run-*.json`). Pending: v2 stress step (needs a contracts script), HTTP path after the flip |
+
 ## C. Pass D robustness (UI / ops)
 
 | # | Check | Owner | Status | Evidence |
@@ -67,4 +74,5 @@ Findings from `qa`'s contract and API review. Each one is posted to the owner in
 | Q-008 | web / `CreditPool.stats()` | `totalSupplied` is really totalAssets (cash + lent), so label it "lender claims" | web | open (P3) |
 | Q-009 | api `bills/service.ts` payLocked | CREATED orders can be paid after quote expiry (stale interim FX) | api | open (P3) |
 | Q-010 | api bills store | File store + in-process locks aren't serverless-safe; demo runs on a local single process (README note) | api / qa | disclosed (P3) |
+| Q-011 | contracts v2 `MultiCollateralVault.maxMintable` | Ignores debt-ceiling headroom, so a UI 'Max' can revert `DebtCeilingExceeded` | contracts | open (P2) |
 | Q-002 | api `/api/driver/score` | Caller chooses profile for any borrower, so any wallet can claim "steady". Mitigated by borrower binding + 1,500 per-user cap; demo-acceptable, disclosed | api / qa | accepted (P3) |
