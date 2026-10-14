@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils";
 import { Panel, PhoneFrame, Row, Rows } from "@/components/console";
 import { ConnectGate } from "@/components/shell/connect-gate";
 import { Badge } from "@/components/ui/badge";
-import { BottomSheet, BrandLogo, ConsentSheet, PlatformButton, ScreenTransition, Skeleton, SuccessCheck, brandName, fmtMoney } from "@/components/mobile";
+import { personaByAddress } from "@/components/wallet/personas";
+import { BottomSheet, BrandLogo, ConsentSheet, PhonePanel, PlatformButton, ScreenTransition, Skeleton, SuccessCheck, brandName, fmtMoney } from "@/components/mobile";
 import {
   ActionRow,
   BankRow,
@@ -113,6 +114,7 @@ function DriverAppInner() {
               {flow === "recibido" && <Recibido {...props} />}
               {flow === "pagado" && <Pagado {...props} />}
             </ScreenTransition>
+            {flow === "app" && <AppNav tab={tab} setTab={setTab} />}
           </EdApp>
           <ConsentSheet
             open={!!asking}
@@ -133,7 +135,9 @@ function DriverAppInner() {
           <PagarSheet {...props} openSheet={sheet === "pagar"} close={() => setSheet(undefined)} />
         </PhoneFrame>
       </div>
-      <WhatHappened {...props} />
+      <PhonePanel>
+        <WhatHappened {...props} />
+      </PhonePanel>
     </div>
   );
 }
@@ -172,7 +176,7 @@ function Conectar({ ask }: Props) {
   const { address } = useConnection();
   return (
     <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
-      <Meta mark={ROSA} parts={["Mercado Crédito", "Testnet · sin valor real"]} />
+      <Meta mark={ROSA} parts={["Mercado Crédito", "Testnet · sin valor real", "No canjeable"]} />
       <Display as="h1" size={50} className="mt-10">
         Adelanta
         <br />
@@ -201,33 +205,37 @@ function Conectar({ ask }: Props) {
 /* ─────────────────────────────── App shell + tabs ─────────────────────────────── */
 
 function AppShell(props: Props) {
-  const { tab, setTab } = props;
+  const { tab } = props;
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex-1">
-        {tab === "inicio" && <Inicio {...props} />}
-        {tab === "ganancias" && <Ganancias {...props} />}
-        {tab === "actividad" && <Actividad {...props} />}
-        {tab === "perfil" && <Perfil {...props} />}
-      </div>
-      <DotNav
-        value={tab}
-        onChange={setTab}
-        items={[
-          { id: "inicio", label: "Inicio", icon: <Home strokeWidth={1.75} /> },
-          { id: "ganancias", label: "Ganancias", icon: <BarChart3 strokeWidth={1.75} /> },
-          { id: "actividad", label: "Actividad", icon: <List strokeWidth={1.75} /> },
-          { id: "perfil", label: "Perfil", icon: <User strokeWidth={1.75} /> },
-        ]}
-      />
+    <div className="flex-1">
+      {tab === "inicio" && <Inicio {...props} />}
+      {tab === "ganancias" && <Ganancias {...props} />}
+      {tab === "actividad" && <Actividad {...props} />}
+      {tab === "perfil" && <Perfil {...props} />}
     </div>
+  );
+}
+
+/** Outside ScreenTransition: its slide leaves a transform that would trap the nav's position:fixed on phones. */
+function AppNav({ tab, setTab }: Pick<Props, "tab" | "setTab">) {
+  return (
+    <DotNav
+      value={tab}
+      onChange={setTab}
+      items={[
+        { id: "inicio", label: "Inicio", icon: <Home strokeWidth={1.75} /> },
+        { id: "ganancias", label: "Ganancias", icon: <BarChart3 strokeWidth={1.75} /> },
+        { id: "actividad", label: "Actividad", icon: <List strokeWidth={1.75} /> },
+        { id: "perfil", label: "Perfil", icon: <User strokeWidth={1.75} /> },
+      ]}
+    />
   );
 }
 
 function TopMeta({ platform, title }: { platform?: Platform; title: string }) {
   return (
     <div className="flex items-start justify-between gap-3 px-5 pt-4">
-      <Meta mark={ROSA} parts={[title, "Testnet · sin valor real"]} />
+      <Meta mark={ROSA} parts={[title, "Testnet · sin valor real", "No canjeable"]} />
       {platform && (
         <span className="grid h-7 shrink-0 place-items-center rounded-full border border-[var(--m-outline-variant)] bg-white px-2.5">
           <BrandLogo id={platform} height={platform === "rappi" ? 13 : 10} />
@@ -245,7 +253,9 @@ function Inicio({ platform, data, adv, open, setTab, ask }: Props) {
   const owed = adv.pool.loanPrincipal !== undefined && adv.pool.loanFee !== undefined ? adv.pool.loanPrincipal + adv.pool.loanFee : undefined;
   const paidPct = owing && owed && owed > 0n ? Math.max(0, Math.min(100, Number(((owed - debt!) * 100n) / owed))) : 0;
   const canDraw = !!adv.att && !adv.expired && (adv.available ?? 0n) > 0n;
-  const name = firstName(data.data);
+  const { address } = useConnection();
+  // Same person as the Card holder app ("Hola, Javier") before a platform is connected.
+  const name = firstName(data.data) ?? (personaByAddress(address)?.id === "driver" ? "Javier" : undefined);
 
   return (
     <div className="pb-6">
@@ -569,7 +579,7 @@ function Perfil({ platform, data, disconnect }: Props) {
         )}
         <Meta
           className="mt-6"
-          parts={["Consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Ganancias: datos demo sintéticos", "xMXN: token demo sin valor real"]}
+          parts={["Consentimiento simulado", "Sin afiliación con Uber, DiDi ni Rappi", "Ganancias: datos demo sintéticos", "xMXN: token demo sin valor real, no canjeable por pesos"]}
         />
       </div>
     </div>

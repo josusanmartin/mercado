@@ -337,7 +337,7 @@ export function DotNav<T extends string>({ items, value, onChange }: { items: Do
   return (
     <nav
       aria-label="Navegación"
-      className="relative z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-white sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[88px] sm:pb-5"
+      className="z-10 grid h-[68px] grid-flow-col border-t border-[var(--m-on-surface)] bg-white max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:h-[calc(68px+env(safe-area-inset-bottom))] max-sm:pb-[env(safe-area-inset-bottom)] sm:sticky sm:-bottom-5 sm:-mb-5 sm:h-[88px] sm:pb-5"
     >
       {items.map((it) => {
         const on = it.id === value;

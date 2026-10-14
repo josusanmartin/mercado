@@ -68,24 +68,25 @@ export function PhoneApp() {
         ) : view.product ? (
           <ProductScreen product={view.product} back={() => setView({ tab: "inicio" })} trade={(mode) => setTrade({ product: view.product!, mode })} />
         ) : (
-          <div className="flex flex-1 flex-col">
-            <div className="flex-1">
-              {view.tab === "inicio" && <Inicio open={(product) => setView({ tab: "inicio", product })} trade={(product, mode) => setTrade({ product, mode })} />}
-              {view.tab === "actividad" && <Actividad />}
-              {view.tab === "perfil" && <Perfil />}
-            </div>
-            <DotNav
-              value={view.tab}
-              onChange={(tab) => setView({ tab })}
-              items={[
-                { id: "inicio", label: "Inicio", icon: <Home strokeWidth={1.75} /> },
-                { id: "actividad", label: "Actividad", icon: <List strokeWidth={1.75} /> },
-                { id: "perfil", label: "Perfil", icon: <User strokeWidth={1.75} /> },
-              ]}
-            />
+          <div className="flex-1">
+            {view.tab === "inicio" && <Inicio open={(product) => setView({ tab: "inicio", product })} trade={(product, mode) => setTrade({ product, mode })} />}
+            {view.tab === "actividad" && <Actividad />}
+            {view.tab === "perfil" && <Perfil />}
           </div>
         )}
       </ScreenTransition>
+      {/* outside ScreenTransition: its slide leaves a transform that would trap position:fixed on phones */}
+      {!done && !view.product && (
+        <DotNav
+          value={view.tab}
+          onChange={(tab) => setView({ tab })}
+          items={[
+            { id: "inicio", label: "Inicio", icon: <Home strokeWidth={1.75} /> },
+            { id: "actividad", label: "Actividad", icon: <List strokeWidth={1.75} /> },
+            { id: "perfil", label: "Perfil", icon: <User strokeWidth={1.75} /> },
+          ]}
+        />
+      )}
       <TradeSheet
         state={trade}
         setState={setTrade}
@@ -101,7 +102,7 @@ export function PhoneApp() {
 function TopMeta({ title }: { title: string }) {
   return (
     <div className="px-5 pt-4">
-      <Meta mark={MAIZ} parts={[title, "Testnet · sin valor real"]} />
+      <Meta mark={MAIZ} parts={[title, "Testnet · sin valor real", "No canjeable"]} />
     </div>
   );
 }
@@ -539,7 +540,7 @@ function Perfil() {
         </dl>
         <Meta
           className="mt-6"
-          parts={["OUSD: token de testnet, sin valor ni respaldo", "Rendimientos variables, no garantizados", "tTBILL: token demo, no es un valor", "Precios: feeds de administrador"]}
+          parts={["OUSD y xMXN: tokens de testnet, sin valor ni respaldo, no canjeables", "Rendimientos variables, no garantizados", "tTBILL: token demo, no es un valor", "Precios: feeds de administrador"]}
         />
       </div>
     </div>
