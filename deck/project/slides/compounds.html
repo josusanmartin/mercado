@@ -1,0 +1,43 @@
+<section id="compounds" data-transition="fade" style="background:#0D0D0D;color:#F2F0EA;font-family:'Instrument Sans', Arial, sans-serif;padding:128px 128px 160px">
+<img src="/_blob/d054ca3e8281c9347fc63a938de31bba" alt="" style="position:absolute;left:0;top:0;width:1920px;height:56px;object-fit:cover">
+<p style="position:absolute;left:128px;top:128px;width:900px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#999999">09 — why it compounds</p>
+<h2 data-build-in="rise 1" style="position:absolute;left:128px;top:190px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#F2F0EA">Each product</h2>
+<h2 data-build-in="rise 2" style="position:absolute;left:128px;top:292px;width:1600px;font-size:96px;font-weight:500;line-height:1.05;letter-spacing:-4px;color:#999999">feeds the others.</h2>
+<hr style="position:absolute;left:128px;top:440px;width:1664px;border-top:1px solid rgba(255,255,255,0.12)">
+<x-embed style="position:absolute;left:128px;top:460px;width:1664px;height:440px"><!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:#0D0D0D;color:#F2F0EA;font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;overflow:hidden}
+.mono{font-family:"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace}
+svg{position:absolute;left:0;top:0}
+#c{position:absolute;left:250px;top:170px;width:200px;text-align:center;font-size:48px;font-weight:600;color:#FFB547}
+.r{position:absolute;left:760px;width:900px;display:flex;gap:28px;align-items:baseline;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.12);opacity:.3;transition:opacity .5s}
+.r.on{opacity:1}
+.r b{width:300px;font-size:32px;font-weight:600}
+.r span{font-size:30px;color:#F2F0EA}
+</style></head><body>
+<svg width="720" height="440" viewBox="0 0 720 440">
+<g fill="none" stroke-width="26" stroke-linecap="butt">
+<path id="s0" d="M350 30 A190 190 0 0 1 540 220" stroke="#0E7C66"/>
+<path id="s1" d="M540 220 A190 190 0 0 1 350 410" stroke="#F08C00"/>
+<path id="s2" d="M350 410 A190 190 0 0 1 160 220" stroke="#E4007C"/>
+<path id="s3" d="M160 220 A190 190 0 0 1 350 30" stroke="#FFB547"/>
+</g>
+<circle id="dot" r="16" fill="#F2F0EA"/>
+</svg>
+<div id="c">xMXN</div>
+<div class="r" id="r0" style="top:6px"><b style="color:#22B08C">Mint</b><span>minting creates the supply</span></div>
+<div class="r" id="r1" style="top:108px"><b style="color:#F08C00">Remesas · Global</b><span>flows create demand and fees</span></div>
+<div class="r" id="r2" style="top:210px"><b style="color:#FF3D9E">Crédito</b><span>credit brings in new users</span></div>
+<div class="r" id="r3" style="top:312px"><b style="color:#FFB547">Spend · HTTP 402</b><span>payments give xMXN a use</span></div>
+<script>
+var segs=[0,1,2,3].map(function(i){return document.getElementById('s'+i)}),rows=[0,1,2,3].map(function(i){return document.getElementById('r'+i)}),dot=document.getElementById('dot'),t0=0,SEG=1800;
+function f(t){if(!t0)t0=t;var e=(t-t0)%(SEG*4),i=Math.floor(e/SEG),k=(e%SEG)/SEG,p=segs[i],L=p.getTotalLength(),pt=p.getPointAtLength(k*L);
+dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);
+rows.forEach(function(r,j){r.classList.toggle('on',j===i)});
+segs.forEach(function(s,j){s.setAttribute('stroke-opacity',j===i?'1':'0.35')});
+requestAnimationFrame(f)}
+requestAnimationFrame(f);
+</script></body></html></x-embed>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;color:#8A8A8A">Mercado · testnet prototype on Tempo Moderato</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-family:'DM Mono', 'Courier New', monospace;font-size:24px;text-align:right;color:#8A8A8A">09</p>
+<aside>~10s. Why an ecosystem rather than four apps: each product feeds the others. Mint creates the supply of xMXN. Remesas and Global move it across the border, which creates demand for xMXN and fees for the exchange's reserve buffer. Crédito brings in users, drivers who hold and spend xMXN and lenders who earn realized fees. And HTTP 402 payments, bills and paid APIs, give xMXN a use in every product. This is the design thesis; it is not a measured network effect, and we have no usage numbers beyond testnet runs.</aside>
+</section>
