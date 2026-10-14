@@ -25,6 +25,7 @@ The demo must keep all of these visible:
 - **Third-party collateral token.** Testnet OUSD is controlled by its issuer (transfer policy, pause), not by Mercado, so collateral could be frozen outside our control.
 - **Open demo eligibility.** Any wallet can request a score for any demo profile. The attestation binds the borrower and the pool caps per-user exposure, but the profile isn't tied to a real identity.
 - **Mock oracle.** The MXN/USD price comes from an admin-controlled testnet feed (`isMock() == true`), not a verified market feed.
+- **The swap desk isn't a market.** `SwapDesk` is a capped demo liquidity source: finite reserves, oracle price minus spread, a per-swap max and a per-address rolling cap. Because faucet OUSD is free, the desk is reseeded before demos (`scripts/demo-journey.ts --steps J0`). It says nothing about xMXN's market price or depth.
 - **No yield promises.** Lender fees come only from repaid loans. There's no guaranteed APY.
 
 ## Architecture

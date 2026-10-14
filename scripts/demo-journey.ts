@@ -4,6 +4,7 @@
  *   npx tsx scripts/demo-journey.ts                 # run everything
  *   npx tsx scripts/demo-journey.ts --steps J4,J5   # run a subset
  *   npx tsx scripts/demo-journey.ts --keep-going    # don't stop at the first failure
+ *   npx tsx scripts/demo-journey.ts --steps J0      # pre-demo health check only (auto-heals; --no-heal to just report)
  *
  * Needs: root .env.local (testnet keys), packages/shared/src/deployments/42431.json,
  * and the app running at MERCADO_API_URL (default http://localhost:3000) for J4/J5.
@@ -52,6 +53,14 @@ const chain = tempoModerato.extend({ feeToken: FEE_TOKEN })
 
 const args = process.argv.slice(2)
 const KEEP_GOING = args.includes('--keep-going')
+// J0 tops up desk/pool/oracle when below these floors unless --no-heal (pre-demo health check)
+const HEAL = !args.includes('--no-heal')
+const FLOOR = {
+  deskXmxn: parseUnits('5000', 6),
+  deskOusd: parseUnits('250', 6),
+  poolLiquidity: parseUnits('2000', 6),
+  oracleMinHeadroomSec: 900, // refresh if it would go stale within 15 min (i.e. mid-demo)
+}
 const ONLY = (() => {
   const i = args.indexOf('--steps')
   return i >= 0 ? new Set(args[i + 1].split(',').map((s) => s.trim().toUpperCase())) : undefined
@@ -109,6 +118,9 @@ const oracleAbi = parseAbi([
   'function price() view returns (uint256 mxnPerUsd, uint256 updatedAt)',
   'function isMock() view returns (bool)',
   'function maxAge() view returns (uint256)',
+  'function peek() view returns (uint256 mxnPerUsd, uint256 updatedAt, bool valid)',
+  'function paused() view returns (bool)',
+  'function setPrice(uint256)',
 ])
 const vaultAbi = parseAbi([
   'function depositCollateral(uint256)',
@@ -123,6 +135,7 @@ const deskAbi = parseAbi([
   'function quote(bool ousdToXmxn, uint256 amountIn) view returns (uint256 amountOut, uint256 fee)',
   'function swapOusdForXmxn(uint256 amountIn, uint256 minOut) returns (uint256)',
   'function reserves() view returns (uint256 ousd, uint256 xmxn)',
+  'function seed(uint256 ousd, uint256 xmxn)',
 ])
 const poolAbi = parseAbi([
   'function supply(uint256)',
@@ -195,6 +208,69 @@ async function api(path: string, init?: RequestInit) {
   return { res, body }
 }
 
+/**
+ * Mint `amount` xMXN to `acct` through its own vault position at ~300% (faucet OUSD as collateral).
+ * Used to fund the desk/pool from *separate* positions, never from other users' collateral.
+ */
+async function mintXmxnFor(d: Deployments, acct: PrivateKeyAccount, label: string, amount: bigint) {
+  const [px] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'price' })
+  const collateral = (amount * 3n * 10n ** 8n) / px + 1n
+  await ensureOusd(d, acct.address, collateral, label)
+  await approveIfNeeded(acct, d.ousd, d.vault, collateral, `OUSD → vault (${label})`)
+  await send(`${label} depositCollateral ${fmt(collateral)} OUSD`, acct, { address: d.vault, abi: vaultAbi, functionName: 'depositCollateral', args: [collateral] })
+  await send(`${label} mint ${fmt(amount)} xMXN`, acct, { address: d.vault, abi: vaultAbi, functionName: 'mint', args: [amount] })
+}
+
+/** Pre-demo health check (lead decision on Q-003): oracle fresh, desk reserves and pool liquidity above floors. */
+async function healthCheck(d: Deployments) {
+  const problems: string[] = []
+  // oracle
+  const [opx, oat, valid] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'peek' })
+  const paused = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'paused' })
+  const maxAge = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'maxAge' })
+  const age = Math.round(Date.now() / 1000) - Number(oat)
+  const headroom = Number(maxAge) - age
+  if (paused) problems.push('oracle is PAUSED (not auto-unpausing; ask @contracts)')
+  else if (!valid || headroom < FLOOR.oracleMinHeadroomSec) {
+    if (HEAL) {
+      warn(`oracle ${valid ? `goes stale in ${headroom}s` : 'is stale/invalid'}; deployer re-pushes the same mock price ${fmt(opx, 8)}`)
+      await send('oracle setPrice (refresh mock feed)', account('DEPLOYER'), { address: d.oracle, abi: oracleAbi, functionName: 'setPrice', args: [opx] })
+    } else problems.push(`oracle stale or about to be (headroom ${headroom}s)`)
+  } else ok(`health: oracle fresh (${age}s old, max ${maxAge}s)`)
+
+  // swap desk inventory
+  const [rO, rX] = await pub.readContract({ address: d.swapDesk, abi: deskAbi, functionName: 'reserves' })
+  if (rX < FLOOR.deskXmxn || rO < FLOOR.deskOusd) {
+    const addX = rX < FLOOR.deskXmxn ? FLOOR.deskXmxn * 2n - rX : 0n
+    const addO = rO < FLOOR.deskOusd ? FLOOR.deskOusd * 2n - rO : 0n
+    if (HEAL) {
+      warn(`desk low (${fmt(rO)} OUSD / ${fmt(rX)} xMXN); deployer reseeds +${fmt(addO)} OUSD / +${fmt(addX)} xMXN from its own vault position`)
+      const dep = account('DEPLOYER')
+      if (addX > 0n) await mintXmxnFor(d, dep, 'deployer', addX)
+      if (addO > 0n) await ensureOusd(d, dep.address, addO, 'deployer')
+      if (addO > 0n) await approveIfNeeded(dep, d.ousd, d.swapDesk, addO, 'OUSD → desk')
+      if (addX > 0n) await approveIfNeeded(dep, d.xMXN, d.swapDesk, addX, 'xMXN → desk')
+      await send('desk seed', dep, { address: d.swapDesk, abi: deskAbi, functionName: 'seed', args: [addO, addX] })
+    } else problems.push(`desk reserves low: ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
+  } else ok(`health: desk reserves ${fmt(rO)} OUSD / ${fmt(rX)} xMXN`)
+
+  // credit pool cash
+  const liq = await pub.readContract({ address: d.creditPool, abi: poolAbi, functionName: 'availableLiquidity' })
+  if (liq < FLOOR.poolLiquidity) {
+    const add = FLOOR.poolLiquidity * 2n - liq
+    if (HEAL) {
+      warn(`pool liquidity ${fmt(liq)} xMXN is low; LENDER mints ${fmt(add)} xMXN from its own vault position and supplies it`)
+      const lender = account('LENDER')
+      const have = await bal(d.xMXN, lender.address)
+      if (have < add) await mintXmxnFor(d, lender, 'lender', add - have)
+      await approveIfNeeded(lender, d.xMXN, d.creditPool, add, 'xMXN → pool')
+      await send(`lender supply ${fmt(add)} xMXN`, lender, { address: d.creditPool, abi: poolAbi, functionName: 'supply', args: [add] })
+    } else problems.push(`pool liquidity low: ${fmt(liq)} xMXN`)
+  } else ok(`health: pool liquidity ${fmt(liq)} xMXN`)
+
+  if (problems.length) throw new Error(`health check failed: ${problems.join('; ')}`)
+}
+
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`assertion failed: ${msg}`)
 }
@@ -206,7 +282,7 @@ type Ctx = { d: Deployments; driverBorrowed?: bigint }
 const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] = [
   {
     id: 'J0',
-    title: 'Preflight: chain, deployments, oracle',
+    title: 'Preflight + health: chain, deployments, oracle freshness, desk reserves, pool liquidity',
     async run({ d }) {
       const id = await pub.getChainId()
       assert(id === 42431, `chain id ${id} != 42431`)
@@ -216,6 +292,7 @@ const STEPS: { id: string; title: string; run: (ctx: Ctx) => Promise<void> }[] =
         if (!code || code === '0x') warn(`${k} ${d[k]} has no code`)
         else log(`${k.padEnd(10)} ${d[k]}  ${C.dim}${EXPLORER}/address/${d[k]}${C.x}`)
       }
+      await healthCheck(d)
       const [px, at] = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'price' })
       const mock = await pub.readContract({ address: d.oracle, abi: oracleAbi, functionName: 'isMock' })
       ok(`oracle: ${fmt(px, 8)} MXN/USD, updated ${Math.round(Date.now() / 1000 - Number(at))}s ago${mock ? ' (MOCK admin feed, labeled)' : ''}`)
