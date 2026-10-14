@@ -1,7 +1,7 @@
 // Client helper for paying bills over MPP (HTTP 402). Works in the browser (wagmi wallet client →
 // mppx "push" mode: the wallet broadcasts the transfer) and in Node scripts (local viem account →
 // "pull" mode: mppx signs, the server broadcasts). Isomorphic: no server-only imports.
-import { Mppx, tempo } from "mppx/client";
+import { Fetch, Mppx, tempo } from "mppx/client";
 import { Receipt } from "mppx";
 import { createClient, http, type Account, type Client } from "viem";
 import { TEMPO_MODERATO_CHAIN_ID, tempoModerato } from "@mercado/shared";
@@ -11,6 +11,14 @@ import type {
   BillQuoteRequest,
   BillQuoteResponse,
 } from "@mercado/shared";
+
+/**
+ * The real, unwrapped fetch. Some wallet connectors (accounts/Tempo Wallet) install a global mppx fetch
+ * polyfill that auto-pays any 402. Calls that must never pay (quote, order lookup, settlement check) go
+ * through this instead of globalThis.fetch.
+ */
+const rawFetch: typeof fetch = (input, init) =>
+  Fetch.unwrapFetch(globalThis.fetch)(input, init);
 
 export type PayStage =
   "requesting" | "challenge" | "signing" | "verifying" | "done";
@@ -53,7 +61,7 @@ export async function quoteBill(
   req: BillQuoteRequest,
   baseUrl = "",
 ): Promise<BillQuoteResponse> {
-  const res = await fetch(`${baseUrl}/api/bills/quote`, {
+  const res = await rawFetch(`${baseUrl}/api/bills/quote`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
@@ -172,7 +180,7 @@ export async function getBillOrder(
   id: string,
   baseUrl = "",
 ): Promise<BillOrder> {
-  const res = await fetch(
+  const res = await rawFetch(
     `${baseUrl}/api/bills/orders/${encodeURIComponent(id)}`,
     { cache: "no-store" },
   );
@@ -202,7 +210,7 @@ export async function checkBillSettlement(
   idempotencyKey: string,
   baseUrl = "",
 ): Promise<SettlementCheck> {
-  const res = await fetch(`${baseUrl}/api/bills/pay`, {
+  const res = await rawFetch(`${baseUrl}/api/bills/pay`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ quoteId, idempotencyKey }),
