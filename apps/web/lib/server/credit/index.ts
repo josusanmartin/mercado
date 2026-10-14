@@ -16,7 +16,10 @@ export * from "./attest";
 const poolAbi = parseAbi(["function borrowCapacity(address borrower, uint256 maxAmount) view returns (uint256)"]);
 
 export function creditPoolAddress(): Address | undefined {
-  return activeProtocol().creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
+  const proto = activeProtocol();
+  // v2 fails closed: never sign an attestation for the v1 pool (or an env override) while v2 is active.
+  if (proto.version === "v2") return proto.creditPool;
+  return proto.creditPool ?? (env("CREDIT_POOL_ADDRESS") as Address | undefined);
 }
 
 /**
