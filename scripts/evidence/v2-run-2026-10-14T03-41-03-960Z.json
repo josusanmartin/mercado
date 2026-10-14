@@ -1,0 +1,136 @@
+{
+  "at": "2026-10-14T03:41:03.959Z",
+  "protocol": "v2",
+  "steps": "all",
+  "evidence": {
+    "V0": {
+      "status": "fail",
+      "txs": {},
+      "notes": [],
+      "error": "Request exceeds defined limit."
+    },
+    "V1": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x06c9a086637a1d6cb45ade6e05f4a943d81441a4ed1accef8e51259b60fd4641",
+        "stake 200 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x449eb197f3cfcecd8d8bf3b0da4180239f268834e2e103e63f608c3f0334046f",
+        "approve sOUSD → vault": "https://explore.testnet.tempo.xyz/tx/0x14df11e15a8fef2b6616017d1f35eb0434d5e967d4f09c9bfd50ba1e6d68973a",
+        "depositCollateral 200 sOUSD": "https://explore.testnet.tempo.xyz/tx/0xc9a97759ae62a27e0a58af2f4a88206693464370b5a0b12d1ee40d60961bba1f",
+        "mint 1,469.73 xMXN v2 against sOUSD": "https://explore.testnet.tempo.xyz/tx/0xce91277c9fe79d182c1f104c8780cd1621c633d636cc4b5ca8af083255d6165d"
+      },
+      "notes": []
+    },
+    "V2": {
+      "status": "pass",
+      "txs": {
+        "approve tTBILL → vault": "https://explore.testnet.tempo.xyz/tx/0x748bcca43fe9a1f34edcc41a58aa12485ac9f31f9422140ab14a37c964267712",
+        "depositCollateral 10 tTBILL": "https://explore.testnet.tempo.xyz/tx/0x88dc21a5961fe7211e26c9471529642c06c79cee91a3f8cebcffd3352f832ebb",
+        "mint 6,123.89 xMXN v2 against tTBILL": "https://explore.testnet.tempo.xyz/tx/0xb078e900dd548a77156cc7cb4c8643fed30a05e3fa6a785b8c2a6c28462e8018"
+      },
+      "notes": []
+    },
+    "V3": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → vamm": "https://explore.testnet.tempo.xyz/tx/0x9ae78bb05b13b52d8457cc51f34cf618d6410b652699e199f13df2a3de54c118",
+        "swapOusdForXmxn 50 OUSD → Rosa": "https://explore.testnet.tempo.xyz/tx/0x23ecf9c266373013257d16b23c4091c2ee75f94a298fc516c649a8d68f0eab5e"
+      },
+      "notes": []
+    },
+    "V4": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → vamm": "https://explore.testnet.tempo.xyz/tx/0x30993027ef0a2812d3766f7fe406abbfcbc44ba67169179520eb255ce01ade85",
+        "swapXmxnForOusd 200 xMXN v2 (burn)": "https://explore.testnet.tempo.xyz/tx/0xc64c051b35b653350ef0b40ad46fa4c0b0761fc2e34cf466d39afd3580568dd1"
+      },
+      "notes": []
+    },
+    "V5": {
+      "status": "pass",
+      "txs": {
+        "borrow 500 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0x53b1b33dd3896cf2a87a236bebcc51f957544b8992a312a48225ace33d0b08f4"
+      },
+      "notes": []
+    },
+    "V6": {
+      "status": "pass",
+      "txs": {
+        "MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0x8898cdbd84bdf5ee91ea2f17d166eba3b60a6588f2d45ee098b60a4b11a9c5f4"
+      },
+      "notes": []
+    },
+    "V7": {
+      "status": "pass",
+      "txs": {
+        "top-up 247.5 xMXN v2 LP → Driver": "https://explore.testnet.tempo.xyz/tx/0x8e8b3a99978d0fd61a6f3101961e8a99ebad6129b55594d2d04679f59cb7e4ab",
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0xa0ffb448a97a1f0323ff1e147023846a9766d258940420b20ffc5758e68dd799",
+        "repay 892.5 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0x9c946280f338f12b0b8a1c7c64f1287cff62f35279a406d755b5399b67e1f98d"
+      },
+      "notes": []
+    },
+    "V8": {
+      "status": "pass",
+      "txs": {
+        "underwriter MPP payment (xMXN v2)": "https://explore.testnet.tempo.xyz/tx/0x4f63e0f2b33be47e80fdea428b82fd4471ec478f8a28c31cf2f077f733c40c1f"
+      },
+      "notes": []
+    },
+    "V9": {
+      "status": "pass",
+      "txs": {
+        "holder sets the daily limit 600 → 700 xMXN": "https://explore.testnet.tempo.xyz/tx/0xe3bf5b0d08273159f3de59b260a0a8fd93789ae46bea5181f569b778854fe464",
+        "approve xMXN v2 → card (spending allowance)": "https://explore.testnet.tempo.xyz/tx/0xff5465f608e497dfd1b05157495078bbf1694b3fe880b8bb2778aea949ff9093",
+        "holder freezes the card": "https://explore.testnet.tempo.xyz/tx/0xb08eddae03fc4dce0ea29f935b4f528f23322c1882cd783b0062d73b9c00f2af",
+        "holder unfreezes the card": "https://explore.testnet.tempo.xyz/tx/0xbb671c94e09caf5cda8ba96fc6ceb3feb6e4b2e3927ba0a74bad8d1e2eabdc38",
+        "terminal charges 50 xMXN v2 (holder's tap)": "https://explore.testnet.tempo.xyz/tx/0xd299669c809329984fe8fd895737dad98759b57e777e759d320aed546d17cf83",
+        "approve merchant xMXN v2 → card (refund allowance)": "https://explore.testnet.tempo.xyz/tx/0x2752eed32439972a0776c21004982dff05b72d9d70124ce5a94062c720668a2f",
+        "merchant refunds 10 xMXN v2": "https://explore.testnet.tempo.xyz/tx/0x18e3394c44328c42762da6533b0b3f4384200212e200f8963251e16a28882f71"
+      },
+      "notes": []
+    },
+    "V10": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → pool v2": "https://explore.testnet.tempo.xyz/tx/0xee07d65cac1b1a31bfea23171e2a9d5eaba12f5e28c027e3e92d31a6d5161427",
+        "Ahorro en pesos: supply 100 xMXN v2 to the credit pool": "https://explore.testnet.tempo.xyz/tx/0x817a9b03257e82bb9985da972807a0db6e287d6652fbbef5985440f50af3b286",
+        "approve OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0xfbd2d35fbf40e2e58b0f58666b9e1d4960e9610d18c7bd16298fc27daf2fea26",
+        "Ahorro en dólares: stake 50 OUSD → sOUSD": "https://explore.testnet.tempo.xyz/tx/0x767407ea8e1b9f608046e17a2161c40381023d921864e7acf33a5e04e0c47ad9",
+        "approve OUSD → InvestDesk": "https://explore.testnet.tempo.xyz/tx/0x35f304935e3fe11b64fd2840f52169214ce83edd69c3454a70bbe86d62912da7",
+        "buy tTBILL with 100 OUSD": "https://explore.testnet.tempo.xyz/tx/0xd1f242ee18cee6f6146c4e2ad00f4624291c984ad878de783d9d003738f96af0",
+        "approve tTBILL → InvestDesk": "https://explore.testnet.tempo.xyz/tx/0xde01e2bbeb981f0ea1d20b98a78d031d3a98cae22a76646a88e37123cf13ac7c",
+        "sell 0.4988 tTBILL back": "https://explore.testnet.tempo.xyz/tx/0x92e2ccb37df864b5754b18eb8f9269c5eb9d6cf27d811234497617dbef090a6e"
+      },
+      "notes": []
+    },
+    "V11": {
+      "status": "pass",
+      "txs": {
+        "approve OUSD → stocks desk": "https://explore.testnet.tempo.xyz/tx/0x3378bc2a338e2df00bd3fe60f3a69c3e74d40d20054746831104a0ae43609914",
+        "buy mIDX with 200 OUSD": "https://explore.testnet.tempo.xyz/tx/0x96d913fda32cbcc177e21004f453ec6816ab72659ccaff7898b3b145bdf58ccd",
+        "approve mIDX → stocks desk": "https://explore.testnet.tempo.xyz/tx/0xfd7ef2ab98f36b861021f6c7667971a16d67ed82896a3e0fa3b40b801cb92ac9",
+        "sell 0.4988 mIDX back": "https://explore.testnet.tempo.xyz/tx/0x574aea83fe156a1448ae63868cc44c54b3b425963892406ff979bccfa78799b7",
+        "approve mIDX → vault": "https://explore.testnet.tempo.xyz/tx/0x89822fa22d259e8a583e7bbc077ed598a448ce6daf370faa1e84a9c972ae01a9",
+        "depositCollateral 2 mIDX": "https://explore.testnet.tempo.xyz/tx/0x8ab843c82138dc62167e942efa1dde0830fa2fb547653bc33f7ff3c9cdacedef",
+        "mint 1,049.81 xMXN v2 against mIDX": "https://explore.testnet.tempo.xyz/tx/0xfb46460650e3b89b07227d59a664556db82338ae0c5c81d6585b0c1b289008a0"
+      },
+      "notes": []
+    },
+    "V12": {
+      "status": "pass",
+      "txs": {
+        "approve xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x944dd5354bea8e1d28a0941108950ddf40518e3ca62a89446d41b2c4ef85d018",
+        "Ahorro en pesos: deposit 100 xMXN v2 → sxMXN": "https://explore.testnet.tempo.xyz/tx/0x8859392d1b361c4322ec419546dfedfb5af04b8f7e322dc12d5a9933afb8a43d",
+        "donate 1 xMXN v2 straight to sxMXN (should NOT move the share price)": "https://explore.testnet.tempo.xyz/tx/0x1b9561ddccc7c9432a729e8d2765833d61c7048b8530473b5f4d97780f70290a",
+        "redeem 50 sxMXN": "https://explore.testnet.tempo.xyz/tx/0x63c67a92469067161719a67752c480000e4671c8f075c223e6e29a1f355ef75a"
+      },
+      "notes": []
+    },
+    "VS": {
+      "status": "pass",
+      "txs": {
+        "liquidation 0x360912": "https://explore.testnet.tempo.xyz/tx/0xa77c4c710885863514b62f4a958a192a4d037dd3bc992f41e829e2a304cbca04"
+      },
+      "notes": []
+    }
+  }
+}
